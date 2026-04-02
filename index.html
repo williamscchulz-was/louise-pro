@@ -93,8 +93,9 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "3.1.0";
+const APP_VERSION = "3.2.0";
 const CHANGELOG = [
+  { v: "3.2.0", date: "2026-04-02", changes: "i18n EN/PT-BR, ring events proporcional ao horário, ícones maiores no ring" },
   { v: "3.1.0", date: "2026-04-02", changes: "Resumo da noite, vibração na janela de sono, filtros no histórico (Leite/Sono/Fralda/Med), fix scroll e fade-out" },
   { v: "3.0.1", date: "2026-04-02", changes: "Fix scroll: fundo fixo, só conteúdo rola, sem bounce preto no iOS" },
   { v: "3.0.0", date: "2026-04-02", changes: "Visual Napper-level: céu estrelado com nebulosas, ícones com glow vivo, header abaixo Dynamic Island" },
@@ -260,10 +261,10 @@ const I={
   sleep:{pt:"sono",en:"sleep"},
   wokeUp:{pt:"acordou",en:"woke up"},
   milk:{pt:"leite",en:"milk"},
-  lastFeed:{pt:"Última mamada",en:"Last feed"},
-  milkVsWeek:{pt:"leite vs sem. passada",en:"milk vs last week"},
+  lastFeed:{pt:"{L("lastFeed")}",en:"Last feed"},
+  milkVsWeek:{pt:"{L("milkVsWeek")}",en:"milk vs last week"},
   sleepLabel:{pt:"sono",en:"sleep"},
-  repeatLast:{pt:"Repetir último",en:"Repeat last"},
+  repeatLast:{pt:"{L("repeatLast")}",en:"Repeat last"},
   history:{pt:"Histórico",en:"History"},
   summary:{pt:"Resumo",en:"Summary"},
   growth:{pt:"Crescimento",en:"Growth"},
@@ -290,9 +291,9 @@ const I={
   wet:{pt:"Xixi",en:"Wet"},dirty:{pt:"Cocô",en:"Dirty"},
   all:{pt:"Tudo",en:"All"},
   noEntries:{pt:"Nenhum registro",en:"No entries"},
-  tapToAdd:{pt:"Toque + para registrar",en:"Tap + to add"},
+  tapToAdd:{pt:"{_lang==="en"?"Tap + to add":"Toque + para registrar"}",en:"Tap + to add"},
   language:{pt:"Idioma",en:"Language"},
-  birthData:{pt:"Dados de nascimento",en:"Birth data"},
+  birthData:{pt:_lang==="en"?"Birth data":L("birthData"),en:"Birth data"},
   weight:{pt:"Peso",en:"Weight"},length:{pt:"Comprimento",en:"Length"},head:{pt:"Cabeça",en:"Head"},
   viewGrowth:{pt:"Ver crescimento e percentis",en:"View growth & percentiles"},
   name:{pt:"Nome",en:"Name"},birthDate:{pt:"Data de nascimento",en:"Date of birth"},
@@ -351,7 +352,7 @@ function Ring({activeTimer,napSug,tick,recentEvents,lang}){
   </div>);
 }
 
-function MlGoalBar({current,goal}){if(!goal||goal<=0)return null;const pct=Math.min(100,(current/goal)*100);const reached=current>=goal;return(<div style={{padding:"0 20px",marginBottom:16}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}><div style={{display:"flex",alignItems:"center",gap:6}}><Icon name="target" size={14} color={reached?T.green:T.sub}/><span style={{fontSize:11,fontWeight:600,color:T.sub}}>Meta diária</span></div><span style={{fontSize:12,fontWeight:700,color:reached?T.green:T.text}}>{current} / {goal} ml</span></div><div style={{height:6,borderRadius:3,background:T.bg3,overflow:"hidden"}}><div style={{height:"100%",borderRadius:3,width:`${pct}%`,background:reached?T.green:`linear-gradient(90deg,${T.accent},${T.purple})`,transition:"width .5s"}}/></div></div>)}
+function MlGoalBar({current,goal}){if(!goal||goal<=0)return null;const pct=Math.min(100,(current/goal)*100);const reached=current>=goal;return(<div style={{padding:"0 20px",marginBottom:16}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}><div style={{display:"flex",alignItems:"center",gap:6}}><Icon name="target" size={14} color={reached?T.green:T.sub}/><span style={{fontSize:11,fontWeight:600,color:T.sub}}>{L("dailyGoal")}}</span></div><span style={{fontSize:12,fontWeight:700,color:reached?T.green:T.text}}>{current} / {goal} ml</span></div><div style={{height:6,borderRadius:3,background:T.bg3,overflow:"hidden"}}><div style={{height:"100%",borderRadius:3,width:`${pct}%`,background:reached?T.green:`linear-gradient(90deg,${T.accent},${T.purple})`,transition:"width .5s"}}/></div></div>)}
 
 // ── NIGHT SUMMARY ──
 function NightCard({entries}){
@@ -371,22 +372,22 @@ function NightCard({entries}){
   if(!sleepMin&&!wakings&&!feeds.length)return null;
   return(<div style={{padding:"0 20px",marginBottom:14}}>
     <div style={{padding:"12px 16px",borderRadius:14,background:"rgba(22,28,60,0.5)",border:`1px solid ${T.purple}15`,display:"flex",flexDirection:"column",gap:8}}>
-      <div style={{display:"flex",alignItems:"center",gap:6}}><Icon name="moon" size={13} color={T.purple}/><span style={{fontSize:11,fontWeight:700,color:T.sub}}>Noite passada</span></div>
+      <div style={{display:"flex",alignItems:"center",gap:6}}><Icon name="moon" size={13} color={T.purple}/><span style={{fontSize:11,fontWeight:700,color:T.sub}}>{L("lastNight")}}</span></div>
       <div style={{display:"flex",gap:12,flexWrap:"wrap"}}>
-        {sleepMin>0&&<div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:18,fontWeight:800,color:T.purple}}>{fmtDur(sleepMin)}</span><span style={{fontSize:10,color:T.dim}}>sono</span></div>}
-        {wakings>0&&<div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:18,fontWeight:800,color:T.orange}}>{wakings}x</span><span style={{fontSize:10,color:T.dim}}>acordou</span></div>}
-        {feedMl>0&&<div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:18,fontWeight:800,color:T.green}}>{feedMl}ml</span><span style={{fontSize:10,color:T.dim}}>leite</span></div>}
+        {sleepMin>0&&<div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:18,fontWeight:800,color:T.purple}}>{fmtDur(sleepMin)}</span><span style={{fontSize:10,color:T.dim}}>{L("sleep")}}</span></div>}
+        {wakings>0&&<div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:18,fontWeight:800,color:T.orange}}>{wakings}x</span><span style={{fontSize:10,color:T.dim}}>{L("wokeUp")}}</span></div>}
+        {feedMl>0&&<div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:18,fontWeight:800,color:T.green}}>{feedMl}ml</span><span style={{fontSize:10,color:T.dim}}>{L("milk")}}</span></div>}
       </div>
-      {lastFeed&&<div style={{fontSize:10,color:T.dim}}>Última mamada: {lastFeed.time}{lastFeed.ml?` · ${lastFeed.ml}ml`:""}</div>}
+      {lastFeed&&<div style={{fontSize:10,color:T.dim}}>{L("lastFeed")}: {lastFeed.time}{lastFeed.ml?` · ${lastFeed.ml}ml`:""}</div>}
     </div>
   </div>);
 }
 
-function WeeklyCard({entries}){const tw=[],lw=[];for(let i=0;i<7;i++){const d1=dateOffset(todayStr(),-i),d2=dateOffset(todayStr(),-7-i);tw.push(...entries.filter(e=>e.date===d1));lw.push(...entries.filter(e=>e.date===d2))}const tMl=tw.filter(e=>e.type==="bottle").reduce((s,e)=>s+(e.ml||0),0);const lMl=lw.filter(e=>e.type==="bottle").reduce((s,e)=>s+(e.ml||0),0);const tSl=tw.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin).reduce((s,e)=>s+e.durationMin,0);const lSl=lw.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin).reduce((s,e)=>s+e.durationMin,0);if(!lMl&&!lSl)return null;const md=lMl>0?Math.round(((tMl-lMl)/lMl)*100):0;const sd=lSl>0?Math.round(((tSl-lSl)/lSl)*100):0;if(!md&&!sd)return null;return(<div style={{padding:"0 20px",marginBottom:16}}><div style={{padding:"12px 16px",borderRadius:14,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",gap:16}}>{md!==0&&<div style={{display:"flex",alignItems:"center",gap:6,flex:1}}><Icon name={md>0?"arrowUp":"arrowDown"} size={14} color={md>0?T.green:T.orange}/><span style={{fontSize:11,color:T.sub}}><span style={{fontWeight:700,color:md>0?T.green:T.orange}}>{Math.abs(md)}%</span> leite vs sem. passada</span></div>}{sd!==0&&<div style={{display:"flex",alignItems:"center",gap:6,flex:1}}><Icon name={sd>0?"arrowUp":"arrowDown"} size={14} color={sd>0?T.green:T.orange}/><span style={{fontSize:11,color:T.sub}}><span style={{fontWeight:700,color:sd>0?T.green:T.orange}}>{Math.abs(sd)}%</span> sono</span></div>}</div></div>)}
+function WeeklyCard({entries}){const tw=[],lw=[];for(let i=0;i<7;i++){const d1=dateOffset(todayStr(),-i),d2=dateOffset(todayStr(),-7-i);tw.push(...entries.filter(e=>e.date===d1));lw.push(...entries.filter(e=>e.date===d2))}const tMl=tw.filter(e=>e.type==="bottle").reduce((s,e)=>s+(e.ml||0),0);const lMl=lw.filter(e=>e.type==="bottle").reduce((s,e)=>s+(e.ml||0),0);const tSl=tw.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin).reduce((s,e)=>s+e.durationMin,0);const lSl=lw.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin).reduce((s,e)=>s+e.durationMin,0);if(!lMl&&!lSl)return null;const md=lMl>0?Math.round(((tMl-lMl)/lMl)*100):0;const sd=lSl>0?Math.round(((tSl-lSl)/lSl)*100):0;if(!md&&!sd)return null;return(<div style={{padding:"0 20px",marginBottom:16}}><div style={{padding:"12px 16px",borderRadius:14,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",gap:16}}>{md!==0&&<div style={{display:"flex",alignItems:"center",gap:6,flex:1}}><Icon name={md>0?"arrowUp":"arrowDown"} size={14} color={md>0?T.green:T.orange}/><span style={{fontSize:11,color:T.sub}}><span style={{fontWeight:700,color:md>0?T.green:T.orange}}>{Math.abs(md)}%</span> {L("milkVsWeek")}</span></div>}{sd!==0&&<div style={{display:"flex",alignItems:"center",gap:6,flex:1}}><Icon name={sd>0?"arrowUp":"arrowDown"} size={14} color={sd>0?T.green:T.orange}/><span style={{fontSize:11,color:T.sub}}><span style={{fontWeight:700,color:sd>0?T.green:T.orange}}>{Math.abs(sd)}%</span> sono</span></div>}</div></div>)}
 
-function TimerBar({activeTimer,onStop}){const[secs,setSecs]=useState(0);useEffect(()=>{if(!activeTimer)return;const calc=()=>Math.max(0,Math.floor((Date.now()-new Date(activeTimer.startTime).getTime())/1000));setSecs(calc());const iv=setInterval(()=>setSecs(calc()),1000);return()=>clearInterval(iv)},[activeTimer]);if(!activeTimer)return null;return(<div style={{position:"fixed",bottom:"calc(76px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 32px)",maxWidth:448,padding:"12px 16px",borderRadius:16,background:"rgba(20,26,66,0.92)",border:`1px solid ${T.purple}33`,backdropFilter:"blur(12px)",display:"flex",alignItems:"center",gap:12,zIndex:60,boxShadow:"0 4px 24px rgba(0,0,0,0.4)"}}><div style={{width:36,height:36,borderRadius:10,background:T.purpleS,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name={activeTimer.type==="nap"?"cloud":"moon"} size={18} color={T.purple}/></div><div style={{flex:1}}><div style={{fontSize:12,fontWeight:600,color:T.sub}}>{activeTimer.type==="nap"?"Soneca":"Sono"}</div><div style={{fontSize:20,fontWeight:800,fontVariantNumeric:"tabular-nums"}}>{fmtTimer(secs)}</div></div><button onClick={onStop} style={{width:40,height:40,borderRadius:12,background:T.purpleS,border:`1px solid ${T.purple}33`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="stop" size={16} color={T.purple}/></button></div>)}
+function TimerBar({activeTimer,onStop}){const[secs,setSecs]=useState(0);useEffect(()=>{if(!activeTimer)return;const calc=()=>Math.max(0,Math.floor((Date.now()-new Date(activeTimer.startTime).getTime())/1000));setSecs(calc());const iv=setInterval(()=>setSecs(calc()),1000);return()=>clearInterval(iv)},[activeTimer]);if(!activeTimer)return null;return(<div style={{position:"fixed",bottom:"calc(76px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 32px)",maxWidth:448,padding:"12px 16px",borderRadius:16,background:"rgba(20,26,66,0.92)",border:`1px solid ${T.purple}33`,backdropFilter:"blur(12px)",display:"flex",alignItems:"center",gap:12,zIndex:60,boxShadow:"0 4px 24px rgba(0,0,0,0.4)"}}><div style={{width:36,height:36,borderRadius:10,background:T.purpleS,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name={activeTimer.type==="nap"?"cloud":"moon"} size={18} color={T.purple}/></div><div style={{flex:1}}><div style={{fontSize:12,fontWeight:600,color:T.sub}}>{activeTimer.type==="nap"?TL("nap"):TL("sleep")}</div><div style={{fontSize:20,fontWeight:800,fontVariantNumeric:"tabular-nums"}}>{fmtTimer(secs)}</div></div><button onClick={onStop} style={{width:40,height:40,borderRadius:12,background:T.purpleS,border:`1px solid ${T.purple}33`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="stop" size={16} color={T.purple}/></button></div>)}
 
-function Toast({message,onUndo,onClose}){const closeRef=useRef(onClose);closeRef.current=onClose;useEffect(()=>{const t=setTimeout(()=>closeRef.current(),2000);return()=>clearTimeout(t)},[]);return(<div style={{position:"fixed",top:"calc(20px + env(safe-area-inset-top))",left:"50%",transform:"translateX(-50%)",zIndex:300,padding:"10px 16px",borderRadius:14,background:"rgba(20,26,66,0.95)",border:`1px solid ${T.gB}`,backdropFilter:"blur(12px)",display:"flex",alignItems:"center",gap:10,boxShadow:"0 8px 24px rgba(0,0,0,0.5)",animation:"slideDown .3s ease"}}><span style={{fontSize:13,color:T.text}}>{message}</span>{onUndo&&<button onClick={onUndo} style={{padding:"4px 12px",borderRadius:8,background:T.accent,color:"#fff",fontSize:12,fontWeight:700}}>Desfazer</button>}</div>)}
+function Toast({message,onUndo,onClose}){const closeRef=useRef(onClose);closeRef.current=onClose;useEffect(()=>{const t=setTimeout(()=>closeRef.current(),2000);return()=>clearTimeout(t)},[]);return(<div style={{position:"fixed",top:"calc(20px + env(safe-area-inset-top))",left:"50%",transform:"translateX(-50%)",zIndex:300,padding:"10px 16px",borderRadius:14,background:"rgba(20,26,66,0.95)",border:`1px solid ${T.gB}`,backdropFilter:"blur(12px)",display:"flex",alignItems:"center",gap:10,boxShadow:"0 8px 24px rgba(0,0,0,0.5)",animation:"slideDown .3s ease"}}><span style={{fontSize:13,color:T.text}}>{message}</span>{onUndo&&<button onClick={onUndo} style={{padding:"4px 12px",borderRadius:8,background:T.accent,color:"#fff",fontSize:12,fontWeight:700}}>{L("undo")}</button>}</div>)}
 
 function Sheet({open,onClose,children}){const[vis,setVis]=useState(false),[show,setShow]=useState(false);useEffect(()=>{if(open){setVis(true);requestAnimationFrame(()=>requestAnimationFrame(()=>setShow(true)))}else{setShow(false);const t=setTimeout(()=>setVis(false),350);return()=>clearTimeout(t)}},[open]);if(!vis)return null;return(<div style={{position:"fixed",inset:0,zIndex:100}} onClick={onClose}><div style={{position:"absolute",inset:0,background:"rgba(2,3,10,0.55)",backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",opacity:show?1:0,transition:"opacity .35s"}}/><div onClick={e=>e.stopPropagation()} style={{position:"absolute",bottom:0,left:0,right:0,maxWidth:480,margin:"0 auto",background:"rgba(10,14,40,0.78)",backdropFilter:"blur(40px)",WebkitBackdropFilter:"blur(40px)",borderRadius:"28px 28px 0 0",border:"1px solid rgba(100,115,220,0.1)",borderBottom:"none",boxShadow:"0 -8px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(140,150,255,0.06)",padding:"8px 0 calc(36px + env(safe-area-inset-bottom))",transform:show?"translateY(0)":"translateY(100%)",transition:"transform .38s cubic-bezier(0.22,1,0.36,1)",maxHeight:"78vh",overflowY:"auto"}}><div style={{width:40,height:4,borderRadius:2,background:"rgba(140,150,255,0.2)",margin:"8px auto 24px"}}/>{children}</div></div>)}
 
@@ -399,7 +400,7 @@ function EntryRow({entry,onDelete,onEdit}){const[del,setDel]=useState(false);con
   <button onClick={()=>onEdit&&onEdit(entry)} style={{width:34,height:34,borderRadius:10,background:cfg.bg,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name={cfg.icon} size={16} color={cfg.color}/></button>
   <button onClick={()=>onEdit&&onEdit(entry)} style={{flex:1,textAlign:"left"}}><div style={{fontSize:13,fontWeight:600}}>{cfg.label[_lang]||cfg.label.en}</div>{detail&&<div style={{fontSize:11,color:T.sub}}>{detail}</div>}</button>
   <div style={{textAlign:"right",flexShrink:0}}><div style={{fontSize:13,fontWeight:600}}>{entry.time}</div><div style={{fontSize:9,color:T.dim}}>{timeSince(entry.date,entry.time)}</div></div>
-  {!del?<button onClick={()=>setDel(true)} style={{padding:4,color:T.dim,opacity:0.4}}><Icon name="x" size={14} color={T.dim}/></button>:<button onClick={()=>onDelete(entry.id)} style={{padding:"4px 8px",borderRadius:6,fontSize:10,fontWeight:700,background:T.red,color:"#fff"}}>Apagar</button>}
+  {!del?<button onClick={()=>setDel(true)} style={{padding:4,color:T.dim,opacity:0.4}}><Icon name="x" size={14} color={T.dim}/></button>:<button onClick={()=>onDelete(entry.id)} style={{padding:"4px 8px",borderRadius:6,fontSize:10,fontWeight:700,background:T.red,color:"#fff"}}>{L("delete")}</button>}
 </div>)}
 
 function AddForm({type,onSave,savedMeds,onSaveMeds,editEntry}){const cfg=TYPES[type];const ed=editEntry||{};
@@ -433,7 +434,7 @@ function AddForm({type,onSave,savedMeds,onSaveMeds,editEntry}){const cfg=TYPES[t
   };
   const inp={width:"100%",padding:"13px 16px",background:"rgba(14,18,48,0.8)",border:`1px solid ${T.gB}`,borderRadius:12,color:T.text,fontSize:15,outline:"none"};
   const isToday=date===todayStr();
-  const dateLbl=isToday?"Hoje":new Date(date+"T12:00").toLocaleDateString("pt-BR",{weekday:"short",day:"numeric",month:"short"});
+  const dateLbl=isToday?L("today"):new Date(date+"T12:00").toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{weekday:"short",day:"numeric",month:"short"});
   return(<div style={{paddingBottom:20}}>
     <div style={{display:"flex",alignItems:"center",gap:12,padding:"0 20px 16px"}}>
       <div style={{width:32,height:32,borderRadius:10,background:cfg.bg,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name={cfg.icon} size={18} color={cfg.color}/></div>
@@ -443,29 +444,29 @@ function AddForm({type,onSave,savedMeds,onSaveMeds,editEntry}){const cfg=TYPES[t
       {/* Date + Time row */}
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:18}}>
         <Fld label={"Dia · "+dateLbl}><input type="date" value={date} onChange={e=>setDate(e.target.value)} style={{...inp,colorScheme:"dark"}}/></Fld>
-        <Fld label="Horário"><input type="time" value={time} onChange={e=>setTime(e.target.value)} style={{...inp,colorScheme:"dark"}}/></Fld>
+        <Fld label={L("time")}><input type="time" value={time} onChange={e=>setTime(e.target.value)} style={{...inp,colorScheme:"dark"}}/></Fld>
       </div>
       {type==="bottle"&&<><Fld label="Quantidade (ml)"><input ref={mRef} type="number" inputMode="numeric" placeholder="0" value={ml} onChange={e=>setMl(e.target.value)} style={{...inp,fontSize:36,fontWeight:800,textAlign:"center",padding:"16px"}}/></Fld>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:20}}>{[50,70,90,100].map(v=><button key={v} onClick={()=>setMl(String(v))} style={{padding:"10px 0",borderRadius:10,fontSize:13,fontWeight:600,background:ml===String(v)?T.green:T.glass,color:ml===String(v)?T.bg1:T.text,border:`1px solid ${ml===String(v)?T.green:T.gB}`}}>{v}</button>)}</div></>}
-      {type==="nursing"&&<><Fld label="Lado"><Seg opts={[{v:"left",l:"Esquerdo"},{v:"right",l:"Direito"},{v:"both",l:"Ambos"}]} val={side} set={setSide} color={cfg.color}/></Fld><Fld label="Duração (min)"><input type="number" inputMode="numeric" placeholder="15" value={nurseM} onChange={e=>setNurseM(e.target.value)} style={inp}/></Fld></>}
+      {type==="nursing"&&<><Fld label="Lado"><Seg opts={[{v:"left",l:L("left")},{v:"right",l:L("right")},{v:"both",l:L("both")}]} val={side} set={setSide} color={cfg.color}/></Fld><Fld label="Duração (min)"><input type="number" inputMode="numeric" placeholder="15" value={nurseM} onChange={e=>setNurseM(e.target.value)} style={inp}/></Fld></>}
       {(type==="sleep"||type==="nap")&&<>
         <div style={{display:"flex",gap:4,marginBottom:14,background:T.glass,borderRadius:10,padding:3,border:`1px solid ${T.gB}`}}>
-          <button onClick={()=>setDurMode("dur")} style={{flex:1,padding:"8px 0",borderRadius:8,fontSize:12,fontWeight:700,background:durMode==="dur"?T.purple:"transparent",color:durMode==="dur"?"#fff":T.sub}}>Duração</button>
-          <button onClick={()=>setDurMode("end")} style={{flex:1,padding:"8px 0",borderRadius:8,fontSize:12,fontWeight:700,background:durMode==="end"?T.purple:"transparent",color:durMode==="end"?"#fff":T.sub}}>Horário fim</button>
+          <button onClick={()=>setDurMode("dur")} style={{flex:1,padding:"8px 0",borderRadius:8,fontSize:12,fontWeight:700,background:durMode==="dur"?T.purple:"transparent",color:durMode==="dur"?"#fff":T.sub}}>{L("duration")}</button>
+          <button onClick={()=>setDurMode("end")} style={{flex:1,padding:"8px 0",borderRadius:8,fontSize:12,fontWeight:700,background:durMode==="end"?T.purple:"transparent",color:durMode==="end"?"#fff":T.sub}}>{L("endTime")}</button>
         </div>
-        {durMode==="dur"?<Fld label="Duração"><div style={{display:"flex",gap:10,alignItems:"center"}}><input type="number" inputMode="numeric" placeholder="0" value={durH} onChange={e=>setDurH(e.target.value)} style={{...inp,flex:1,textAlign:"center",fontSize:28,fontWeight:800}}/><span style={{color:T.dim,fontWeight:700}}>h</span><input type="number" inputMode="numeric" placeholder="0" value={durM} onChange={e=>setDurM(e.target.value)} style={{...inp,flex:1,textAlign:"center",fontSize:28,fontWeight:800}}/><span style={{color:T.dim,fontWeight:700}}>m</span></div></Fld>
-        :<Fld label="Acordou às"><input type="time" value={endTime} onChange={e=>setEndTime(e.target.value)} style={{...inp,colorScheme:"dark",fontSize:28,fontWeight:800,textAlign:"center",padding:"14px 16px"}}/></Fld>}
+        {durMode==="dur"?<Fld label={L("duration")}><div style={{display:"flex",gap:10,alignItems:"center"}}><input type="number" inputMode="numeric" placeholder="0" value={durH} onChange={e=>setDurH(e.target.value)} style={{...inp,flex:1,textAlign:"center",fontSize:28,fontWeight:800}}/><span style={{color:T.dim,fontWeight:700}}>h</span><input type="number" inputMode="numeric" placeholder="0" value={durM} onChange={e=>setDurM(e.target.value)} style={{...inp,flex:1,textAlign:"center",fontSize:28,fontWeight:800}}/><span style={{color:T.dim,fontWeight:700}}>m</span></div></Fld>
+        :<Fld label={L("wokeAt")}><input type="time" value={endTime} onChange={e=>setEndTime(e.target.value)} style={{...inp,colorScheme:"dark",fontSize:28,fontWeight:800,textAlign:"center",padding:"14px 16px"}}/></Fld>}
         {durMode==="end"&&endTime&&time&&<div style={{fontSize:11,color:T.sub,marginBottom:12,textAlign:"center"}}>{(()=>{const[sh,sm]=time.split(":").map(Number);const[eh,em]=endTime.split(":").map(Number);let d=(eh*60+em)-(sh*60+sm);if(d<=0)d+=1440;return`Duração: ${fmtDur(d)}${d>720?" (próximo dia)":""}`})()}</div>}
       </>}
-      {type==="diaper"&&<Fld label="Tipo"><Seg opts={[{v:"wet",l:"Xixi"},{v:"dirty",l:"Cocô"},{v:"both",l:"Ambos"}]} val={diaperT} set={setDiaperT} color={cfg.color}/></Fld>}
-      {type==="medicine"&&<><Fld label="Medicamento"><div style={{display:"flex",gap:8}}><input type="text" placeholder="Nome" value={medN} onChange={e=>setMedN(e.target.value)} style={{...inp,flex:1}}/><button onClick={()=>setShowML(!showML)} style={{width:44,borderRadius:12,background:T.amberS,border:`1px solid ${T.amber}22`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="list" size={18} color={T.amber}/></button></div></Fld>
-        {showML&&<div style={{background:T.glass,border:`1px solid ${T.gB}`,borderRadius:14,padding:14,marginBottom:20}}><div style={{fontSize:13,fontWeight:700,marginBottom:12,color:T.sub}}>Medicamentos salvos</div>{savedMeds.map((m,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 12px",background:"rgba(14,18,48,0.5)",borderRadius:10,marginBottom:4}}><button onClick={()=>{setMedN(m.name);setMedD(m.dose||"");setShowML(false)}} style={{flex:1,textAlign:"left"}}><div style={{fontSize:13,fontWeight:600}}>{m.name}</div>{m.dose&&<div style={{fontSize:11,color:T.dim}}>{m.dose}</div>}</button><button onClick={()=>onSaveMeds(savedMeds.filter((_,j)=>j!==i))} style={{padding:"3px 8px",borderRadius:6,background:T.redS}}><Icon name="x" size={12} color={T.red}/></button></div>)}<div style={{marginTop:12,display:"flex",gap:6}}><input placeholder="Nome" value={nMN} onChange={e=>setNMN(e.target.value)} style={{...inp,flex:2,padding:"9px 12px",fontSize:12}}/><input placeholder="Dose" value={nMD} onChange={e=>setNMD(e.target.value)} style={{...inp,flex:1,padding:"9px 12px",fontSize:12}}/><button onClick={()=>{if(!nMN.trim())return;onSaveMeds([...savedMeds,{name:nMN.trim(),dose:nMD.trim()}]);setNMN("");setNMD("")}} style={{width:40,borderRadius:10,background:T.amber,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="plus" size={16} color={T.bg1}/></button></div></div>}
-        <Fld label="Dose"><input type="text" placeholder="Ex: 3 gotas" value={medD} onChange={e=>setMedD(e.target.value)} style={inp}/></Fld></>}
+      {type==="diaper"&&<Fld label="Tipo"><Seg opts={[{v:"wet",l:L("wet")},{v:"dirty",l:L("dirty")},{v:"both",l:L("both")}]} val={diaperT} set={setDiaperT} color={cfg.color}/></Fld>}
+      {type==="medicine"&&<><Fld label={TL("medicine")}><div style={{display:"flex",gap:8}}><input type="text" placeholder={L("name")} value={medN} onChange={e=>setMedN(e.target.value)} style={{...inp,flex:1}}/><button onClick={()=>setShowML(!showML)} style={{width:44,borderRadius:12,background:T.amberS,border:`1px solid ${T.amber}22`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="list" size={18} color={T.amber}/></button></div></Fld>
+        {showML&&<div style={{background:T.glass,border:`1px solid ${T.gB}`,borderRadius:14,padding:14,marginBottom:20}}><div style={{fontSize:13,fontWeight:700,marginBottom:12,color:T.sub}}>{L("savedMeds")}}</div>{savedMeds.map((m,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 12px",background:"rgba(14,18,48,0.5)",borderRadius:10,marginBottom:4}}><button onClick={()=>{setMedN(m.name);setMedD(m.dose||"");setShowML(false)}} style={{flex:1,textAlign:"left"}}><div style={{fontSize:13,fontWeight:600}}>{m.name}</div>{m.dose&&<div style={{fontSize:11,color:T.dim}}>{m.dose}</div>}</button><button onClick={()=>onSaveMeds(savedMeds.filter((_,j)=>j!==i))} style={{padding:"3px 8px",borderRadius:6,background:T.redS}}><Icon name="x" size={12} color={T.red}/></button></div>)}<div style={{marginTop:12,display:"flex",gap:6}}><input placeholder={L("name")} value={nMN} onChange={e=>setNMN(e.target.value)} style={{...inp,flex:2,padding:"9px 12px",fontSize:12}}/><input placeholder={L("dose")} value={nMD} onChange={e=>setNMD(e.target.value)} style={{...inp,flex:1,padding:"9px 12px",fontSize:12}}/><button onClick={()=>{if(!nMN.trim())return;onSaveMeds([...savedMeds,{name:nMN.trim(),dose:nMD.trim()}]);setNMN("");setNMD("")}} style={{width:40,borderRadius:10,background:T.amber,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="plus" size={16} color={T.bg1}/></button></div></div>}
+        <Fld label={L("dose")}><input type="text" placeholder="Ex: 3 gotas" value={medD} onChange={e=>setMedD(e.target.value)} style={inp}/></Fld></>}
       {type==="temperature"&&<Fld label="Temperatura (°C)"><input type="number" inputMode="decimal" step="0.1" placeholder="36.5" value={tempV} onChange={e=>setTempV(e.target.value)} style={{...inp,fontSize:36,fontWeight:800,textAlign:"center"}}/></Fld>}
       {type==="pumping"&&<Fld label="Quantidade (ml)"><input type="number" inputMode="numeric" placeholder="0" value={pumpMl} onChange={e=>setPumpMl(e.target.value)} style={{...inp,fontSize:28,fontWeight:800,textAlign:"center"}}/></Fld>}
       {type==="growth"&&<><Fld label="Peso (kg)"><input type="number" inputMode="decimal" step="0.01" placeholder="Ex: 4.5" value={weightKg} onChange={e=>setWeightKg(e.target.value)} style={{...inp,fontSize:28,fontWeight:800,textAlign:"center"}}/></Fld><Fld label="Comprimento (cm)"><input type="number" inputMode="decimal" step="0.1" placeholder="Ex: 55.0" value={lengthCm} onChange={e=>setLengthCm(e.target.value)} style={{...inp,fontSize:28,fontWeight:800,textAlign:"center"}}/></Fld><Fld label="Cabeça (cm)"><input type="number" inputMode="decimal" step="0.1" placeholder="Ex: 37.0" value={headCm} onChange={e=>setHeadCm(e.target.value)} style={{...inp,fontSize:28,fontWeight:800,textAlign:"center"}}/></Fld></>}
-      <Fld label="Observações"><textarea placeholder="Anotação..." value={notes} onChange={e=>setNotes(e.target.value)} rows={2} style={{...inp,resize:"vertical"}}/></Fld>
-      <button onClick={doSave} style={{width:"100%",padding:14,borderRadius:12,background:cfg.color,color:T.bg1,fontSize:15,fontWeight:700}}>{isEdit?"Atualizar":"Salvar"}</button>
+      <Fld label={L("notes")}><textarea placeholder={_lang==="en"?"Note...":"Anotação..."} value={notes} onChange={e=>setNotes(e.target.value)} rows={2} style={{...inp,resize:"vertical"}}/></Fld>
+      <button onClick={doSave} style={{width:"100%",padding:14,borderRadius:12,background:cfg.color,color:T.bg1,fontSize:15,fontWeight:700}}>{isEdit?L("update"):L("save")}</button>
     </div>
   </div>);
 }
@@ -484,12 +485,12 @@ function ProfilePage({profile,onSave,onBack,onGrowth}){
   const doSave=()=>{onSave({name:name.trim(),birthDate:birth,photo,mlGoal:parseInt(mlGoal)||0,birthWeight:parseFloat(birthWeight)||0,birthLength:parseFloat(birthLength)||0,birthHead:parseFloat(birthHead)||0,lang:langSel});onBack()};
   const inp={width:"100%",padding:"14px 16px",background:"rgba(14,18,48,0.8)",border:`1px solid ${T.gB}`,borderRadius:12,color:T.text,fontSize:15,outline:"none"};
   return(<div style={{position:"fixed",inset:0,zIndex:200,maxWidth:480,margin:"0 auto",background:T.bg1,overflowY:"auto",paddingTop:"env(safe-area-inset-top)",paddingBottom:"calc(40px + env(safe-area-inset-bottom))"}}>
-    <div style={{display:"flex",alignItems:"center",gap:14,padding:"16px 20px"}}><button onClick={onBack} style={{width:36,height:36,borderRadius:10,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="back" size={18} color={T.sub}/></button><span style={{fontSize:17,fontWeight:700}}>Perfil</span></div>
+    <div style={{display:"flex",alignItems:"center",gap:14,padding:"16px 20px"}}><button onClick={onBack} style={{width:36,height:36,borderRadius:10,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="back" size={18} color={T.sub}/></button><span style={{fontSize:17,fontWeight:700}}>{L("profile")}}</span></div>
     <div style={{padding:"0 20px"}}>
-      <div style={{display:"flex",flexDirection:"column",alignItems:"center",marginBottom:28}}><button onClick={()=>fr.current?.click()} style={{width:88,height:88,borderRadius:"50%",overflow:"hidden",background:T.glass,border:`2px solid ${T.accent}33`,display:"flex",alignItems:"center",justifyContent:"center"}}>{photo?<img src={photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<Icon name="sun" size={32} color={T.sub}/>}</button><input ref={fr} type="file" accept="image/*" style={{display:"none"}} onChange={handlePhoto}/><span style={{fontSize:11,color:T.dim,marginTop:8}}>Toque para alterar</span></div>
-      <Fld label="Nome"><input type="text" placeholder="Ex: Louise" value={name} onChange={e=>setName(e.target.value)} style={inp}/></Fld>
-      <Fld label="Data de nascimento"><input type="date" value={birth} onChange={e=>setBirth(e.target.value)} style={{...inp,colorScheme:"dark"}}/></Fld>
-      <Fld label="Meta diária de leite (ml)"><input type="number" inputMode="numeric" placeholder="Ex: 600" value={mlGoal} onChange={e=>setMlGoal(e.target.value)} style={inp}/></Fld>
+      <div style={{display:"flex",flexDirection:"column",alignItems:"center",marginBottom:28}}><button onClick={()=>fr.current?.click()} style={{width:88,height:88,borderRadius:"50%",overflow:"hidden",background:T.glass,border:`2px solid ${T.accent}33`,display:"flex",alignItems:"center",justifyContent:"center"}}>{photo?<img src={photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<Icon name="sun" size={32} color={T.sub}/>}</button><input ref={fr} type="file" accept="image/*" style={{display:"none"}} onChange={handlePhoto}/><span style={{fontSize:11,color:T.dim,marginTop:8}}>{_lang==="en"?"Tap to change":"Toque para alterar"}</span></div>
+      <Fld label={L("name")}><input type="text" placeholder={_lang==="en"?"e.g. Louise":"Ex: Louise"} value={name} onChange={e=>setName(e.target.value)} style={inp}/></Fld>
+      <Fld label={L("birthDate")}><input type="date" value={birth} onChange={e=>setBirth(e.target.value)} style={{...inp,colorScheme:"dark"}}/></Fld>
+      <Fld label={L("dailyMilkGoal")}><input type="number" inputMode="numeric" placeholder={_lang==="en"?"e.g. 600":"Ex: 600"} value={mlGoal} onChange={e=>setMlGoal(e.target.value)} style={inp}/></Fld>
       
       {/* Birth measurements */}
       {/* Language toggle */}
@@ -500,7 +501,7 @@ function ProfilePage({profile,onSave,onBack,onGrowth}){
         </div>
       </Fld>
       
-      <div style={{fontSize:12,fontWeight:700,color:T.sub,marginTop:20,marginBottom:12,textTransform:"uppercase",letterSpacing:1}}>Dados de nascimento</div>
+      <div style={{fontSize:12,fontWeight:700,color:T.sub,marginTop:20,marginBottom:12,textTransform:"uppercase",letterSpacing:1}}>{L("birthData")}}</div>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:20}}>
         <Fld label="Peso (kg)"><input type="number" inputMode="decimal" step="0.01" placeholder="3.2" value={birthWeight} onChange={e=>setBirthWeight(e.target.value)} style={{...inp,textAlign:"center",padding:"12px 8px"}}/></Fld>
         <Fld label="Comp. (cm)"><input type="number" inputMode="decimal" step="0.1" placeholder="49" value={birthLength} onChange={e=>setBirthLength(e.target.value)} style={{...inp,textAlign:"center",padding:"12px 8px"}}/></Fld>
@@ -509,7 +510,7 @@ function ProfilePage({profile,onSave,onBack,onGrowth}){
       
       {/* Growth page link */}
       <button onClick={()=>{doSave();onGrowth()}} style={{width:"100%",padding:14,borderRadius:12,marginBottom:12,background:"rgba(163,230,53,0.1)",border:"1px solid rgba(163,230,53,0.2)",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
-        <Icon name="ruler" size={16} color="#a3e635"/><span style={{fontSize:14,fontWeight:700,color:"#a3e635"}}>Ver crescimento e percentis</span>
+        <Icon name="ruler" size={16} color="#a3e635"/><span style={{fontSize:14,fontWeight:700,color:"#a3e635"}}>{L("viewGrowth")}}</span>
       </button>
       
       <button onClick={doSave} style={{width:"100%",padding:14,borderRadius:12,background:T.accent,color:"#fff",fontSize:15,fontWeight:700}}>Salvar</button>
@@ -522,29 +523,29 @@ function StatsPage({entries,onGrowth}){
   const[period,setPeriod]=useState(7);
   const days=period==="all"?[...new Set(entries.map(e=>e.date))].sort():Array.from({length:period},(_,i)=>{const d=new Date();d.setDate(d.getDate()-((period-1)-i));return d.toISOString().slice(0,10)});
   const numDays=days.length||1;
-  const data=days.map(dt=>{const de=entries.filter(e=>e.date===dt);return{date:dt,label:numDays<=14?new Date(dt+"T12:00").toLocaleDateString("pt-BR",{weekday:"short"}).replace(".",""):new Date(dt+"T12:00").toLocaleDateString("pt-BR",{day:"numeric",month:"numeric"}).replace(/\/\d{4}/,""),ml:de.filter(e=>e.type==="bottle").reduce((s,e)=>s+(e.ml||0),0),sl:de.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin).reduce((s,e)=>s+e.durationMin,0)}});
+  const data=days.map(dt=>{const de=entries.filter(e=>e.date===dt);return{date:dt,label:numDays<=14?new Date(dt+"T12:00").toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{weekday:"short"}).replace(".",""):new Date(dt+"T12:00").toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{day:"numeric",month:"numeric"}).replace(/\/\d{4}/,""),ml:de.filter(e=>e.type==="bottle").reduce((s,e)=>s+(e.ml||0),0),sl:de.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin).reduce((s,e)=>s+e.durationMin,0)}});
   const mxMl=Math.max(...data.map(d=>d.ml),1),mxSl=Math.max(...data.map(d=>d.sl),1);
   const avgMl=Math.round(data.reduce((s,d)=>s+d.ml,0)/numDays);
   const avgSl=Math.round(data.reduce((s,d)=>s+d.sl,0)/numDays);
-  const periodLabel=period==="all"?"Tudo":`${period} dias`;
+  const periodLabel=period==="all"?"Tudo":`${period{_lang==="en"?" days":" dias"}`;
   const exportCSV=()=>{const h="Data,Hora,Tipo,Detalhe,Notas\n";const rows=entries.map(e=>{let d="";if(e.ml)d=`${e.ml}ml`;else if(e.durationMin)d=fmtDur(e.durationMin);else if(e.name)d=e.name;else if(e.value)d=`${e.value}°C`;else if(e.subtype)d=e.subtype;return`${e.date},${e.time},${TL(e.type)||e.type},${d},${e.notes||""}`}).join("\n");const blob=new Blob([h+rows],{type:"text/csv"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=`louise-pro-${todayStr()}.csv`;a.click();URL.revokeObjectURL(url)};
   return(<div style={{padding:"16px 20px 0"}}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-      <h2 style={{fontSize:17,fontWeight:700,margin:0}}>Resumo</h2>
+      <h2 style={{fontSize:17,fontWeight:700,margin:0}}>{L("summary")}</h2>
       <div style={{display:"flex",gap:6}}>
         <button onClick={onGrowth} style={{display:"flex",alignItems:"center",gap:4,padding:"6px 10px",borderRadius:8,background:"rgba(163,230,53,0.1)",border:"1px solid rgba(163,230,53,0.2)",fontSize:11,fontWeight:600,color:"#a3e635"}}><Icon name="ruler" size={12} color="#a3e635"/>Crescimento</button>
-        <button onClick={exportCSV} style={{display:"flex",alignItems:"center",gap:4,padding:"6px 10px",borderRadius:8,background:T.glass,border:`1px solid ${T.gB}`,fontSize:11,fontWeight:600,color:T.sub}}><Icon name="download" size={12} color={T.sub}/>CSV</button>
+        <button onClick={exportCSV} style={{display:"flex",alignItems:"center",gap:4,padding:"6px 10px",borderRadius:8,background:T.glass,border:`1px solid ${T.gB}`,fontSize:11,fontWeight:600,color:T.sub}}><Icon name="download" size={12} color={T.sub}/{_lang==="en"?"Export":"CSV"}</button>
       </div>
     </div>
     {/* Period selector */}
     <div style={{display:"flex",gap:4,marginBottom:18,background:T.glass,borderRadius:12,padding:3,border:`1px solid ${T.gB}`}}>
-      {[{v:7,l:"7d"},{v:14,l:"14d"},{v:30,l:"30d"},{v:"all",l:"Tudo"}].map(p=>
+      {[{v:7,l:"7d"},{v:14,l:"14d"},{v:30,l:"30d"},{v:"all",l:L("all")}].map(p=>
         <button key={p.v} onClick={()=>setPeriod(p.v)} style={{flex:1,padding:"8px 0",borderRadius:10,fontSize:12,fontWeight:700,background:period===p.v?T.accent:"transparent",color:period===p.v?"#fff":T.sub,transition:"all .15s"}}>{p.l}</button>
       )}
     </div>
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:20}}>
-      <div style={{background:T.greenS,borderRadius:14,padding:12}}><div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}><Icon name="bottle" size={14} color={T.green}/><span style={{fontSize:10,color:T.sub}}>Média leite/dia</span></div><div style={{fontSize:20,fontWeight:800,color:T.green}}>{avgMl} ml</div></div>
-      <div style={{background:T.purpleS,borderRadius:14,padding:12}}><div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}><Icon name="moon" size={14} color={T.purple}/><span style={{fontSize:10,color:T.sub}}>Média sono/dia</span></div><div style={{fontSize:20,fontWeight:800,color:T.purple}}>{fmtDur(avgSl)}</div></div>
+      <div style={{background:T.greenS,borderRadius:14,padding:12}}><div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}><Icon name="bottle" size={14} color={T.green}/><span style={{fontSize:10,color:T.sub}}>_lang==="en"?"Avg milk/day":"Média leite/dia"</span></div><div style={{fontSize:20,fontWeight:800,color:T.green}}>{avgMl} ml</div></div>
+      <div style={{background:T.purpleS,borderRadius:14,padding:12}}><div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}><Icon name="moon" size={14} color={T.purple}/><span style={{fontSize:10,color:T.sub}}>_lang==="en"?"Avg sleep/day":"Média sono/dia"</span></div><div style={{fontSize:20,fontWeight:800,color:T.purple}}>{fmtDur(avgSl)}</div></div>
     </div>
     {[{t:"Leite (ml)",f:"ml",max:mxMl,c:T.green},{t:"Sono total",f:"sl",max:mxSl,c:T.purple}].map(ch=>(
       <div key={ch.f} style={{marginBottom:22}}><div style={{fontSize:12,fontWeight:600,color:T.sub,marginBottom:8}}>{ch.t}</div>
@@ -573,15 +574,15 @@ function HistoryPage({entries,onDelete,onEdit}){
   });
   const dMl=dayE.filter(e=>e.type==="bottle").reduce((s,e)=>s+(e.ml||0),0);
   const dSl=dayE.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin).reduce((s,e)=>s+e.durationMin,0);
-  const dLbl=new Date(viewDate+"T12:00").toLocaleDateString("pt-BR",{weekday:"long",day:"numeric",month:"long"});
+  const dLbl=new Date(viewDate+"T12:00").toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{weekday:"long",day:"numeric",month:"long"});
   const isToday=dateIdx===0;
-  const filters=[{v:"all",l:"Tudo",c:T.accent},{v:"feed",l:"Leite",c:T.green},{v:"sleep",l:"Sono",c:T.purple},{v:"diaper",l:"Fralda",c:T.pink},{v:"medicine",l:"Med.",c:T.amber}];
+  const filters=[{v:"all",l:L("all"),c:T.accent},{v:"feed",l:L("milk"),c:T.green},{v:"sleep",l:L("sleepLabel"),c:T.purple},{v:"diaper",l:typeLabel("diaper",_lang),c:T.pink},{v:"medicine",l:_lang==="en"?"Meds":"Med.",c:T.amber}];
   return(<div style={{padding:"16px 20px 0"}}>
-    <h2 style={{fontSize:17,fontWeight:700,marginBottom:12}}>Histórico</h2>
+    <h2 style={{fontSize:17,fontWeight:700,marginBottom:12}}>{L("history")}</h2>
     {/* Date navigator */}
     <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}>
       <button onClick={()=>setDateIdx(dateIdx+1)} style={{width:36,height:36,borderRadius:10,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="back" size={16} color={T.sub}/></button>
-      <div style={{flex:1,textAlign:"center"}}><div style={{fontSize:14,fontWeight:700,color:isToday?T.accent:T.text}}>{isToday?"Hoje":dLbl}</div><div style={{display:"flex",justifyContent:"center",gap:12,fontSize:11,color:T.sub,marginTop:2}}>{dMl>0&&<span>{dMl} ml</span>}{dSl>0&&<span>{fmtDur(dSl)}</span>}<span>{dayE.length} reg.</span></div></div>
+      <div style={{flex:1,textAlign:"center"}}><div style={{fontSize:14,fontWeight:700,color:isToday?T.accent:T.text}}>{isToday?L("today"):dLbl}</div><div style={{display:"flex",justifyContent:"center",gap:12,fontSize:11,color:T.sub,marginTop:2}}>{dMl>0&&<span>{dMl} ml</span>}{dSl>0&&<span>{fmtDur(dSl)}</span>}<span>{dayE.length} {L("reg")}</span></div></div>
       <button onClick={()=>setDateIdx(Math.max(0,dateIdx-1))} disabled={isToday} style={{width:36,height:36,borderRadius:10,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center",opacity:isToday?0.3:1}}><Icon name="forward" size={16} color={T.sub}/></button>
     </div>
     {/* Type filters */}
@@ -604,14 +605,14 @@ function GrowthPage({entries,birthDate,profile,onBack,onAddEntry}){
   // Build all data points: birth + entries
   const allPoints=[];
   if(profile.birthWeight||profile.birthLength||profile.birthHead){
-    allPoints.push({ageM:0,date:birthDate,weightKg:profile.birthWeight,lengthCm:profile.birthLength,headCm:profile.birthHead,label:"Nasc."});
+    allPoints.push({ageM:0,date:birthDate,weightKg:profile.birthWeight,lengthCm:profile.birthLength,headCm:profile.birthHead,label:_lang==="en"?"Birth":"Nasc."});
   }
   growthEntries.forEach(e=>{
     const eAge=calcAge(birthDate);
     if(!eAge)return;
     const d1=new Date(birthDate),d2=new Date(e.date);
     const mths=(d2.getFullYear()-d1.getFullYear())*12+d2.getMonth()-d1.getMonth()+(d2.getDate()-d1.getDate())/30;
-    allPoints.push({ageM:Math.max(0,mths),date:e.date,weightKg:e.weightKg,lengthCm:e.lengthCm,headCm:e.headCm,label:new Date(e.date+"T12:00").toLocaleDateString("pt-BR",{day:"numeric",month:"short"})});
+    allPoints.push({ageM:Math.max(0,mths),date:e.date,weightKg:e.weightKg,lengthCm:e.lengthCm,headCm:e.headCm,label:new Date(e.date+"T12:00").toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{day:"numeric",month:"short"})});
   });
   const latest=allPoints[allPoints.length-1];
 
@@ -700,31 +701,31 @@ function GrowthPage({entries,birthDate,profile,onBack,onAddEntry}){
 
   return(<div style={{padding:"16px 20px 0"}}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
-      <div style={{display:"flex",alignItems:"center",gap:10}}><button onClick={onBack} style={{width:32,height:32,borderRadius:10,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="back" size={16} color={T.sub}/></button><h2 style={{fontSize:17,fontWeight:700,margin:0}}>Crescimento</h2></div>
+      <div style={{display:"flex",alignItems:"center",gap:10}}><button onClick={onBack} style={{width:32,height:32,borderRadius:10,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="back" size={16} color={T.sub}/></button><h2 style={{fontSize:17,fontWeight:700,margin:0}}>{L("growth")}}</h2></div>
       <button onClick={()=>setShowForm(!showForm)} style={{padding:"6px 12px",borderRadius:10,background:"rgba(163,230,53,0.1)",border:"1px solid rgba(163,230,53,0.2)",fontSize:12,fontWeight:700,color:"#a3e635"}}>{showForm?"Cancelar":"+ Medição"}</button>
     </div>
 
     {showForm&&<div style={{background:T.glass,borderRadius:14,padding:16,marginBottom:16,border:`1px solid ${T.gB}`}}>
-      <div style={{fontSize:12,fontWeight:700,color:T.sub,marginBottom:12}}>Nova medição</div>
+      <div style={{fontSize:12,fontWeight:700,color:T.sub,marginBottom:12}}>{_lang==="en"?"New measurement":"Nova medição"}</div>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:12}}>
         <Fld label="Peso (kg)"><input type="number" inputMode="decimal" step="0.01" placeholder="4.5" value={wK} onChange={e=>setWK(e.target.value)} style={inp}/></Fld>
         <Fld label="Comp. (cm)"><input type="number" inputMode="decimal" step="0.1" placeholder="55" value={lC} onChange={e=>setLC(e.target.value)} style={inp}/></Fld>
         <Fld label="Cabeça (cm)"><input type="number" inputMode="decimal" step="0.1" placeholder="37" value={hC} onChange={e=>setHC(e.target.value)} style={inp}/></Fld>
       </div>
-      <button onClick={doAdd} style={{width:"100%",padding:12,borderRadius:10,background:"#a3e635",color:T.bg1,fontSize:14,fontWeight:700}}>Salvar medição</button>
+      <button onClick={doAdd} style={{width:"100%",padding:12,borderRadius:10,background:"#a3e635",color:T.bg1,fontSize:14,fontWeight:700}}>{_lang==="en"?"Save measurement":L("save")+" medição"}</button>
     </div>}
 
     {/* Percentile cards */}
     {latest&&<div style={{fontSize:11,color:T.sub,marginBottom:10}}>
-      {latest.label==="Nasc."?"Dados de nascimento":`Última medição: ${latest.label}`} · {ageMonths.toFixed(1)} meses
+      {latest.label===(_lang==="en"?"Birth":"Nasc.")?(_lang==="en"?"Birth data":L("birthData")):`${_lang==="en"?"Last":"Últ."}: ${latest.label}`} · {ageMonths.toFixed(1)} {_lang==="en"?"mo":"meses"}
     </div>}
-    <PercentileCard label="Peso" value={latest?.weightKg} unit="kg" table={WHO_GIRLS.weight} icon="target" field="weightKg" onQuickAdd={quickAdd}/>
-    <PercentileCard label="Comprimento" value={latest?.lengthCm} unit="cm" table={WHO_GIRLS.length} icon="ruler" field="lengthCm" onQuickAdd={quickAdd}/>
-    <PercentileCard label="Cabeça" value={latest?.headCm} unit="cm" table={WHO_GIRLS.head} icon="target" field="headCm" onQuickAdd={quickAdd}/>
+    <PercentileCard label={L("weight")} value={latest?.weightKg} unit="kg" table={WHO_GIRLS.weight} icon="target" field="weightKg" onQuickAdd={quickAdd}/>
+    <PercentileCard label={L("length")} value={latest?.lengthCm} unit="cm" table={WHO_GIRLS.length} icon="ruler" field="lengthCm" onQuickAdd={quickAdd}/>
+    <PercentileCard label={L("head")} value={latest?.headCm} unit="cm" table={WHO_GIRLS.head} icon="target" field="headCm" onQuickAdd={quickAdd}/>
 
     {/* Growth charts */}
     {allPoints.length>0&&<>
-      <div style={{fontSize:12,fontWeight:600,color:T.dim,marginTop:16,marginBottom:10,textTransform:"uppercase",letterSpacing:0.8}}>Curvas de crescimento</div>
+      <div style={{fontSize:12,fontWeight:600,color:T.dim,marginTop:16,marginBottom:10,textTransform:"uppercase",letterSpacing:0.8}}>{_lang==="en"?"Growth curves":"Curvas de crescimento"}</div>
       <GrowthChart label="Peso (kg)" field="weightKg" table={WHO_GIRLS.weight} color={T.green}/>
       <GrowthChart label="Comprimento (cm)" field="lengthCm" table={WHO_GIRLS.length} color={T.blue}/>
       <GrowthChart label="Cabeça (cm)" field="headCm" table={WHO_GIRLS.head} color={T.amber}/>
@@ -778,7 +779,7 @@ function App(){
     const parts=splitMidnight(e);
     for(const p of parts) await FB.addEntry(p);
     setFormType(null);setShowAdd(false);setEditEntry(null);
-    showToast(`${TL(e.type)||e.type} ${editEntry?"atualizado":"registrado"}`,async()=>{for(const p of parts) await FB.delEntry(p.id)});
+    showToast(`${TL(e.type)||e.type} ${editEntry?L("updated"):L("registered")}`,async()=>{for(const p of parts) await FB.delEntry(p.id)});
   },[editEntry]);
 
   const startEdit=useCallback((entry)=>{
@@ -786,7 +787,7 @@ function App(){
     setFormType(entry.type);
     setShowAdd(false);
   },[]);
-  const deleteEntry=useCallback(async id=>{const entry=entries.find(e=>e.id===id);await FB.delEntry(id);showToast(`${TL(entry?.type)||""} removido`,async()=>{if(entry)await FB.addEntry(entry)})},[entries]);
+  const deleteEntry=useCallback(async id=>{const entry=entries.find(e=>e.id===id);await FB.delEntry(id);showToast(`${TL(entry?.type)||""} ${L("removed")}`,async()=>{if(entry)await FB.addEntry(entry)})},[entries]);
   const quickWakeup=useCallback(()=>addEntry({type:"wakeup",date:todayStr(),time:nowTime(),id:uid()}),[addEntry]);
   const duplicateLast=useCallback(()=>{if(!entries.length)return;const l=entries[0];addEntry({...l,id:uid(),date:todayStr(),time:nowTime(),_docId:undefined})},[entries,addEntry]);
   const startTimer=useCallback(async type=>{await FB.saveTimer({type,startTime:new Date().toISOString()});setShowAdd(false)},[]);
@@ -856,19 +857,19 @@ function App(){
       {page==="home"&&<div style={{animation:"fadeIn .3s"}}>
         <div style={{padding:"calc(12px + env(safe-area-inset-top)) 20px 0",display:"flex",alignItems:"center",gap:12}}>
           <div style={{position:"relative"}}><button onClick={()=>setShowProfile(true)} style={{width:46,height:46,borderRadius:"50%",overflow:"hidden",border:`2px solid ${T.accent}33`,background:T.glass,display:"flex",alignItems:"center",justifyContent:"center"}}>{profile.photo?<img src={profile.photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<Icon name="sun" size={22} color={T.sub}/>}</button>{daysLeft!==null&&daysLeft>0&&<button onClick={()=>setShowSleepInfo(true)} style={{position:"absolute",top:-4,right:-8,minWidth:24,height:24,borderRadius:12,background:T.accent,color:"#fff",fontSize:11,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 6px",boxShadow:`0 2px 8px ${T.accent}66`,border:`2px solid ${T.bg1}`}}>{daysLeft}</button>}{sleepRec?.phase===2&&<button onClick={()=>setShowSleepInfo(true)} style={{position:"absolute",top:-2,right:-6,width:20,height:20,borderRadius:10,background:T.green,display:"flex",alignItems:"center",justifyContent:"center",border:`2px solid ${T.bg1}`}}><Icon name="check" size={10} color={T.bg1}/></button>}</div>
-          <div style={{flex:1}}><h1 style={{fontSize:20,fontWeight:800,margin:0,letterSpacing:-0.5}}>{babyName}</h1><div style={{fontSize:11,color:T.sub,marginTop:2}}>{age&&<>{age.months>0?`${age.months} ${age.months===1?"mês":"meses"} e `:""}{age.days} dias</>}</div></div>
-          <div style={{textAlign:"right"}}><div style={{fontSize:10,color:T.dim}}>{new Date().toLocaleDateString("pt-BR",{day:"numeric",month:"short"})}</div><div style={{fontSize:8,color:T.dim,opacity:0.5,marginTop:2}}>v{APP_VERSION}</div></div>
+          <div style={{flex:1}}><h1 style={{fontSize:20,fontWeight:800,margin:0,letterSpacing:-0.5}}>{babyName}</h1><div style={{fontSize:11,color:T.sub,marginTop:2}}>{age&&<>{age.months>0?`${age.months} ${_lang==="en"?(age.months===1?"month":"months"):(age.months===1?"mês":"meses")}${_lang==="en"?" and ":" e "}`:""}{age.days} {_lang==="en"?"days":"dias"}</>}</div></div>
+          <div style={{textAlign:"right"}}><div style={{fontSize:10,color:T.dim}}>{new Date().toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{day:"numeric",month:"short"})}</div><div style={{fontSize:8,color:T.dim,opacity:0.5,marginTop:2}}>v{APP_VERSION}</div></div>
         </div>
         <div style={{padding:"20px 0 8px"}}><Ring activeTimer={activeTimer} napSug={napSug} tick={tick} recentEvents={todayE.slice(0,7)} lang={lang}/></div>
-        <div style={{display:"flex",gap:8,padding:"0 20px",marginBottom:14}}>{!activeTimer&&<><button onClick={quickWakeup} style={{flex:1,padding:"10px 0",borderRadius:12,background:T.amberS,border:`1px solid ${T.amber}22`,display:"flex",alignItems:"center",justifyContent:"center",gap:5}}><Icon name="sun" size={13} color={T.amber}/><span style={{fontSize:11,fontWeight:700,color:T.amber}}>Acordou</span></button><button onClick={()=>{setFormType("bottle");setShowAdd(false)}} style={{flex:1,padding:"10px 0",borderRadius:12,background:T.greenS,border:`1px solid ${T.green}22`,display:"flex",alignItems:"center",justifyContent:"center",gap:5}}><Icon name="bottle" size={13} color={T.green}/><span style={{fontSize:11,fontWeight:700,color:T.green}}>Mamad.</span></button><button onClick={()=>startTimer("nap")} style={{flex:1,padding:"10px 0",borderRadius:12,background:`${T.accent}15`,border:`1px solid ${T.accent}22`,display:"flex",alignItems:"center",justifyContent:"center",gap:5}}><Icon name="play" size={12} color={T.accent}/><span style={{fontSize:11,fontWeight:700,color:T.accent}}>Soneca</span></button><button onClick={()=>startTimer("sleep")} style={{flex:1,padding:"10px 0",borderRadius:12,background:T.purpleS,border:`1px solid ${T.purple}22`,display:"flex",alignItems:"center",justifyContent:"center",gap:5}}><Icon name="play" size={12} color={T.purple}/><span style={{fontSize:11,fontWeight:700,color:T.purple}}>Sono</span></button></>}</div>
-        {napSug?.wind&&<div style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:T.amberS,border:`1px solid ${T.amber}22`,display:"flex",alignItems:"center",gap:10,animation:"pulse 2s infinite"}}><Icon name="bell" size={18} color={T.amber}/><div><div style={{fontSize:12,fontWeight:700,color:T.amber}}>Preparar para dormir</div><div style={{fontSize:10,color:T.sub}}>~{napSug.rem}min restantes</div></div></div>}
-        {napSug?.over&&<div style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:T.orangeS,border:`1px solid ${T.orange}22`,display:"flex",alignItems:"center",gap:10,animation:"pulse 1.5s infinite"}}><Icon name="zap" size={18} color={T.orange}/><div><div style={{fontSize:12,fontWeight:700,color:T.orange}}>Janela de sono passou</div><div style={{fontSize:10,color:T.sub}}>{fmtDur(napSug.el)} acordado(a)</div></div></div>}
+        <div style={{display:"flex",gap:8,padding:"0 20px",marginBottom:14}}>{!activeTimer&&<><button onClick={quickWakeup} style={{flex:1,padding:"10px 0",borderRadius:12,background:T.amberS,border:`1px solid ${T.amber}22`,display:"flex",alignItems:"center",justifyContent:"center",gap:5}}><Icon name="sun" size={13} color={T.amber}/><span style={{fontSize:11,fontWeight:700,color:T.amber}}>{L("today")==="Today"?"Woke up":"Acordou"}</span></button><button onClick={()=>{setFormType("bottle");setShowAdd(false)}} style={{flex:1,padding:"10px 0",borderRadius:12,background:T.greenS,border:`1px solid ${T.green}22`,display:"flex",alignItems:"center",justifyContent:"center",gap:5}}><Icon name="bottle" size={13} color={T.green}/><span style={{fontSize:11,fontWeight:700,color:T.green}}>{_lang==="en"?"Bottle":"Mamad."}</span></button><button onClick={()=>startTimer("nap")} style={{flex:1,padding:"10px 0",borderRadius:12,background:`${T.accent}15`,border:`1px solid ${T.accent}22`,display:"flex",alignItems:"center",justifyContent:"center",gap:5}}><Icon name="play" size={12} color={T.accent}/><span style={{fontSize:11,fontWeight:700,color:T.accent}}>{_lang==="en"?"Nap":"Soneca"}</span></button><button onClick={()=>startTimer("sleep")} style={{flex:1,padding:"10px 0",borderRadius:12,background:T.purpleS,border:`1px solid ${T.purple}22`,display:"flex",alignItems:"center",justifyContent:"center",gap:5}}><Icon name="play" size={12} color={T.purple}/><span style={{fontSize:11,fontWeight:700,color:T.purple}}>{_lang==="en"?"Sleep":"Sono"}</span></button></>}</div>
+        {napSug?.wind&&<div style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:T.amberS,border:`1px solid ${T.amber}22`,display:"flex",alignItems:"center",gap:10,animation:"pulse 2s infinite"}}><Icon name="bell" size={18} color={T.amber}/><div><div style={{fontSize:12,fontWeight:700,color:T.amber}}>{_lang==="en"?"Get ready for sleep":"Preparar para dormir"}</div><div style={{fontSize:10,color:T.sub}}>{_lang==="en"?`~${napSug.rem}min left`:`~${napSug.rem}min restantes`}</div></div></div>}
+        {napSug?.over&&<div style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:T.orangeS,border:`1px solid ${T.orange}22`,display:"flex",alignItems:"center",gap:10,animation:"pulse 1.5s infinite"}}><Icon name="zap" size={18} color={T.orange}/><div><div style={{fontSize:12,fontWeight:700,color:T.orange}}>{_lang==="en"?"Sleep window passed":"Janela de sono passou"}</div><div style={{fontSize:10,color:T.sub}}>{_lang==="en"?`${fmtDur(napSug.el)} awake`:`${fmtDur(napSug.el)} acordado(a)`}</div></div></div>}
         <MlGoalBar current={totalMl} goal={profile.mlGoal}/>
         <NightCard entries={entries}/>
         <WeeklyCard entries={entries}/>
         <div style={{padding:"0 20px",marginBottom:14}}><div style={{display:"flex",background:T.glass,borderRadius:14,border:`1px solid ${T.gB}`}}>{[{i:"bottle",v:`${totalMl}`,u:"ml",c:T.green},{i:"breast",v:totalNursingMin>0?fmtDur(totalNursingMin):`${totalNursing}x`,c:T.blue},{i:"moon",v:fmtDur(totalSleep),c:T.purple},{i:"droplet",v:`${totalDiapers}`,c:T.pink}].map((p,idx)=><div key={idx} style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:5,padding:"10px 2px"}}><Icon name={p.i} size={14} color={p.c}/><span style={{fontSize:12,fontWeight:700,color:p.c}}>{p.v}{p.u?<span style={{fontSize:10,fontWeight:500,opacity:0.7}}>{p.u}</span>:null}</span></div>)}</div></div>
-        {entries.length>0&&<div style={{padding:"0 20px",marginBottom:14}}><button onClick={duplicateLast} style={{width:"100%",padding:"10px 14px",borderRadius:12,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}><Icon name="copy" size={14} color={T.sub}/><span style={{fontSize:12,fontWeight:600,color:T.sub}}>Repetir último: {TL(entries[0].type)}</span></button></div>}
-        <div style={{padding:"0 20px"}}><div style={{fontSize:12,fontWeight:600,color:T.dim,marginBottom:8,textTransform:"uppercase",letterSpacing:0.8}}>Hoje</div>{todayE.length===0&&<div style={{textAlign:"center",padding:"32px 20px",color:T.dim}}><Icon name="star" size={32} color={T.dim} fill={T.dim}/><div style={{fontSize:13,marginTop:8}}>Toque + para registrar</div></div>}{todayE.map(e=><EntryRow key={e.id} entry={e} onDelete={deleteEntry} onEdit={startEdit}/>)}</div>
+        {entries.length>0&&<div style={{padding:"0 20px",marginBottom:14}}><button onClick={duplicateLast} style={{width:"100%",padding:"10px 14px",borderRadius:12,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}><Icon name="copy" size={14} color={T.sub}/><span style={{fontSize:12,fontWeight:600,color:T.sub}}>{L("repeatLast")}: {TL(entries[0].type)}</span></button></div>}
+        <div style={{padding:"0 20px"}}><div style={{fontSize:12,fontWeight:600,color:T.dim,marginBottom:8,textTransform:"uppercase",letterSpacing:0.8}}>{L("today")}</div>{todayE.length===0&&<div style={{textAlign:"center",padding:"32px 20px",color:T.dim}}><Icon name="star" size={32} color={T.dim} fill={T.dim}/><div style={{fontSize:13,marginTop:8}}>{_lang==="en"?"Tap + to add":"Toque + para registrar"}</div></div>}{todayE.map(e=><EntryRow key={e.id} entry={e} onDelete={deleteEntry} onEdit={startEdit}/>)}</div>
       </div>}
       {page==="history"&&<HistoryPage entries={entries} onDelete={deleteEntry} onEdit={startEdit}/>}
       {page==="stats"&&<StatsPage entries={entries} onGrowth={()=>goTo("growth")}/>}
@@ -881,8 +882,8 @@ function App(){
     <div style={{position:"fixed",bottom:0,left:0,right:0,maxWidth:480,margin:"0 auto",height:100,background:`linear-gradient(to bottom, transparent 0%, ${T.bg1}ee 50%, ${T.bg1} 100%)`,pointerEvents:"none",zIndex:40}}/>
 
     <Modal open={showSleepInfo} onClose={()=>setShowSleepInfo(false)}>
-      {sleepRec?.phase===1&&<><div style={{textAlign:"center",marginBottom:16}}><Icon name="star" size={40} color={T.accent} fill={T.accent}/></div><div style={{textAlign:"center",fontSize:22,fontWeight:800,marginBottom:6}}>{sleepRec.dl} dias</div><div style={{textAlign:"center",fontSize:13,color:T.sub,marginBottom:16}}>para o plano de sono de {babyName}</div><div style={{height:4,borderRadius:2,background:T.bg1,marginBottom:16,overflow:"hidden"}}><div style={{height:"100%",width:`${Math.max(0,Math.min(100,((60-sleepRec.dl)/60)*100))}%`,background:T.accent,borderRadius:2}}/></div><div style={{fontSize:12,color:T.sub,lineHeight:1.6}}>Aos 2 meses o ritmo circadiano amadurece. Continue registrando.</div><div style={{marginTop:14,padding:"10px 12px",borderRadius:10,background:"rgba(14,18,48,0.6)",fontSize:11,color:T.dim}}>Janela: {sleepRec.g.min}–{sleepRec.g.max} min · {sleepRec.g.naps} sonecas/dia</div></>}
-      {sleepRec?.phase===2&&<><div style={{textAlign:"center",marginBottom:12}}><Icon name="check" size={36} color={T.green}/></div><div style={{textAlign:"center",fontSize:16,fontWeight:700,marginBottom:14}}>Plano de sono ativo</div>{sleepRec.a?<><div style={{padding:10,borderRadius:10,background:T.greenS,textAlign:"center",marginBottom:14}}><div style={{fontSize:9,color:T.sub,textTransform:"uppercase",marginBottom:4}}>Recomendado</div><div style={{fontSize:18,fontWeight:800,color:T.green}}>{fmtDur(sleepRec.a.rec)}</div></div><div style={{fontSize:11,color:T.dim}}>Baseado em {sleepRec.a.pts} observações</div></>:<div style={{fontSize:12,color:T.sub}}>Registre mais dados para personalizar.</div>}</>}
+      {sleepRec?.phase===1&&<><div style={{textAlign:"center",marginBottom:16}}><Icon name="star" size={40} color={T.accent} fill={T.accent}/></div><div style={{textAlign:"center",fontSize:22,fontWeight:800,marginBottom:6}}>{sleepRec.dl} {_lang==="en"?"days":"dias"}</div><div style={{textAlign:"center",fontSize:13,color:T.sub,marginBottom:16}}>{_lang==="en"?`until ${babyName}'s sleep plan`:`para o plano de sono de ${babyName}`}</div><div style={{height:4,borderRadius:2,background:T.bg1,marginBottom:16,overflow:"hidden"}}><div style={{height:"100%",width:`${Math.max(0,Math.min(100,((60-sleepRec.dl)/60)*100))}%`,background:T.accent,borderRadius:2}}/></div><div style={{fontSize:12,color:T.sub,lineHeight:1.6}}>{_lang==="en"?"At 2 months the circadian rhythm matures. Keep tracking.":"Aos 2 meses o ritmo circadiano amadurece. Continue registrando."}</div><div style={{marginTop:14,padding:"10px 12px",borderRadius:10,background:"rgba(14,18,48,0.6)",fontSize:11,color:T.dim}}>{_lang==="en"?"Window":"Janela"}: {sleepRec.g.min}–{sleepRec.g.max} min · {sleepRec.g.naps} {_lang==="en"?"naps/day":"sonecas/dia"}</div></>}
+      {sleepRec?.phase===2&&<><div style={{textAlign:"center",marginBottom:12}}><Icon name="check" size={36} color={T.green}/></div><div style={{textAlign:"center",fontSize:16,fontWeight:700,marginBottom:14}}>{_lang==="en"?"Sleep plan active":"Plano de sono ativo"}</div>{sleepRec.a?<><div style={{padding:10,borderRadius:10,background:T.greenS,textAlign:"center",marginBottom:14}}><div style={{fontSize:9,color:T.sub,textTransform:"uppercase",marginBottom:4}}>{_lang==="en"?"Recommended":"Recomendado"}</div><div style={{fontSize:18,fontWeight:800,color:T.green}}>{fmtDur(sleepRec.a.rec)}</div></div><div style={{fontSize:11,color:T.dim}}>{_lang==="en"?`Based on ${sleepRec.a.pts} observations`:`Baseado em ${sleepRec.a.pts} observações`}</div></>:<div style={{fontSize:12,color:T.sub}}>{_lang==="en"?"Track more data to personalize.":"Registre mais dados para personalizar."}</div>}</>}
     </Modal>
 
     <Sheet open={showAdd&&!formType} onClose={()=>setShowAdd(false)}>
@@ -904,9 +905,9 @@ function App(){
     <TimerBar activeTimer={activeTimer} onStop={stopTimer}/>
 
     <nav style={{position:"fixed",bottom:"calc(12px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 32px)",maxWidth:448,display:"flex",alignItems:"center",justifyContent:"space-around",padding:"8px 12px",background:"rgba(16,20,52,0.92)",backdropFilter:"blur(16px)",borderRadius:22,border:`1px solid ${T.gB}`,boxShadow:"0 8px 32px rgba(0,0,0,0.5)",zIndex:50}}>
-      {[{icon:"home",label:"Início",active:page==="home"&&!showAdd,action:()=>goTo("home")},{icon:"clock",label:"Histórico",active:page==="history",action:()=>goTo("history")}].map(n=><button key={n.icon} onClick={n.action} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,padding:"4px 8px",opacity:n.active?1:0.4}}><Icon name={n.icon} size={20} color={n.active?T.accent:T.sub}/><span style={{fontSize:9,fontWeight:600,color:n.active?T.accent:T.dim}}>{n.label}</span></button>)}
+      {[{icon:"home",label:L("home"),active:page==="home"&&!showAdd,action:()=>goTo("home")},{icon:"clock",label:L("history"),active:page==="history",action:()=>goTo("history")}].map(n=><button key={n.icon} onClick={n.action} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,padding:"4px 8px",opacity:n.active?1:0.4}}><Icon name={n.icon} size={20} color={n.active?T.accent:T.sub}/><span style={{fontSize:9,fontWeight:600,color:n.active?T.accent:T.dim}}>{n.label}</span></button>)}
       <button onClick={()=>{setShowAdd(!showAdd);setFormType(null);setPage("home")}} style={{width:50,height:50,borderRadius:"50%",background:T.accent,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 4px 20px ${T.accent}44`,transition:"transform .2s cubic-bezier(0.34,1.56,0.64,1)",transform:showAdd?"rotate(45deg) scale(1.05)":"scale(1)",margin:"-8px 0"}}><Icon name="plus" size={22} color="#fff"/></button>
-      {[{icon:"chart",label:"Resumo",active:page==="stats"||page==="growth",action:()=>goTo("stats")},{icon:"gear",label:"Perfil",active:false,action:()=>setShowProfile(true)}].map(n=><button key={n.icon} onClick={n.action} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,padding:"4px 8px",opacity:n.active?1:0.4}}><Icon name={n.icon} size={20} color={n.active?T.accent:T.sub}/><span style={{fontSize:9,fontWeight:600,color:n.active?T.accent:T.dim}}>{n.label}</span></button>)}
+      {[{icon:"chart",label:L("summary"),active:page==="stats"||page==="growth",action:()=>goTo("stats")},{icon:"gear",label:L("profile"),active:false,action:()=>setShowProfile(true)}].map(n=><button key={n.icon} onClick={n.action} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,padding:"4px 8px",opacity:n.active?1:0.4}}><Icon name={n.icon} size={20} color={n.active?T.accent:T.sub}/><span style={{fontSize:9,fontWeight:600,color:n.active?T.accent:T.dim}}>{n.label}</span></button>)}
     </nav>
   </div>);
 }
