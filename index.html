@@ -93,8 +93,9 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "3.2.0";
+const APP_VERSION = "3.2.1";
 const CHANGELOG = [
+  { v: "3.2.1", date: "2026-04-02", changes: "Fix syntax: brace balance, broken template literals, JSX expressions" },
   { v: "3.2.0", date: "2026-04-02", changes: "i18n EN/PT-BR, ring events proporcional ao horário, ícones maiores no ring" },
   { v: "3.1.0", date: "2026-04-02", changes: "Resumo da noite, vibração na janela de sono, filtros no histórico (Leite/Sono/Fralda/Med), fix scroll e fade-out" },
   { v: "3.0.1", date: "2026-04-02", changes: "Fix scroll: fundo fixo, só conteúdo rola, sem bounce preto no iOS" },
@@ -352,7 +353,7 @@ function Ring({activeTimer,napSug,tick,recentEvents,lang}){
   </div>);
 }
 
-function MlGoalBar({current,goal}){if(!goal||goal<=0)return null;const pct=Math.min(100,(current/goal)*100);const reached=current>=goal;return(<div style={{padding:"0 20px",marginBottom:16}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}><div style={{display:"flex",alignItems:"center",gap:6}}><Icon name="target" size={14} color={reached?T.green:T.sub}/><span style={{fontSize:11,fontWeight:600,color:T.sub}}>{L("dailyGoal")}}</span></div><span style={{fontSize:12,fontWeight:700,color:reached?T.green:T.text}}>{current} / {goal} ml</span></div><div style={{height:6,borderRadius:3,background:T.bg3,overflow:"hidden"}}><div style={{height:"100%",borderRadius:3,width:`${pct}%`,background:reached?T.green:`linear-gradient(90deg,${T.accent},${T.purple})`,transition:"width .5s"}}/></div></div>)}
+function MlGoalBar({current,goal}){if(!goal||goal<=0)return null;const pct=Math.min(100,(current/goal)*100);const reached=current>=goal;return(<div style={{padding:"0 20px",marginBottom:16}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}><div style={{display:"flex",alignItems:"center",gap:6}}><Icon name="target" size={14} color={reached?T.green:T.sub}/><span style={{fontSize:11,fontWeight:600,color:T.sub}}>{L("dailyGoal")}</span></div><span style={{fontSize:12,fontWeight:700,color:reached?T.green:T.text}}>{current} / {goal} ml</span></div><div style={{height:6,borderRadius:3,background:T.bg3,overflow:"hidden"}}><div style={{height:"100%",borderRadius:3,width:`${pct}%`,background:reached?T.green:`linear-gradient(90deg,${T.accent},${T.purple})`,transition:"width .5s"}}/></div></div>)}
 
 // ── NIGHT SUMMARY ──
 function NightCard({entries}){
@@ -372,11 +373,11 @@ function NightCard({entries}){
   if(!sleepMin&&!wakings&&!feeds.length)return null;
   return(<div style={{padding:"0 20px",marginBottom:14}}>
     <div style={{padding:"12px 16px",borderRadius:14,background:"rgba(22,28,60,0.5)",border:`1px solid ${T.purple}15`,display:"flex",flexDirection:"column",gap:8}}>
-      <div style={{display:"flex",alignItems:"center",gap:6}}><Icon name="moon" size={13} color={T.purple}/><span style={{fontSize:11,fontWeight:700,color:T.sub}}>{L("lastNight")}}</span></div>
+      <div style={{display:"flex",alignItems:"center",gap:6}}><Icon name="moon" size={13} color={T.purple}/><span style={{fontSize:11,fontWeight:700,color:T.sub}}>{L("lastNight")}</span></div>
       <div style={{display:"flex",gap:12,flexWrap:"wrap"}}>
-        {sleepMin>0&&<div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:18,fontWeight:800,color:T.purple}}>{fmtDur(sleepMin)}</span><span style={{fontSize:10,color:T.dim}}>{L("sleep")}}</span></div>}
-        {wakings>0&&<div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:18,fontWeight:800,color:T.orange}}>{wakings}x</span><span style={{fontSize:10,color:T.dim}}>{L("wokeUp")}}</span></div>}
-        {feedMl>0&&<div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:18,fontWeight:800,color:T.green}}>{feedMl}ml</span><span style={{fontSize:10,color:T.dim}}>{L("milk")}}</span></div>}
+        {sleepMin>0&&<div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:18,fontWeight:800,color:T.purple}}>{fmtDur(sleepMin)}</span><span style={{fontSize:10,color:T.dim}}>{L("sleep")}</span></div>}
+        {wakings>0&&<div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:18,fontWeight:800,color:T.orange}}>{wakings}x</span><span style={{fontSize:10,color:T.dim}}>{L("wokeUp")}</span></div>}
+        {feedMl>0&&<div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:18,fontWeight:800,color:T.green}}>{feedMl}ml</span><span style={{fontSize:10,color:T.dim}}>{L("milk")}</span></div>}
       </div>
       {lastFeed&&<div style={{fontSize:10,color:T.dim}}>{L("lastFeed")}: {lastFeed.time}{lastFeed.ml?` · ${lastFeed.ml}ml`:""}</div>}
     </div>
@@ -460,7 +461,7 @@ function AddForm({type,onSave,savedMeds,onSaveMeds,editEntry}){const cfg=TYPES[t
       </>}
       {type==="diaper"&&<Fld label="Tipo"><Seg opts={[{v:"wet",l:L("wet")},{v:"dirty",l:L("dirty")},{v:"both",l:L("both")}]} val={diaperT} set={setDiaperT} color={cfg.color}/></Fld>}
       {type==="medicine"&&<><Fld label={TL("medicine")}><div style={{display:"flex",gap:8}}><input type="text" placeholder={L("name")} value={medN} onChange={e=>setMedN(e.target.value)} style={{...inp,flex:1}}/><button onClick={()=>setShowML(!showML)} style={{width:44,borderRadius:12,background:T.amberS,border:`1px solid ${T.amber}22`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="list" size={18} color={T.amber}/></button></div></Fld>
-        {showML&&<div style={{background:T.glass,border:`1px solid ${T.gB}`,borderRadius:14,padding:14,marginBottom:20}}><div style={{fontSize:13,fontWeight:700,marginBottom:12,color:T.sub}}>{L("savedMeds")}}</div>{savedMeds.map((m,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 12px",background:"rgba(14,18,48,0.5)",borderRadius:10,marginBottom:4}}><button onClick={()=>{setMedN(m.name);setMedD(m.dose||"");setShowML(false)}} style={{flex:1,textAlign:"left"}}><div style={{fontSize:13,fontWeight:600}}>{m.name}</div>{m.dose&&<div style={{fontSize:11,color:T.dim}}>{m.dose}</div>}</button><button onClick={()=>onSaveMeds(savedMeds.filter((_,j)=>j!==i))} style={{padding:"3px 8px",borderRadius:6,background:T.redS}}><Icon name="x" size={12} color={T.red}/></button></div>)}<div style={{marginTop:12,display:"flex",gap:6}}><input placeholder={L("name")} value={nMN} onChange={e=>setNMN(e.target.value)} style={{...inp,flex:2,padding:"9px 12px",fontSize:12}}/><input placeholder={L("dose")} value={nMD} onChange={e=>setNMD(e.target.value)} style={{...inp,flex:1,padding:"9px 12px",fontSize:12}}/><button onClick={()=>{if(!nMN.trim())return;onSaveMeds([...savedMeds,{name:nMN.trim(),dose:nMD.trim()}]);setNMN("");setNMD("")}} style={{width:40,borderRadius:10,background:T.amber,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="plus" size={16} color={T.bg1}/></button></div></div>}
+        {showML&&<div style={{background:T.glass,border:`1px solid ${T.gB}`,borderRadius:14,padding:14,marginBottom:20}}><div style={{fontSize:13,fontWeight:700,marginBottom:12,color:T.sub}}>{L("savedMeds")}</div>{savedMeds.map((m,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 12px",background:"rgba(14,18,48,0.5)",borderRadius:10,marginBottom:4}}><button onClick={()=>{setMedN(m.name);setMedD(m.dose||"");setShowML(false)}} style={{flex:1,textAlign:"left"}}><div style={{fontSize:13,fontWeight:600}}>{m.name}</div>{m.dose&&<div style={{fontSize:11,color:T.dim}}>{m.dose}</div>}</button><button onClick={()=>onSaveMeds(savedMeds.filter((_,j)=>j!==i))} style={{padding:"3px 8px",borderRadius:6,background:T.redS}}><Icon name="x" size={12} color={T.red}/></button></div>)}<div style={{marginTop:12,display:"flex",gap:6}}><input placeholder={L("name")} value={nMN} onChange={e=>setNMN(e.target.value)} style={{...inp,flex:2,padding:"9px 12px",fontSize:12}}/><input placeholder={L("dose")} value={nMD} onChange={e=>setNMD(e.target.value)} style={{...inp,flex:1,padding:"9px 12px",fontSize:12}}/><button onClick={()=>{if(!nMN.trim())return;onSaveMeds([...savedMeds,{name:nMN.trim(),dose:nMD.trim()}]);setNMN("");setNMD("")}} style={{width:40,borderRadius:10,background:T.amber,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="plus" size={16} color={T.bg1}/></button></div></div>}
         <Fld label={L("dose")}><input type="text" placeholder="Ex: 3 gotas" value={medD} onChange={e=>setMedD(e.target.value)} style={inp}/></Fld></>}
       {type==="temperature"&&<Fld label="Temperatura (°C)"><input type="number" inputMode="decimal" step="0.1" placeholder="36.5" value={tempV} onChange={e=>setTempV(e.target.value)} style={{...inp,fontSize:36,fontWeight:800,textAlign:"center"}}/></Fld>}
       {type==="pumping"&&<Fld label="Quantidade (ml)"><input type="number" inputMode="numeric" placeholder="0" value={pumpMl} onChange={e=>setPumpMl(e.target.value)} style={{...inp,fontSize:28,fontWeight:800,textAlign:"center"}}/></Fld>}
@@ -485,7 +486,7 @@ function ProfilePage({profile,onSave,onBack,onGrowth}){
   const doSave=()=>{onSave({name:name.trim(),birthDate:birth,photo,mlGoal:parseInt(mlGoal)||0,birthWeight:parseFloat(birthWeight)||0,birthLength:parseFloat(birthLength)||0,birthHead:parseFloat(birthHead)||0,lang:langSel});onBack()};
   const inp={width:"100%",padding:"14px 16px",background:"rgba(14,18,48,0.8)",border:`1px solid ${T.gB}`,borderRadius:12,color:T.text,fontSize:15,outline:"none"};
   return(<div style={{position:"fixed",inset:0,zIndex:200,maxWidth:480,margin:"0 auto",background:T.bg1,overflowY:"auto",paddingTop:"env(safe-area-inset-top)",paddingBottom:"calc(40px + env(safe-area-inset-bottom))"}}>
-    <div style={{display:"flex",alignItems:"center",gap:14,padding:"16px 20px"}}><button onClick={onBack} style={{width:36,height:36,borderRadius:10,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="back" size={18} color={T.sub}/></button><span style={{fontSize:17,fontWeight:700}}>{L("profile")}}</span></div>
+    <div style={{display:"flex",alignItems:"center",gap:14,padding:"16px 20px"}}><button onClick={onBack} style={{width:36,height:36,borderRadius:10,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="back" size={18} color={T.sub}/></button><span style={{fontSize:17,fontWeight:700}}>{L("profile")}</span></div>
     <div style={{padding:"0 20px"}}>
       <div style={{display:"flex",flexDirection:"column",alignItems:"center",marginBottom:28}}><button onClick={()=>fr.current?.click()} style={{width:88,height:88,borderRadius:"50%",overflow:"hidden",background:T.glass,border:`2px solid ${T.accent}33`,display:"flex",alignItems:"center",justifyContent:"center"}}>{photo?<img src={photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<Icon name="sun" size={32} color={T.sub}/>}</button><input ref={fr} type="file" accept="image/*" style={{display:"none"}} onChange={handlePhoto}/><span style={{fontSize:11,color:T.dim,marginTop:8}}>{_lang==="en"?"Tap to change":"Toque para alterar"}</span></div>
       <Fld label={L("name")}><input type="text" placeholder={_lang==="en"?"e.g. Louise":"Ex: Louise"} value={name} onChange={e=>setName(e.target.value)} style={inp}/></Fld>
@@ -501,7 +502,7 @@ function ProfilePage({profile,onSave,onBack,onGrowth}){
         </div>
       </Fld>
       
-      <div style={{fontSize:12,fontWeight:700,color:T.sub,marginTop:20,marginBottom:12,textTransform:"uppercase",letterSpacing:1}}>{L("birthData")}}</div>
+      <div style={{fontSize:12,fontWeight:700,color:T.sub,marginTop:20,marginBottom:12,textTransform:"uppercase",letterSpacing:1}}>{L("birthData")}</div>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:20}}>
         <Fld label="Peso (kg)"><input type="number" inputMode="decimal" step="0.01" placeholder="3.2" value={birthWeight} onChange={e=>setBirthWeight(e.target.value)} style={{...inp,textAlign:"center",padding:"12px 8px"}}/></Fld>
         <Fld label="Comp. (cm)"><input type="number" inputMode="decimal" step="0.1" placeholder="49" value={birthLength} onChange={e=>setBirthLength(e.target.value)} style={{...inp,textAlign:"center",padding:"12px 8px"}}/></Fld>
@@ -510,7 +511,7 @@ function ProfilePage({profile,onSave,onBack,onGrowth}){
       
       {/* Growth page link */}
       <button onClick={()=>{doSave();onGrowth()}} style={{width:"100%",padding:14,borderRadius:12,marginBottom:12,background:"rgba(163,230,53,0.1)",border:"1px solid rgba(163,230,53,0.2)",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
-        <Icon name="ruler" size={16} color="#a3e635"/><span style={{fontSize:14,fontWeight:700,color:"#a3e635"}}>{L("viewGrowth")}}</span>
+        <Icon name="ruler" size={16} color="#a3e635"/><span style={{fontSize:14,fontWeight:700,color:"#a3e635"}}>{L("viewGrowth")}</span>
       </button>
       
       <button onClick={doSave} style={{width:"100%",padding:14,borderRadius:12,background:T.accent,color:"#fff",fontSize:15,fontWeight:700}}>Salvar</button>
@@ -527,7 +528,7 @@ function StatsPage({entries,onGrowth}){
   const mxMl=Math.max(...data.map(d=>d.ml),1),mxSl=Math.max(...data.map(d=>d.sl),1);
   const avgMl=Math.round(data.reduce((s,d)=>s+d.ml,0)/numDays);
   const avgSl=Math.round(data.reduce((s,d)=>s+d.sl,0)/numDays);
-  const periodLabel=period==="all"?"Tudo":`${period{_lang==="en"?" days":" dias"}`;
+  const periodLabel=period==="all"?L("all"):`${period} ${_lang==="en"?"days":"dias"}`;
   const exportCSV=()=>{const h="Data,Hora,Tipo,Detalhe,Notas\n";const rows=entries.map(e=>{let d="";if(e.ml)d=`${e.ml}ml`;else if(e.durationMin)d=fmtDur(e.durationMin);else if(e.name)d=e.name;else if(e.value)d=`${e.value}°C`;else if(e.subtype)d=e.subtype;return`${e.date},${e.time},${TL(e.type)||e.type},${d},${e.notes||""}`}).join("\n");const blob=new Blob([h+rows],{type:"text/csv"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=`louise-pro-${todayStr()}.csv`;a.click();URL.revokeObjectURL(url)};
   return(<div style={{padding:"16px 20px 0"}}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
@@ -544,10 +545,10 @@ function StatsPage({entries,onGrowth}){
       )}
     </div>
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:20}}>
-      <div style={{background:T.greenS,borderRadius:14,padding:12}}><div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}><Icon name="bottle" size={14} color={T.green}/><span style={{fontSize:10,color:T.sub}}>_lang==="en"?"Avg milk/day":"Média leite/dia"</span></div><div style={{fontSize:20,fontWeight:800,color:T.green}}>{avgMl} ml</div></div>
-      <div style={{background:T.purpleS,borderRadius:14,padding:12}}><div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}><Icon name="moon" size={14} color={T.purple}/><span style={{fontSize:10,color:T.sub}}>_lang==="en"?"Avg sleep/day":"Média sono/dia"</span></div><div style={{fontSize:20,fontWeight:800,color:T.purple}}>{fmtDur(avgSl)}</div></div>
+      <div style={{background:T.greenS,borderRadius:14,padding:12}}><div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}><Icon name="bottle" size={14} color={T.green}/><span style={{fontSize:10,color:T.sub}}{_lang==="en"?"Avg milk/day":"Média leite/dia"}</span></div><div style={{fontSize:20,fontWeight:800,color:T.green}}>{avgMl} ml</div></div>
+      <div style={{background:T.purpleS,borderRadius:14,padding:12}}><div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}><Icon name="moon" size={14} color={T.purple}/><span style={{fontSize:10,color:T.sub}}{_lang==="en"?"Avg sleep/day":"Média sono/dia"}</span></div><div style={{fontSize:20,fontWeight:800,color:T.purple}}>{fmtDur(avgSl)}</div></div>
     </div>
-    {[{t:"Leite (ml)",f:"ml",max:mxMl,c:T.green},{t:"Sono total",f:"sl",max:mxSl,c:T.purple}].map(ch=>(
+    {[{t:_lang==="en"?"Milk (ml)":"Leite (ml)",f:"ml",max:mxMl,c:T.green},{t:_lang==="en"?"Total sleep":"Sono total",f:"sl",max:mxSl,c:T.purple}].map(ch=>(
       <div key={ch.f} style={{marginBottom:22}}><div style={{fontSize:12,fontWeight:600,color:T.sub,marginBottom:8}}>{ch.t}</div>
         <div style={{display:"flex",gap:numDays>20?1:numDays>14?2:5,alignItems:"flex-end",height:100,background:T.glass,borderRadius:14,padding:"12px 4px 6px",border:`1px solid ${T.gB}`,overflow:"hidden"}}>
           {data.map(d=>{const v=d[ch.f];return<div key={d.date} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2,minWidth:0}}>
@@ -701,7 +702,7 @@ function GrowthPage({entries,birthDate,profile,onBack,onAddEntry}){
 
   return(<div style={{padding:"16px 20px 0"}}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
-      <div style={{display:"flex",alignItems:"center",gap:10}}><button onClick={onBack} style={{width:32,height:32,borderRadius:10,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="back" size={16} color={T.sub}/></button><h2 style={{fontSize:17,fontWeight:700,margin:0}}>{L("growth")}}</h2></div>
+      <div style={{display:"flex",alignItems:"center",gap:10}}><button onClick={onBack} style={{width:32,height:32,borderRadius:10,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="back" size={16} color={T.sub}/></button><h2 style={{fontSize:17,fontWeight:700,margin:0}}>{L("growth")}</h2></div>
       <button onClick={()=>setShowForm(!showForm)} style={{padding:"6px 12px",borderRadius:10,background:"rgba(163,230,53,0.1)",border:"1px solid rgba(163,230,53,0.2)",fontSize:12,fontWeight:700,color:"#a3e635"}}>{showForm?"Cancelar":"+ Medição"}</button>
     </div>
 
