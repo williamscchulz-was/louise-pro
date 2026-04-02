@@ -1,3 +1,91 @@
+<!--
+═══════════════════════════════════════════════════════════════
+  LOUISE PRO — BABY TRACKER — CHANGELOG
+═══════════════════════════════════════════════════════════════
+
+  v3.3.1  02/04/2026  Fix critical: blank screen
+    • i18n dictionary had runtime code instead of static strings
+    • Babel failed silently trying to evaluate L() before it existed
+    • Fixed 5 corrupted dictionary entries (lastFeed, milkVsWeek, 
+      repeatLast, tapToAdd, birthData)
+
+  v3.3.0  02/04/2026  Tooltips no ring
+    • Toque no ícone do ring mostra detalhes (tipo, ml, duração)
+    • Balão com seta, auto-dismiss 3s, animação scale bounce
+    • Overlay transparente pra fechar tocando fora
+
+  v3.2.0  02/04/2026  i18n EN/PT-BR + Ring proporcional
+    • Toggle English/Português no Perfil (default: English)
+    • 52 traduções: todas as telas, forms, toasts, nav, filtros
+    • Datas adaptam ao locale (en-US / pt-BR)
+    • Eventos no ring posicionados pelo horário real (5h-23h)
+    • Ícones do ring maiores (32px) com glow forte
+
+  v3.1.0  02/04/2026  Resumo da noite + Vibração + Filtros
+    • Card "Noite passada" na home (sono, despertares, última mamada)
+    • Vibração quando janela de sono acaba (Vibration API)
+    • Filtros no histórico: Tudo, Leite, Sono, Fralda, Med.
+    • Fix scroll e fade-out gradient antes do nav
+
+  v3.0.0  02/04/2026  Visual Napper-level
+    • Céu estrelado: 80+ estrelas, nebulosas, estrelas coloridas
+    • Ícones com glow triplo colorido + reflexo de vidro
+    • Header abaixo da Dynamic Island (iPhone 15+)
+    • Fundo fixo sem bounce preto no iOS
+
+  v2.5.0  02/04/2026  Splash screen
+    • Lua animada com gradiente + glow SVG
+    • Estrelas piscando, texto gradiente "Louise Pro"
+    • 1.8s de duração, transição suave pro app
+
+  v2.4.0  02/04/2026  Ring redesign
+    • Gradiente SVG no arco (linearGradient)
+    • Glow duplo via filtro SVG (feGaussianBlur + feMerge)
+    • Texto central com background-clip gradient
+    • Animação cubic-bezier suave
+
+  v2.3.0  02/04/2026  Edição + Sono melhorado
+    • Editar qualquer registro (toque no item)
+    • Toggle Duração/Horário fim no sono
+    • Sono que cruza meia-noite auto-divide em 2 dias
+    • Toast 2s com desfazer (fix timer ref)
+    • Safe-area iPhone 15+, versão no header
+
+  v2.2.0  02/04/2026  Crescimento + Perfil
+    • Dados de nascimento no perfil (peso, comprimento, cabeça)
+    • Crescimento com percentis OMS (meninas 0-24m)
+    • Curvas SVG P3-P50-P97 com pontos plotados
+    • Adicionar medição individual por métrica
+    • Seletor de dia em todos os formulários
+    • Glassmorphism sheets (blur 40px)
+
+  v2.1.0  02/04/2026  Resumo com filtros
+    • Período: 7d, 14d, 30d, Tudo
+    • Gráficos adaptam barras ao período
+    • Labels dinâmicos (dia da semana ou data)
+
+  v2.0.0  02/04/2026  Crescimento + Versionamento
+    • Crescimento com percentil OMS
+    • Sistema de versionamento semver
+    • Changelog visível no Perfil
+
+  v1.0.0  02/04/2026  Lançamento
+    • Timer ao vivo com sync Firebase (onSnapshot)
+    • Algoritmo de janelas de sono (2 fases)
+    • Meta diária de ml com progresso
+    • Histórico navegável por dia
+    • CSV export, toast undo, duplicar último
+    • Medicamentos pré-cadastrados
+    • Botões rápidos: Acordou, Mamad., Soneca, Sono
+    • Bottom sheet Napper-style (grid 3x3)
+    • Nav flutuante, SVG icons, PWA
+
+  Stack: HTML puro + React 18 CDN + Babel + Firebase 10.x compat
+  Repo: https://github.com/williamscchulz-was/louise-pro
+  Firebase: louise-pro (Cloud Firestore)
+═══════════════════════════════════════════════════════════════
+-->
+
 <!DOCTYPE html>
 
 <html lang="pt-BR">
@@ -12,6 +100,21 @@
   <link rel="apple-touch-icon" href="icon-192.png">
   <title>Baby Tracker</title>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- ERROR & LOADING HANDLER -->
+
+  <script>
+  window.onerror=function(msg,src,line,col,err){
+    var d=document.getElementById('error-display');
+    if(!d){d=document.createElement('div');d.id='error-display';d.style.cssText='position:fixed;inset:0;z-index:9999;background:#0a0e28;color:#f87171;padding:40px 20px;font-family:monospace;font-size:13px;overflow:auto;white-space:pre-wrap';document.body.appendChild(d);d.innerHTML='<div style="font-size:20px;font-weight:bold;color:#fbbf24;margin-bottom:16px">⚠ Louise Pro — Error</div>';}
+    d.innerHTML+='<div style="margin-bottom:12px;padding:12px;background:rgba(248,113,113,0.1);border-radius:8px;border-left:3px solid #f87171"><b>'+msg+'</b>\nLine: '+line+' Col: '+col+'\n'+(err&&err.stack?err.stack:'')+'</div>';
+    return false;
+  };
+  window.addEventListener('unhandledrejection',function(e){
+    window.onerror('Promise: '+(e.reason&&e.reason.message||e.reason),null,0,0,e.reason);
+  });
+  </script>
+
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
     html,body{height:100%;overflow:hidden;overscroll-behavior:none;background:#070b1e}
@@ -31,9 +134,23 @@
     @keyframes splashLogo{0%{transform:scale(0.8);opacity:0}40%{transform:scale(1.05);opacity:1}100%{transform:scale(1);opacity:1}}
     @keyframes splashText{0%{opacity:0;transform:translateY(8px)}50%{opacity:0}100%{opacity:1;transform:translateY(0)}}
   </style>
+
 </head>
 <body>
 <div id="root"></div>
+<!-- Debug: shows if app fails to load after 10s -->
+<div id="load-debug" style="position:fixed;inset:0;z-index:9998;background:#070b1e;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:monospace;color:#8b90b8;font-size:12px">
+  <div style="font-size:16px;margin-bottom:12px;color:#a78bfa">Louise Pro</div>
+  <div id="load-status">Loading...</div>
+</div>
+<script>
+var _dbg=document.getElementById('load-status');
+function dbg(m){if(_dbg)_dbg.textContent=m;console.log('[LP]',m)}
+setTimeout(function(){
+  var d=document.getElementById('load-debug');
+  if(d){_dbg.innerHTML='App did not load.<br><br>• Check internet<br>• Clear cache<br>• Check console (F12)';_dbg.style.color='#fb923c';}
+},10000);
+</script>
 
 <!-- Firebase (compat v9) -->
 
