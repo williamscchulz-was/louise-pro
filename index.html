@@ -15,7 +15,8 @@
     *{margin:0;padding:0;box-sizing:border-box}
     body{background:#070b1e;overflow-x:hidden;font-family:'Outfit',sans-serif;
       -webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;
-      -webkit-overflow-scrolling:touch}
+      -webkit-overflow-scrolling:touch;
+      padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
     button{cursor:pointer;border:none;background:none;color:inherit;font-family:inherit}
     input,textarea{font-family:inherit;-webkit-user-select:text;user-select:text}
     input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-outer-spin-button{-webkit-appearance:none}
@@ -89,8 +90,10 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "2.3.0";
+const APP_VERSION = "2.3.2";
 const CHANGELOG = [
+  { v: "2.3.2", date: "2026-04-02", changes: "Fix toast: auto-some em 2s, não fica mais travado na tela" },
+  { v: "2.3.1", date: "2026-04-02", changes: "Sono: toggle Duração/Horário fim, calcula auto. Safe-area iPhone 15+. Versão no header" },
   { v: "2.3.0", date: "2026-04-02", changes: "Editar registros: toque no ícone ou texto de qualquer lançamento pra abrir e editar" },
   { v: "2.2.5", date: "2026-04-02", changes: "Versão visível no header, safe-area iPhone 15+ (Dynamic Island, home indicator), inputs selecionáveis" },
   { v: "2.2.4", date: "2026-04-02", changes: "Fix idade (timezone), sono que cruza meia-noite auto-divide em 2 dias" },
@@ -256,7 +259,7 @@ function WeeklyCard({entries}){const tw=[],lw=[];for(let i=0;i<7;i++){const d1=d
 
 function TimerBar({activeTimer,onStop}){const[secs,setSecs]=useState(0);useEffect(()=>{if(!activeTimer)return;const calc=()=>Math.max(0,Math.floor((Date.now()-new Date(activeTimer.startTime).getTime())/1000));setSecs(calc());const iv=setInterval(()=>setSecs(calc()),1000);return()=>clearInterval(iv)},[activeTimer]);if(!activeTimer)return null;return(<div style={{position:"fixed",bottom:"calc(76px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 32px)",maxWidth:448,padding:"12px 16px",borderRadius:16,background:"rgba(20,26,66,0.92)",border:`1px solid ${T.purple}33`,backdropFilter:"blur(12px)",display:"flex",alignItems:"center",gap:12,zIndex:60,boxShadow:"0 4px 24px rgba(0,0,0,0.4)"}}><div style={{width:36,height:36,borderRadius:10,background:T.purpleS,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name={activeTimer.type==="nap"?"cloud":"moon"} size={18} color={T.purple}/></div><div style={{flex:1}}><div style={{fontSize:12,fontWeight:600,color:T.sub}}>{activeTimer.type==="nap"?"Soneca":"Sono"}</div><div style={{fontSize:20,fontWeight:800,fontVariantNumeric:"tabular-nums"}}>{fmtTimer(secs)}</div></div><button onClick={onStop} style={{width:40,height:40,borderRadius:12,background:T.purpleS,border:`1px solid ${T.purple}33`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="stop" size={16} color={T.purple}/></button></div>)}
 
-function Toast({message,onUndo,onClose}){useEffect(()=>{const t=setTimeout(onClose,4000);return()=>clearTimeout(t)},[onClose]);return(<div style={{position:"fixed",top:20,left:"50%",transform:"translateX(-50%)",zIndex:300,padding:"10px 16px",borderRadius:14,background:"rgba(20,26,66,0.95)",border:`1px solid ${T.gB}`,backdropFilter:"blur(12px)",display:"flex",alignItems:"center",gap:10,boxShadow:"0 8px 24px rgba(0,0,0,0.5)",animation:"slideDown .3s ease"}}><span style={{fontSize:13,color:T.text}}>{message}</span>{onUndo&&<button onClick={onUndo} style={{padding:"4px 12px",borderRadius:8,background:T.accent,color:"#fff",fontSize:12,fontWeight:700}}>Desfazer</button>}</div>)}
+function Toast({message,onUndo,onClose}){const closeRef=useRef(onClose);closeRef.current=onClose;useEffect(()=>{const t=setTimeout(()=>closeRef.current(),2000);return()=>clearTimeout(t)},[]);return(<div style={{position:"fixed",top:"calc(20px + env(safe-area-inset-top))",left:"50%",transform:"translateX(-50%)",zIndex:300,padding:"10px 16px",borderRadius:14,background:"rgba(20,26,66,0.95)",border:`1px solid ${T.gB}`,backdropFilter:"blur(12px)",display:"flex",alignItems:"center",gap:10,boxShadow:"0 8px 24px rgba(0,0,0,0.5)",animation:"slideDown .3s ease"}}><span style={{fontSize:13,color:T.text}}>{message}</span>{onUndo&&<button onClick={onUndo} style={{padding:"4px 12px",borderRadius:8,background:T.accent,color:"#fff",fontSize:12,fontWeight:700}}>Desfazer</button>}</div>)}
 
 function Sheet({open,onClose,children}){const[vis,setVis]=useState(false),[show,setShow]=useState(false);useEffect(()=>{if(open){setVis(true);requestAnimationFrame(()=>requestAnimationFrame(()=>setShow(true)))}else{setShow(false);const t=setTimeout(()=>setVis(false),350);return()=>clearTimeout(t)}},[open]);if(!vis)return null;return(<div style={{position:"fixed",inset:0,zIndex:100}} onClick={onClose}><div style={{position:"absolute",inset:0,background:"rgba(2,3,10,0.55)",backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",opacity:show?1:0,transition:"opacity .35s"}}/><div onClick={e=>e.stopPropagation()} style={{position:"absolute",bottom:0,left:0,right:0,maxWidth:480,margin:"0 auto",background:"rgba(10,14,40,0.78)",backdropFilter:"blur(40px)",WebkitBackdropFilter:"blur(40px)",borderRadius:"28px 28px 0 0",border:"1px solid rgba(100,115,220,0.1)",borderBottom:"none",boxShadow:"0 -8px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(140,150,255,0.06)",padding:"8px 0 calc(36px + env(safe-area-inset-bottom))",transform:show?"translateY(0)":"translateY(100%)",transition:"transform .38s cubic-bezier(0.22,1,0.36,1)",maxHeight:"78vh",overflowY:"auto"}}><div style={{width:40,height:4,borderRadius:2,background:"rgba(140,150,255,0.2)",margin:"8px auto 24px"}}/>{children}</div></div>)}
 
@@ -280,13 +283,20 @@ function AddForm({type,onSave,savedMeds,onSaveMeds,editEntry}){const cfg=TYPES[t
   const[tempV,setTempV]=useState(ed.value?String(ed.value):"");const[side,setSide]=useState(ed.side||"left");const[nurseM,setNurseM]=useState(ed.durationMin&&type==="nursing"?String(ed.durationMin):"");
   const[pumpMl,setPumpMl]=useState(ed.ml&&type==="pumping"?String(ed.ml):"");const[weightKg,setWeightKg]=useState(ed.weightKg?String(ed.weightKg):"");const[lengthCm,setLengthCm]=useState(ed.lengthCm?String(ed.lengthCm):"");
   const[headCm,setHeadCm]=useState(ed.headCm?String(ed.headCm):"");const[notes,setNotes]=useState(ed.notes||"");const[showML,setShowML]=useState(false);
+  const[endTime,setEndTime]=useState("");const[durMode,setDurMode]=useState("dur");
   const[nMN,setNMN]=useState("");const[nMD,setNMD]=useState("");const mRef=useRef(null);
   const isEdit=!!editEntry;
   useEffect(()=>{if(type==="bottle"&&mRef.current)mRef.current.focus()},[type]);
   const doSave=()=>{const b={type,date,time,notes:notes.trim()||undefined,id:isEdit?ed.id:uid()};
     if(type==="bottle"){if(!ml)return;onSave({...b,ml:parseInt(ml)})}
     else if(type==="nursing")onSave({...b,side,durationMin:nurseM?parseInt(nurseM):undefined});
-    else if(type==="sleep"||type==="nap"){const t2=(parseInt(durH)||0)*60+(parseInt(durM)||0);if(!t2)return;onSave({...b,durationMin:t2})}
+    else if(type==="sleep"||type==="nap"){
+      let t2;
+      if(durMode==="end"&&endTime){
+        const[sh,sm]=time.split(":").map(Number);const[eh,em]=endTime.split(":").map(Number);
+        let diff=(eh*60+em)-(sh*60+sm);if(diff<=0)diff+=1440;t2=diff;
+      }else{t2=(parseInt(durH)||0)*60+(parseInt(durM)||0)}
+      if(!t2)return;onSave({...b,durationMin:t2})}
     else if(type==="wakeup"||type==="nightwaking")onSave(b);
     else if(type==="diaper")onSave({...b,subtype:diaperT});
     else if(type==="medicine"){if(!medN.trim())return;onSave({...b,name:medN.trim(),dose:medD.trim()||undefined})}
@@ -311,7 +321,15 @@ function AddForm({type,onSave,savedMeds,onSaveMeds,editEntry}){const cfg=TYPES[t
       {type==="bottle"&&<><Fld label="Quantidade (ml)"><input ref={mRef} type="number" inputMode="numeric" placeholder="0" value={ml} onChange={e=>setMl(e.target.value)} style={{...inp,fontSize:36,fontWeight:800,textAlign:"center",padding:"16px"}}/></Fld>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:20}}>{[50,70,90,100].map(v=><button key={v} onClick={()=>setMl(String(v))} style={{padding:"10px 0",borderRadius:10,fontSize:13,fontWeight:600,background:ml===String(v)?T.green:T.glass,color:ml===String(v)?T.bg1:T.text,border:`1px solid ${ml===String(v)?T.green:T.gB}`}}>{v}</button>)}</div></>}
       {type==="nursing"&&<><Fld label="Lado"><Seg opts={[{v:"left",l:"Esquerdo"},{v:"right",l:"Direito"},{v:"both",l:"Ambos"}]} val={side} set={setSide} color={cfg.color}/></Fld><Fld label="Duração (min)"><input type="number" inputMode="numeric" placeholder="15" value={nurseM} onChange={e=>setNurseM(e.target.value)} style={inp}/></Fld></>}
-      {(type==="sleep"||type==="nap")&&<Fld label="Duração"><div style={{display:"flex",gap:10,alignItems:"center"}}><input type="number" inputMode="numeric" placeholder="0" value={durH} onChange={e=>setDurH(e.target.value)} style={{...inp,flex:1,textAlign:"center",fontSize:28,fontWeight:800}}/><span style={{color:T.dim,fontWeight:700}}>h</span><input type="number" inputMode="numeric" placeholder="0" value={durM} onChange={e=>setDurM(e.target.value)} style={{...inp,flex:1,textAlign:"center",fontSize:28,fontWeight:800}}/><span style={{color:T.dim,fontWeight:700}}>m</span></div></Fld>}
+      {(type==="sleep"||type==="nap")&&<>
+        <div style={{display:"flex",gap:4,marginBottom:14,background:T.glass,borderRadius:10,padding:3,border:`1px solid ${T.gB}`}}>
+          <button onClick={()=>setDurMode("dur")} style={{flex:1,padding:"8px 0",borderRadius:8,fontSize:12,fontWeight:700,background:durMode==="dur"?T.purple:"transparent",color:durMode==="dur"?"#fff":T.sub}}>Duração</button>
+          <button onClick={()=>setDurMode("end")} style={{flex:1,padding:"8px 0",borderRadius:8,fontSize:12,fontWeight:700,background:durMode==="end"?T.purple:"transparent",color:durMode==="end"?"#fff":T.sub}}>Horário fim</button>
+        </div>
+        {durMode==="dur"?<Fld label="Duração"><div style={{display:"flex",gap:10,alignItems:"center"}}><input type="number" inputMode="numeric" placeholder="0" value={durH} onChange={e=>setDurH(e.target.value)} style={{...inp,flex:1,textAlign:"center",fontSize:28,fontWeight:800}}/><span style={{color:T.dim,fontWeight:700}}>h</span><input type="number" inputMode="numeric" placeholder="0" value={durM} onChange={e=>setDurM(e.target.value)} style={{...inp,flex:1,textAlign:"center",fontSize:28,fontWeight:800}}/><span style={{color:T.dim,fontWeight:700}}>m</span></div></Fld>
+        :<Fld label="Acordou às"><input type="time" value={endTime} onChange={e=>setEndTime(e.target.value)} style={{...inp,colorScheme:"dark",fontSize:28,fontWeight:800,textAlign:"center",padding:"14px 16px"}}/></Fld>}
+        {durMode==="end"&&endTime&&time&&<div style={{fontSize:11,color:T.sub,marginBottom:12,textAlign:"center"}}>{(()=>{const[sh,sm]=time.split(":").map(Number);const[eh,em]=endTime.split(":").map(Number);let d=(eh*60+em)-(sh*60+sm);if(d<=0)d+=1440;return`Duração: ${fmtDur(d)}${d>720?" (próximo dia)":""}`})()}</div>}
+      </>}
       {type==="diaper"&&<Fld label="Tipo"><Seg opts={[{v:"wet",l:"Xixi"},{v:"dirty",l:"Cocô"},{v:"both",l:"Ambos"}]} val={diaperT} set={setDiaperT} color={cfg.color}/></Fld>}
       {type==="medicine"&&<><Fld label="Medicamento"><div style={{display:"flex",gap:8}}><input type="text" placeholder="Nome" value={medN} onChange={e=>setMedN(e.target.value)} style={{...inp,flex:1}}/><button onClick={()=>setShowML(!showML)} style={{width:44,borderRadius:12,background:T.amberS,border:`1px solid ${T.amber}22`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="list" size={18} color={T.amber}/></button></div></Fld>
         {showML&&<div style={{background:T.glass,border:`1px solid ${T.gB}`,borderRadius:14,padding:14,marginBottom:20}}><div style={{fontSize:13,fontWeight:700,marginBottom:12,color:T.sub}}>Medicamentos salvos</div>{savedMeds.map((m,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 12px",background:"rgba(14,18,48,0.5)",borderRadius:10,marginBottom:4}}><button onClick={()=>{setMedN(m.name);setMedD(m.dose||"");setShowML(false)}} style={{flex:1,textAlign:"left"}}><div style={{fontSize:13,fontWeight:600}}>{m.name}</div>{m.dose&&<div style={{fontSize:11,color:T.dim}}>{m.dose}</div>}</button><button onClick={()=>onSaveMeds(savedMeds.filter((_,j)=>j!==i))} style={{padding:"3px 8px",borderRadius:6,background:T.redS}}><Icon name="x" size={12} color={T.red}/></button></div>)}<div style={{marginTop:12,display:"flex",gap:6}}><input placeholder="Nome" value={nMN} onChange={e=>setNMN(e.target.value)} style={{...inp,flex:2,padding:"9px 12px",fontSize:12}}/><input placeholder="Dose" value={nMD} onChange={e=>setNMD(e.target.value)} style={{...inp,flex:1,padding:"9px 12px",fontSize:12}}/><button onClick={()=>{if(!nMN.trim())return;onSaveMeds([...savedMeds,{name:nMN.trim(),dose:nMD.trim()}]);setNMN("");setNMD("")}} style={{width:40,borderRadius:10,background:T.amber,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="plus" size={16} color={T.bg1}/></button></div></div>}
