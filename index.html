@@ -3,6 +3,12 @@
   LOUISE PRO — BABY TRACKER — CHANGELOG
 ═══════════════════════════════════════════════════════════════
 
+  v3.4.0  02/04/2026  Awake for / Asleep for + Stars + Last Feed
+    • Ring center: "Awake for Xh Xm" / "Asleep for Xm" (Napper-style)
+    • Estrelas 2x mais visíveis: opacidade, glow, 8 coloridas
+    • NightCard removido, substituído por LastFeedCard
+    • LastFeed mostra última mamada (bottle ou nursing) com ml e horário
+
   v3.3.1  02/04/2026  Fix critical: blank screen
     • i18n dictionary had runtime code instead of static strings
     • Babel failed silently trying to evaluate L() before it existed
@@ -234,6 +240,7 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ╚═══════════════════════════════════════════════╝
 const APP_VERSION = "3.4.0";
 const CHANGELOG = [
+  { v: "3.4.0", date: "2026-04-02", changes: "Awake for/Asleep for no ring (Napper-style), estrelas mais visíveis, Last Feed card, fix NightCard removido" },
   { v: "3.3.1", date: "2026-04-02", changes: "Fix critical: i18n dictionary had runtime code instead of strings, causing blank screen" },
   { v: "3.3.0", date: "2026-04-02", changes: "Tooltip nos eventos do ring: toque no ícone pra ver detalhes (tipo, ml, duração, horário)" },
   { v: "3.2.1", date: "2026-04-02", changes: "Fix syntax: brace balance, broken template literals, JSX expressions" },
