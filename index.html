@@ -90,8 +90,9 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "2.3.2";
+const APP_VERSION = "2.4.0";
 const CHANGELOG = [
+  { v: "2.4.0", date: "2026-04-02", changes: "Ring redesign: gradiente SVG, glow duplo, lua transparente, texto com gradient, animação suave" },
   { v: "2.3.2", date: "2026-04-02", changes: "Fix toast: auto-some em 2s, não fica mais travado na tela" },
   { v: "2.3.1", date: "2026-04-02", changes: "Sono: toggle Duração/Horário fim, calcula auto. Safe-area iPhone 15+. Versão no header" },
   { v: "2.3.0", date: "2026-04-02", changes: "Editar registros: toque no ícone ou texto de qualquer lançamento pra abrir e editar" },
@@ -245,12 +246,37 @@ const TYPES={bottle:{label:"Mamadeira",icon:"bottle",color:T.green,bg:T.greenS},
 
 // ── UI COMPONENTS ──
 function Ring({activeTimer,napSug,tick,recentEvents}){
-  const sz=250,stk=9,r=(sz-stk*2)/2,circ=2*Math.PI*r,gF=0.14,arc=circ*(1-2*gF),rot=90+gF*360;
-  let prog=0,lbl="",sub="",col=T.dim;
-  if(activeTimer){const el=Math.max(0,Math.floor((Date.now()-new Date(activeTimer.startTime).getTime())/1000));const mins=Math.floor(el/60);prog=Math.min(mins/(14*60),0.95);lbl=mins<60?`${mins} min`:`${Math.floor(mins/60)}h ${String(mins%60).padStart(2,"0")}m`;sub=activeTimer.type==="nap"?"Soneca":"Dormindo";col=T.purple}
-  else if(napSug){prog=napSug.prog;lbl=napSug.rem>0?fmtDur(napSug.rem):"0min";sub=napSug.over?"Hora de dormir":napSug.wind?"Preparar p/ dormir":`Acordado · ${fmtDur(napSug.el)}`;col=napSug.over?T.orange:napSug.wind?T.amber:T.green}
+  const sz=260,stk=10,r=(sz-stk*2)/2,circ=2*Math.PI*r,gF=0.14,arc=circ*(1-2*gF),rot=90+gF*360;
+  let prog=0,lbl="",sub="",col1=T.dim,col2=T.dim,glowCol="transparent";
+  if(activeTimer){const el=Math.max(0,Math.floor((Date.now()-new Date(activeTimer.startTime).getTime())/1000));const mins=Math.floor(el/60);prog=Math.min(mins/(14*60),0.95);lbl=mins<60?`${mins} min`:`${Math.floor(mins/60)}h ${String(mins%60).padStart(2,"0")}m`;sub=activeTimer.type==="nap"?"Soneca":"Dormindo";col1="#7c3aed";col2="#c084fc";glowCol=T.purple}
+  else if(napSug){prog=napSug.prog;lbl=napSug.rem>0?fmtDur(napSug.rem):"0min";sub=napSug.over?"Hora de dormir":napSug.wind?"Preparar p/ dormir":`Acordado · ${fmtDur(napSug.el)}`;
+    if(napSug.over){col1="#ea580c";col2="#fb923c";glowCol=T.orange}else if(napSug.wind){col1="#d97706";col2="#fbbf24";glowCol=T.amber}else{col1="#059669";col2="#34d399";glowCol=T.green}}
   else{sub="";lbl="—"}
-  return(<div style={{position:"relative",width:sz,height:sz,margin:"0 auto"}}><svg width={sz} height={sz}><circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke={T.bg3} strokeWidth={stk} strokeDasharray={`${arc} ${circ-arc}`} strokeLinecap="round" transform={`rotate(${rot} ${sz/2} ${sz/2})`}/>{prog>0.003&&<circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke={col} strokeWidth={stk} strokeDasharray={`${arc*prog} ${circ-arc*prog}`} strokeLinecap="round" transform={`rotate(${rot} ${sz/2} ${sz/2})`} style={{filter:`drop-shadow(0 0 10px ${col}55)`,transition:"stroke-dasharray .5s"}}/>}</svg><div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}><span style={{fontSize:12,color:T.sub,fontWeight:500,letterSpacing:1.5,textTransform:"uppercase"}}>{sub}</span><span style={{fontSize:38,fontWeight:800,letterSpacing:-1.5,marginTop:4,color:napSug?.over?T.orange:napSug?.wind?T.amber:T.text}}>{lbl}</span>{!activeTimer&&napSug&&napSug.rem>0&&<span style={{fontSize:10,color:T.dim,marginTop:4}}>p/ próxima soneca</span>}</div>{(recentEvents||[]).slice(0,5).map((ev,i)=>{const ang=(rot*Math.PI/180)+(i+1)*(arc/circ*2*Math.PI/6);const x=sz/2+r*Math.cos(ang),y=sz/2+r*Math.sin(ang);const cfg=TYPES[ev.type];if(!cfg)return null;return<div key={ev.id} style={{position:"absolute",left:x-14,top:y-14,width:28,height:28,borderRadius:"50%",background:`${T.bg2}ee`,border:`2px solid ${cfg.color}33`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 2px 8px rgba(0,0,0,0.3)"}}><Icon name={cfg.icon} size={12} color={cfg.color}/></div>})}</div>);
+  const gradId="ringGrad"+tick;
+  return(<div style={{position:"relative",width:sz,height:sz,margin:"0 auto"}}>
+    <svg width={sz} height={sz}>
+      <defs>
+        <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor={col1}/><stop offset="100%" stopColor={col2}/></linearGradient>
+        <filter id="ringGlow"><feGaussianBlur stdDeviation="6" result="blur"/><feFlood floodColor={glowCol} floodOpacity="0.4" result="color"/><feComposite in="color" in2="blur" operator="in" result="glow"/><feMerge><feMergeNode in="glow"/><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      </defs>
+      {/* Track ring */}
+      <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke="rgba(30,36,80,0.5)" strokeWidth={stk} strokeDasharray={`${arc} ${circ-arc}`} strokeLinecap="round" transform={`rotate(${rot} ${sz/2} ${sz/2})`}/>
+      {/* Inner subtle ring */}
+      <circle cx={sz/2} cy={sz/2} r={r-14} fill="none" stroke="rgba(50,58,120,0.08)" strokeWidth={0.5}/>
+      {/* Progress ring with gradient + glow */}
+      {prog>0.003&&<circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke={`url(#${gradId})`} strokeWidth={stk} strokeDasharray={`${arc*prog} ${circ-arc*prog}`} strokeLinecap="round" transform={`rotate(${rot} ${sz/2} ${sz/2})`} filter="url(#ringGlow)" style={{transition:"stroke-dasharray .6s cubic-bezier(0.4,0,0.2,1)"}}/>}
+      {/* Moon icon in center */}
+      {!activeTimer&&<g transform={`translate(${sz/2-18},${sz/2-42})`} opacity="0.12"><path d="M33 14.79A14 14 0 1 1 17.21 0a11 11 0 0 0 15.79 14.79z" fill={T.accent}/></g>}
+    </svg>
+    {/* Center content */}
+    <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
+      <span style={{fontSize:10,color:T.sub,fontWeight:600,letterSpacing:2,textTransform:"uppercase"}}>{sub}</span>
+      <span style={{fontSize:42,fontWeight:800,letterSpacing:-2,marginTop:2,background:prog>0?`linear-gradient(135deg,${col2},${col1})`:`linear-gradient(135deg,${T.text},${T.sub})`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>{lbl}</span>
+      {!activeTimer&&napSug&&napSug.rem>0&&<span style={{fontSize:9,color:T.dim,marginTop:4,letterSpacing:0.5}}>p/ próxima soneca</span>}
+    </div>
+    {/* Event dots around ring */}
+    {(recentEvents||[]).slice(0,5).map((ev,i)=>{const ang=(rot*Math.PI/180)+(i+1)*(arc/circ*2*Math.PI/6);const x=sz/2+r*Math.cos(ang),y=sz/2+r*Math.sin(ang);const cfg=TYPES[ev.type];if(!cfg)return null;return<div key={ev.id} style={{position:"absolute",left:x-13,top:y-13,width:26,height:26,borderRadius:"50%",background:`radial-gradient(circle at 40% 35%,rgba(30,38,80,0.95),rgba(12,16,40,0.98))`,border:`1.5px solid ${cfg.color}30`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 2px 8px rgba(0,0,0,0.4), 0 0 8px ${cfg.color}15`}}><Icon name={cfg.icon} size={10} color={cfg.color}/></div>})}
+  </div>);
 }
 
 function MlGoalBar({current,goal}){if(!goal||goal<=0)return null;const pct=Math.min(100,(current/goal)*100);const reached=current>=goal;return(<div style={{padding:"0 20px",marginBottom:16}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}><div style={{display:"flex",alignItems:"center",gap:6}}><Icon name="target" size={14} color={reached?T.green:T.sub}/><span style={{fontSize:11,fontWeight:600,color:T.sub}}>Meta diária</span></div><span style={{fontSize:12,fontWeight:700,color:reached?T.green:T.text}}>{current} / {goal} ml</span></div><div style={{height:6,borderRadius:3,background:T.bg3,overflow:"hidden"}}><div style={{height:"100%",borderRadius:3,width:`${pct}%`,background:reached?T.green:`linear-gradient(90deg,${T.accent},${T.purple})`,transition:"width .5s"}}/></div></div>)}
