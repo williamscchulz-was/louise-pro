@@ -85,9 +85,7 @@
   Firebase: louise-pro (Cloud Firestore)
 ═══════════════════════════════════════════════════════════════
 -->
-
 <!DOCTYPE html>
-
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
@@ -102,7 +100,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
   <!-- ERROR & LOADING HANDLER -->
-
   <script>
   window.onerror=function(msg,src,line,col,err){
     var d=document.getElementById('error-display');
@@ -114,7 +111,6 @@
     window.onerror('Promise: '+(e.reason&&e.reason.message||e.reason),null,0,0,e.reason);
   });
   </script>
-
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
     html,body{height:100%;overflow:hidden;overscroll-behavior:none;background:#070b1e}
@@ -134,7 +130,6 @@
     @keyframes splashLogo{0%{transform:scale(0.8);opacity:0}40%{transform:scale(1.05);opacity:1}100%{transform:scale(1);opacity:1}}
     @keyframes splashText{0%{opacity:0;transform:translateY(8px)}50%{opacity:0}100%{opacity:1;transform:translateY(0)}}
   </style>
-
 </head>
 <body>
 <div id="root"></div>
@@ -153,17 +148,12 @@ setTimeout(function(){
 </script>
 
 <!-- Firebase -->
-
 <script crossorigin="anonymous" src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js" onload="dbg('Firebase OK')" onerror="dbg('ERROR: Firebase CDN blocked')"></script>
-
 <script crossorigin="anonymous" src="https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore-compat.js" onload="dbg('Firestore OK')" onerror="dbg('ERROR: Firestore CDN blocked')"></script>
 
 <!-- React -->
-
 <script crossorigin="anonymous" src="https://unpkg.com/react@18/umd/react.production.min.js" onload="dbg('React OK')" onerror="dbg('ERROR: React CDN blocked')"></script>
-
 <script crossorigin="anonymous" src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" onload="dbg('ReactDOM OK')" onerror="dbg('ERROR: ReactDOM CDN blocked')"></script>
-
 <script crossorigin="anonymous" src="https://unpkg.com/@babel/standalone@7.24.0/babel.min.js" onload="dbg('Babel OK')" onerror="dbg('ERROR: Babel CDN blocked')"></script>
 
 <script>
@@ -690,8 +680,8 @@ function StatsPage({entries,onGrowth}){
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
       <h2 style={{fontSize:17,fontWeight:700,margin:0}}>{L("summary")}</h2>
       <div style={{display:"flex",gap:6}}>
-        <button onClick={onGrowth} style={{display:"flex",alignItems:"center",gap:4,padding:"6px 10px",borderRadius:8,background:"rgba(163,230,53,0.1)",border:"1px solid rgba(163,230,53,0.2)",fontSize:11,fontWeight:600,color:"#a3e635"}}><Icon name="ruler" size={12} color="#a3e635"/>Crescimento</button>
-        <button onClick={exportCSV} style={{display:"flex",alignItems:"center",gap:4,padding:"6px 10px",borderRadius:8,background:T.glass,border:`1px solid ${T.gB}`,fontSize:11,fontWeight:600,color:T.sub}}><Icon name="download" size={12} color={T.sub}/{_lang==="en"?"Export":"CSV"}</button>
+        <button onClick={onGrowth} style={{display:"flex",alignItems:"center",gap:4,padding:"6px 10px",borderRadius:8,background:"rgba(163,230,53,0.1)",border:"1px solid rgba(163,230,53,0.2)",fontSize:11,fontWeight:600,color:"#a3e635"}}><Icon name="ruler" size={12} color="#a3e635"/>{L("growth")}</button>
+        <button onClick={exportCSV} style={{display:"flex",alignItems:"center",gap:4,padding:"6px 10px",borderRadius:8,background:T.glass,border:`1px solid ${T.gB}`,fontSize:11,fontWeight:600,color:T.sub}}><Icon name="download" size={12} color={T.sub}/>{_lang==="en"?"Export":"CSV"}</button>
       </div>
     </div>
     {/* Period selector */}
@@ -1073,6 +1063,5 @@ function App(){
 var _ld=document.getElementById('load-debug');if(_ld)_ld.remove();
 ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
 </script>
-
 </body>
 </html>
