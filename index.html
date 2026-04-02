@@ -85,7 +85,9 @@
   Firebase: louise-pro (Cloud Firestore)
 ═══════════════════════════════════════════════════════════════
 -->
+
 <!DOCTYPE html>
+
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
@@ -100,6 +102,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
   <!-- ERROR & LOADING HANDLER -->
+
   <script>
   window.onerror=function(msg,src,line,col,err){
     var d=document.getElementById('error-display');
@@ -111,6 +114,7 @@
     window.onerror('Promise: '+(e.reason&&e.reason.message||e.reason),null,0,0,e.reason);
   });
   </script>
+
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
     html,body{height:100%;overflow:hidden;overscroll-behavior:none;background:#070b1e}
@@ -130,6 +134,7 @@
     @keyframes splashLogo{0%{transform:scale(0.8);opacity:0}40%{transform:scale(1.05);opacity:1}100%{transform:scale(1);opacity:1}}
     @keyframes splashText{0%{opacity:0;transform:translateY(8px)}50%{opacity:0}100%{opacity:1;transform:translateY(0)}}
   </style>
+
 </head>
 <body>
 <div id="root"></div>
@@ -148,12 +153,17 @@ setTimeout(function(){
 </script>
 
 <!-- Firebase -->
+
 <script crossorigin="anonymous" src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js" onload="dbg('Firebase OK')" onerror="dbg('ERROR: Firebase CDN blocked')"></script>
+
 <script crossorigin="anonymous" src="https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore-compat.js" onload="dbg('Firestore OK')" onerror="dbg('ERROR: Firestore CDN blocked')"></script>
 
 <!-- React -->
+
 <script crossorigin="anonymous" src="https://unpkg.com/react@18/umd/react.production.min.js" onload="dbg('React OK')" onerror="dbg('ERROR: React CDN blocked')"></script>
+
 <script crossorigin="anonymous" src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" onload="dbg('ReactDOM OK')" onerror="dbg('ERROR: ReactDOM CDN blocked')"></script>
+
 <script crossorigin="anonymous" src="https://unpkg.com/@babel/standalone@7.24.0/babel.min.js" onload="dbg('Babel OK')" onerror="dbg('ERROR: Babel CDN blocked')"></script>
 
 <script>
@@ -691,8 +701,8 @@ function StatsPage({entries,onGrowth}){
       )}
     </div>
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:20}}>
-      <div style={{background:T.greenS,borderRadius:14,padding:12}}><div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}><Icon name="bottle" size={14} color={T.green}/><span style={{fontSize:10,color:T.sub}}{_lang==="en"?"Avg milk/day":"Média leite/dia"}</span></div><div style={{fontSize:20,fontWeight:800,color:T.green}}>{avgMl} ml</div></div>
-      <div style={{background:T.purpleS,borderRadius:14,padding:12}}><div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}><Icon name="moon" size={14} color={T.purple}/><span style={{fontSize:10,color:T.sub}}{_lang==="en"?"Avg sleep/day":"Média sono/dia"}</span></div><div style={{fontSize:20,fontWeight:800,color:T.purple}}>{fmtDur(avgSl)}</div></div>
+      <div style={{background:T.greenS,borderRadius:14,padding:12}}><div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}><Icon name="bottle" size={14} color={T.green}/><span style={{fontSize:10,color:T.sub}}>{_lang==="en"?"Avg milk/day":"Média leite/dia"}</span></div><div style={{fontSize:20,fontWeight:800,color:T.green}}>{avgMl} ml</div></div>
+      <div style={{background:T.purpleS,borderRadius:14,padding:12}}><div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}><Icon name="moon" size={14} color={T.purple}/><span style={{fontSize:10,color:T.sub}}>{_lang==="en"?"Avg sleep/day":"Média sono/dia"}</span></div><div style={{fontSize:20,fontWeight:800,color:T.purple}}>{fmtDur(avgSl)}</div></div>
     </div>
     {[{t:_lang==="en"?"Milk (ml)":"Leite (ml)",f:"ml",max:mxMl,c:T.green},{t:_lang==="en"?"Total sleep":"Sono total",f:"sl",max:mxSl,c:T.purple}].map(ch=>(
       <div key={ch.f} style={{marginBottom:22}}><div style={{fontSize:12,fontWeight:600,color:T.sub,marginBottom:8}}>{ch.t}</div>
@@ -1063,5 +1073,6 @@ function App(){
 var _ld=document.getElementById('load-debug');if(_ld)_ld.remove();
 ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
 </script>
+
 </body>
 </html>
