@@ -368,7 +368,27 @@ const WW=[{maxW:4,min:30,max:60,naps:"4-5"},{maxW:8,min:45,max:75,naps:"4-5"},{m
 function getGuideline(w){for(const g of WW)if(w<g.maxW)return g;return WW[WW.length-1]}
 function daysUntilSchedule(b){if(!b)return null;const t=new Date(b);t.setMonth(t.getMonth()+2);return Math.max(0,Math.ceil((t-new Date())/864e5))}
 function getSleepRec(entries,age,birth){if(!age)return null;const dl=daysUntilSchedule(birth),g=getGuideline(age.totalWeeks);if(dl>0)return{phase:1,dl,g};const sorted=[...entries].filter(e=>["wakeup","nightwaking","sleep","nap"].includes(e.type)).sort((a,b)=>new Date(`${b.date}T${b.time}`)-new Date(`${a.date}T${a.time}`));const wins=[];for(let i=0;i<sorted.length-1;i++){const c=sorted[i],p=sorted[i+1];if((c.type==="sleep"||c.type==="nap")&&(p.type==="wakeup"||p.type==="nightwaking")){const wm=Math.floor((new Date(`${c.date}T${c.time}`)-new Date(`${p.date}T${p.time}`))/6e4);if(wm>10&&wm<600)wins.push({wm})}}if(wins.length<3)return{phase:2,dl:0,g,a:null};const avg=Math.round(wins.reduce((s,w)=>s+w.wm,0)/wins.length);return{phase:2,dl:0,g,a:{avg,rec:Math.round(avg*0.7+((g.min+g.max)/2)*0.3),pts:wins.length}}}
-function getNapSug(entries,rec){if(!rec)return null;const lw=entries.find(e=>e.type==="wakeup"||e.type==="nightwaking");if(!lw)return null;const el=minSince(lw.date,lw.time);if(el===null)return null;const tgt=rec.phase===2&&rec.a?rec.a.rec:(rec.g.min+rec.g.max)/2;const rem=Math.max(0,Math.round(tgt-el));return{el,rem,prog:Math.min(1,el/tgt),wind:rem<=15&&rem>0,over:rem===0&&el>0}}
+function getNapSug(entries,rec){
+  if(!rec)return null;
+  // Find when baby last woke: either a wakeup event OR end of last sleep/nap
+  let lastWakeTime=null;
+  for(const e of entries){
+    if(e.type==="wakeup"||e.type==="nightwaking"){
+      const t=new Date(`${e.date}T${e.time}`);
+      if(!lastWakeTime||t>lastWakeTime)lastWakeTime=t;
+    }
+    if((e.type==="sleep"||e.type==="nap")&&e.durationMin){
+      const start=new Date(`${e.date}T${e.time}`);
+      const end=new Date(start.getTime()+e.durationMin*60000);
+      if(!lastWakeTime||end>lastWakeTime)lastWakeTime=end;
+    }
+  }
+  if(!lastWakeTime)return null;
+  const el=Math.max(0,Math.floor((Date.now()-lastWakeTime)/60000));
+  const tgt=rec.phase===2&&rec.a?rec.a.rec:(rec.g.min+rec.g.max)/2;
+  const rem=Math.max(0,Math.round(tgt-el));
+  return{el,rem,prog:Math.min(1,el/tgt),wind:rem<=15&&rem>0,over:rem===0&&el>0};
+}
 
 // ── ICON ──
 function Icon({name,size=20,color="currentColor",fill="none"}){
