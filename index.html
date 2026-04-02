@@ -90,8 +90,9 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "2.1.0";
+const APP_VERSION = "2.2.0";
 const CHANGELOG = [
+  { v: "2.2.0", date: "2026-04-02", changes: "Crescimento no Perfil: dados nascimento, curvas OMS com gráficos SVG, adicionar medição inline" },
   { v: "2.1.0", date: "2026-04-02", changes: "Resumo com filtros: 7d, 14d, 30d e Tudo. Gráficos adaptam barras e labels ao período" },
   { v: "2.0.1", date: "2026-04-02", changes: "Fix save Firebase, glassmorphism sheets, safe-area iPhone 15+, atalho mamadeira" },
   { v: "2.0.0", date: "2026-04-02", changes: "Crescimento com percentil OMS, versionamento, changelog" },
@@ -247,7 +248,44 @@ function EntryRow({entry,onDelete}){const[del,setDel]=useState(false);const cfg=
 
 function AddForm({type,onSave,savedMeds,onSaveMeds}){const cfg=TYPES[type];const[time,setTime]=useState(nowTime());const[ml,setMl]=useState("");const[durH,setDurH]=useState("");const[durM,setDurM]=useState("");const[diaperT,setDiaperT]=useState("wet");const[medN,setMedN]=useState("");const[medD,setMedD]=useState("");const[tempV,setTempV]=useState("");const[side,setSide]=useState("left");const[nurseM,setNurseM]=useState("");const[pumpMl,setPumpMl]=useState("");const[weightKg,setWeightKg]=useState("");const[lengthCm,setLengthCm]=useState("");const[headCm,setHeadCm]=useState("");const[notes,setNotes]=useState("");const[showML,setShowML]=useState(false);const[nMN,setNMN]=useState("");const[nMD,setNMD]=useState("");const mRef=useRef(null);useEffect(()=>{if(type==="bottle"&&mRef.current)mRef.current.focus()},[type]);const doSave=()=>{const b={type,date:todayStr(),time,notes:notes.trim()||undefined,id:uid()};if(type==="bottle"){if(!ml)return;onSave({...b,ml:parseInt(ml)})}else if(type==="nursing")onSave({...b,side,durationMin:nurseM?parseInt(nurseM):undefined});else if(type==="sleep"||type==="nap"){const t2=(parseInt(durH)||0)*60+(parseInt(durM)||0);if(!t2)return;onSave({...b,durationMin:t2})}else if(type==="wakeup"||type==="nightwaking")onSave(b);else if(type==="diaper")onSave({...b,subtype:diaperT});else if(type==="medicine"){if(!medN.trim())return;onSave({...b,name:medN.trim(),dose:medD.trim()||undefined})}else if(type==="temperature"){if(!tempV)return;onSave({...b,value:parseFloat(tempV)})}else if(type==="pumping"){if(!pumpMl)return;onSave({...b,ml:parseInt(pumpMl)})}else if(type==="growth"){onSave({...b,weightKg:weightKg?parseFloat(weightKg):undefined,lengthCm:lengthCm?parseFloat(lengthCm):undefined,headCm:headCm?parseFloat(headCm):undefined})}};const inp={width:"100%",padding:"13px 16px",background:"rgba(14,18,48,0.8)",border:`1px solid ${T.gB}`,borderRadius:12,color:T.text,fontSize:15,outline:"none"};return(<div style={{paddingBottom:20}}><div style={{display:"flex",alignItems:"center",gap:12,padding:"0 20px 16px"}}><div style={{width:32,height:32,borderRadius:10,background:cfg.bg,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name={cfg.icon} size={18} color={cfg.color}/></div><span style={{fontSize:17,fontWeight:700}}>{cfg.label}</span></div><div style={{padding:"0 20px"}}><Fld label="Horário"><input type="time" value={time} onChange={e=>setTime(e.target.value)} style={{...inp,colorScheme:"dark"}}/></Fld>{type==="bottle"&&<><Fld label="Quantidade (ml)"><input ref={mRef} type="number" inputMode="numeric" placeholder="0" value={ml} onChange={e=>setMl(e.target.value)} style={{...inp,fontSize:36,fontWeight:800,textAlign:"center",padding:"16px"}}/></Fld><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:20}}>{[50,70,90,100].map(v=><button key={v} onClick={()=>setMl(String(v))} style={{padding:"10px 0",borderRadius:10,fontSize:13,fontWeight:600,background:ml===String(v)?T.green:T.glass,color:ml===String(v)?T.bg1:T.text,border:`1px solid ${ml===String(v)?T.green:T.gB}`}}>{v}</button>)}</div></>}{type==="nursing"&&<><Fld label="Lado"><Seg opts={[{v:"left",l:"Esquerdo"},{v:"right",l:"Direito"},{v:"both",l:"Ambos"}]} val={side} set={setSide} color={cfg.color}/></Fld><Fld label="Duração (min)"><input type="number" inputMode="numeric" placeholder="15" value={nurseM} onChange={e=>setNurseM(e.target.value)} style={inp}/></Fld></>}{(type==="sleep"||type==="nap")&&<Fld label="Duração"><div style={{display:"flex",gap:10,alignItems:"center"}}><input type="number" inputMode="numeric" placeholder="0" value={durH} onChange={e=>setDurH(e.target.value)} style={{...inp,flex:1,textAlign:"center",fontSize:28,fontWeight:800}}/><span style={{color:T.dim,fontWeight:700}}>h</span><input type="number" inputMode="numeric" placeholder="0" value={durM} onChange={e=>setDurM(e.target.value)} style={{...inp,flex:1,textAlign:"center",fontSize:28,fontWeight:800}}/><span style={{color:T.dim,fontWeight:700}}>m</span></div></Fld>}{type==="diaper"&&<Fld label="Tipo"><Seg opts={[{v:"wet",l:"Xixi"},{v:"dirty",l:"Cocô"},{v:"both",l:"Ambos"}]} val={diaperT} set={setDiaperT} color={cfg.color}/></Fld>}{type==="medicine"&&<><Fld label="Medicamento"><div style={{display:"flex",gap:8}}><input type="text" placeholder="Nome" value={medN} onChange={e=>setMedN(e.target.value)} style={{...inp,flex:1}}/><button onClick={()=>setShowML(!showML)} style={{width:44,borderRadius:12,background:T.amberS,border:`1px solid ${T.amber}22`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="list" size={18} color={T.amber}/></button></div></Fld>{showML&&<div style={{background:T.glass,border:`1px solid ${T.gB}`,borderRadius:14,padding:14,marginBottom:20}}><div style={{fontSize:13,fontWeight:700,marginBottom:12,color:T.sub}}>Medicamentos salvos</div>{savedMeds.map((m,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 12px",background:"rgba(14,18,48,0.5)",borderRadius:10,marginBottom:4}}><button onClick={()=>{setMedN(m.name);setMedD(m.dose||"");setShowML(false)}} style={{flex:1,textAlign:"left"}}><div style={{fontSize:13,fontWeight:600}}>{m.name}</div>{m.dose&&<div style={{fontSize:11,color:T.dim}}>{m.dose}</div>}</button><button onClick={()=>onSaveMeds(savedMeds.filter((_,j)=>j!==i))} style={{padding:"3px 8px",borderRadius:6,background:T.redS}}><Icon name="x" size={12} color={T.red}/></button></div>)}<div style={{marginTop:12,display:"flex",gap:6}}><input placeholder="Nome" value={nMN} onChange={e=>setNMN(e.target.value)} style={{...inp,flex:2,padding:"9px 12px",fontSize:12}}/><input placeholder="Dose" value={nMD} onChange={e=>setNMD(e.target.value)} style={{...inp,flex:1,padding:"9px 12px",fontSize:12}}/><button onClick={()=>{if(!nMN.trim())return;onSaveMeds([...savedMeds,{name:nMN.trim(),dose:nMD.trim()}]);setNMN("");setNMD("")}} style={{width:40,borderRadius:10,background:T.amber,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="plus" size={16} color={T.bg1}/></button></div></div>}<Fld label="Dose"><input type="text" placeholder="Ex: 3 gotas" value={medD} onChange={e=>setMedD(e.target.value)} style={inp}/></Fld></>}{type==="temperature"&&<Fld label="Temperatura (°C)"><input type="number" inputMode="decimal" step="0.1" placeholder="36.5" value={tempV} onChange={e=>setTempV(e.target.value)} style={{...inp,fontSize:36,fontWeight:800,textAlign:"center"}}/></Fld>}{type==="pumping"&&<Fld label="Quantidade (ml)"><input type="number" inputMode="numeric" placeholder="0" value={pumpMl} onChange={e=>setPumpMl(e.target.value)} style={{...inp,fontSize:28,fontWeight:800,textAlign:"center"}}/></Fld>}{type==="growth"&&<><Fld label="Peso (kg)"><input type="number" inputMode="decimal" step="0.01" placeholder="Ex: 4.5" value={weightKg} onChange={e=>setWeightKg(e.target.value)} style={{...inp,fontSize:28,fontWeight:800,textAlign:"center"}}/></Fld><Fld label="Comprimento (cm)"><input type="number" inputMode="decimal" step="0.1" placeholder="Ex: 55.0" value={lengthCm} onChange={e=>setLengthCm(e.target.value)} style={{...inp,fontSize:28,fontWeight:800,textAlign:"center"}}/></Fld><Fld label="Perímetro cefálico (cm)"><input type="number" inputMode="decimal" step="0.1" placeholder="Ex: 37.0" value={headCm} onChange={e=>setHeadCm(e.target.value)} style={{...inp,fontSize:28,fontWeight:800,textAlign:"center"}}/></Fld></>}<Fld label="Observações"><textarea placeholder="Anotação..." value={notes} onChange={e=>setNotes(e.target.value)} rows={2} style={{...inp,resize:"vertical"}}/></Fld><button onClick={doSave} style={{width:"100%",padding:14,borderRadius:12,background:cfg.color,color:T.bg1,fontSize:15,fontWeight:700}}>Salvar</button></div></div>)}
 
-function ProfilePage({profile,onSave,onBack}){const[name,setName]=useState(profile.name||"");const[birth,setBirth]=useState(profile.birthDate||"");const[photo,setPhoto]=useState(profile.photo||"");const[mlGoal,setMlGoal]=useState(String(profile.mlGoal||""));const fr=useRef(null);const handlePhoto=e=>{const f=e.target.files?.[0];if(!f)return;const rd=new FileReader();rd.onload=ev=>{const img=new Image();img.onload=()=>{const c=document.createElement("canvas"),mx=200;let w=img.width,h=img.height;if(w>h){h=(h/w)*mx;w=mx}else{w=(w/h)*mx;h=mx}c.width=w;c.height=h;c.getContext("2d").drawImage(img,0,0,w,h);setPhoto(c.toDataURL("image/jpeg",0.8))};img.src=ev.target.result};rd.readAsDataURL(f)};const inp={width:"100%",padding:"14px 16px",background:"rgba(14,18,48,0.8)",border:`1px solid ${T.gB}`,borderRadius:12,color:T.text,fontSize:15,outline:"none"};return(<div style={{position:"fixed",inset:0,zIndex:200,maxWidth:480,margin:"0 auto",background:T.bg1,overflowY:"auto",paddingBottom:40}}><div style={{display:"flex",alignItems:"center",gap:14,padding:"16px 20px"}}><button onClick={onBack} style={{width:36,height:36,borderRadius:10,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="back" size={18} color={T.sub}/></button><span style={{fontSize:17,fontWeight:700}}>Perfil</span></div><div style={{padding:"0 20px"}}><div style={{display:"flex",flexDirection:"column",alignItems:"center",marginBottom:28}}><button onClick={()=>fr.current?.click()} style={{width:88,height:88,borderRadius:"50%",overflow:"hidden",background:T.glass,border:`2px solid ${T.accent}33`,display:"flex",alignItems:"center",justifyContent:"center"}}>{photo?<img src={photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<Icon name="sun" size={32} color={T.sub}/>}</button><input ref={fr} type="file" accept="image/*" style={{display:"none"}} onChange={handlePhoto}/><span style={{fontSize:11,color:T.dim,marginTop:8}}>Toque para alterar</span></div><Fld label="Nome"><input type="text" placeholder="Ex: Louise" value={name} onChange={e=>setName(e.target.value)} style={inp}/></Fld><Fld label="Data de nascimento"><input type="date" value={birth} onChange={e=>setBirth(e.target.value)} style={{...inp,colorScheme:"dark"}}/></Fld><Fld label="Meta diária de leite (ml)"><input type="number" inputMode="numeric" placeholder="Ex: 600" value={mlGoal} onChange={e=>setMlGoal(e.target.value)} style={inp}/></Fld><button onClick={()=>{onSave({name:name.trim(),birthDate:birth,photo,mlGoal:parseInt(mlGoal)||0});onBack()}} style={{width:"100%",padding:14,borderRadius:12,marginTop:12,background:T.accent,color:"#fff",fontSize:15,fontWeight:700}}>Salvar</button><div style={{marginTop:24,padding:14,background:T.glass,borderRadius:12,border:`1px solid ${T.gB}`}}><div style={{fontSize:12,fontWeight:700,color:T.sub,marginBottom:8}}>Louise Pro v{APP_VERSION}</div>{CHANGELOG.map((c,i)=><div key={i} style={{fontSize:10,color:T.dim,marginBottom:4}}><span style={{fontWeight:700}}>v{c.v}</span> ({c.date}) — {c.changes}</div>)}</div></div></div>)}
+function ProfilePage({profile,onSave,onBack,onGrowth}){
+  const[name,setName]=useState(profile.name||"");
+  const[birth,setBirth]=useState(profile.birthDate||"");
+  const[photo,setPhoto]=useState(profile.photo||"");
+  const[mlGoal,setMlGoal]=useState(String(profile.mlGoal||""));
+  const[birthWeight,setBirthWeight]=useState(String(profile.birthWeight||""));
+  const[birthLength,setBirthLength]=useState(String(profile.birthLength||""));
+  const[birthHead,setBirthHead]=useState(String(profile.birthHead||""));
+  const fr=useRef(null);
+  const handlePhoto=e=>{const f=e.target.files?.[0];if(!f)return;const rd=new FileReader();rd.onload=ev=>{const img=new Image();img.onload=()=>{const c=document.createElement("canvas"),mx=200;let w=img.width,h=img.height;if(w>h){h=(h/w)*mx;w=mx}else{w=(w/h)*mx;h=mx}c.width=w;c.height=h;c.getContext("2d").drawImage(img,0,0,w,h);setPhoto(c.toDataURL("image/jpeg",0.8))};img.src=ev.target.result};rd.readAsDataURL(f)};
+  const doSave=()=>{onSave({name:name.trim(),birthDate:birth,photo,mlGoal:parseInt(mlGoal)||0,birthWeight:parseFloat(birthWeight)||0,birthLength:parseFloat(birthLength)||0,birthHead:parseFloat(birthHead)||0});onBack()};
+  const inp={width:"100%",padding:"14px 16px",background:"rgba(14,18,48,0.8)",border:`1px solid ${T.gB}`,borderRadius:12,color:T.text,fontSize:15,outline:"none"};
+  return(<div style={{position:"fixed",inset:0,zIndex:200,maxWidth:480,margin:"0 auto",background:T.bg1,overflowY:"auto",paddingBottom:40}}>
+    <div style={{display:"flex",alignItems:"center",gap:14,padding:"16px 20px"}}><button onClick={onBack} style={{width:36,height:36,borderRadius:10,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="back" size={18} color={T.sub}/></button><span style={{fontSize:17,fontWeight:700}}>Perfil</span></div>
+    <div style={{padding:"0 20px"}}>
+      <div style={{display:"flex",flexDirection:"column",alignItems:"center",marginBottom:28}}><button onClick={()=>fr.current?.click()} style={{width:88,height:88,borderRadius:"50%",overflow:"hidden",background:T.glass,border:`2px solid ${T.accent}33`,display:"flex",alignItems:"center",justifyContent:"center"}}>{photo?<img src={photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<Icon name="sun" size={32} color={T.sub}/>}</button><input ref={fr} type="file" accept="image/*" style={{display:"none"}} onChange={handlePhoto}/><span style={{fontSize:11,color:T.dim,marginTop:8}}>Toque para alterar</span></div>
+      <Fld label="Nome"><input type="text" placeholder="Ex: Louise" value={name} onChange={e=>setName(e.target.value)} style={inp}/></Fld>
+      <Fld label="Data de nascimento"><input type="date" value={birth} onChange={e=>setBirth(e.target.value)} style={{...inp,colorScheme:"dark"}}/></Fld>
+      <Fld label="Meta diária de leite (ml)"><input type="number" inputMode="numeric" placeholder="Ex: 600" value={mlGoal} onChange={e=>setMlGoal(e.target.value)} style={inp}/></Fld>
+      
+      {/* Birth measurements */}
+      <div style={{fontSize:12,fontWeight:700,color:T.sub,marginTop:20,marginBottom:12,textTransform:"uppercase",letterSpacing:1}}>Dados de nascimento</div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:20}}>
+        <Fld label="Peso (kg)"><input type="number" inputMode="decimal" step="0.01" placeholder="3.2" value={birthWeight} onChange={e=>setBirthWeight(e.target.value)} style={{...inp,textAlign:"center",padding:"12px 8px"}}/></Fld>
+        <Fld label="Comp. (cm)"><input type="number" inputMode="decimal" step="0.1" placeholder="49" value={birthLength} onChange={e=>setBirthLength(e.target.value)} style={{...inp,textAlign:"center",padding:"12px 8px"}}/></Fld>
+        <Fld label="PC (cm)"><input type="number" inputMode="decimal" step="0.1" placeholder="34" value={birthHead} onChange={e=>setBirthHead(e.target.value)} style={{...inp,textAlign:"center",padding:"12px 8px"}}/></Fld>
+      </div>
+      
+      {/* Growth page link */}
+      <button onClick={()=>{doSave();onGrowth()}} style={{width:"100%",padding:14,borderRadius:12,marginBottom:12,background:"rgba(163,230,53,0.1)",border:"1px solid rgba(163,230,53,0.2)",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+        <Icon name="ruler" size={16} color="#a3e635"/><span style={{fontSize:14,fontWeight:700,color:"#a3e635"}}>Ver crescimento e percentis</span>
+      </button>
+      
+      <button onClick={doSave} style={{width:"100%",padding:14,borderRadius:12,background:T.accent,color:"#fff",fontSize:15,fontWeight:700}}>Salvar</button>
+      <div style={{marginTop:24,padding:14,background:T.glass,borderRadius:12,border:`1px solid ${T.gB}`}}><div style={{fontSize:12,fontWeight:700,color:T.sub,marginBottom:8}}>Louise Pro v{APP_VERSION}</div>{CHANGELOG.map((c,i)=><div key={i} style={{fontSize:10,color:T.dim,marginBottom:4}}><span style={{fontWeight:700}}>v{c.v}</span> ({c.date}) — {c.changes}</div>)}</div>
+    </div>
+  </div>);
+}
 
 function StatsPage({entries,onGrowth}){
   const[period,setPeriod]=useState(7);
@@ -295,64 +333,139 @@ function StatsPage({entries,onGrowth}){
 function HistoryPage({entries,onDelete}){const[dateIdx,setDateIdx]=useState(0);const viewDate=dateOffset(todayStr(),-dateIdx);const dayE=entries.filter(e=>e.date===viewDate);const dMl=dayE.filter(e=>e.type==="bottle").reduce((s,e)=>s+(e.ml||0),0);const dSl=dayE.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin).reduce((s,e)=>s+e.durationMin,0);const dLbl=new Date(viewDate+"T12:00").toLocaleDateString("pt-BR",{weekday:"long",day:"numeric",month:"long"});const isToday=dateIdx===0;return(<div style={{padding:"16px 20px 0"}}><h2 style={{fontSize:17,fontWeight:700,marginBottom:16}}>Histórico</h2><div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}><button onClick={()=>setDateIdx(dateIdx+1)} style={{width:36,height:36,borderRadius:10,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="back" size={16} color={T.sub}/></button><div style={{flex:1,textAlign:"center"}}><div style={{fontSize:14,fontWeight:700,color:isToday?T.accent:T.text}}>{isToday?"Hoje":dLbl}</div><div style={{display:"flex",justifyContent:"center",gap:12,fontSize:11,color:T.sub,marginTop:2}}>{dMl>0&&<span>{dMl} ml</span>}{dSl>0&&<span>{fmtDur(dSl)}</span>}<span>{dayE.length} reg.</span></div></div><button onClick={()=>setDateIdx(Math.max(0,dateIdx-1))} disabled={isToday} style={{width:36,height:36,borderRadius:10,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center",opacity:isToday?0.3:1}}><Icon name="forward" size={16} color={T.sub}/></button></div>{dayE.length===0&&<p style={{color:T.dim,textAlign:"center",padding:40,fontSize:13}}>Nenhum registro neste dia</p>}{dayE.map(e=><EntryRow key={e.id} entry={e} onDelete={onDelete}/>)}</div>)}
 
 // ── GROWTH PAGE with WHO percentiles ──
-function GrowthPage({entries,birthDate,onBack}){
-  const growthEntries=entries.filter(e=>e.type==="growth").sort((a,b)=>`${b.date}T${b.time}`.localeCompare(`${a.date}T${a.time}`));
-  const latest=growthEntries[0];
+function GrowthPage({entries,birthDate,profile,onBack,onAddEntry}){
+  const growthEntries=entries.filter(e=>e.type==="growth").sort((a,b)=>`${a.date}T${a.time}`.localeCompare(`${b.date}T${b.time}`));
   const age=calcAge(birthDate);
   const ageMonths=age?(age.months+(age.days/30)):0;
-  
+  const[showForm,setShowForm]=useState(false);
+  const[wK,setWK]=useState("");const[lC,setLC]=useState("");const[hC,setHC]=useState("");
+
+  // Build all data points: birth + entries
+  const allPoints=[];
+  if(profile.birthWeight||profile.birthLength||profile.birthHead){
+    allPoints.push({ageM:0,date:birthDate,weightKg:profile.birthWeight,lengthCm:profile.birthLength,headCm:profile.birthHead,label:"Nasc."});
+  }
+  growthEntries.forEach(e=>{
+    const eAge=calcAge(birthDate);
+    if(!eAge)return;
+    const d1=new Date(birthDate),d2=new Date(e.date);
+    const mths=(d2.getFullYear()-d1.getFullYear())*12+d2.getMonth()-d1.getMonth()+(d2.getDate()-d1.getDate())/30;
+    allPoints.push({ageM:Math.max(0,mths),date:e.date,weightKg:e.weightKg,lengthCm:e.lengthCm,headCm:e.headCm,label:new Date(e.date+"T12:00").toLocaleDateString("pt-BR",{day:"numeric",month:"short"})});
+  });
+  const latest=allPoints[allPoints.length-1];
+
+  const doAdd=()=>{
+    if(!wK&&!lC&&!hC)return;
+    onAddEntry({type:"growth",date:todayStr(),time:nowTime(),id:uid(),weightKg:wK?parseFloat(wK):undefined,lengthCm:lC?parseFloat(lC):undefined,headCm:hC?parseFloat(hC):undefined});
+    setWK("");setLC("");setHC("");setShowForm(false);
+  };
+
+  // Mini chart for a metric
+  function GrowthChart({label,field,table,color}){
+    const pts=allPoints.filter(p=>p[field]);
+    if(pts.length<1)return null;
+    // WHO P3, P50, P97 curves
+    const maxAge=Math.max(ageMonths+1,3);
+    const whoSteps=[];for(let m=0;m<=maxAge;m+=maxAge/20){
+      const lms=interpolateLMS(table,m);
+      const z3=lms.M*Math.pow(1+lms.L*lms.S*(-1.88),1/lms.L);
+      const z97=lms.M*Math.pow(1+lms.L*lms.S*1.88,1/lms.L);
+      whoSteps.push({m,p3:Math.abs(lms.L)>0.001?z3:lms.M*Math.exp(-1.88*lms.S),p50:lms.M,p97:Math.abs(lms.L)>0.001?z97:lms.M*Math.exp(1.88*lms.S)});
+    }
+    const allVals=[...whoSteps.map(w=>w.p97),...whoSteps.map(w=>w.p3),...pts.map(p=>p[field])];
+    const minV=Math.min(...allVals)*0.9,maxV=Math.max(...allVals)*1.05;
+    const W=320,H=140;
+    const x=m=>10+(m/maxAge)*(W-20);
+    const y=v=>H-10-((v-minV)/(maxV-minV))*(H-20);
+    const pathStr=(arr,key)=>arr.map((p,i)=>`${i===0?"M":"L"}${x(p.m).toFixed(1)},${y(p[key]).toFixed(1)}`).join(" ");
+    return(<div style={{marginBottom:16}}>
+      <div style={{fontSize:12,fontWeight:700,color,marginBottom:6}}>{label}</div>
+      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{width:"100%",height:"auto",background:T.glass,borderRadius:12,border:`1px solid ${T.gB}`}}>
+        <path d={pathStr(whoSteps,"p3")+" L"+x(maxAge)+","+y(whoSteps[whoSteps.length-1].p97)+" "+pathStr([...whoSteps].reverse(),"p97")} fill={`${color}08`} stroke="none"/>
+        <path d={pathStr(whoSteps,"p50")} fill="none" stroke={`${color}44`} strokeWidth="1" strokeDasharray="4,3"/>
+        <path d={pathStr(whoSteps,"p3")} fill="none" stroke={`${color}22`} strokeWidth="0.5"/>
+        <path d={pathStr(whoSteps,"p97")} fill="none" stroke={`${color}22`} strokeWidth="0.5"/>
+        {pts.map((p,i)=><circle key={i} cx={x(p.ageM)} cy={y(p[field])} r={4} fill={color} stroke={T.bg1} strokeWidth={2}/>)}
+        {pts.length>1&&<path d={pts.map((p,i)=>`${i===0?"M":"L"}${x(p.ageM).toFixed(1)},${y(p[field]).toFixed(1)}`).join(" ")} fill="none" stroke={color} strokeWidth="2"/>}
+        <text x={W-4} y={y(whoSteps[whoSteps.length-1].p50)+4} textAnchor="end" fill={`${color}66`} fontSize="8">P50</text>
+        <text x={W-4} y={y(whoSteps[whoSteps.length-1].p97)+4} textAnchor="end" fill={`${color}44`} fontSize="7">P97</text>
+        <text x={W-4} y={y(whoSteps[whoSteps.length-1].p3)+4} textAnchor="end" fill={`${color}44`} fontSize="7">P3</text>
+      </svg>
+    </div>);
+  }
+
   function PercentileCard({label,value,unit,table,icon}){
     if(!value)return null;
     const result=getPercentile(value,table,ageMonths);
     const p=result.percentile;
     const pColor=p<3||p>97?T.red:p<15||p>85?T.orange:T.green;
-    return(<div style={{background:T.glass,borderRadius:14,padding:16,marginBottom:8,border:`1px solid ${T.gB}`}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-        <div style={{display:"flex",alignItems:"center",gap:8}}><Icon name={icon} size={16} color={pColor}/><span style={{fontSize:13,fontWeight:700}}>{label}</span></div>
+    return(<div style={{background:T.glass,borderRadius:14,padding:14,marginBottom:8,border:`1px solid ${T.gB}`}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+        <div style={{display:"flex",alignItems:"center",gap:8}}><Icon name={icon} size={14} color={pColor}/><span style={{fontSize:13,fontWeight:700}}>{label}</span></div>
         <span style={{fontSize:18,fontWeight:800}}>{value} {unit}</span>
       </div>
       <div style={{display:"flex",alignItems:"center",gap:10}}>
         <div style={{flex:1,height:6,borderRadius:3,background:T.bg3,overflow:"hidden",position:"relative"}}>
           <div style={{position:"absolute",left:"3%",width:1,height:"100%",background:T.dim,opacity:0.3}}/>
-          <div style={{position:"absolute",left:"15%",width:1,height:"100%",background:T.dim,opacity:0.3}}/>
           <div style={{position:"absolute",left:"50%",width:1,height:"100%",background:T.dim,opacity:0.5}}/>
-          <div style={{position:"absolute",left:"85%",width:1,height:"100%",background:T.dim,opacity:0.3}}/>
           <div style={{position:"absolute",left:"97%",width:1,height:"100%",background:T.dim,opacity:0.3}}/>
           <div style={{position:"absolute",left:`${Math.max(1,Math.min(99,p))}%`,transform:"translateX(-50%)",width:8,height:8,borderRadius:"50%",background:pColor,top:-1,boxShadow:`0 0 6px ${pColor}88`}}/>
         </div>
-        <span style={{fontSize:14,fontWeight:800,color:pColor,minWidth:40,textAlign:"right"}}>P{p}</span>
+        <span style={{fontSize:14,fontWeight:800,color:pColor,minWidth:35,textAlign:"right"}}>P{p}</span>
       </div>
-      <div style={{display:"flex",justifyContent:"space-between",marginTop:6,fontSize:9,color:T.dim}}>
-        <span>P3</span><span>P15</span><span>P50</span><span>P85</span><span>P97</span>
-      </div>
-      <div style={{fontSize:10,color:T.sub,marginTop:6}}>Mediana OMS: {result.median.toFixed(1)} {unit}</div>
+      <div style={{fontSize:10,color:T.sub,marginTop:4}}>Mediana OMS: {result.median.toFixed(1)} {unit}</div>
     </div>);
   }
 
+  const inp={width:"100%",padding:"12px",background:"rgba(14,18,48,0.8)",border:`1px solid ${T.gB}`,borderRadius:10,color:T.text,fontSize:15,outline:"none",textAlign:"center"};
+
   return(<div style={{padding:"16px 20px 0"}}>
-    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
       <div style={{display:"flex",alignItems:"center",gap:10}}><button onClick={onBack} style={{width:32,height:32,borderRadius:10,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="back" size={16} color={T.sub}/></button><h2 style={{fontSize:17,fontWeight:700,margin:0}}>Crescimento</h2></div>
-      <span style={{fontSize:11,color:T.sub}}>{age?`${ageMonths.toFixed(1)} meses`:""}</span>
+      <button onClick={()=>setShowForm(!showForm)} style={{padding:"6px 12px",borderRadius:10,background:"rgba(163,230,53,0.1)",border:"1px solid rgba(163,230,53,0.2)",fontSize:12,fontWeight:700,color:"#a3e635"}}>{showForm?"Cancelar":"+ Medição"}</button>
     </div>
-    {!latest&&<div style={{textAlign:"center",padding:"40px 20px",color:T.dim}}><Icon name="ruler" size={32} color={T.dim}/><div style={{fontSize:13,marginTop:8}}>Registre o primeiro crescimento pelo +</div></div>}
+
+    {showForm&&<div style={{background:T.glass,borderRadius:14,padding:16,marginBottom:16,border:`1px solid ${T.gB}`}}>
+      <div style={{fontSize:12,fontWeight:700,color:T.sub,marginBottom:12}}>Nova medição</div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:12}}>
+        <Fld label="Peso (kg)"><input type="number" inputMode="decimal" step="0.01" placeholder="4.5" value={wK} onChange={e=>setWK(e.target.value)} style={inp}/></Fld>
+        <Fld label="Comp. (cm)"><input type="number" inputMode="decimal" step="0.1" placeholder="55" value={lC} onChange={e=>setLC(e.target.value)} style={inp}/></Fld>
+        <Fld label="PC (cm)"><input type="number" inputMode="decimal" step="0.1" placeholder="37" value={hC} onChange={e=>setHC(e.target.value)} style={inp}/></Fld>
+      </div>
+      <button onClick={doAdd} style={{width:"100%",padding:12,borderRadius:10,background:"#a3e635",color:T.bg1,fontSize:14,fontWeight:700}}>Salvar medição</button>
+    </div>}
+
+    {/* Percentile cards */}
     {latest&&<>
-      <div style={{fontSize:12,color:T.sub,marginBottom:12}}>Última medição: {new Date(latest.date+"T12:00").toLocaleDateString("pt-BR",{day:"numeric",month:"short",year:"numeric"})}</div>
+      <div style={{fontSize:11,color:T.sub,marginBottom:10}}>
+        {latest.label==="Nasc."?"Dados de nascimento":`Última medição: ${latest.label}`} · {ageMonths.toFixed(1)} meses
+      </div>
       <PercentileCard label="Peso" value={latest.weightKg} unit="kg" table={WHO_GIRLS.weight} icon="target"/>
       <PercentileCard label="Comprimento" value={latest.lengthCm} unit="cm" table={WHO_GIRLS.length} icon="ruler"/>
       <PercentileCard label="Perímetro cefálico" value={latest.headCm} unit="cm" table={WHO_GIRLS.head} icon="target"/>
     </>}
-    {growthEntries.length>1&&<><div style={{fontSize:12,fontWeight:600,color:T.dim,marginTop:20,marginBottom:10,textTransform:"uppercase",letterSpacing:0.8}}>Histórico</div>
-      {growthEntries.map(e=><div key={e.id} style={{display:"flex",alignItems:"center",gap:12,padding:"8px 12px",marginBottom:4,background:T.glass,borderRadius:10,border:`1px solid ${T.gB}`}}>
-        <span style={{fontSize:11,color:T.sub,minWidth:60}}>{new Date(e.date+"T12:00").toLocaleDateString("pt-BR",{day:"numeric",month:"short"})}</span>
-        <div style={{flex:1,display:"flex",gap:12,fontSize:12}}>
-          {e.weightKg&&<span style={{color:T.green}}>{e.weightKg}kg</span>}
-          {e.lengthCm&&<span style={{color:T.blue}}>{e.lengthCm}cm</span>}
-          {e.headCm&&<span style={{color:T.amber}}>PC {e.headCm}cm</span>}
+
+    {/* Growth charts */}
+    {allPoints.length>0&&<>
+      <div style={{fontSize:12,fontWeight:600,color:T.dim,marginTop:16,marginBottom:10,textTransform:"uppercase",letterSpacing:0.8}}>Curvas de crescimento</div>
+      <GrowthChart label="Peso (kg)" field="weightKg" table={WHO_GIRLS.weight} color={T.green}/>
+      <GrowthChart label="Comprimento (cm)" field="lengthCm" table={WHO_GIRLS.length} color={T.blue}/>
+      <GrowthChart label="Perímetro cefálico (cm)" field="headCm" table={WHO_GIRLS.head} color={T.amber}/>
+    </>}
+
+    {/* History table */}
+    {allPoints.length>0&&<><div style={{fontSize:12,fontWeight:600,color:T.dim,marginTop:8,marginBottom:10,textTransform:"uppercase",letterSpacing:0.8}}>Histórico</div>
+      {[...allPoints].reverse().map((p,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:12,padding:"8px 12px",marginBottom:4,background:T.glass,borderRadius:10,border:`1px solid ${T.gB}`}}>
+        <span style={{fontSize:11,color:T.sub,minWidth:50}}>{p.label}</span>
+        <div style={{flex:1,display:"flex",gap:10,fontSize:12}}>
+          {p.weightKg&&<span style={{color:T.green}}>{p.weightKg}kg</span>}
+          {p.lengthCm&&<span style={{color:T.blue}}>{p.lengthCm}cm</span>}
+          {p.headCm&&<span style={{color:T.amber}}>PC {p.headCm}</span>}
         </div>
       </div>)}
     </>}
-    <div style={{marginTop:20,padding:12,background:T.glass,borderRadius:12,border:`1px solid ${T.gB}`,fontSize:10,color:T.dim,lineHeight:1.6}}>
-      Percentis baseados nos padrões de crescimento da OMS para meninas de 0-24 meses. P50 = mediana. Entre P15-P85 é considerado normal. · v{APP_VERSION}
+    <div style={{marginTop:16,padding:12,background:T.glass,borderRadius:12,border:`1px solid ${T.gB}`,fontSize:10,color:T.dim,lineHeight:1.6}}>
+      Curvas OMS para meninas 0-24m. Linha tracejada = P50 (mediana). Faixa = P3-P97.
     </div>
   </div>);
 }
@@ -424,7 +537,7 @@ function App(){
       </div>}
       {page==="history"&&<HistoryPage entries={entries} onDelete={deleteEntry}/>}
       {page==="stats"&&<StatsPage entries={entries} onGrowth={()=>goTo("growth")}/>}
-      {page==="growth"&&<GrowthPage entries={entries} birthDate={profile.birthDate} onBack={()=>goTo("stats")}/>}
+      {page==="growth"&&<GrowthPage entries={entries} birthDate={profile.birthDate} profile={profile} onBack={()=>goTo("stats")} onAddEntry={addEntry}/>}
     </div>
 
     <Modal open={showSleepInfo} onClose={()=>setShowSleepInfo(false)}>
@@ -433,14 +546,14 @@ function App(){
     </Modal>
 
     <Sheet open={showAdd&&!formType} onClose={()=>setShowAdd(false)}>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"6px 0",padding:"0 12px"}}>{["bottle","nursing","sleep","nap","wakeup","nightwaking","diaper","medicine","temperature","pumping","growth"].map((type,i)=>{const cfg=TYPES[type];const last=entries.find(e=>e.type===type);const agoRaw=last?timeSince(last.date,last.time):null;const ago=agoRaw==="now"?"Just now":agoRaw;return(<button key={type} onClick={()=>setFormType(type)} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8,padding:"16px 4px 12px",animation:`slideUp .25s ease ${i*0.03}s both`}}><div style={{width:64,height:64,borderRadius:"50%",background:"radial-gradient(circle at 45% 40%,rgba(40,48,100,0.8),rgba(20,26,60,0.9))",border:"1px solid rgba(100,110,180,0.15)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 2px 12px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.04)"}}><Icon name={cfg.icon} size={26} color={cfg.color}/></div><div style={{textAlign:"center"}}><div style={{fontSize:12,fontWeight:600,color:T.text,lineHeight:1.3}}>{cfg.label}</div>{ago&&<div style={{fontSize:10,color:T.dim,marginTop:2}}>{ago}</div>}</div></button>)})}</div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"6px 0",padding:"0 12px"}}>{["bottle","nursing","sleep","nap","wakeup","nightwaking","diaper","medicine","temperature","pumping"].map((type,i)=>{const cfg=TYPES[type];const last=entries.find(e=>e.type===type);const agoRaw=last?timeSince(last.date,last.time):null;const ago=agoRaw==="now"?"Just now":agoRaw;return(<button key={type} onClick={()=>setFormType(type)} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8,padding:"16px 4px 12px",animation:`slideUp .25s ease ${i*0.03}s both`}}><div style={{width:64,height:64,borderRadius:"50%",background:"radial-gradient(circle at 45% 40%,rgba(40,48,100,0.8),rgba(20,26,60,0.9))",border:"1px solid rgba(100,110,180,0.15)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 2px 12px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.04)"}}><Icon name={cfg.icon} size={26} color={cfg.color}/></div><div style={{textAlign:"center"}}><div style={{fontSize:12,fontWeight:600,color:T.text,lineHeight:1.3}}>{cfg.label}</div>{ago&&<div style={{fontSize:10,color:T.dim,marginTop:2}}>{ago}</div>}</div></button>)})}</div>
     </Sheet>
 
     <Sheet open={!!formType} onClose={()=>setFormType(null)}>
       {formType&&<AddForm type={formType} onSave={addEntry} savedMeds={savedMeds} onSaveMeds={async m=>await FB.saveMeds(m)}/>}
     </Sheet>
 
-    {showProfile&&<ProfilePage profile={profile} onSave={async p=>await FB.saveProfile(p)} onBack={()=>setShowProfile(false)}/>}
+    {showProfile&&<ProfilePage profile={profile} onSave={async p=>await FB.saveProfile(p)} onBack={()=>setShowProfile(false)} onGrowth={()=>{setShowProfile(false);goTo("growth")}}/>}
     <TimerBar activeTimer={activeTimer} onStop={stopTimer}/>
 
     <nav style={{position:"fixed",bottom:"calc(12px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 32px)",maxWidth:448,display:"flex",alignItems:"center",justifyContent:"space-around",padding:"8px 12px",background:"rgba(16,20,52,0.92)",backdropFilter:"blur(16px)",borderRadius:22,border:`1px solid ${T.gB}`,boxShadow:"0 8px 32px rgba(0,0,0,0.5)",zIndex:50}}>
