@@ -152,28 +152,42 @@ setTimeout(function(){
 },10000);
 </script>
 
-<!-- Firebase (compat v9) -->
+<!-- Firebase -->
 
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script crossorigin="anonymous" src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js" onload="dbg('Firebase OK')" onerror="dbg('ERROR: Firebase CDN blocked')"></script>
 
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script crossorigin="anonymous" src="https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore-compat.js" onload="dbg('Firestore OK')" onerror="dbg('ERROR: Firestore CDN blocked')"></script>
 
 <!-- React -->
 
-<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin="anonymous" src="https://unpkg.com/react@18/umd/react.production.min.js" onload="dbg('React OK')" onerror="dbg('ERROR: React CDN blocked')"></script>
 
-<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script crossorigin="anonymous" src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" onload="dbg('ReactDOM OK')" onerror="dbg('ERROR: ReactDOM CDN blocked')"></script>
 
-<script src="https://unpkg.com/@babel/standalone@7.24.0/babel.min.js"></script>
+<script crossorigin="anonymous" src="https://unpkg.com/@babel/standalone@7.24.0/babel.min.js" onload="dbg('Babel OK')" onerror="dbg('ERROR: Babel CDN blocked')"></script>
 
 <script>
+// Intercept Babel errors (Babel logs to console.error, not window.onerror)
+var _origErr=console.error;
+console.error=function(){
+  _origErr.apply(console,arguments);
+  var msg=Array.from(arguments).join(' ');
+  if(msg.includes('SyntaxError')||msg.includes('Unexpected')||msg.includes('babel')){
+    var d=document.getElementById('load-debug')||document.getElementById('error-display');
+    if(!d){d=document.createElement('div');d.id='error-display';d.style.cssText='position:fixed;inset:0;z-index:9999;background:#0a0e28;color:#f87171;padding:40px 20px;font-family:monospace;font-size:12px;overflow:auto;white-space:pre-wrap';document.body.appendChild(d)}
+    d.innerHTML='<div style="font-size:18px;font-weight:bold;color:#fbbf24;margin-bottom:16px">⚠ Babel Error</div><div style="color:#f87171;padding:12px;background:rgba(248,113,113,0.1);border-radius:8px">'+msg.substring(0,2000)+'</div>';
+    d.style.color='#f87171';
+  }
+};
+dbg('Initializing Firebase...');
 // Verify Firebase loaded
 if (typeof firebase === 'undefined') {
-  document.getElementById('root').innerHTML = '<div style="color:#f87171;padding:40px;font-family:sans-serif;text-align:center"><h2>Erro ao carregar Firebase</h2><p>Verifique sua conexão com a internet e recarregue.</p></div>';
+  dbg('ERROR: Firebase not loaded - no internet?');
   throw new Error('Firebase not loaded');
 }
 
 // ── FIREBASE INIT ──
+try {
 firebase.initializeApp({
   apiKey: "AIzaSyBPiWTlC0ZKLEX5Z8PqKM2c3zaXN8p7DH8",
   authDomain: "louise-pro.firebaseapp.com",
@@ -207,6 +221,8 @@ window.FB = {
   subTimer(cb) { return db.collection('config').doc('active').onSnapshot(s => cb(s.exists ? s.data() : null)); },
   async saveTimer(t) { await db.collection('config').doc('active').set(t||{cleared:true}); },
 };
+dbg('Firebase ready');
+} catch(e) { dbg('Firebase Error: '+e.message); throw e; }
 </script>
 
 <script type="text/babel">
@@ -1053,6 +1069,8 @@ function App(){
   </div>);
 }
 
+// Remove loading screen
+var _ld=document.getElementById('load-debug');if(_ld)_ld.remove();
 ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
 </script>
 
