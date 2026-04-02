@@ -93,8 +93,9 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "3.2.1";
+const APP_VERSION = "3.3.0";
 const CHANGELOG = [
+  { v: "3.3.0", date: "2026-04-02", changes: "Tooltip nos eventos do ring: toque no ícone pra ver detalhes (tipo, ml, duração, horário)" },
   { v: "3.2.1", date: "2026-04-02", changes: "Fix syntax: brace balance, broken template literals, JSX expressions" },
   { v: "3.2.0", date: "2026-04-02", changes: "i18n EN/PT-BR, ring events proporcional ao horário, ícones maiores no ring" },
   { v: "3.1.0", date: "2026-04-02", changes: "Resumo da noite, vibração na janela de sono, filtros no histórico (Leite/Sono/Fralda/Med), fix scroll e fade-out" },
@@ -313,6 +314,8 @@ function TL(type){return typeLabel(type,_lang)}
 
 // ── UI COMPONENTS ──
 function Ring({activeTimer,napSug,tick,recentEvents,lang}){
+  const[tip,setTip]=useState(null);
+  useEffect(()=>{if(tip!==null){const t=setTimeout(()=>setTip(null),3000);return()=>clearTimeout(t)}},[tip]);
   const sz=260,stk=10,r=(sz-stk*2)/2,circ=2*Math.PI*r,gF=0.14,arc=circ*(1-2*gF),rot=90+gF*360;
   const arcDeg=360*(1-2*gF);
   let prog=0,lbl="",sub="",col1=T.dim,col2=T.dim,glowCol="transparent";
@@ -349,7 +352,20 @@ function Ring({activeTimer,napSug,tick,recentEvents,lang}){
       <span style={{fontSize:42,fontWeight:800,letterSpacing:-2,marginTop:2,background:prog>0?`linear-gradient(135deg,${col2},${col1})`:`linear-gradient(135deg,${T.text},${T.sub})`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>{lbl}</span>
       {!activeTimer&&napSug&&napSug.rem>0&&<span style={{fontSize:9,color:T.dim,marginTop:4,letterSpacing:0.5}}>{lang==="en"?"until next nap":"p/ próxima soneca"}</span>}
     </div>
-    {evDots.map((d,i)=><div key={d.ev.id||i} style={{position:"absolute",left:d.x-16,top:d.y-16,width:32,height:32,borderRadius:"50%",background:`radial-gradient(circle at 35% 30%,rgba(40,50,100,0.95),rgba(14,18,45,0.98))`,border:`2px solid ${d.cfg.color}40`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 2px 10px rgba(0,0,0,0.4), 0 0 12px ${d.cfg.color}25`,zIndex:2}}><Icon name={d.cfg.icon} size={14} color={d.cfg.color}/></div>)}
+    {evDots.map((d,i)=>{
+      const ev=d.ev;let detail=TL(ev.type);
+      if(ev.ml)detail+=` · ${ev.ml}ml`;
+      else if(ev.durationMin)detail+=` · ${fmtDur(ev.durationMin)}`;
+      else if(ev.subtype)detail+=` · ${({wet:L("wet"),dirty:L("dirty"),both:L("both")})[ev.subtype]||""}`;
+      else if(ev.name)detail+=` · ${ev.name}`;
+      return<div key={ev.id||i} onClick={(e)=>{e.stopPropagation();setTip(tip===i?null:i)}} style={{position:"absolute",left:d.x-16,top:d.y-16,width:32,height:32,borderRadius:"50%",background:`radial-gradient(circle at 35% 30%,rgba(40,50,100,0.95),rgba(14,18,45,0.98))`,border:`2px solid ${tip===i?d.cfg.color:d.cfg.color+"40"}`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 2px 10px rgba(0,0,0,0.4), 0 0 ${tip===i?20:12}px ${d.cfg.color}${tip===i?"50":"25"}`,zIndex:tip===i?10:2,transform:tip===i?"scale(1.25)":"scale(1)",transition:"all .2s cubic-bezier(0.34,1.56,0.64,1)"}}>
+        <Icon name={d.cfg.icon} size={14} color={d.cfg.color}/>
+        {tip===i&&<div style={{position:"absolute",bottom:38,left:"50%",transform:"translateX(-50%)",whiteSpace:"nowrap",padding:"6px 12px",borderRadius:10,background:"rgba(10,14,40,0.95)",border:`1px solid ${d.cfg.color}30`,boxShadow:`0 4px 16px rgba(0,0,0,0.5), 0 0 8px ${d.cfg.color}20`,fontSize:11,fontWeight:600,color:d.cfg.color,zIndex:20,animation:"fadeIn .15s ease"}}>
+          {detail}<span style={{display:"block",fontSize:9,color:T.dim,fontWeight:400,marginTop:1}}>{ev.time}</span>
+          <div style={{position:"absolute",bottom:-5,left:"50%",transform:"translateX(-50%) rotate(45deg)",width:8,height:8,background:"rgba(10,14,40,0.95)",borderRight:`1px solid ${d.cfg.color}30`,borderBottom:`1px solid ${d.cfg.color}30`}}/>
+        </div>}
+      </div>})}
+    {tip!==null&&<div onClick={()=>setTip(null)} style={{position:"absolute",inset:0,zIndex:1}}/>}
   </div>);
 }
 
