@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
@@ -14,11 +13,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
-    html{height:100%;overflow:hidden;overscroll-behavior:none}
-    body{background:#070b1e;font-family:'Outfit',sans-serif;
-      -webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;
-      height:100%;overflow:hidden;position:fixed;width:100%;overscroll-behavior:none;
-      padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
+    html,body{height:100%;overflow:hidden;overscroll-behavior:none;background:#070b1e}
+    body{font-family:'Outfit',sans-serif;
+      -webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+    #root{height:100%;overflow:hidden}
     button{cursor:pointer;border:none;background:none;color:inherit;font-family:inherit}
     input,textarea{font-family:inherit;-webkit-user-select:text;user-select:text}
     input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-outer-spin-button{-webkit-appearance:none}
@@ -37,17 +35,12 @@
 <div id="root"></div>
 
 <!-- Firebase (compat v9) -->
-
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <!-- React -->
-
 <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-
 <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-
 <script src="https://unpkg.com/@babel/standalone@7.24.0/babel.min.js"></script>
 
 <script>
@@ -100,8 +93,9 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "3.0.1";
+const APP_VERSION = "3.1.0";
 const CHANGELOG = [
+  { v: "3.1.0", date: "2026-04-02", changes: "Resumo da noite, vibração na janela de sono, filtros no histórico (Leite/Sono/Fralda/Med), fix scroll e fade-out" },
   { v: "3.0.1", date: "2026-04-02", changes: "Fix scroll: fundo fixo, só conteúdo rola, sem bounce preto no iOS" },
   { v: "3.0.0", date: "2026-04-02", changes: "Visual Napper-level: céu estrelado com nebulosas, ícones com glow vivo, header abaixo Dynamic Island" },
   { v: "2.5.0", date: "2026-04-02", changes: "Splash screen com lua animada, estrelas e gradiente (1.8s)" },
@@ -255,44 +249,138 @@ function Icon({name,size=20,color="currentColor",fill="none"}){
 
 // ── THEME ──
 const T={bg1:"#070b1e",bg2:"#0d1133",bg3:"#141a42",glass:"rgba(22,28,60,0.6)",gB:"rgba(90,100,180,0.12)",text:"#e4e6f5",sub:"#8b90b8",dim:"#555a80",accent:"#8b7cf6",green:"#34d399",greenS:"rgba(52,211,153,0.1)",purple:"#a78bfa",purpleS:"rgba(167,139,250,0.1)",pink:"#f472b6",pinkS:"rgba(244,114,182,0.1)",amber:"#fbbf24",amberS:"rgba(251,191,36,0.1)",orange:"#fb923c",orangeS:"rgba(251,146,60,0.1)",blue:"#60a5fa",blueS:"rgba(96,165,250,0.1)",red:"#f87171",redS:"rgba(248,113,113,0.1)",cyan:"#22d3ee",cyanS:"rgba(34,211,238,0.1)"};
-const TYPES={bottle:{label:"Mamadeira",icon:"bottle",color:T.green,bg:T.greenS},nursing:{label:"Amamentação",icon:"breast",color:T.blue,bg:T.blueS},sleep:{label:"Sono",icon:"moon",color:T.purple,bg:T.purpleS},wakeup:{label:"Acordou",icon:"sun",color:T.amber,bg:T.amberS},nap:{label:"Soneca",icon:"cloud",color:T.purple,bg:T.purpleS},nightwaking:{label:"Acordou à noite",icon:"zap",color:T.orange,bg:T.orangeS},diaper:{label:"Fralda",icon:"droplet",color:T.pink,bg:T.pinkS},medicine:{label:"Medicamento",icon:"pill",color:T.amber,bg:T.amberS},temperature:{label:"Temperatura",icon:"thermo",color:T.red,bg:T.redS},pumping:{label:"Extração",icon:"pump",color:T.cyan,bg:T.cyanS},growth:{label:"Crescimento",icon:"ruler",color:"#a3e635",bg:"rgba(163,230,53,0.1)"}};
+const TYPES={bottle:{label:{pt:"Mamadeira",en:"Bottle"},icon:"bottle",color:T.green,bg:T.greenS},nursing:{label:{pt:"Amamentação",en:"Nursing"},icon:"breast",color:T.blue,bg:T.blueS},sleep:{label:{pt:"Sono",en:"Bedtime"},icon:"moon",color:T.purple,bg:T.purpleS},wakeup:{label:{pt:"Acordou",en:"Woke up"},icon:"sun",color:T.amber,bg:T.amberS},nap:{label:{pt:"Soneca",en:"Nap"},icon:"cloud",color:T.purple,bg:T.purpleS},nightwaking:{label:{pt:"Acordou à noite",en:"Night waking"},icon:"zap",color:T.orange,bg:T.orangeS},diaper:{label:{pt:"Fralda",en:"Diaper"},icon:"droplet",color:T.pink,bg:T.pinkS},medicine:{label:{pt:"Medicamento",en:"Medicine"},icon:"pill",color:T.amber,bg:T.amberS},temperature:{label:{pt:"Temperatura",en:"Temperature"},icon:"thermo",color:T.red,bg:T.redS},pumping:{label:{pt:"Extração",en:"Pumping"},icon:"pump",color:T.cyan,bg:T.cyanS},growth:{label:{pt:"Crescimento",en:"Growth"},icon:"ruler",color:"#a3e635",bg:"rgba(163,230,53,0.1)"}};
+
+// ── i18n ──
+const I={
+  today:{pt:"Hoje",en:"Today"},
+  days:{pt:"dias",en:"days"},
+  dailyGoal:{pt:"Meta diária",en:"Daily goal"},
+  lastNight:{pt:"Noite passada",en:"Last night"},
+  sleep:{pt:"sono",en:"sleep"},
+  wokeUp:{pt:"acordou",en:"woke up"},
+  milk:{pt:"leite",en:"milk"},
+  lastFeed:{pt:"Última mamada",en:"Last feed"},
+  milkVsWeek:{pt:"leite vs sem. passada",en:"milk vs last week"},
+  sleepLabel:{pt:"sono",en:"sleep"},
+  repeatLast:{pt:"Repetir último",en:"Repeat last"},
+  history:{pt:"Histórico",en:"History"},
+  summary:{pt:"Resumo",en:"Summary"},
+  growth:{pt:"Crescimento",en:"Growth"},
+  profile:{pt:"Perfil",en:"Profile"},
+  home:{pt:"Início",en:"Home"},
+  save:{pt:"Salvar",en:"Save"},
+  update:{pt:"Atualizar",en:"Update"},
+  cancel:{pt:"Cancelar",en:"Cancel"},
+  delete:{pt:"Apagar",en:"Delete"},
+  undo:{pt:"Desfazer",en:"Undo"},
+  registered:{pt:"registrado",en:"registered"},
+  removed:{pt:"removido",en:"removed"},
+  updated:{pt:"atualizado",en:"updated"},
+  day:{pt:"Dia",en:"Day"},
+  time:{pt:"Horário",en:"Time"},
+  duration:{pt:"Duração",en:"Duration"},
+  endTime:{pt:"Horário fim",en:"End time"},
+  wokeAt:{pt:"Acordou às",en:"Woke at"},
+  amount:{pt:"Quantidade (ml)",en:"Amount (ml)"},
+  notes:{pt:"Observações",en:"Notes"},
+  side:{pt:"Lado",en:"Side"},
+  left:{pt:"Esquerdo",en:"Left"},right:{pt:"Direito",en:"Right"},both:{pt:"Ambos",en:"Both"},
+  type:{pt:"Tipo",en:"Type"},
+  wet:{pt:"Xixi",en:"Wet"},dirty:{pt:"Cocô",en:"Dirty"},
+  all:{pt:"Tudo",en:"All"},
+  noEntries:{pt:"Nenhum registro",en:"No entries"},
+  tapToAdd:{pt:"Toque + para registrar",en:"Tap + to add"},
+  language:{pt:"Idioma",en:"Language"},
+  birthData:{pt:"Dados de nascimento",en:"Birth data"},
+  weight:{pt:"Peso",en:"Weight"},length:{pt:"Comprimento",en:"Length"},head:{pt:"Cabeça",en:"Head"},
+  viewGrowth:{pt:"Ver crescimento e percentis",en:"View growth & percentiles"},
+  name:{pt:"Nome",en:"Name"},birthDate:{pt:"Data de nascimento",en:"Date of birth"},
+  dailyMilkGoal:{pt:"Meta diária de leite (ml)",en:"Daily milk goal (ml)"},
+  measurement:{pt:"Medição",en:"Measurement"},
+  savedMeds:{pt:"Medicamentos salvos",en:"Saved medicines"},
+  dose:{pt:"Dose",en:"Dose"},
+  reg:{pt:"reg.",en:"entries"},
+};
+function tl(key,lang){return I[key]?.[lang]||I[key]?.en||key}
+function typeLabel(type,lang){const t=TYPES[type];return t?.label?.[lang]||t?.label?.en||type}
+// Global lang for components without prop
+let _lang="en";
+function L(key){return I[key]?.[_lang]||I[key]?.en||key}
+function TL(type){return typeLabel(type,_lang)}
 
 // ── UI COMPONENTS ──
-function Ring({activeTimer,napSug,tick,recentEvents}){
+function Ring({activeTimer,napSug,tick,recentEvents,lang}){
   const sz=260,stk=10,r=(sz-stk*2)/2,circ=2*Math.PI*r,gF=0.14,arc=circ*(1-2*gF),rot=90+gF*360;
+  const arcDeg=360*(1-2*gF);
   let prog=0,lbl="",sub="",col1=T.dim,col2=T.dim,glowCol="transparent";
-  if(activeTimer){const el=Math.max(0,Math.floor((Date.now()-new Date(activeTimer.startTime).getTime())/1000));const mins=Math.floor(el/60);prog=Math.min(mins/(14*60),0.95);lbl=mins<60?`${mins} min`:`${Math.floor(mins/60)}h ${String(mins%60).padStart(2,"0")}m`;sub=activeTimer.type==="nap"?"Soneca":"Dormindo";col1="#7c3aed";col2="#c084fc";glowCol=T.purple}
-  else if(napSug){prog=napSug.prog;lbl=napSug.rem>0?fmtDur(napSug.rem):"0min";sub=napSug.over?"Hora de dormir":napSug.wind?"Preparar p/ dormir":`Acordado · ${fmtDur(napSug.el)}`;
+  if(activeTimer){const el=Math.max(0,Math.floor((Date.now()-new Date(activeTimer.startTime).getTime())/1000));const mins=Math.floor(el/60);prog=Math.min(mins/(14*60),0.95);lbl=mins<60?`${mins} min`:`${Math.floor(mins/60)}h ${String(mins%60).padStart(2,"0")}m`;sub=activeTimer.type==="nap"?(lang==="en"?"Nap":"Soneca"):(lang==="en"?"Sleeping":"Dormindo");col1="#7c3aed";col2="#c084fc";glowCol=T.purple}
+  else if(napSug){prog=napSug.prog;lbl=napSug.rem>0?fmtDur(napSug.rem):"0min";
+    sub=napSug.over?(lang==="en"?"Time to sleep":"Hora de dormir"):napSug.wind?(lang==="en"?"Get ready for sleep":"Preparar p/ dormir"):(lang==="en"?`Awake · ${fmtDur(napSug.el)}`:`Acordado · ${fmtDur(napSug.el)}`);
     if(napSug.over){col1="#ea580c";col2="#fb923c";glowCol=T.orange}else if(napSug.wind){col1="#d97706";col2="#fbbf24";glowCol=T.amber}else{col1="#059669";col2="#34d399";glowCol=T.green}}
   else{sub="";lbl="—"}
-  const gradId="ringGrad"+tick;
+  const gradId="rg"+(tick%2);
+  // Position events proportionally by time of day (6:00=start, 22:00=end)
+  const evDots=(recentEvents||[]).slice(0,7).map(ev=>{
+    const cfg=TYPES[ev.type];if(!cfg)return null;
+    const[h,m]=(ev.time||"12:00").split(":").map(Number);
+    let dayMin=h*60+m;
+    // Map 5:00-23:00 to 0-1 on the arc
+    const startMin=5*60,endMin=23*60;
+    let t=Math.max(0,Math.min(1,(dayMin-startMin)/(endMin-startMin)));
+    const ang=(rot*Math.PI/180)+t*(arcDeg*Math.PI/180);
+    const x=sz/2+r*Math.cos(ang),y=sz/2+r*Math.sin(ang);
+    return{ev,cfg,x,y};
+  }).filter(Boolean);
   return(<div style={{position:"relative",width:sz,height:sz,margin:"0 auto"}}>
     <svg width={sz} height={sz}>
       <defs>
         <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor={col1}/><stop offset="100%" stopColor={col2}/></linearGradient>
-        <filter id="ringGlow"><feGaussianBlur stdDeviation="6" result="blur"/><feFlood floodColor={glowCol} floodOpacity="0.4" result="color"/><feComposite in="color" in2="blur" operator="in" result="glow"/><feMerge><feMergeNode in="glow"/><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <filter id="rgw"><feGaussianBlur stdDeviation="6" result="b"/><feFlood floodColor={glowCol} floodOpacity="0.4" result="c"/><feComposite in="c" in2="b" operator="in" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
       </defs>
-      {/* Track ring */}
-      <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke="rgba(30,36,80,0.5)" strokeWidth={stk} strokeDasharray={`${arc} ${circ-arc}`} strokeLinecap="round" transform={`rotate(${rot} ${sz/2} ${sz/2})`}/>
-      {/* Inner subtle ring */}
-      <circle cx={sz/2} cy={sz/2} r={r-14} fill="none" stroke="rgba(50,58,120,0.08)" strokeWidth={0.5}/>
-      {/* Progress ring with gradient + glow */}
-      {prog>0.003&&<circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke={`url(#${gradId})`} strokeWidth={stk} strokeDasharray={`${arc*prog} ${circ-arc*prog}`} strokeLinecap="round" transform={`rotate(${rot} ${sz/2} ${sz/2})`} filter="url(#ringGlow)" style={{transition:"stroke-dasharray .6s cubic-bezier(0.4,0,0.2,1)"}}/>}
-      {/* Moon icon in center */}
-      {!activeTimer&&<g transform={`translate(${sz/2-18},${sz/2-42})`} opacity="0.12"><path d="M33 14.79A14 14 0 1 1 17.21 0a11 11 0 0 0 15.79 14.79z" fill={T.accent}/></g>}
+      <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke="rgba(30,36,80,0.4)" strokeWidth={stk} strokeDasharray={`${arc} ${circ-arc}`} strokeLinecap="round" transform={`rotate(${rot} ${sz/2} ${sz/2})`}/>
+      <circle cx={sz/2} cy={sz/2} r={r-16} fill="none" stroke="rgba(50,58,120,0.06)" strokeWidth={0.5}/>
+      {prog>0.003&&<circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke={`url(#${gradId})`} strokeWidth={stk} strokeDasharray={`${arc*prog} ${circ-arc*prog}`} strokeLinecap="round" transform={`rotate(${rot} ${sz/2} ${sz/2})`} filter="url(#rgw)" style={{transition:"stroke-dasharray .6s cubic-bezier(0.4,0,0.2,1)"}}/>}
     </svg>
-    {/* Center content */}
     <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
       <span style={{fontSize:10,color:T.sub,fontWeight:600,letterSpacing:2,textTransform:"uppercase"}}>{sub}</span>
       <span style={{fontSize:42,fontWeight:800,letterSpacing:-2,marginTop:2,background:prog>0?`linear-gradient(135deg,${col2},${col1})`:`linear-gradient(135deg,${T.text},${T.sub})`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>{lbl}</span>
-      {!activeTimer&&napSug&&napSug.rem>0&&<span style={{fontSize:9,color:T.dim,marginTop:4,letterSpacing:0.5}}>p/ próxima soneca</span>}
+      {!activeTimer&&napSug&&napSug.rem>0&&<span style={{fontSize:9,color:T.dim,marginTop:4,letterSpacing:0.5}}>{lang==="en"?"until next nap":"p/ próxima soneca"}</span>}
     </div>
-    {/* Event dots around ring */}
-    {(recentEvents||[]).slice(0,5).map((ev,i)=>{const ang=(rot*Math.PI/180)+(i+1)*(arc/circ*2*Math.PI/6);const x=sz/2+r*Math.cos(ang),y=sz/2+r*Math.sin(ang);const cfg=TYPES[ev.type];if(!cfg)return null;return<div key={ev.id} style={{position:"absolute",left:x-13,top:y-13,width:26,height:26,borderRadius:"50%",background:`radial-gradient(circle at 40% 35%,rgba(30,38,80,0.95),rgba(12,16,40,0.98))`,border:`1.5px solid ${cfg.color}30`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 2px 8px rgba(0,0,0,0.4), 0 0 8px ${cfg.color}15`}}><Icon name={cfg.icon} size={10} color={cfg.color}/></div>})}
+    {evDots.map((d,i)=><div key={d.ev.id||i} style={{position:"absolute",left:d.x-16,top:d.y-16,width:32,height:32,borderRadius:"50%",background:`radial-gradient(circle at 35% 30%,rgba(40,50,100,0.95),rgba(14,18,45,0.98))`,border:`2px solid ${d.cfg.color}40`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 2px 10px rgba(0,0,0,0.4), 0 0 12px ${d.cfg.color}25`,zIndex:2}}><Icon name={d.cfg.icon} size={14} color={d.cfg.color}/></div>)}
   </div>);
 }
 
 function MlGoalBar({current,goal}){if(!goal||goal<=0)return null;const pct=Math.min(100,(current/goal)*100);const reached=current>=goal;return(<div style={{padding:"0 20px",marginBottom:16}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}><div style={{display:"flex",alignItems:"center",gap:6}}><Icon name="target" size={14} color={reached?T.green:T.sub}/><span style={{fontSize:11,fontWeight:600,color:T.sub}}>Meta diária</span></div><span style={{fontSize:12,fontWeight:700,color:reached?T.green:T.text}}>{current} / {goal} ml</span></div><div style={{height:6,borderRadius:3,background:T.bg3,overflow:"hidden"}}><div style={{height:"100%",borderRadius:3,width:`${pct}%`,background:reached?T.green:`linear-gradient(90deg,${T.accent},${T.purple})`,transition:"width .5s"}}/></div></div>)}
+
+// ── NIGHT SUMMARY ──
+function NightCard({entries}){
+  const today=todayStr(),yesterday=dateOffset(today,-1);
+  // Night = entries from yesterday 20:00 to today 08:00
+  const nightEntries=entries.filter(e=>{
+    if(e.date===yesterday&&e.time>="20:00")return true;
+    if(e.date===today&&e.time<"08:00")return true;
+    return false;
+  });
+  if(nightEntries.length===0)return null;
+  const sleepMin=nightEntries.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin).reduce((s,e)=>s+e.durationMin,0);
+  const wakings=nightEntries.filter(e=>e.type==="nightwaking").length;
+  const feeds=nightEntries.filter(e=>e.type==="bottle"||e.type==="nursing");
+  const lastFeed=feeds.length>0?feeds.sort((a,b)=>`${b.date}T${b.time}`.localeCompare(`${a.date}T${a.time}`))[0]:null;
+  const feedMl=feeds.filter(e=>e.ml).reduce((s,e)=>s+e.ml,0);
+  if(!sleepMin&&!wakings&&!feeds.length)return null;
+  return(<div style={{padding:"0 20px",marginBottom:14}}>
+    <div style={{padding:"12px 16px",borderRadius:14,background:"rgba(22,28,60,0.5)",border:`1px solid ${T.purple}15`,display:"flex",flexDirection:"column",gap:8}}>
+      <div style={{display:"flex",alignItems:"center",gap:6}}><Icon name="moon" size={13} color={T.purple}/><span style={{fontSize:11,fontWeight:700,color:T.sub}}>Noite passada</span></div>
+      <div style={{display:"flex",gap:12,flexWrap:"wrap"}}>
+        {sleepMin>0&&<div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:18,fontWeight:800,color:T.purple}}>{fmtDur(sleepMin)}</span><span style={{fontSize:10,color:T.dim}}>sono</span></div>}
+        {wakings>0&&<div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:18,fontWeight:800,color:T.orange}}>{wakings}x</span><span style={{fontSize:10,color:T.dim}}>acordou</span></div>}
+        {feedMl>0&&<div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:18,fontWeight:800,color:T.green}}>{feedMl}ml</span><span style={{fontSize:10,color:T.dim}}>leite</span></div>}
+      </div>
+      {lastFeed&&<div style={{fontSize:10,color:T.dim}}>Última mamada: {lastFeed.time}{lastFeed.ml?` · ${lastFeed.ml}ml`:""}</div>}
+    </div>
+  </div>);
+}
 
 function WeeklyCard({entries}){const tw=[],lw=[];for(let i=0;i<7;i++){const d1=dateOffset(todayStr(),-i),d2=dateOffset(todayStr(),-7-i);tw.push(...entries.filter(e=>e.date===d1));lw.push(...entries.filter(e=>e.date===d2))}const tMl=tw.filter(e=>e.type==="bottle").reduce((s,e)=>s+(e.ml||0),0);const lMl=lw.filter(e=>e.type==="bottle").reduce((s,e)=>s+(e.ml||0),0);const tSl=tw.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin).reduce((s,e)=>s+e.durationMin,0);const lSl=lw.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin).reduce((s,e)=>s+e.durationMin,0);if(!lMl&&!lSl)return null;const md=lMl>0?Math.round(((tMl-lMl)/lMl)*100):0;const sd=lSl>0?Math.round(((tSl-lSl)/lSl)*100):0;if(!md&&!sd)return null;return(<div style={{padding:"0 20px",marginBottom:16}}><div style={{padding:"12px 16px",borderRadius:14,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",gap:16}}>{md!==0&&<div style={{display:"flex",alignItems:"center",gap:6,flex:1}}><Icon name={md>0?"arrowUp":"arrowDown"} size={14} color={md>0?T.green:T.orange}/><span style={{fontSize:11,color:T.sub}}><span style={{fontWeight:700,color:md>0?T.green:T.orange}}>{Math.abs(md)}%</span> leite vs sem. passada</span></div>}{sd!==0&&<div style={{display:"flex",alignItems:"center",gap:6,flex:1}}><Icon name={sd>0?"arrowUp":"arrowDown"} size={14} color={sd>0?T.green:T.orange}/><span style={{fontSize:11,color:T.sub}}><span style={{fontWeight:700,color:sd>0?T.green:T.orange}}>{Math.abs(sd)}%</span> sono</span></div>}</div></div>)}
 
@@ -309,7 +397,7 @@ function Seg({opts,val,set,color}){return<div style={{display:"flex",gap:6}}>{op
 
 function EntryRow({entry,onDelete,onEdit}){const[del,setDel]=useState(false);const cfg=TYPES[entry.type]||{label:entry.type,icon:"star",color:T.text,bg:T.glass};let detail="";if(entry.ml)detail=`${entry.ml} ml`;else if(entry.durationMin)detail=fmtDur(entry.durationMin);else if(entry.subtype)detail=({wet:"Xixi",dirty:"Cocô",both:"Ambos"})[entry.subtype]||"";else if(entry.name)detail=entry.name+(entry.dose?` · ${entry.dose}`:"");else if(entry.value)detail=`${entry.value}°C`;else if(entry.weightKg||entry.lengthCm||entry.headCm){const parts=[];if(entry.weightKg)parts.push(`${entry.weightKg}kg`);if(entry.lengthCm)parts.push(`${entry.lengthCm}cm`);if(entry.headCm)parts.push(`Cab. ${entry.headCm}cm`);detail=parts.join(" · ")}if(entry.type==="nursing"&&entry.side)detail=(detail?detail+" · ":"")+({left:"Esq",right:"Dir",both:"Ambos"}[entry.side]||"");return(<div style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",marginBottom:4,background:T.glass,borderRadius:12,borderLeft:`3px solid ${cfg.color}`}}>
   <button onClick={()=>onEdit&&onEdit(entry)} style={{width:34,height:34,borderRadius:10,background:cfg.bg,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name={cfg.icon} size={16} color={cfg.color}/></button>
-  <button onClick={()=>onEdit&&onEdit(entry)} style={{flex:1,textAlign:"left"}}><div style={{fontSize:13,fontWeight:600}}>{cfg.label}</div>{detail&&<div style={{fontSize:11,color:T.sub}}>{detail}</div>}</button>
+  <button onClick={()=>onEdit&&onEdit(entry)} style={{flex:1,textAlign:"left"}}><div style={{fontSize:13,fontWeight:600}}>{cfg.label[_lang]||cfg.label.en}</div>{detail&&<div style={{fontSize:11,color:T.sub}}>{detail}</div>}</button>
   <div style={{textAlign:"right",flexShrink:0}}><div style={{fontSize:13,fontWeight:600}}>{entry.time}</div><div style={{fontSize:9,color:T.dim}}>{timeSince(entry.date,entry.time)}</div></div>
   {!del?<button onClick={()=>setDel(true)} style={{padding:4,color:T.dim,opacity:0.4}}><Icon name="x" size={14} color={T.dim}/></button>:<button onClick={()=>onDelete(entry.id)} style={{padding:"4px 8px",borderRadius:6,fontSize:10,fontWeight:700,background:T.red,color:"#fff"}}>Apagar</button>}
 </div>)}
@@ -349,7 +437,7 @@ function AddForm({type,onSave,savedMeds,onSaveMeds,editEntry}){const cfg=TYPES[t
   return(<div style={{paddingBottom:20}}>
     <div style={{display:"flex",alignItems:"center",gap:12,padding:"0 20px 16px"}}>
       <div style={{width:32,height:32,borderRadius:10,background:cfg.bg,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name={cfg.icon} size={18} color={cfg.color}/></div>
-      <span style={{fontSize:17,fontWeight:700}}>{cfg.label}</span>
+      <span style={{fontSize:17,fontWeight:700}}>{cfg.label[_lang]||cfg.label.en}</span>
     </div>
     <div style={{padding:"0 20px"}}>
       {/* Date + Time row */}
@@ -390,9 +478,10 @@ function ProfilePage({profile,onSave,onBack,onGrowth}){
   const[birthWeight,setBirthWeight]=useState(String(profile.birthWeight||""));
   const[birthLength,setBirthLength]=useState(String(profile.birthLength||""));
   const[birthHead,setBirthHead]=useState(String(profile.birthHead||""));
+  const[langSel,setLangSel]=useState(profile.lang||"en");
   const fr=useRef(null);
   const handlePhoto=e=>{const f=e.target.files?.[0];if(!f)return;const rd=new FileReader();rd.onload=ev=>{const img=new Image();img.onload=()=>{const c=document.createElement("canvas"),mx=200;let w=img.width,h=img.height;if(w>h){h=(h/w)*mx;w=mx}else{w=(w/h)*mx;h=mx}c.width=w;c.height=h;c.getContext("2d").drawImage(img,0,0,w,h);setPhoto(c.toDataURL("image/jpeg",0.8))};img.src=ev.target.result};rd.readAsDataURL(f)};
-  const doSave=()=>{onSave({name:name.trim(),birthDate:birth,photo,mlGoal:parseInt(mlGoal)||0,birthWeight:parseFloat(birthWeight)||0,birthLength:parseFloat(birthLength)||0,birthHead:parseFloat(birthHead)||0});onBack()};
+  const doSave=()=>{onSave({name:name.trim(),birthDate:birth,photo,mlGoal:parseInt(mlGoal)||0,birthWeight:parseFloat(birthWeight)||0,birthLength:parseFloat(birthLength)||0,birthHead:parseFloat(birthHead)||0,lang:langSel});onBack()};
   const inp={width:"100%",padding:"14px 16px",background:"rgba(14,18,48,0.8)",border:`1px solid ${T.gB}`,borderRadius:12,color:T.text,fontSize:15,outline:"none"};
   return(<div style={{position:"fixed",inset:0,zIndex:200,maxWidth:480,margin:"0 auto",background:T.bg1,overflowY:"auto",paddingTop:"env(safe-area-inset-top)",paddingBottom:"calc(40px + env(safe-area-inset-bottom))"}}>
     <div style={{display:"flex",alignItems:"center",gap:14,padding:"16px 20px"}}><button onClick={onBack} style={{width:36,height:36,borderRadius:10,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="back" size={18} color={T.sub}/></button><span style={{fontSize:17,fontWeight:700}}>Perfil</span></div>
@@ -403,6 +492,14 @@ function ProfilePage({profile,onSave,onBack,onGrowth}){
       <Fld label="Meta diária de leite (ml)"><input type="number" inputMode="numeric" placeholder="Ex: 600" value={mlGoal} onChange={e=>setMlGoal(e.target.value)} style={inp}/></Fld>
       
       {/* Birth measurements */}
+      {/* Language toggle */}
+      <Fld label={langSel==="en"?"Language":"Idioma"}>
+        <div style={{display:"flex",gap:4,background:T.glass,borderRadius:10,padding:3,border:`1px solid ${T.gB}`}}>
+          <button onClick={()=>setLangSel("en")} style={{flex:1,padding:"10px 0",borderRadius:8,fontSize:13,fontWeight:700,background:langSel==="en"?T.accent:"transparent",color:langSel==="en"?"#fff":T.sub}}>English</button>
+          <button onClick={()=>setLangSel("pt")} style={{flex:1,padding:"10px 0",borderRadius:8,fontSize:13,fontWeight:700,background:langSel==="pt"?T.accent:"transparent",color:langSel==="pt"?"#fff":T.sub}}>Português</button>
+        </div>
+      </Fld>
+      
       <div style={{fontSize:12,fontWeight:700,color:T.sub,marginTop:20,marginBottom:12,textTransform:"uppercase",letterSpacing:1}}>Dados de nascimento</div>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:20}}>
         <Fld label="Peso (kg)"><input type="number" inputMode="decimal" step="0.01" placeholder="3.2" value={birthWeight} onChange={e=>setBirthWeight(e.target.value)} style={{...inp,textAlign:"center",padding:"12px 8px"}}/></Fld>
@@ -430,7 +527,7 @@ function StatsPage({entries,onGrowth}){
   const avgMl=Math.round(data.reduce((s,d)=>s+d.ml,0)/numDays);
   const avgSl=Math.round(data.reduce((s,d)=>s+d.sl,0)/numDays);
   const periodLabel=period==="all"?"Tudo":`${period} dias`;
-  const exportCSV=()=>{const h="Data,Hora,Tipo,Detalhe,Notas\n";const rows=entries.map(e=>{let d="";if(e.ml)d=`${e.ml}ml`;else if(e.durationMin)d=fmtDur(e.durationMin);else if(e.name)d=e.name;else if(e.value)d=`${e.value}°C`;else if(e.subtype)d=e.subtype;return`${e.date},${e.time},${TYPES[e.type]?.label||e.type},${d},${e.notes||""}`}).join("\n");const blob=new Blob([h+rows],{type:"text/csv"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=`louise-pro-${todayStr()}.csv`;a.click();URL.revokeObjectURL(url)};
+  const exportCSV=()=>{const h="Data,Hora,Tipo,Detalhe,Notas\n";const rows=entries.map(e=>{let d="";if(e.ml)d=`${e.ml}ml`;else if(e.durationMin)d=fmtDur(e.durationMin);else if(e.name)d=e.name;else if(e.value)d=`${e.value}°C`;else if(e.subtype)d=e.subtype;return`${e.date},${e.time},${TL(e.type)||e.type},${d},${e.notes||""}`}).join("\n");const blob=new Blob([h+rows],{type:"text/csv"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=`louise-pro-${todayStr()}.csv`;a.click();URL.revokeObjectURL(url)};
   return(<div style={{padding:"16px 20px 0"}}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
       <h2 style={{fontSize:17,fontWeight:700,margin:0}}>Resumo</h2>
@@ -464,7 +561,37 @@ function StatsPage({entries,onGrowth}){
   </div>);
 }
 
-function HistoryPage({entries,onDelete,onEdit}){const[dateIdx,setDateIdx]=useState(0);const viewDate=dateOffset(todayStr(),-dateIdx);const dayE=entries.filter(e=>e.date===viewDate);const dMl=dayE.filter(e=>e.type==="bottle").reduce((s,e)=>s+(e.ml||0),0);const dSl=dayE.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin).reduce((s,e)=>s+e.durationMin,0);const dLbl=new Date(viewDate+"T12:00").toLocaleDateString("pt-BR",{weekday:"long",day:"numeric",month:"long"});const isToday=dateIdx===0;return(<div style={{padding:"16px 20px 0"}}><h2 style={{fontSize:17,fontWeight:700,marginBottom:16}}>Histórico</h2><div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}><button onClick={()=>setDateIdx(dateIdx+1)} style={{width:36,height:36,borderRadius:10,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="back" size={16} color={T.sub}/></button><div style={{flex:1,textAlign:"center"}}><div style={{fontSize:14,fontWeight:700,color:isToday?T.accent:T.text}}>{isToday?"Hoje":dLbl}</div><div style={{display:"flex",justifyContent:"center",gap:12,fontSize:11,color:T.sub,marginTop:2}}>{dMl>0&&<span>{dMl} ml</span>}{dSl>0&&<span>{fmtDur(dSl)}</span>}<span>{dayE.length} reg.</span></div></div><button onClick={()=>setDateIdx(Math.max(0,dateIdx-1))} disabled={isToday} style={{width:36,height:36,borderRadius:10,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center",opacity:isToday?0.3:1}}><Icon name="forward" size={16} color={T.sub}/></button></div>{dayE.length===0&&<p style={{color:T.dim,textAlign:"center",padding:40,fontSize:13}}>Nenhum registro neste dia</p>}{dayE.map(e=><EntryRow key={e.id} entry={e} onDelete={onDelete} onEdit={onEdit}/>)}</div>)}
+function HistoryPage({entries,onDelete,onEdit}){
+  const[dateIdx,setDateIdx]=useState(0);
+  const[filter,setFilter]=useState("all");
+  const viewDate=dateOffset(todayStr(),-dateIdx);
+  const dayE=entries.filter(e=>e.date===viewDate);
+  const filtered=filter==="all"?dayE:dayE.filter(e=>{
+    if(filter==="feed")return e.type==="bottle"||e.type==="nursing";
+    if(filter==="sleep")return e.type==="sleep"||e.type==="nap"||e.type==="wakeup"||e.type==="nightwaking";
+    return e.type===filter;
+  });
+  const dMl=dayE.filter(e=>e.type==="bottle").reduce((s,e)=>s+(e.ml||0),0);
+  const dSl=dayE.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin).reduce((s,e)=>s+e.durationMin,0);
+  const dLbl=new Date(viewDate+"T12:00").toLocaleDateString("pt-BR",{weekday:"long",day:"numeric",month:"long"});
+  const isToday=dateIdx===0;
+  const filters=[{v:"all",l:"Tudo",c:T.accent},{v:"feed",l:"Leite",c:T.green},{v:"sleep",l:"Sono",c:T.purple},{v:"diaper",l:"Fralda",c:T.pink},{v:"medicine",l:"Med.",c:T.amber}];
+  return(<div style={{padding:"16px 20px 0"}}>
+    <h2 style={{fontSize:17,fontWeight:700,marginBottom:12}}>Histórico</h2>
+    {/* Date navigator */}
+    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}>
+      <button onClick={()=>setDateIdx(dateIdx+1)} style={{width:36,height:36,borderRadius:10,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="back" size={16} color={T.sub}/></button>
+      <div style={{flex:1,textAlign:"center"}}><div style={{fontSize:14,fontWeight:700,color:isToday?T.accent:T.text}}>{isToday?"Hoje":dLbl}</div><div style={{display:"flex",justifyContent:"center",gap:12,fontSize:11,color:T.sub,marginTop:2}}>{dMl>0&&<span>{dMl} ml</span>}{dSl>0&&<span>{fmtDur(dSl)}</span>}<span>{dayE.length} reg.</span></div></div>
+      <button onClick={()=>setDateIdx(Math.max(0,dateIdx-1))} disabled={isToday} style={{width:36,height:36,borderRadius:10,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center",opacity:isToday?0.3:1}}><Icon name="forward" size={16} color={T.sub}/></button>
+    </div>
+    {/* Type filters */}
+    <div style={{display:"flex",gap:4,marginBottom:14,overflowX:"auto",paddingBottom:2}}>
+      {filters.map(f=><button key={f.v} onClick={()=>setFilter(f.v)} style={{padding:"6px 12px",borderRadius:8,fontSize:11,fontWeight:600,whiteSpace:"nowrap",background:filter===f.v?`${f.c}20`:"transparent",color:filter===f.v?f.c:T.dim,border:`1px solid ${filter===f.v?f.c+"30":T.gB}`}}>{f.l}</button>)}
+    </div>
+    {filtered.length===0&&<p style={{color:T.dim,textAlign:"center",padding:40,fontSize:13}}>Nenhum registro{filter!=="all"?" desse tipo":""}</p>}
+    {filtered.map(e=><EntryRow key={e.id} entry={e} onDelete={onDelete} onEdit={onEdit}/>)}
+  </div>);
+}
 
 // ── GROWTH PAGE with WHO percentiles ──
 function GrowthPage({entries,birthDate,profile,onBack,onAddEntry}){
@@ -627,6 +754,7 @@ function App(){
   const[activeTimer,setActiveTimer]=useState(null);const[loading,setLoading]=useState(true);
   const[page,setPage]=useState("home");const[showAdd,setShowAdd]=useState(false);const[formType,setFormType]=useState(null);const[editEntry,setEditEntry]=useState(null);
   const[showProfile,setShowProfile]=useState(false);const[showSleepInfo,setShowSleepInfo]=useState(false);
+  const lang=profile.lang||"en";_lang=lang;
   const[toast,setToast]=useState(null);const[tick,setTick]=useState(0);const undoRef=useRef(null);
   const[splash,setSplash]=useState(true);
   useEffect(()=>{const t=setTimeout(()=>setSplash(false),1800);return()=>clearTimeout(t)},[]);
@@ -650,7 +778,7 @@ function App(){
     const parts=splitMidnight(e);
     for(const p of parts) await FB.addEntry(p);
     setFormType(null);setShowAdd(false);setEditEntry(null);
-    showToast(`${TYPES[e.type]?.label||e.type} ${editEntry?"atualizado":"registrado"}`,async()=>{for(const p of parts) await FB.delEntry(p.id)});
+    showToast(`${TL(e.type)||e.type} ${editEntry?"atualizado":"registrado"}`,async()=>{for(const p of parts) await FB.delEntry(p.id)});
   },[editEntry]);
 
   const startEdit=useCallback((entry)=>{
@@ -658,7 +786,7 @@ function App(){
     setFormType(entry.type);
     setShowAdd(false);
   },[]);
-  const deleteEntry=useCallback(async id=>{const entry=entries.find(e=>e.id===id);await FB.delEntry(id);showToast(`${TYPES[entry?.type]?.label||""} removido`,async()=>{if(entry)await FB.addEntry(entry)})},[entries]);
+  const deleteEntry=useCallback(async id=>{const entry=entries.find(e=>e.id===id);await FB.delEntry(id);showToast(`${TL(entry?.type)||""} removido`,async()=>{if(entry)await FB.addEntry(entry)})},[entries]);
   const quickWakeup=useCallback(()=>addEntry({type:"wakeup",date:todayStr(),time:nowTime(),id:uid()}),[addEntry]);
   const duplicateLast=useCallback(()=>{if(!entries.length)return;const l=entries[0];addEntry({...l,id:uid(),date:todayStr(),time:nowTime(),_docId:undefined})},[entries,addEntry]);
   const startTimer=useCallback(async type=>{await FB.saveTimer({type,startTime:new Date().toISOString()});setShowAdd(false)},[]);
@@ -674,6 +802,14 @@ function App(){
   const sleepRec=useMemo(()=>getSleepRec(entries,age,profile.birthDate),[entries,age,profile.birthDate]);
   const napSug=useMemo(()=>!activeTimer?getNapSug(todayE,sleepRec):null,[todayE,sleepRec,activeTimer,tick]);
   const daysLeft=sleepRec?.phase===1?sleepRec.dl:null;
+
+  // Vibrate when sleep window warning triggers
+  const prevWind=useRef(false);const prevOver=useRef(false);
+  useEffect(()=>{
+    if(napSug?.wind&&!prevWind.current&&navigator.vibrate)navigator.vibrate([200,100,200]);
+    if(napSug?.over&&!prevOver.current&&navigator.vibrate)navigator.vibrate([300,150,300,150,300]);
+    prevWind.current=!!napSug?.wind;prevOver.current=!!napSug?.over;
+  },[napSug?.wind,napSug?.over]);
 
   if(splash||loading)return(
     <div style={{background:`radial-gradient(ellipse at 50% 40%,#10153d 0%,${T.bg1} 70%)`,minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",fontFamily:"'Outfit',sans-serif",overflow:"hidden",animation:!splash&&!loading?"":"",opacity:splash?1:0,transition:"opacity .4s"}}>
@@ -702,7 +838,7 @@ function App(){
   );
   const goTo=p=>{setPage(p);setShowAdd(false);setFormType(null)};
 
-  return(<div style={{background:`radial-gradient(ellipse at 50% 0%,#10153d 0%,${T.bg1} 65%)`,height:"100vh",overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch",overscrollBehavior:"none",color:T.text,maxWidth:480,margin:"0 auto",position:"relative",paddingBottom:activeTimer?"calc(170px + env(safe-area-inset-bottom))":"calc(80px + env(safe-area-inset-bottom))"}}>
+  return(<div style={{background:`radial-gradient(ellipse at 50% 0%,#10153d 0%,${T.bg1} 65%)`,height:"100%",overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch",overscrollBehavior:"none",color:T.text,maxWidth:480,margin:"0 auto",position:"relative"}}>
     {/* Starfield */}
     <div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:0}}>
       {/* Nebula patches */}
@@ -723,20 +859,26 @@ function App(){
           <div style={{flex:1}}><h1 style={{fontSize:20,fontWeight:800,margin:0,letterSpacing:-0.5}}>{babyName}</h1><div style={{fontSize:11,color:T.sub,marginTop:2}}>{age&&<>{age.months>0?`${age.months} ${age.months===1?"mês":"meses"} e `:""}{age.days} dias</>}</div></div>
           <div style={{textAlign:"right"}}><div style={{fontSize:10,color:T.dim}}>{new Date().toLocaleDateString("pt-BR",{day:"numeric",month:"short"})}</div><div style={{fontSize:8,color:T.dim,opacity:0.5,marginTop:2}}>v{APP_VERSION}</div></div>
         </div>
-        <div style={{padding:"20px 0 8px"}}><Ring activeTimer={activeTimer} napSug={napSug} tick={tick} recentEvents={todayE.slice(0,5)}/></div>
+        <div style={{padding:"20px 0 8px"}}><Ring activeTimer={activeTimer} napSug={napSug} tick={tick} recentEvents={todayE.slice(0,7)} lang={lang}/></div>
         <div style={{display:"flex",gap:8,padding:"0 20px",marginBottom:14}}>{!activeTimer&&<><button onClick={quickWakeup} style={{flex:1,padding:"10px 0",borderRadius:12,background:T.amberS,border:`1px solid ${T.amber}22`,display:"flex",alignItems:"center",justifyContent:"center",gap:5}}><Icon name="sun" size={13} color={T.amber}/><span style={{fontSize:11,fontWeight:700,color:T.amber}}>Acordou</span></button><button onClick={()=>{setFormType("bottle");setShowAdd(false)}} style={{flex:1,padding:"10px 0",borderRadius:12,background:T.greenS,border:`1px solid ${T.green}22`,display:"flex",alignItems:"center",justifyContent:"center",gap:5}}><Icon name="bottle" size={13} color={T.green}/><span style={{fontSize:11,fontWeight:700,color:T.green}}>Mamad.</span></button><button onClick={()=>startTimer("nap")} style={{flex:1,padding:"10px 0",borderRadius:12,background:`${T.accent}15`,border:`1px solid ${T.accent}22`,display:"flex",alignItems:"center",justifyContent:"center",gap:5}}><Icon name="play" size={12} color={T.accent}/><span style={{fontSize:11,fontWeight:700,color:T.accent}}>Soneca</span></button><button onClick={()=>startTimer("sleep")} style={{flex:1,padding:"10px 0",borderRadius:12,background:T.purpleS,border:`1px solid ${T.purple}22`,display:"flex",alignItems:"center",justifyContent:"center",gap:5}}><Icon name="play" size={12} color={T.purple}/><span style={{fontSize:11,fontWeight:700,color:T.purple}}>Sono</span></button></>}</div>
         {napSug?.wind&&<div style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:T.amberS,border:`1px solid ${T.amber}22`,display:"flex",alignItems:"center",gap:10,animation:"pulse 2s infinite"}}><Icon name="bell" size={18} color={T.amber}/><div><div style={{fontSize:12,fontWeight:700,color:T.amber}}>Preparar para dormir</div><div style={{fontSize:10,color:T.sub}}>~{napSug.rem}min restantes</div></div></div>}
         {napSug?.over&&<div style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:T.orangeS,border:`1px solid ${T.orange}22`,display:"flex",alignItems:"center",gap:10,animation:"pulse 1.5s infinite"}}><Icon name="zap" size={18} color={T.orange}/><div><div style={{fontSize:12,fontWeight:700,color:T.orange}}>Janela de sono passou</div><div style={{fontSize:10,color:T.sub}}>{fmtDur(napSug.el)} acordado(a)</div></div></div>}
         <MlGoalBar current={totalMl} goal={profile.mlGoal}/>
+        <NightCard entries={entries}/>
         <WeeklyCard entries={entries}/>
         <div style={{padding:"0 20px",marginBottom:14}}><div style={{display:"flex",background:T.glass,borderRadius:14,border:`1px solid ${T.gB}`}}>{[{i:"bottle",v:`${totalMl}`,u:"ml",c:T.green},{i:"breast",v:totalNursingMin>0?fmtDur(totalNursingMin):`${totalNursing}x`,c:T.blue},{i:"moon",v:fmtDur(totalSleep),c:T.purple},{i:"droplet",v:`${totalDiapers}`,c:T.pink}].map((p,idx)=><div key={idx} style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:5,padding:"10px 2px"}}><Icon name={p.i} size={14} color={p.c}/><span style={{fontSize:12,fontWeight:700,color:p.c}}>{p.v}{p.u?<span style={{fontSize:10,fontWeight:500,opacity:0.7}}>{p.u}</span>:null}</span></div>)}</div></div>
-        {entries.length>0&&<div style={{padding:"0 20px",marginBottom:14}}><button onClick={duplicateLast} style={{width:"100%",padding:"10px 14px",borderRadius:12,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}><Icon name="copy" size={14} color={T.sub}/><span style={{fontSize:12,fontWeight:600,color:T.sub}}>Repetir último: {TYPES[entries[0].type]?.label}</span></button></div>}
+        {entries.length>0&&<div style={{padding:"0 20px",marginBottom:14}}><button onClick={duplicateLast} style={{width:"100%",padding:"10px 14px",borderRadius:12,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}><Icon name="copy" size={14} color={T.sub}/><span style={{fontSize:12,fontWeight:600,color:T.sub}}>Repetir último: {TL(entries[0].type)}</span></button></div>}
         <div style={{padding:"0 20px"}}><div style={{fontSize:12,fontWeight:600,color:T.dim,marginBottom:8,textTransform:"uppercase",letterSpacing:0.8}}>Hoje</div>{todayE.length===0&&<div style={{textAlign:"center",padding:"32px 20px",color:T.dim}}><Icon name="star" size={32} color={T.dim} fill={T.dim}/><div style={{fontSize:13,marginTop:8}}>Toque + para registrar</div></div>}{todayE.map(e=><EntryRow key={e.id} entry={e} onDelete={deleteEntry} onEdit={startEdit}/>)}</div>
       </div>}
       {page==="history"&&<HistoryPage entries={entries} onDelete={deleteEntry} onEdit={startEdit}/>}
       {page==="stats"&&<StatsPage entries={entries} onGrowth={()=>goTo("growth")}/>}
       {page==="growth"&&<GrowthPage entries={entries} birthDate={profile.birthDate} profile={profile} onBack={()=>goTo("stats")} onAddEntry={addEntry}/>}
+      {/* Bottom spacer so content clears nav bar */}
+      <div style={{height:activeTimer?170:100}}/>
     </div>
+
+    {/* Fade gradient above nav */}
+    <div style={{position:"fixed",bottom:0,left:0,right:0,maxWidth:480,margin:"0 auto",height:100,background:`linear-gradient(to bottom, transparent 0%, ${T.bg1}ee 50%, ${T.bg1} 100%)`,pointerEvents:"none",zIndex:40}}/>
 
     <Modal open={showSleepInfo} onClose={()=>setShowSleepInfo(false)}>
       {sleepRec?.phase===1&&<><div style={{textAlign:"center",marginBottom:16}}><Icon name="star" size={40} color={T.accent} fill={T.accent}/></div><div style={{textAlign:"center",fontSize:22,fontWeight:800,marginBottom:6}}>{sleepRec.dl} dias</div><div style={{textAlign:"center",fontSize:13,color:T.sub,marginBottom:16}}>para o plano de sono de {babyName}</div><div style={{height:4,borderRadius:2,background:T.bg1,marginBottom:16,overflow:"hidden"}}><div style={{height:"100%",width:`${Math.max(0,Math.min(100,((60-sleepRec.dl)/60)*100))}%`,background:T.accent,borderRadius:2}}/></div><div style={{fontSize:12,color:T.sub,lineHeight:1.6}}>Aos 2 meses o ritmo circadiano amadurece. Continue registrando.</div><div style={{marginTop:14,padding:"10px 12px",borderRadius:10,background:"rgba(14,18,48,0.6)",fontSize:11,color:T.dim}}>Janela: {sleepRec.g.min}–{sleepRec.g.max} min · {sleepRec.g.naps} sonecas/dia</div></>}
@@ -750,7 +892,7 @@ function App(){
           <div style={{position:"absolute",top:"15%",left:"25%",width:"40%",height:"30%",background:`radial-gradient(ellipse,${cfg.color}12,transparent)`,borderRadius:"50%",filter:"blur(6px)"}}/>
           <Icon name={cfg.icon} size={27} color={cfg.color}/>
         </div>
-        <div style={{textAlign:"center"}}><div style={{fontSize:12,fontWeight:600,color:T.text,lineHeight:1.3}}>{cfg.label}</div>{ago&&<div style={{fontSize:10,color:T.dim,marginTop:2}}>{ago}</div>}</div>
+        <div style={{textAlign:"center"}}><div style={{fontSize:12,fontWeight:600,color:T.text,lineHeight:1.3}}>{cfg.label[_lang]||cfg.label.en}</div>{ago&&<div style={{fontSize:10,color:T.dim,marginTop:2}}>{ago}</div>}</div>
       </button>)})}</div>
     </Sheet>
 
@@ -771,6 +913,5 @@ function App(){
 
 ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
 </script>
-
 </body>
 </html>
