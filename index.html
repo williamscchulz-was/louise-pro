@@ -90,8 +90,10 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "2.2.2";
+const APP_VERSION = "2.2.4";
 const CHANGELOG = [
+  { v: "2.2.4", date: "2026-04-02", changes: "Fix idade (timezone), sono que cruza meia-noite auto-divide em 2 dias" },
+  { v: "2.2.3", date: "2026-04-02", changes: "Botão + em cada card de crescimento, adicionar peso/comprimento/cabeça individualmente" },
   { v: "2.2.2", date: "2026-04-02", changes: "Seletor de dia em todos os registros, labels mais claros (Cabeça em vez de PC)" },
   { v: "2.2.1", date: "2026-04-02", changes: "Glassmorphism Napper-style: sheet blur(40px), glow sutil nos ícones, profundidade visual" },
   { v: "2.2.0", date: "2026-04-02", changes: "Crescimento no Perfil: dados nascimento, curvas OMS com gráficos SVG, adicionar medição inline" },
@@ -165,12 +167,28 @@ function getPercentile(value, table, ageMonths) {
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const todayStr=()=>new Date().toISOString().slice(0,10);
 function nowTime(){const d=new Date();return`${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`}
-function calcAge(b){if(!b)return null;const bi=new Date(b),n=new Date();let m=(n.getFullYear()-bi.getFullYear())*12+n.getMonth()-bi.getMonth(),d=n.getDate()-bi.getDate();if(d<0){m--;d+=new Date(n.getFullYear(),n.getMonth(),0).getDate()}return{months:Math.max(0,m),days:Math.max(0,d),totalWeeks:Math.floor(Math.max(0,(n-bi)/864e5)/7)}}
+function calcAge(b){if(!b)return null;const p=b.split("-");const bi=new Date(+p[0],+p[1]-1,+p[2]);const n=new Date();const n0=new Date(n.getFullYear(),n.getMonth(),n.getDate());let m=(n0.getFullYear()-bi.getFullYear())*12+n0.getMonth()-bi.getMonth(),d=n0.getDate()-bi.getDate();if(d<0){m--;d+=new Date(n0.getFullYear(),n0.getMonth(),0).getDate()}const totalDays=Math.floor((n0-bi)/864e5);return{months:Math.max(0,m),days:Math.max(0,d),totalDays,totalWeeks:Math.floor(totalDays/7)}}
 function fmtDur(m){if(!m)return"0min";const h=Math.floor(m/60),r=m%60;return h>0?(r>0?`${h}h${r}m`:`${h}h`):`${r}min`}
 function fmtTimer(s){return`${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`}
 function timeSince(d,t){if(!d||!t)return"";const diff=Math.floor((new Date()-new Date(`${d}T${t}`))/6e4);if(diff<1)return"now";if(diff<60)return`${diff}min ago`;const h=Math.floor(diff/60);return h<24?`${h}h ago`:`${Math.floor(h/24)}d ago`}
 function minSince(d,t){if(!d||!t)return null;return Math.max(0,Math.floor((new Date()-new Date(`${d}T${t}`))/6e4))}
 function dateOffset(b,o){const d=new Date(b+"T12:00:00");d.setDate(d.getDate()+o);return d.toISOString().slice(0,10)}
+
+// Split sleep entry that crosses midnight into two entries
+function splitMidnight(entry){
+  if(!entry.durationMin || (entry.type!=="sleep"&&entry.type!=="nap")) return [entry];
+  const [h,m]=(entry.time||"00:00").split(":").map(Number);
+  const startMin=h*60+m;
+  const endMin=startMin+entry.durationMin;
+  if(endMin<=1440) return [entry]; // doesn't cross midnight
+  const beforeMidnight=1440-startMin;
+  const afterMidnight=entry.durationMin-beforeMidnight;
+  const nextDay=dateOffset(entry.date,1);
+  return[
+    {...entry, durationMin:beforeMidnight, id:entry.id},
+    {...entry, date:nextDay, time:"00:00", durationMin:afterMidnight, id:entry.id+"_b"},
+  ];
+}
 
 // ── SLEEP ENGINE ──
 const WW=[{maxW:4,min:30,max:60,naps:"4-5"},{maxW:8,min:45,max:75,naps:"4-5"},{maxW:12,min:60,max:90,naps:"3-4"},{maxW:16,min:75,max:120,naps:"3-4"},{maxW:28,min:120,max:180,naps:"2-3"},{maxW:40,min:150,max:210,naps:"2"},{maxW:56,min:180,max:240,naps:"1-2"},{maxW:104,min:240,max:360,naps:"1"}];
@@ -412,6 +430,12 @@ function GrowthPage({entries,birthDate,profile,onBack,onAddEntry}){
     setWK("");setLC("");setHC("");setShowForm(false);
   };
 
+  const quickAdd=(field,value)=>{
+    const entry={type:"growth",date:todayStr(),time:nowTime(),id:uid()};
+    entry[field]=value;
+    onAddEntry(entry);
+  };
+
   // Mini chart for a metric
   function GrowthChart({label,field,table,color}){
     const pts=allPoints.filter(p=>p[field]);
@@ -446,17 +470,25 @@ function GrowthPage({entries,birthDate,profile,onBack,onAddEntry}){
     </div>);
   }
 
-  function PercentileCard({label,value,unit,table,icon}){
-    if(!value)return null;
-    const result=getPercentile(value,table,ageMonths);
-    const p=result.percentile;
-    const pColor=p<3||p>97?T.red:p<15||p>85?T.orange:T.green;
+  function PercentileCard({label,value,unit,table,icon,field,onQuickAdd}){
+    const[adding,setAdding]=useState(false);
+    const[val,setVal]=useState("");
+    if(!value&&!adding)return(<div style={{background:T.glass,borderRadius:14,padding:14,marginBottom:8,border:`1px solid ${T.gB}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+      <div style={{display:"flex",alignItems:"center",gap:8}}><Icon name={icon} size={14} color={T.dim}/><span style={{fontSize:13,fontWeight:600,color:T.dim}}>{label}</span></div>
+      <button onClick={()=>setAdding(true)} style={{padding:"6px 12px",borderRadius:8,background:"rgba(163,230,53,0.1)",border:"1px solid rgba(163,230,53,0.2)",fontSize:11,fontWeight:700,color:"#a3e635"}}>+ Registrar</button>
+    </div>);
+    const result=value?getPercentile(value,table,ageMonths):null;
+    const p=result?.percentile;
+    const pColor=!p?T.dim:p<3||p>97?T.red:p<15||p>85?T.orange:T.green;
     return(<div style={{background:T.glass,borderRadius:14,padding:14,marginBottom:8,border:`1px solid ${T.gB}`}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
         <div style={{display:"flex",alignItems:"center",gap:8}}><Icon name={icon} size={14} color={pColor}/><span style={{fontSize:13,fontWeight:700}}>{label}</span></div>
-        <span style={{fontSize:18,fontWeight:800}}>{value} {unit}</span>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          {value&&<span style={{fontSize:18,fontWeight:800}}>{value} {unit}</span>}
+          <button onClick={()=>setAdding(!adding)} style={{width:28,height:28,borderRadius:8,background:"rgba(163,230,53,0.1)",border:"1px solid rgba(163,230,53,0.15)",display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="plus" size={12} color="#a3e635"/></button>
+        </div>
       </div>
-      <div style={{display:"flex",alignItems:"center",gap:10}}>
+      {value&&<><div style={{display:"flex",alignItems:"center",gap:10}}>
         <div style={{flex:1,height:6,borderRadius:3,background:T.bg3,overflow:"hidden",position:"relative"}}>
           <div style={{position:"absolute",left:"3%",width:1,height:"100%",background:T.dim,opacity:0.3}}/>
           <div style={{position:"absolute",left:"50%",width:1,height:"100%",background:T.dim,opacity:0.5}}/>
@@ -465,7 +497,11 @@ function GrowthPage({entries,birthDate,profile,onBack,onAddEntry}){
         </div>
         <span style={{fontSize:14,fontWeight:800,color:pColor,minWidth:35,textAlign:"right"}}>P{p}</span>
       </div>
-      <div style={{fontSize:10,color:T.sub,marginTop:4}}>Mediana OMS: {result.median.toFixed(1)} {unit}</div>
+      <div style={{fontSize:10,color:T.sub,marginTop:4}}>Mediana OMS: {result.median.toFixed(1)} {unit}</div></>}
+      {adding&&<div style={{display:"flex",gap:8,marginTop:10,alignItems:"center"}}>
+        <input type="number" inputMode="decimal" step="0.01" placeholder={`${label} em ${unit}`} value={val} onChange={e=>setVal(e.target.value)} autoFocus style={{flex:1,padding:"10px 12px",background:"rgba(14,18,48,0.8)",border:`1px solid ${T.gB}`,borderRadius:10,color:T.text,fontSize:15,outline:"none",textAlign:"center"}}/>
+        <button onClick={()=>{if(!val)return;onQuickAdd(field,parseFloat(val));setVal("");setAdding(false)}} style={{padding:"10px 16px",borderRadius:10,background:"#a3e635",color:T.bg1,fontSize:13,fontWeight:700}}>Salvar</button>
+      </div>}
     </div>);
   }
 
@@ -488,14 +524,12 @@ function GrowthPage({entries,birthDate,profile,onBack,onAddEntry}){
     </div>}
 
     {/* Percentile cards */}
-    {latest&&<>
-      <div style={{fontSize:11,color:T.sub,marginBottom:10}}>
-        {latest.label==="Nasc."?"Dados de nascimento":`Última medição: ${latest.label}`} · {ageMonths.toFixed(1)} meses
-      </div>
-      <PercentileCard label="Peso" value={latest.weightKg} unit="kg" table={WHO_GIRLS.weight} icon="target"/>
-      <PercentileCard label="Comprimento" value={latest.lengthCm} unit="cm" table={WHO_GIRLS.length} icon="ruler"/>
-      <PercentileCard label="Cabeça" value={latest.headCm} unit="cm" table={WHO_GIRLS.head} icon="target"/>
-    </>}
+    {latest&&<div style={{fontSize:11,color:T.sub,marginBottom:10}}>
+      {latest.label==="Nasc."?"Dados de nascimento":`Última medição: ${latest.label}`} · {ageMonths.toFixed(1)} meses
+    </div>}
+    <PercentileCard label="Peso" value={latest?.weightKg} unit="kg" table={WHO_GIRLS.weight} icon="target" field="weightKg" onQuickAdd={quickAdd}/>
+    <PercentileCard label="Comprimento" value={latest?.lengthCm} unit="cm" table={WHO_GIRLS.length} icon="ruler" field="lengthCm" onQuickAdd={quickAdd}/>
+    <PercentileCard label="Cabeça" value={latest?.headCm} unit="cm" table={WHO_GIRLS.head} icon="target" field="headCm" onQuickAdd={quickAdd}/>
 
     {/* Growth charts */}
     {allPoints.length>0&&<>
@@ -546,12 +580,17 @@ function App(){
 
   const showToast=(msg,fn)=>{undoRef.current=fn;setToast(msg)};
   const handleUndo=()=>{if(undoRef.current)undoRef.current();setToast(null)};
-  const addEntry=useCallback(async e=>{await FB.addEntry(e);setFormType(null);setShowAdd(false);showToast(`${TYPES[e.type]?.label||e.type} registrado`,async()=>{await FB.delEntry(e.id)})},[]);
+  const addEntry=useCallback(async e=>{
+    const parts=splitMidnight(e);
+    for(const p of parts) await FB.addEntry(p);
+    setFormType(null);setShowAdd(false);
+    showToast(`${TYPES[e.type]?.label||e.type} registrado`,async()=>{for(const p of parts) await FB.delEntry(p.id)});
+  },[]);
   const deleteEntry=useCallback(async id=>{const entry=entries.find(e=>e.id===id);await FB.delEntry(id);showToast(`${TYPES[entry?.type]?.label||""} removido`,async()=>{if(entry)await FB.addEntry(entry)})},[entries]);
   const quickWakeup=useCallback(()=>addEntry({type:"wakeup",date:todayStr(),time:nowTime(),id:uid()}),[addEntry]);
   const duplicateLast=useCallback(()=>{if(!entries.length)return;const l=entries[0];addEntry({...l,id:uid(),date:todayStr(),time:nowTime(),_docId:undefined})},[entries,addEntry]);
   const startTimer=useCallback(async type=>{await FB.saveTimer({type,startTime:new Date().toISOString()});setShowAdd(false)},[]);
-  const stopTimer=useCallback(async()=>{if(!activeTimer)return;const s=new Date(activeTimer.startTime);const mins=Math.max(1,Math.round((Date.now()-s.getTime())/6e4));await FB.addEntry({type:activeTimer.type,date:s.toISOString().slice(0,10),time:`${String(s.getHours()).padStart(2,"0")}:${String(s.getMinutes()).padStart(2,"0")}`,durationMin:mins,id:uid()});await FB.saveTimer(null);showToast(`${mins}min registrado`,null)},[activeTimer]);
+  const stopTimer=useCallback(async()=>{if(!activeTimer)return;const s=new Date(activeTimer.startTime);const mins=Math.max(1,Math.round((Date.now()-s.getTime())/6e4));const entry={type:activeTimer.type,date:`${s.getFullYear()}-${String(s.getMonth()+1).padStart(2,"0")}-${String(s.getDate()).padStart(2,"0")}`,time:`${String(s.getHours()).padStart(2,"0")}:${String(s.getMinutes()).padStart(2,"0")}`,durationMin:mins,id:uid()};const parts=splitMidnight(entry);for(const p of parts) await FB.addEntry(p);await FB.saveTimer(null);showToast(`${mins}min registrado`,null)},[activeTimer]);
 
   const today=todayStr();const todayE=useMemo(()=>entries.filter(e=>e.date===today),[entries,today]);
   const totalMl=todayE.filter(e=>e.type==="bottle").reduce((s,e)=>s+(e.ml||0),0);
