@@ -28,16 +28,22 @@
 <body>
 <div id="root"></div>
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore-compat.js"></script>
+<!-- Firebase (compat v9) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <!-- React -->
 <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7.24.0/babel.min.js"></script>
 
 <script>
+// Verify Firebase loaded
+if (typeof firebase === 'undefined') {
+  document.getElementById('root').innerHTML = '<div style="color:#f87171;padding:40px;font-family:sans-serif;text-align:center"><h2>Erro ao carregar Firebase</h2><p>Verifique sua conexão com a internet e recarregue.</p></div>';
+  throw new Error('Firebase not loaded');
+}
+
 // ── FIREBASE INIT ──
 firebase.initializeApp({
   apiKey: "AIzaSyBPiWTlC0ZKLEX5Z8PqKM2c3zaXN8p7DH8",
