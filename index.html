@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
@@ -35,12 +36,17 @@
 <div id="root"></div>
 
 <!-- Firebase (compat v9) -->
+
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <!-- React -->
+
 <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+
 <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
 <script src="https://unpkg.com/@babel/standalone@7.24.0/babel.min.js"></script>
 
 <script>
@@ -93,8 +99,9 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "3.3.0";
+const APP_VERSION = "3.3.1";
 const CHANGELOG = [
+  { v: "3.3.1", date: "2026-04-02", changes: "Fix critical: i18n dictionary had runtime code instead of strings, causing blank screen" },
   { v: "3.3.0", date: "2026-04-02", changes: "Tooltip nos eventos do ring: toque no ícone pra ver detalhes (tipo, ml, duração, horário)" },
   { v: "3.2.1", date: "2026-04-02", changes: "Fix syntax: brace balance, broken template literals, JSX expressions" },
   { v: "3.2.0", date: "2026-04-02", changes: "i18n EN/PT-BR, ring events proporcional ao horário, ícones maiores no ring" },
@@ -263,10 +270,10 @@ const I={
   sleep:{pt:"sono",en:"sleep"},
   wokeUp:{pt:"acordou",en:"woke up"},
   milk:{pt:"leite",en:"milk"},
-  lastFeed:{pt:"{L("lastFeed")}",en:"Last feed"},
-  milkVsWeek:{pt:"{L("milkVsWeek")}",en:"milk vs last week"},
+  lastFeed:{pt:"Última mamada",en:"Last feed"},
+  milkVsWeek:{pt:"leite vs sem. passada",en:"milk vs last week"},
   sleepLabel:{pt:"sono",en:"sleep"},
-  repeatLast:{pt:"{L("repeatLast")}",en:"Repeat last"},
+  repeatLast:{pt:"Repetir último",en:"Repeat last"},
   history:{pt:"Histórico",en:"History"},
   summary:{pt:"Resumo",en:"Summary"},
   growth:{pt:"Crescimento",en:"Growth"},
@@ -293,9 +300,9 @@ const I={
   wet:{pt:"Xixi",en:"Wet"},dirty:{pt:"Cocô",en:"Dirty"},
   all:{pt:"Tudo",en:"All"},
   noEntries:{pt:"Nenhum registro",en:"No entries"},
-  tapToAdd:{pt:"{_lang==="en"?"Tap + to add":"Toque + para registrar"}",en:"Tap + to add"},
+  tapToAdd:{pt:"Toque + para registrar",en:"Tap + to add"},
   language:{pt:"Idioma",en:"Language"},
-  birthData:{pt:_lang==="en"?"Birth data":L("birthData"),en:"Birth data"},
+  birthData:{pt:"Dados de nascimento",en:"Birth data"},
   weight:{pt:"Peso",en:"Weight"},length:{pt:"Comprimento",en:"Length"},head:{pt:"Cabeça",en:"Head"},
   viewGrowth:{pt:"Ver crescimento e percentis",en:"View growth & percentiles"},
   name:{pt:"Nome",en:"Name"},birthDate:{pt:"Data de nascimento",en:"Date of birth"},
@@ -931,5 +938,6 @@ function App(){
 
 ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
 </script>
+
 </body>
 </html>
