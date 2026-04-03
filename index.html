@@ -3,6 +3,19 @@
   LOUISE PRO — BABY TRACKER — CHANGELOG
 ═══════════════════════════════════════════════════════════════
 
+  v5.1.0  03/04/2026  Ring diurno + nav glass bottom
+    • Ring: wake-up a meia-noite, wakeup editavel no menu+
+    • Lua auto quando sleep timer ativo (fecha o dia)
+    • Nav glass colado no bottom com safe-area interno
+    • Time-ago preciso: 1h32m ago em vez de 1h ago
+    • Summary bar com ago por categoria
+    • Removidos: repeat last, resumo duplicado
+
+  v5.0.0  03/04/2026  Redesign Napper-style
+    • Fix ${c} bug (4 componentes), stacked dots grouping
+    • Toast contextual, starfield memo, tick adaptativo
+    • Bottle pre-fill, haptic, icon 22px, remove cards
+
   v3.9.0  02/04/2026  Timer live + Nav + Stars + Icons
     • Timer ativo mostra pill crescendo no ring em tempo real
     • Ícone pulsando no meio do arc enquanto dorme
@@ -282,9 +295,10 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "5.0.0";
+const APP_VERSION = "5.1.0";
 const CHANGELOG = [
-  { v: "5.0.0", date: "2026-04-03", changes: "Fix ${c} bug, stacked dots, anchor sol/lua, toast contextual, starfield memo, bottle pre-fill, haptic, icon 22px" },
+  { v: "5.1.0", date: "2026-04-03", changes: "Ring diurno wake-to-midnight, wakeup no menu+, lua auto no sleep timer, nav glass bottom, time-ago preciso, summary bar com ago" },
+  { v: "5.0.0", date: "2026-04-03", changes: "Fix ${c} bug, stacked dots, toast contextual, starfield memo, bottle pre-fill, haptic, icon 22px, remove cards" },
   { v: "3.9.0", date: "2026-04-02", changes: "Timer live arc no ring (cresce enquanto dorme), nav mais baixo, estrelas mais vivas, ícones filled" },
   { v: "3.8.0", date: "2026-04-02", changes: "Ícones preenchidos com gradiente (Napper-style): bottle, moon, cloud, droplet, pill, thermo preenchidos" },
   { v: "3.7.0", date: "2026-04-02", changes: "Ring v2: dots 36px anti-overlap (14° min gap), sleep arcs dominantes (48px glow), track fino 5px" },
@@ -1204,7 +1218,7 @@ function App(){
     {showProfile&&<ProfilePage profile={profile} onSave={async p=>await FB.saveProfile(p)} onBack={()=>setShowProfile(false)} onGrowth={()=>{setShowProfile(false);goTo("growth")}}/>}
     <TimerBar activeTimer={activeTimer} onStop={stopTimer}/>
 
-    <nav style={{position:"fixed",bottom:`env(safe-area-inset-bottom)`,left:12,right:12,maxWidth:456,margin:"0 auto",display:"flex",alignItems:"center",justifyContent:"space-around",padding:"10px 14px",background:"rgba(14,18,48,0.5)",backdropFilter:"blur(40px) saturate(1.8)",WebkitBackdropFilter:"blur(40px) saturate(1.8)",borderRadius:22,border:"1px solid rgba(120,130,220,0.15)",boxShadow:"0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(160,170,255,0.06)",zIndex:50}}>
+    <nav style={{position:"fixed",bottom:0,left:12,right:12,maxWidth:456,margin:"0 auto",display:"flex",alignItems:"center",justifyContent:"space-around",padding:`10px 14px calc(4px + env(safe-area-inset-bottom))`,background:"rgba(14,18,48,0.5)",backdropFilter:"blur(40px) saturate(1.8)",WebkitBackdropFilter:"blur(40px) saturate(1.8)",borderRadius:"22px 22px 0 0",border:"1px solid rgba(120,130,220,0.15)",borderBottom:"none",boxShadow:"0 -4px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(160,170,255,0.06)",zIndex:50}}>
       {[{icon:"home",label:L("home"),active:page==="home"&&!showAdd,action:()=>goTo("home")},{icon:"clock",label:L("history"),active:page==="history",action:()=>goTo("history")}].map(n=><button key={n.icon} onClick={n.action} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,padding:"4px 8px",opacity:n.active?1:0.4}}><Icon name={n.icon} size={20} color={n.active?T.accent:T.sub}/><span style={{fontSize:9,fontWeight:600,color:n.active?T.accent:T.dim}}>{n.label}</span></button>)}
       <button onClick={()=>{setShowAdd(!showAdd);setFormType(null);setPage("home")}} style={{width:50,height:50,borderRadius:"50%",background:T.accent,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 4px 20px ${T.accent}44`,transition:"transform .2s cubic-bezier(0.34,1.56,0.64,1)",transform:showAdd?"rotate(45deg) scale(1.05)":"scale(1)",margin:"-8px 0"}}><Icon name="plus" size={22} color="#fff"/></button>
       {[{icon:"chart",label:L("summary"),active:page==="stats"||page==="growth",action:()=>goTo("stats")},{icon:"gear",label:L("profile"),active:false,action:()=>setShowProfile(true)}].map(n=><button key={n.icon} onClick={n.action} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,padding:"4px 8px",opacity:n.active?1:0.4}}><Icon name={n.icon} size={20} color={n.active?T.accent:T.sub}/><span style={{fontSize:9,fontWeight:600,color:n.active?T.accent:T.dim}}>{n.label}</span></button>)}
