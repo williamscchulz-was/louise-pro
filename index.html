@@ -554,6 +554,7 @@ function Ring({activeTimer,napSug,tick,recentEvents,lang}){
   } else{sub="";lbl="\u2014"}
   const hasProgress=col1!==T.dim;
   const toMin=t=>{const[h,m]=(t||"12:00").split(":").map(Number);return h*60+m};
+  const evs=(recentEvents||[]);
   // Day window: from wake-up to midnight
   let wakeMin=6*60;
   const wakeEv=evs.find(e=>e.type==="wakeup"||e.type==="nightwaking");
@@ -562,7 +563,6 @@ function Ring({activeTimer,napSug,tick,recentEvents,lang}){
   const dayStart=wakeMin,daySpan=Math.max(1,24*60-dayStart);
   const toAng=mins=>{const t=Math.max(0,Math.min(1,(mins-dayStart)/daySpan));return startAng+t*totalArc};
   const descArc=(sA,eA)=>{const s=sA*Math.PI/180,e=eA*Math.PI/180;return`M ${cx+R*Math.cos(s)} ${cy+R*Math.sin(s)} A ${R} ${R} 0 ${eA-sA>180?1:0} 1 ${cx+R*Math.cos(e)} ${cy+R*Math.sin(e)}`};
-  const evs=(recentEvents||[]);
   const sleepEvs=evs.filter(e=>e.type==="nap"&&e.durationMin>0);
   const dotEvs=evs.filter(e=>e.type==="bottle"||e.type==="nursing"||e.type==="diaper"||e.type==="medicine");
   const sleepArcs=sleepEvs.map(ev=>{
