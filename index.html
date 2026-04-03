@@ -1058,7 +1058,7 @@ function App(){
     const u1=FB.subEntries(d=>{setEntries(d);ready.e=true;check()});
     const u2=FB.subProfile(d=>{if(d)setProfile(d);ready.p=true;check()});
     const u3=FB.subMeds(d=>{setSavedMeds(d||[{name:"Simeticona",dose:""},{name:"Paracetamol",dose:""},{name:"Floripa",dose:""},{name:"Vita. D",dose:""}]);ready.m=true;check()});
-    const u4=FB.subTimer(d=>{setActiveTimer(d?.cleared?null:d);ready.a=true;check()});
+    const u4=FB.subTimer(d=>{const t=d?.cleared?null:d;if(t&&t.type==="sleep"&&t.startTime&&!t.nightStart){t.nightStart=t.startTime;FB.saveTimer(t)}setActiveTimer(t);ready.a=true;check()});
     return()=>{u1();u2();u3();u4()};
   },[]);
 
