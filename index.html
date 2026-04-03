@@ -204,17 +204,17 @@ setTimeout(function(){
 
 <!-- Firebase -->
 
-<script crossorigin="anonymous" src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js" onload="dbg('Firebase OK')" onerror="dbg('ERROR: Firebase CDN blocked')"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js" onload="dbg('Firebase OK')" onerror="dbg('ERROR: Firebase CDN blocked')"></script>
 
-<script crossorigin="anonymous" src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js" onload="dbg('Firestore OK')" onerror="dbg('ERROR: Firestore CDN blocked')"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js" onload="dbg('Firestore OK')" onerror="dbg('ERROR: Firestore CDN blocked')"></script>
 
 <!-- React -->
 
-<script crossorigin="anonymous" src="https://unpkg.com/react@18/umd/react.production.min.js" onload="dbg('React OK')" onerror="dbg('ERROR: React CDN blocked')"></script>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" onload="dbg('React OK')" onerror="dbg('ERROR: React CDN blocked')"></script>
 
-<script crossorigin="anonymous" src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" onload="dbg('ReactDOM OK')" onerror="dbg('ERROR: ReactDOM CDN blocked')"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" onload="dbg('ReactDOM OK')" onerror="dbg('ERROR: ReactDOM CDN blocked')"></script>
 
-<script crossorigin="anonymous" src="https://unpkg.com/@babel/standalone@7.24.0/babel.min.js" onload="dbg('Babel OK')" onerror="dbg('ERROR: Babel CDN blocked')"></script>
+<script src="https://unpkg.com/@babel/standalone@7.24.0/babel.min.js" onload="dbg('Babel OK')" onerror="dbg('ERROR: Babel CDN blocked')"></script>
 
 <script>
 // Intercept Babel errors (Babel logs to console.error, not window.onerror)
@@ -601,7 +601,7 @@ function Ring({activeTimer,napSug,tick,recentEvents,lang}){
         {sleepArcs.map((sa,i)=><path key={"sb"+i} d={sa.path} fill="none" stroke={sa.col} strokeWidth={44} strokeLinecap="round" opacity={0.4}/>)}
         {sleepArcs.map((sa,i)=><path key={"sf"+i} d={sa.path} fill="none" stroke="rgba(16,12,40,0.85)" strokeWidth={38} strokeLinecap="round"/>)}
         {/* Live timer arc (growing) */}
-        {timerArc&&<><path d={timerArc.path} fill="none" stroke={timerArc.col} strokeWidth={52} strokeLinecap="round" opacity={0.1} filter="url(#slpG)"/><path d={timerArc.path} fill="none" stroke={timerArc.col} strokeWidth={44} strokeLinecap="round" opacity={0.5}/><path d={timerArc.path} fill="none" stroke="rgba(16,12,40,0.85)" strokeWidth={38} strokeLinecap="round"/></>}
+        {timerArc&&<g><path d={timerArc.path} fill="none" stroke={timerArc.col} strokeWidth={52} strokeLinecap="round" opacity={0.1} filter="url(#slpG)"/><path d={timerArc.path} fill="none" stroke={timerArc.col} strokeWidth={44} strokeLinecap="round" opacity={0.5}/><path d={timerArc.path} fill="none" stroke="rgba(16,12,40,0.85)" strokeWidth={38} strokeLinecap="round"/></g>}
       </svg>
       {/* Sleep icons centered on pills */}
       {sleepArcs.map((sa,i)=><div key={"si"+i} style={{position:"absolute",left:sa.mx-sleepSz/2,top:sa.my-sleepSz/2,width:sleepSz,height:sleepSz,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",zIndex:3,filter:`drop-shadow(0 0 6px ${sa.col}55)`}}><Icon name={sa.ev.type==="nap"?"cloud":"moon"} size={18} color={sa.col}/></div>)}
