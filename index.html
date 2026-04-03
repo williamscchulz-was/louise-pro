@@ -282,7 +282,9 @@ dbg('Firebase ready');
 } catch(e) { dbg('Firebase Error: '+e.message); throw e; }
 </script>
 
-<script type="text/babel">
+
+<!-- DIAGNOSTIC: Manual Babel compilation with error capture -->
+<textarea id="babel-src" style="display:none">
 const {useState, useEffect, useCallback, useRef, useMemo} = React;
 
 // ╔═══════════════════════════════════════════════╗
@@ -1221,7 +1223,31 @@ function App(){
 // Remove loading screen
 var _ld=document.getElementById('load-debug');if(_ld)_ld.remove();
 ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</textarea>
+<script>
+(function(){
+  var src = document.getElementById('babel-src').value;
+  var disp = document.getElementById('load-status') || document.getElementById('error-display');
+  function showErr(title, msg) {
+    var d = document.getElementById('error-display');
+    if(!d){d=document.createElement('div');d.id='error-display';d.style.cssText='position:fixed;inset:0;z-index:9999;background:#0a0e28;color:#f87171;padding:40px 20px;font-family:monospace;font-size:12px;overflow:auto;white-space:pre-wrap;-webkit-user-select:text;user-select:text';document.body.appendChild(d)}
+    d.innerHTML='<div style="font-size:18px;font-weight:bold;color:#fbbf24;margin-bottom:16px">'+title+'</div><div style="color:#f87171;padding:12px;background:rgba(248,113,113,0.1);border-radius:8px;margin-bottom:12px">'+msg+'</div>';
+  }
+  if(disp) disp.textContent = 'Compiling with Babel...';
+  try {
+    var result = Babel.transform(src, {presets:['react']});
+    if(disp) disp.textContent = 'Babel OK, executing...';
+    try {
+      eval(result.code);
+    } catch(runErr) {
+      showErr('Runtime Error (after Babel compiled OK)', runErr.message + '\n\nStack:\n' + (runErr.stack||''));
+    }
+  } catch(compErr) {
+    showErr('Babel Compilation Error', compErr.message + '\n\nStack:\n' + (compErr.stack||''));
+  }
+})();
 </script>
+
 
 </body>
 </html>
