@@ -3,6 +3,17 @@
   LOUISE PRO — BABY TRACKER — CHANGELOG
 ═══════════════════════════════════════════════════════════════
 
+  v3.6.0  02/04/2026  Ring Napper-level rewrite
+    • Sono/soneca como ARCOS no ring (pill shape roxo com glow)
+    • Duração proporcional: sono de 3h ocupa mais que soneca 30min
+    • Ícone da nuvem/lua no meio do arco
+    • Eventos (bottle, diaper, etc.) posicionados pelo horário real
+    • Resumo abaixo do ring: sol (awake) + nuvem (sleep total)
+    • Ring 340px, gap 50°, quase circulo completo
+    • Removidos Woke up e Night waking do menu +
+    • Botões rápidos: Bottle · Nap · Sleep
+    • Fix timezone: todayStr() usa hora local (não UTC)
+
   v3.5.0  02/04/2026  Ring Napper-level rewrite
     • Ring 300px (era 260px), ícones 42px (era 32px)
     • Ícones com inner glow radial, glass reflection, sombra inset
@@ -248,8 +259,9 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "3.5.0";
+const APP_VERSION = "3.6.0";
 const CHANGELOG = [
+  { v: "3.6.0", date: "2026-04-02", changes: "Ring Napper: sleep arcs, time-proportional dots, summary awake+sleep, wakeup/nightwaking removed, timezone fix" },
   { v: "3.5.0", date: "2026-04-02", changes: "Ring Napper-level: 300px, ícones 42px com glow+inner light+glass, até 12 eventos, texto 50px" },
   { v: "3.4.0", date: "2026-04-02", changes: "Awake for/Asleep for no ring (Napper-style), estrelas mais visíveis, Last Feed card, fix NightCard removido" },
   { v: "3.3.1", date: "2026-04-02", changes: "Fix critical: i18n dictionary had runtime code instead of strings, causing blank screen" },
@@ -494,83 +506,119 @@ function TL(type){return typeLabel(type,_lang)}
 function Ring({activeTimer,napSug,tick,recentEvents,lang}){
   const[tip,setTip]=useState(null);
   useEffect(()=>{if(tip!==null){const t=setTimeout(()=>setTip(null),3000);return()=>clearTimeout(t)}},[tip]);
-  const sz=320,stk=8,r=(sz-stk*2)/2-8,circ=2*Math.PI*r,gF=0.10,arc=circ*(1-2*gF),rot=90+gF*360;
-  const arcDeg=360*(1-2*gF);
+  const sz=340,cx=sz/2,cy=sz/2,R=148,stk=6;
+  const gapDeg=50,startAng=90+gapDeg/2,totalArc=360-gapDeg;
   const iconSz=44,iconR=iconSz/2;
-  let prog=0,lbl="",sub="",col1=T.dim,col2=T.dim,glowCol="transparent";
+
+  // Center text
+  let lbl="",sub="",col1=T.dim,col2=T.dim;
   if(activeTimer){
     const el=Math.max(0,Math.floor((Date.now()-new Date(activeTimer.startTime).getTime())/1000));const mins=Math.floor(el/60);
-    prog=Math.min(mins/(14*60),0.95);
     lbl=mins<60?`${mins} min`:`${Math.floor(mins/60)}h ${String(mins%60).padStart(2,"0")}m`;
-    sub=lang==="en"?"Asleep for":"Dormindo";
-    col1="#7c3aed";col2="#c084fc";glowCol=T.purple;
+    sub=lang==="en"?"Asleep for":"Dormindo";col1="#7c3aed";col2="#c084fc";
   } else if(napSug){
-    prog=napSug.prog;lbl=fmtDur(napSug.el);
-    sub=lang==="en"?"Awake for":"Acordado(a)";
-    if(napSug.over){col1="#ea580c";col2="#fb923c";glowCol=T.orange}
-    else if(napSug.wind){col1="#d97706";col2="#fbbf24";glowCol=T.amber}
-    else{col1="#059669";col2="#34d399";glowCol=T.green}
-  } else{sub="";lbl="—"}
-  const gradId="rg"+(tick%2);
-  // Distribute events EVENLY along the arc (Napper-style)
-  const evList=(recentEvents||[]).slice(0,14);
-  const evDots=evList.map((ev,i)=>{
+    lbl=fmtDur(napSug.el);sub=lang==="en"?"Awake for":"Acordado(a)";
+    if(napSug.over){col1="#ea580c";col2="#fb923c"}else if(napSug.wind){col1="#d97706";col2="#fbbf24"}else{col1="#059669";col2="#34d399"}
+  } else{sub="";lbl="\u2014"}
+  const hasProgress=col1!==T.dim;
+
+  // Helpers
+  const toMin=t=>{const[h,m]=(t||"12:00").split(":").map(Number);return h*60+m};
+  const dayEnd=24*60;
+  const descArc=(sA,eA)=>{const s=sA*Math.PI/180,e=eA*Math.PI/180;return`M ${cx+R*Math.cos(s)} ${cy+R*Math.sin(s)} A ${R} ${R} 0 ${eA-sA>180?1:0} 1 ${cx+R*Math.cos(e)} ${cy+R*Math.sin(e)}`};
+
+  // Separate sleep arcs from dot events
+  const evs=(recentEvents||[]);
+  const sleepEvs=evs.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin>0);
+  const dotEvs=evs.filter(e=>!((e.type==="sleep"||e.type==="nap")&&e.durationMin>0));
+
+  // Sleep arcs
+  const sleepArcs=sleepEvs.map(ev=>{
+    const mins=toMin(ev.time),dur=ev.durationMin;
+    const t1=mins/dayEnd,t2=Math.min((mins+dur)/dayEnd,1);
+    const a1=startAng+t1*totalArc,a2=startAng+t2*totalArc;
+    const midAng=(a1+a2)/2;const midRad=midAng*Math.PI/180;
+    return{ev,a1,a2,path:descArc(a1,a2),mx:cx+R*Math.cos(midRad),my:cy+R*Math.sin(midRad),col:TYPES[ev.type]?.color||T.purple};
+  });
+
+  // Dot events positioned by time
+  const dots=dotEvs.map((ev,i)=>{
     const cfg=TYPES[ev.type];if(!cfg)return null;
-    const n=evList.length;
-    // Evenly space: first event at start, last at end
-    const t=n===1?0.5:i/(n-1);
-    // Add small padding so icons don't sit exactly at arc endpoints
-    const tPad=0.03+t*0.94;
-    const ang=(rot*Math.PI/180)+tPad*(arcDeg*Math.PI/180);
-    const x=sz/2+r*Math.cos(ang),y=sz/2+r*Math.sin(ang);
-    return{ev,cfg,x,y};
+    const mins=toMin(ev.time);const t=mins/dayEnd;
+    const ang=(startAng+t*totalArc)*Math.PI/180;
+    return{ev,cfg,x:cx+R*Math.cos(ang),y:cy+R*Math.sin(ang),idx:i};
   }).filter(Boolean);
-  return(<div style={{position:"relative",width:sz,height:sz,margin:"0 auto"}}>
-    <svg width={sz} height={sz}>
-      <defs>
-        <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor={col1}/><stop offset="100%" stopColor={col2}/></linearGradient>
-        <filter id="rgw"><feGaussianBlur stdDeviation="8" result="b"/><feFlood floodColor={glowCol} floodOpacity="0.5" result="c"/><feComposite in="c" in2="b" operator="in" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-      </defs>
-      {/* Track */}
-      <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke="rgba(35,42,90,0.35)" strokeWidth={stk} strokeDasharray={`${arc} ${circ-arc}`} strokeLinecap="round" transform={`rotate(${rot} ${sz/2} ${sz/2})`}/>
-      {/* Inner ring */}
-      <circle cx={sz/2} cy={sz/2} r={r-20} fill="none" stroke="rgba(50,58,120,0.05)" strokeWidth={0.5}/>
-      {/* Progress */}
-      {prog>0.003&&<circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke={`url(#${gradId})`} strokeWidth={stk} strokeDasharray={`${arc*prog} ${circ-arc*prog}`} strokeLinecap="round" transform={`rotate(${rot} ${sz/2} ${sz/2})`} filter="url(#rgw)" style={{transition:"stroke-dasharray .6s cubic-bezier(0.4,0,0.2,1)"}}/>}
-    </svg>
-    {/* Center text */}
-    <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
-      <span style={{fontSize:13,color:T.sub,fontWeight:500,letterSpacing:1.5}}>{sub}</span>
-      <span style={{fontSize:50,fontWeight:800,letterSpacing:-2,marginTop:4,background:prog>0?`linear-gradient(135deg,${col2},${col1})`:`linear-gradient(135deg,${T.text},${T.sub})`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>{lbl}</span>
-    </div>
-    {/* Event icons on ring */}
-    {evDots.map((d,i)=>{
-      const ev=d.ev,c=d.cfg.color;
-      let detail=TL(ev.type);
-      if(ev.ml)detail+=` · ${ev.ml}ml`;
-      else if(ev.durationMin)detail+=` · ${fmtDur(ev.durationMin)}`;
-      else if(ev.subtype)detail+=` · ${({wet:L("wet"),dirty:L("dirty"),both:L("both")})[ev.subtype]||""}`;
-      else if(ev.name)detail+=` · ${ev.name}`;
-      const active=tip===i;
-      return<div key={ev.id||i} onClick={(e)=>{e.stopPropagation();setTip(active?null:i)}} style={{
-        position:"absolute",left:d.x-iconR,top:d.y-iconR,width:iconSz,height:iconSz,borderRadius:"50%",
-        background:`radial-gradient(circle at 35% 30%, rgba(30,38,80,0.95), rgba(12,16,42,0.98))`,
-        border:`2.5px solid ${active?c:c+"55"}`,
-        display:"flex",alignItems:"center",justifyContent:"center",
-        boxShadow:`0 3px 12px rgba(0,0,0,0.5), 0 0 ${active?28:16}px ${c}${active?"55":"22"}, inset 0 1px 0 rgba(180,200,255,0.08), inset 0 -2px 4px rgba(0,0,0,0.2)`,
-        zIndex:active?10:2,transform:active?"scale(1.2)":"scale(1)",
-        transition:"all .2s cubic-bezier(0.34,1.56,0.64,1)",overflow:"hidden"
+
+  // Totals for summary
+  const totalSleepMin=evs.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin).reduce((s,e)=>s+e.durationMin,0);
+
+  return(<div style={{position:"relative",width:sz,margin:"0 auto"}}>
+    <div style={{position:"relative",width:sz,height:sz}}>
+      <svg width={sz} height={sz} style={{overflow:"visible"}}>
+        <defs>
+          <filter id="slpG"><feGaussianBlur stdDeviation="6" result="b"/><feFlood floodColor={T.purple} floodOpacity="0.3" result="c"/><feComposite in="c" in2="b" operator="in" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        </defs>
+        {/* Track */}
+        <path d={descArc(startAng,startAng+totalArc)} fill="none" stroke="rgba(40,48,100,0.25)" strokeWidth={stk} strokeLinecap="round"/>
+        {/* Sleep arcs - glow layer */}
+        {sleepArcs.map((sa,i)=><path key={"sg"+i} d={sa.path} fill="none" stroke={sa.col} strokeWidth={40} strokeLinecap="round" opacity={0.08} filter="url(#slpG)"/>)}
+        {/* Sleep arcs - fill layer */}
+        {sleepArcs.map((sa,i)=><path key={"sf"+i} d={sa.path} fill="none" stroke={sa.col} strokeWidth={36} strokeLinecap="round" opacity={0.15}/>)}
+      </svg>
+
+      {/* Sleep icons on arcs */}
+      {sleepArcs.map((sa,i)=><div key={"si"+i} style={{
+        position:"absolute",left:sa.mx-20,top:sa.my-20,width:40,height:40,borderRadius:"50%",
+        background:"radial-gradient(circle at 35% 30%,rgba(50,40,100,0.95),rgba(20,16,50,0.98))",
+        border:`2.5px solid ${sa.col}`,display:"flex",alignItems:"center",justifyContent:"center",
+        boxShadow:`0 2px 12px rgba(0,0,0,0.4), 0 0 16px ${sa.col}30`,zIndex:3
       }}>
-        {/* Inner glow */}
-        <div style={{position:"absolute",top:"12%",left:"20%",width:"50%",height:"35%",background:`radial-gradient(ellipse,${c}18,transparent)`,borderRadius:"50%",filter:"blur(4px)"}}/>
-        <Icon name={d.cfg.icon} size={20} color={c}/>
-        {/* Tooltip */}
-        {active&&<div style={{position:"absolute",bottom:iconSz+6,left:"50%",transform:"translateX(-50%)",whiteSpace:"nowrap",padding:"6px 12px",borderRadius:10,background:"rgba(8,12,35,0.95)",border:`1px solid ${c}35`,boxShadow:`0 4px 20px rgba(0,0,0,0.6), 0 0 10px ${c}20`,fontSize:11,fontWeight:600,color:c,zIndex:20,animation:"fadeIn .15s ease"}}>
-          {detail}<span style={{display:"block",fontSize:9,color:T.dim,fontWeight:400,marginTop:1}}>{ev.time}</span>
-          <div style={{position:"absolute",bottom:-5,left:"50%",transform:"translateX(-50%) rotate(45deg)",width:8,height:8,background:"rgba(8,12,35,0.95)",borderRight:`1px solid ${c}35`,borderBottom:`1px solid ${c}35`}}/>
-        </div>}
-      </div>})}
-    {tip!==null&&<div onClick={()=>setTip(null)} style={{position:"absolute",inset:0,zIndex:1}}/>}
+        <div style={{position:"absolute",top:"12%",left:"20%",width:"50%",height:"30%",background:`radial-gradient(ellipse,${sa.col}20,transparent)`,borderRadius:"50%",filter:"blur(3px)"}}/>
+        <Icon name={sa.ev.type==="nap"?"cloud":"moon"} size={18} color={sa.col}/>
+      </div>)}
+
+      {/* Dot events */}
+      {dots.map((d,i)=>{
+        const ev=d.ev,c=d.cfg.color;
+        let detail=TL(ev.type);
+        if(ev.ml)detail+=` \u00b7 ${ev.ml}ml`;
+        else if(ev.subtype)detail+=` \u00b7 ${({wet:L("wet"),dirty:L("dirty"),both:L("both")})[ev.subtype]||""}`;
+        else if(ev.name)detail+=` \u00b7 ${ev.name}`;
+        const active=tip===i;
+        return<div key={ev.id||i} onClick={(e)=>{e.stopPropagation();setTip(active?null:i)}} style={{
+          position:"absolute",left:d.x-iconR,top:d.y-iconR,width:iconSz,height:iconSz,borderRadius:"50%",
+          background:"radial-gradient(circle at 35% 30%,rgba(35,42,90,0.95),rgba(14,18,45,0.98))",
+          border:`2.5px solid ${active?c:c+"55"}`,display:"flex",alignItems:"center",justifyContent:"center",
+          boxShadow:`0 3px 12px rgba(0,0,0,0.5), 0 0 ${active?22:14}px ${c}${active?"44":"20"}, inset 0 1px 0 rgba(200,220,255,0.08), inset 0 -2px 4px rgba(0,0,0,0.2)`,
+          zIndex:active?10:2,transform:active?"scale(1.15)":"scale(1)",transition:"all .2s cubic-bezier(0.34,1.56,0.64,1)",overflow:"hidden"
+        }}>
+          <div style={{position:"absolute",top:"12%",left:"20%",width:"50%",height:"30%",background:`radial-gradient(ellipse,${c}15,transparent)`,borderRadius:"50%",filter:"blur(4px)"}}/>
+          <Icon name={d.cfg.icon} size={19} color={c}/>
+          {active&&<div style={{position:"absolute",bottom:iconSz+6,left:"50%",transform:"translateX(-50%)",whiteSpace:"nowrap",padding:"6px 14px",borderRadius:10,background:"rgba(8,12,35,0.96)",border:`1px solid ${c}30`,boxShadow:`0 4px 20px rgba(0,0,0,0.6), 0 0 12px ${c}15`,fontSize:11,fontWeight:600,color:c,zIndex:20,animation:"fadeIn .15s ease"}}>
+            {detail}<span style={{display:"block",fontSize:9,color:T.dim,fontWeight:400,marginTop:1}}>{ev.time}</span>
+            <div style={{position:"absolute",bottom:-5,left:"50%",transform:"translateX(-50%) rotate(45deg)",width:8,height:8,background:"rgba(8,12,35,0.96)",borderRight:`1px solid ${c}30`,borderBottom:`1px solid ${c}30`}}/>
+          </div>}
+        </div>})}
+
+      {/* Center text */}
+      <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}>
+        <span style={{fontSize:14,color:T.sub,fontWeight:500,letterSpacing:1.5}}>{sub}</span>
+        <span style={{fontSize:52,fontWeight:800,letterSpacing:-2,marginTop:4,background:hasProgress?`linear-gradient(135deg,${col2},${col1})`:`linear-gradient(135deg,${T.text},${T.sub})`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>{lbl}</span>
+      </div>
+      {tip!==null&&<div onClick={()=>setTip(null)} style={{position:"absolute",inset:0,zIndex:1}}/>}
+    </div>
+
+    {/* Summary below ring */}
+    {napSug&&<div style={{display:"flex",justifyContent:"center",gap:28,marginTop:4}}>
+      <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3}}>
+        <div style={{width:38,height:38,borderRadius:"50%",background:"linear-gradient(135deg,rgba(251,146,60,0.15),rgba(251,191,36,0.08))",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 16px rgba(251,146,60,0.1)"}}><Icon name="sun" size={18} color={T.orange}/></div>
+        <span style={{fontSize:12,fontWeight:700,color:T.orange}}>{fmtDur(napSug.el)}</span>
+      </div>
+      <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3}}>
+        <div style={{width:38,height:38,borderRadius:"50%",background:"linear-gradient(135deg,rgba(167,139,250,0.15),rgba(139,124,246,0.08))",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 16px rgba(139,124,246,0.1)"}}><Icon name="cloud" size={18} color={T.purple}/></div>
+        <span style={{fontSize:12,fontWeight:700,color:T.purple}}>{fmtDur(totalSleepMin)}</span>
+      </div>
+    </div>}
   </div>);
 }
 
@@ -1077,7 +1125,7 @@ function App(){
           <div style={{flex:1}}><h1 style={{fontSize:20,fontWeight:800,margin:0,letterSpacing:-0.5}}>{babyName}</h1><div style={{fontSize:11,color:T.sub,marginTop:2}}>{age&&<>{age.months>0?`${age.months} ${_lang==="en"?(age.months===1?"month":"months"):(age.months===1?"mês":"meses")}${_lang==="en"?" and ":" e "}`:""}{age.days} {_lang==="en"?"days":"dias"}</>}</div></div>
           <div style={{textAlign:"right"}}><div style={{fontSize:10,color:T.dim}}>{new Date().toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{day:"numeric",month:"short"})}</div><div style={{fontSize:8,color:T.dim,opacity:0.5,marginTop:2}}>v{APP_VERSION}</div></div>
         </div>
-        <div style={{padding:"8px 0 0"}}><Ring activeTimer={activeTimer} napSug={napSug} tick={tick} recentEvents={todayE.slice(0,16)} lang={lang}/></div>
+        <div style={{padding:"4px 0 0"}}><Ring activeTimer={activeTimer} napSug={napSug} tick={tick} recentEvents={todayE} lang={lang}/></div>
         <div style={{display:"flex",gap:8,padding:"0 20px",marginBottom:14}}>{!activeTimer&&<><button onClick={()=>{setFormType("bottle");setShowAdd(false)}} style={{flex:1,padding:"10px 0",borderRadius:12,background:T.greenS,border:`1px solid ${T.green}22`,display:"flex",alignItems:"center",justifyContent:"center",gap:5}}><Icon name="bottle" size={13} color={T.green}/><span style={{fontSize:11,fontWeight:700,color:T.green}}>{_lang==="en"?"Bottle":"Mamad."}</span></button><button onClick={()=>startTimer("nap")} style={{flex:1,padding:"10px 0",borderRadius:12,background:`${T.accent}15`,border:`1px solid ${T.accent}22`,display:"flex",alignItems:"center",justifyContent:"center",gap:5}}><Icon name="play" size={12} color={T.accent}/><span style={{fontSize:11,fontWeight:700,color:T.accent}}>{_lang==="en"?"Nap":"Soneca"}</span></button><button onClick={()=>startTimer("sleep")} style={{flex:1,padding:"10px 0",borderRadius:12,background:T.purpleS,border:`1px solid ${T.purple}22`,display:"flex",alignItems:"center",justifyContent:"center",gap:5}}><Icon name="play" size={12} color={T.purple}/><span style={{fontSize:11,fontWeight:700,color:T.purple}}>{_lang==="en"?"Sleep":"Sono"}</span></button></>}</div>
         {napSug?.wind&&<div style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:T.amberS,border:`1px solid ${T.amber}22`,display:"flex",alignItems:"center",gap:10,animation:"pulse 2s infinite"}}><Icon name="bell" size={18} color={T.amber}/><div><div style={{fontSize:12,fontWeight:700,color:T.amber}}>{_lang==="en"?"Get ready for sleep":"Preparar para dormir"}</div><div style={{fontSize:10,color:T.sub}}>{_lang==="en"?`~${napSug.rem}min left`:`~${napSug.rem}min restantes`}</div></div></div>}
         {napSug?.over&&<div style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:T.orangeS,border:`1px solid ${T.orange}22`,display:"flex",alignItems:"center",gap:10,animation:"pulse 1.5s infinite"}}><Icon name="zap" size={18} color={T.orange}/><div><div style={{fontSize:12,fontWeight:700,color:T.orange}}>{_lang==="en"?"Sleep window passed":"Janela de sono passou"}</div><div style={{fontSize:10,color:T.sub}}>{_lang==="en"?`${fmtDur(napSug.el)} awake`:`${fmtDur(napSug.el)} acordado(a)`}</div></div></div>}
