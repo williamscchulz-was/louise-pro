@@ -3,6 +3,13 @@
   LOUISE PRO — BABY TRACKER — CHANGELOG
 ═══════════════════════════════════════════════════════════════
 
+  v4.0.0  02/04/2026  Night mode (ring da noite)
+    • Bedtime ativa modo noite: ring mostra só eventos noturnos
+    • Night Waking: para timer mas fica no ring da noite
+    • Botão "Bom dia" encerra modo noite e volta pro ring do dia
+    • Posicionamento timestamp-based no ring noturno
+    • Eventos filtrados: dia mostra dia, noite mostra noite
+
   v3.9.0  02/04/2026  Timer live + Nav + Stars + Icons
     • Timer ativo mostra pill crescendo no ring em tempo real
     • Ícone pulsando no meio do arc enquanto dorme
@@ -282,8 +289,9 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "3.9.0";
+const APP_VERSION = "4.0.0";
 const CHANGELOG = [
+  { v: "4.0.0", date: "2026-04-02", changes: "Night mode: ring da noite (bedtime→wake), Night Waking para timer sem sair do modo, botão Bom Dia, events filtrados por modo" },
   { v: "3.9.0", date: "2026-04-02", changes: "Timer live arc no ring (cresce enquanto dorme), nav mais baixo, estrelas mais vivas, ícones filled" },
   { v: "3.8.0", date: "2026-04-02", changes: "Ícones preenchidos com gradiente (Napper-style): bottle, moon, cloud, droplet, pill, thermo preenchidos" },
   { v: "3.7.0", date: "2026-04-02", changes: "Ring v2: dots 36px anti-overlap (14° min gap), sleep arcs dominantes (48px glow), track fino 5px" },
@@ -542,25 +550,42 @@ function Ring({activeTimer,napSug,tick,recentEvents,lang}){
   const sz=340,cx=sz/2,cy=sz/2,R=148;
   const gapDeg=55,startAng=90+gapDeg/2,totalArc=360-gapDeg;
   const dotSz=36,sleepSz=36;
+  const isNight=!!activeTimer?.nightStart;
+  const nightStartTs=isNight?new Date(activeTimer.nightStart).getTime():0;
+  const nightSpan=12*60; // 12h window in minutes
   let lbl="",sub="",col1=T.dim,col2=T.dim;
-  if(activeTimer){
+  if(activeTimer?.startTime){
     const el=Math.max(0,Math.floor((Date.now()-new Date(activeTimer.startTime).getTime())/1000));const mins=Math.floor(el/60);
     lbl=mins<60?`${mins} min`:`${Math.floor(mins/60)}h ${String(mins%60).padStart(2,"0")}m`;
     sub=lang==="en"?"Asleep for":"Dormindo";col1="#7c3aed";col2="#c084fc";
+  } else if(isNight){
+    // Night mode, baby awake
+    const totalNightSleep=(recentEvents||[]).filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin).reduce((s,e)=>s+e.durationMin,0);
+    lbl=fmtDur(totalNightSleep);sub=lang==="en"?"Night sleep":"Sono noturno";col1="#7c3aed";col2="#a78bfa";
   } else if(napSug){
     lbl=fmtDur(napSug.el);sub=lang==="en"?"Awake for":"Acordado(a)";
     if(napSug.over){col1="#ea580c";col2="#fb923c"}else if(napSug.wind){col1="#d97706";col2="#fbbf24"}else{col1="#059669";col2="#34d399"}
   } else{sub="";lbl="\u2014"}
   const hasProgress=col1!==T.dim;
+  // Time mapping: night mode uses timestamps, day mode uses time-of-day
   const toMin=t=>{const[h,m]=(t||"12:00").split(":").map(Number);return h*60+m};
   const dayEnd=24*60;
+  const toRingPos=(ev)=>{
+    if(isNight){
+      const evTs=new Date(`${ev.date}T${ev.time}`).getTime();
+      const minsSince=(evTs-nightStartTs)/60000;
+      return Math.max(0,Math.min(1,minsSince/nightSpan));
+    }
+    return toMin(ev.time)/dayEnd;
+  };
   const descArc=(sA,eA)=>{const s=sA*Math.PI/180,e=eA*Math.PI/180;return`M ${cx+R*Math.cos(s)} ${cy+R*Math.sin(s)} A ${R} ${R} 0 ${eA-sA>180?1:0} 1 ${cx+R*Math.cos(e)} ${cy+R*Math.sin(e)}`};
   const evs=(recentEvents||[]);
   const sleepEvs=evs.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin>0);
   const dotEvs=evs.filter(e=>!((e.type==="sleep"||e.type==="nap")&&e.durationMin>0));
   const sleepArcs=sleepEvs.map(ev=>{
-    const mins=toMin(ev.time),dur=ev.durationMin;
-    const t1=mins/dayEnd,t2=Math.min((mins+dur)/dayEnd,1);
+    const t1=toRingPos(ev);
+    const durFrac=isNight?ev.durationMin/nightSpan:ev.durationMin/dayEnd;
+    const t2=Math.min(t1+durFrac,1);
     const a1=startAng+t1*totalArc,a2=startAng+t2*totalArc;
     const midAng=(a1+a2)/2;const midRad=midAng*Math.PI/180;
     return{ev,path:descArc(a1,a2),mx:cx+R*Math.cos(midRad),my:cy+R*Math.sin(midRad),col:TYPES[ev.type]?.color||T.purple};
@@ -568,7 +593,7 @@ function Ring({activeTimer,napSug,tick,recentEvents,lang}){
   const MIN_GAP=14;
   const rawDots=dotEvs.map(ev=>{
     const cfg=TYPES[ev.type];if(!cfg)return null;
-    const mins=toMin(ev.time);const angDeg=startAng+(mins/dayEnd)*totalArc;
+    const pos=toRingPos(ev);const angDeg=startAng+pos*totalArc;
     const angRad=angDeg*Math.PI/180;
     return{ev,cfg,angDeg,x:cx+R*Math.cos(angRad),y:cy+R*Math.sin(angRad)};
   }).filter(Boolean);
@@ -578,13 +603,18 @@ function Ring({activeTimer,napSug,tick,recentEvents,lang}){
 
   // Live timer arc (growing while timer active)
   let timerArc=null;
-  if(activeTimer){
+  if(activeTimer?.startTime){
     const st=new Date(activeTimer.startTime);
-    const startMins=st.getHours()*60+st.getMinutes();
-    const now=new Date();
-    const nowMins=now.getHours()*60+now.getMinutes();
-    const a1=startAng+(startMins/dayEnd)*totalArc;
-    const a2=startAng+(Math.min(nowMins,dayEnd-1)/dayEnd)*totalArc;
+    let pos1,pos2;
+    if(isNight){
+      pos1=Math.max(0,(st.getTime()-nightStartTs)/60000/nightSpan);
+      pos2=Math.max(0,(Date.now()-nightStartTs)/60000/nightSpan);
+    }else{
+      const startMins=st.getHours()*60+st.getMinutes();
+      const now=new Date();const nowMins=now.getHours()*60+now.getMinutes();
+      pos1=startMins/dayEnd;pos2=Math.min(nowMins,dayEnd-1)/dayEnd;
+    }
+    const a1=startAng+pos1*totalArc,a2=startAng+pos2*totalArc;
     if(a2>a1){
       const midAng=(a1+a2)/2;const midRad=midAng*Math.PI/180;
       timerArc={path:descArc(a1,a2),col:T.purple,mx:cx+R*Math.cos(midRad),my:cy+R*Math.sin(midRad)};
@@ -644,7 +674,7 @@ function LastFeedCard({entries}){
 
 function WeeklyCard({entries}){const tw=[],lw=[];for(let i=0;i<7;i++){const d1=dateOffset(todayStr(),-i),d2=dateOffset(todayStr(),-7-i);tw.push(...entries.filter(e=>e.date===d1));lw.push(...entries.filter(e=>e.date===d2))}const tMl=tw.filter(e=>e.type==="bottle").reduce((s,e)=>s+(e.ml||0),0);const lMl=lw.filter(e=>e.type==="bottle").reduce((s,e)=>s+(e.ml||0),0);const tSl=tw.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin).reduce((s,e)=>s+e.durationMin,0);const lSl=lw.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin).reduce((s,e)=>s+e.durationMin,0);if(!lMl&&!lSl)return null;const md=lMl>0?Math.round(((tMl-lMl)/lMl)*100):0;const sd=lSl>0?Math.round(((tSl-lSl)/lSl)*100):0;if(!md&&!sd)return null;return(<div style={{padding:"0 20px",marginBottom:16}}><div style={{padding:"12px 16px",borderRadius:14,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",gap:16}}>{md!==0&&<div style={{display:"flex",alignItems:"center",gap:6,flex:1}}><Icon name={md>0?"arrowUp":"arrowDown"} size={14} color={md>0?T.green:T.orange}/><span style={{fontSize:11,color:T.sub}}><span style={{fontWeight:700,color:md>0?T.green:T.orange}}>{Math.abs(md)}%</span> {L("milkVsWeek")}</span></div>}{sd!==0&&<div style={{display:"flex",alignItems:"center",gap:6,flex:1}}><Icon name={sd>0?"arrowUp":"arrowDown"} size={14} color={sd>0?T.green:T.orange}/><span style={{fontSize:11,color:T.sub}}><span style={{fontWeight:700,color:sd>0?T.green:T.orange}}>{Math.abs(sd)}%</span> sono</span></div>}</div></div>)}
 
-function TimerBar({activeTimer,onStop}){const[secs,setSecs]=useState(0);useEffect(()=>{if(!activeTimer)return;const calc=()=>Math.max(0,Math.floor((Date.now()-new Date(activeTimer.startTime).getTime())/1000));setSecs(calc());const iv=setInterval(()=>setSecs(calc()),1000);return()=>clearInterval(iv)},[activeTimer]);if(!activeTimer)return null;return(<div style={{position:"fixed",bottom:"calc(66px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 32px)",maxWidth:448,padding:"12px 16px",borderRadius:16,background:"rgba(20,26,66,0.92)",border:`1px solid ${T.purple}33`,backdropFilter:"blur(12px)",display:"flex",alignItems:"center",gap:12,zIndex:60,boxShadow:"0 4px 24px rgba(0,0,0,0.4)"}}><div style={{width:36,height:36,borderRadius:10,background:T.purpleS,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name={activeTimer.type==="nap"?"cloud":"moon"} size={18} color={T.purple}/></div><div style={{flex:1}}><div style={{fontSize:12,fontWeight:600,color:T.sub}}>{activeTimer.type==="nap"?TL("nap"):TL("sleep")}</div><div style={{fontSize:20,fontWeight:800,fontVariantNumeric:"tabular-nums"}}>{fmtTimer(secs)}</div></div><button onClick={onStop} style={{width:40,height:40,borderRadius:12,background:T.purpleS,border:`1px solid ${T.purple}33`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="stop" size={16} color={T.purple}/></button></div>)}
+function TimerBar({activeTimer,onStop,onNightWaking}){const[secs,setSecs]=useState(0);useEffect(()=>{if(!activeTimer?.startTime)return;const calc=()=>Math.max(0,Math.floor((Date.now()-new Date(activeTimer.startTime).getTime())/1000));setSecs(calc());const iv=setInterval(()=>setSecs(calc()),1000);return()=>clearInterval(iv)},[activeTimer]);if(!activeTimer?.startTime)return null;const isBedtime=!!activeTimer.nightStart;return(<div style={{position:"fixed",bottom:"calc(66px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 32px)",maxWidth:448,padding:"12px 16px",borderRadius:16,background:"rgba(20,26,66,0.92)",border:`1px solid ${T.purple}33`,backdropFilter:"blur(12px)",display:"flex",alignItems:"center",gap:12,zIndex:60,boxShadow:"0 4px 24px rgba(0,0,0,0.4)"}}><div style={{width:36,height:36,borderRadius:10,background:T.purpleS,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name={activeTimer.type==="nap"?"cloud":"moon"} size={18} color={T.purple}/></div><div style={{flex:1}}><div style={{fontSize:12,fontWeight:600,color:T.sub}}>{activeTimer.type==="nap"?TL("nap"):TL("sleep")}</div><div style={{fontSize:20,fontWeight:800,fontVariantNumeric:"tabular-nums"}}>{fmtTimer(secs)}</div></div>{isBedtime&&<button onClick={onNightWaking} style={{padding:"8px 12px",borderRadius:12,background:T.orangeS,border:`1px solid ${T.orange}33`,display:"flex",alignItems:"center",gap:6}}><Icon name="zap" size={14} color={T.orange}/><span style={{fontSize:11,fontWeight:700,color:T.orange}}>{_lang==="en"?"Woke up":"Acordou"}</span></button>}<button onClick={onStop} style={{width:40,height:40,borderRadius:12,background:T.purpleS,border:`1px solid ${T.purple}33`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="stop" size={16} color={T.purple}/></button></div>)}
 
 function Toast({message,onUndo,onClose}){const closeRef=useRef(onClose);closeRef.current=onClose;useEffect(()=>{const t=setTimeout(()=>closeRef.current(),2000);return()=>clearTimeout(t)},[]);return(<div style={{position:"fixed",top:"calc(20px + env(safe-area-inset-top))",left:"50%",transform:"translateX(-50%)",zIndex:300,padding:"10px 16px",borderRadius:14,background:"rgba(20,26,66,0.95)",border:`1px solid ${T.gB}`,backdropFilter:"blur(12px)",display:"flex",alignItems:"center",gap:10,boxShadow:"0 8px 24px rgba(0,0,0,0.5)",animation:"slideDown .3s ease"}}><span style={{fontSize:13,color:T.text}}>{message}</span>{onUndo&&<button onClick={onUndo} style={{padding:"4px 12px",borderRadius:8,background:T.accent,color:"#fff",fontSize:12,fontWeight:700}}>{L("undo")}</button>}</div>)}
 
@@ -1049,10 +1079,14 @@ function App(){
   const deleteEntry=useCallback(async id=>{const entry=entries.find(e=>e.id===id);await FB.delEntry(id);showToast(`${TL(entry?.type)||""} ${L("removed")}`,async()=>{if(entry)await FB.addEntry(entry)})},[entries]);
   const quickWakeup=useCallback(()=>addEntry({type:"wakeup",date:todayStr(),time:nowTime(),id:uid()}),[addEntry]);
   const duplicateLast=useCallback(()=>{if(!entries.length)return;const l=entries[0];addEntry({...l,id:uid(),date:todayStr(),time:nowTime(),_docId:undefined})},[entries,addEntry]);
-  const startTimer=useCallback(async type=>{await FB.saveTimer({type,startTime:new Date().toISOString()});setShowAdd(false)},[]);
-  const stopTimer=useCallback(async()=>{if(!activeTimer)return;const s=new Date(activeTimer.startTime);const mins=Math.max(1,Math.round((Date.now()-s.getTime())/6e4));const entry={type:activeTimer.type,date:`${s.getFullYear()}-${String(s.getMonth()+1).padStart(2,"0")}-${String(s.getDate()).padStart(2,"0")}`,time:`${String(s.getHours()).padStart(2,"0")}:${String(s.getMinutes()).padStart(2,"0")}`,durationMin:mins,id:uid()};const parts=splitMidnight(entry);for(const p of parts) await FB.addEntry(p);await FB.saveTimer(null);showToast(`${mins}min registrado`,null)},[activeTimer]);
+  const startTimer=useCallback(async type=>{const d={type,startTime:new Date().toISOString()};if(type==="sleep")d.nightStart=activeTimer?.nightStart||d.startTime;await FB.saveTimer(d);setShowAdd(false)},[activeTimer]);
+  const stopTimer=useCallback(async()=>{if(!activeTimer?.startTime)return;const s=new Date(activeTimer.startTime);const mins=Math.max(1,Math.round((Date.now()-s.getTime())/6e4));const entry={type:activeTimer.type,date:`${s.getFullYear()}-${String(s.getMonth()+1).padStart(2,"0")}-${String(s.getDate()).padStart(2,"0")}`,time:`${String(s.getHours()).padStart(2,"0")}:${String(s.getMinutes()).padStart(2,"0")}`,durationMin:mins,id:uid()};const parts=splitMidnight(entry);for(const p of parts) await FB.addEntry(p);await FB.saveTimer(null);showToast(`${mins}min ${L("registered")}`,null)},[activeTimer]);
+  const nightWaking=useCallback(async()=>{if(!activeTimer?.startTime)return;const s=new Date(activeTimer.startTime);const mins=Math.max(1,Math.round((Date.now()-s.getTime())/6e4));const entry={type:activeTimer.type,date:`${s.getFullYear()}-${String(s.getMonth()+1).padStart(2,"0")}-${String(s.getDate()).padStart(2,"0")}`,time:`${String(s.getHours()).padStart(2,"0")}:${String(s.getMinutes()).padStart(2,"0")}`,durationMin:mins,id:uid()};const parts=splitMidnight(entry);for(const p of parts) await FB.addEntry(p);await FB.saveTimer({nightStart:activeTimer.nightStart});showToast(`${mins}min ${L("registered")}`,null)},[activeTimer]);
 
   const today=todayStr();const todayE=useMemo(()=>entries.filter(e=>e.date===today),[entries,today]);
+  const isNightMode=!!activeTimer?.nightStart;
+  const nightEvents=useMemo(()=>{if(!activeTimer?.nightStart)return[];const nsTs=new Date(activeTimer.nightStart).getTime();return entries.filter(e=>{const eTs=new Date(`${e.date}T${e.time}`).getTime();return eTs>=nsTs})},[entries,activeTimer?.nightStart]);
+  const ringEvents=isNightMode?nightEvents:todayE;
   const totalMl=todayE.filter(e=>e.type==="bottle").reduce((s,e)=>s+(e.ml||0),0);
   const totalNursingMin=todayE.filter(e=>e.type==="nursing"&&e.durationMin).reduce((s,e)=>s+e.durationMin,0);
   const totalNursing=todayE.filter(e=>e.type==="nursing").length;
@@ -1060,16 +1094,17 @@ function App(){
   const totalDiapers=todayE.filter(e=>e.type==="diaper").length;
   const age=calcAge(profile.birthDate);const babyName=profile.name||"Bebê";
   const sleepRec=useMemo(()=>getSleepRec(entries,age,profile.birthDate),[entries,age,profile.birthDate]);
-  const napSug=useMemo(()=>!activeTimer?getNapSug(todayE,sleepRec):null,[todayE,sleepRec,activeTimer,tick]);
+  const napSug=useMemo(()=>!activeTimer?.startTime?getNapSug(todayE,sleepRec):null,[todayE,sleepRec,activeTimer,tick]);
   const daysLeft=sleepRec?.phase===1?sleepRec.dl:null;
 
   // Vibrate when sleep window warning triggers
   const prevWind=useRef(false);const prevOver=useRef(false);
   useEffect(()=>{
+    if(isNightMode)return; // No sleep alerts during bedtime
     if(napSug?.wind&&!prevWind.current&&navigator.vibrate)navigator.vibrate([200,100,200]);
     if(napSug?.over&&!prevOver.current&&navigator.vibrate)navigator.vibrate([300,150,300,150,300]);
     prevWind.current=!!napSug?.wind;prevOver.current=!!napSug?.over;
-  },[napSug?.wind,napSug?.over]);
+  },[napSug?.wind,napSug?.over,isNightMode]);
 
   if(splash||loading)return(
     <div style={{background:`radial-gradient(ellipse at 50% 40%,#10153d 0%,${T.bg1} 70%)`,minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",fontFamily:"'Outfit',sans-serif",overflow:"hidden",animation:!splash&&!loading?"":"",opacity:splash?1:0,transition:"opacity .4s"}}>
@@ -1119,22 +1154,23 @@ function App(){
           <div style={{flex:1}}><h1 style={{fontSize:20,fontWeight:800,margin:0,letterSpacing:-0.5}}>{babyName}</h1><div style={{fontSize:11,color:T.sub,marginTop:2}}>{age&&<>{age.months>0?`${age.months} ${_lang==="en"?(age.months===1?"month":"months"):(age.months===1?"mês":"meses")}${_lang==="en"?" and ":" e "}`:""}{age.days} {_lang==="en"?"days":"dias"}</>}</div></div>
           <div style={{textAlign:"right"}}><div style={{fontSize:10,color:T.dim}}>{new Date().toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{day:"numeric",month:"short"})}</div><div style={{fontSize:8,color:T.dim,opacity:0.5,marginTop:2}}>v{APP_VERSION}</div></div>
         </div>
-        <div style={{padding:"4px 0 0"}}><Ring activeTimer={activeTimer} napSug={napSug} tick={tick} recentEvents={todayE} lang={lang}/></div>
-        <div style={{display:"flex",gap:8,padding:"0 20px",marginBottom:14}}>{!activeTimer&&<><button onClick={()=>{setFormType("bottle");setShowAdd(false)}} style={{flex:1,padding:"10px 0",borderRadius:12,background:T.greenS,border:`1px solid ${T.green}22`,display:"flex",alignItems:"center",justifyContent:"center",gap:5}}><Icon name="bottle" size={13} color={T.green}/><span style={{fontSize:11,fontWeight:700,color:T.green}}>{_lang==="en"?"Bottle":"Mamad."}</span></button><button onClick={()=>startTimer("nap")} style={{flex:1,padding:"10px 0",borderRadius:12,background:`${T.accent}15`,border:`1px solid ${T.accent}22`,display:"flex",alignItems:"center",justifyContent:"center",gap:5}}><Icon name="play" size={12} color={T.accent}/><span style={{fontSize:11,fontWeight:700,color:T.accent}}>{_lang==="en"?"Nap":"Soneca"}</span></button><button onClick={()=>startTimer("sleep")} style={{flex:1,padding:"10px 0",borderRadius:12,background:T.purpleS,border:`1px solid ${T.purple}22`,display:"flex",alignItems:"center",justifyContent:"center",gap:5}}><Icon name="play" size={12} color={T.purple}/><span style={{fontSize:11,fontWeight:700,color:T.purple}}>{_lang==="en"?"Sleep":"Sono"}</span></button></>}</div>
-        {napSug?.wind&&<div style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:T.amberS,border:`1px solid ${T.amber}22`,display:"flex",alignItems:"center",gap:10,animation:"pulse 2s infinite"}}><Icon name="bell" size={18} color={T.amber}/><div><div style={{fontSize:12,fontWeight:700,color:T.amber}}>{_lang==="en"?"Get ready for sleep":"Preparar para dormir"}</div><div style={{fontSize:10,color:T.sub}}>{_lang==="en"?`~${napSug.rem}min left`:`~${napSug.rem}min restantes`}</div></div></div>}
-        {napSug?.over&&<div style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:T.orangeS,border:`1px solid ${T.orange}22`,display:"flex",alignItems:"center",gap:10,animation:"pulse 1.5s infinite"}}><Icon name="zap" size={18} color={T.orange}/><div><div style={{fontSize:12,fontWeight:700,color:T.orange}}>{_lang==="en"?"Sleep window passed":"Janela de sono passou"}</div><div style={{fontSize:10,color:T.sub}}>{_lang==="en"?`${fmtDur(napSug.el)} awake`:`${fmtDur(napSug.el)} acordado(a)`}</div></div></div>}
+        <div style={{padding:"4px 0 0"}}><Ring activeTimer={activeTimer} napSug={napSug} tick={tick} recentEvents={ringEvents} lang={lang}/></div>
+        <div style={{display:"flex",gap:8,padding:"0 20px",marginBottom:14}}>{!activeTimer?.startTime&&!isNightMode&&<><button onClick={()=>{setFormType("bottle");setShowAdd(false)}} style={{flex:1,padding:"10px 0",borderRadius:12,background:T.greenS,border:`1px solid ${T.green}22`,display:"flex",alignItems:"center",justifyContent:"center",gap:5}}><Icon name="bottle" size={13} color={T.green}/><span style={{fontSize:11,fontWeight:700,color:T.green}}>{_lang==="en"?"Bottle":"Mamad."}</span></button><button onClick={()=>startTimer("nap")} style={{flex:1,padding:"10px 0",borderRadius:12,background:`${T.accent}15`,border:`1px solid ${T.accent}22`,display:"flex",alignItems:"center",justifyContent:"center",gap:5}}><Icon name="play" size={12} color={T.accent}/><span style={{fontSize:11,fontWeight:700,color:T.accent}}>{_lang==="en"?"Nap":"Soneca"}</span></button><button onClick={()=>startTimer("sleep")} style={{flex:1,padding:"10px 0",borderRadius:12,background:T.purpleS,border:`1px solid ${T.purple}22`,display:"flex",alignItems:"center",justifyContent:"center",gap:5}}><Icon name="play" size={12} color={T.purple}/><span style={{fontSize:11,fontWeight:700,color:T.purple}}>{_lang==="en"?"Sleep":"Sono"}</span></button></>}{!activeTimer?.startTime&&isNightMode&&<><button onClick={()=>{setFormType("bottle");setShowAdd(false)}} style={{flex:1,padding:"10px 0",borderRadius:12,background:T.greenS,border:`1px solid ${T.green}22`,display:"flex",alignItems:"center",justifyContent:"center",gap:5}}><Icon name="bottle" size={13} color={T.green}/><span style={{fontSize:11,fontWeight:700,color:T.green}}>{_lang==="en"?"Bottle":"Mamad."}</span></button><button onClick={()=>startTimer("sleep")} style={{flex:1,padding:"10px 0",borderRadius:12,background:T.purpleS,border:`1px solid ${T.purple}22`,display:"flex",alignItems:"center",justifyContent:"center",gap:5}}><Icon name="play" size={12} color={T.purple}/><span style={{fontSize:11,fontWeight:700,color:T.purple}}>{_lang==="en"?"Sleep":"Dormir"}</span></button><button onClick={async()=>{await FB.saveTimer(null);showToast(_lang==="en"?"Good morning!":"Bom dia!",null)}} style={{flex:1,padding:"10px 0",borderRadius:12,background:T.amberS,border:`1px solid ${T.amber}22`,display:"flex",alignItems:"center",justifyContent:"center",gap:5}}><Icon name="sun" size={13} color={T.amber}/><span style={{fontSize:11,fontWeight:700,color:T.amber}}>{_lang==="en"?"Morning":"Bom dia"}</span></button></>}</div>
+        {!isNightMode&&napSug?.wind&&<div style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:T.amberS,border:`1px solid ${T.amber}22`,display:"flex",alignItems:"center",gap:10,animation:"pulse 2s infinite"}}><Icon name="bell" size={18} color={T.amber}/><div><div style={{fontSize:12,fontWeight:700,color:T.amber}}>{_lang==="en"?"Get ready for sleep":"Preparar para dormir"}</div><div style={{fontSize:10,color:T.sub}}>{_lang==="en"?`~${napSug.rem}min left`:`~${napSug.rem}min restantes`}</div></div></div>}
+        {!isNightMode&&napSug?.over&&<div style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:T.orangeS,border:`1px solid ${T.orange}22`,display:"flex",alignItems:"center",gap:10,animation:"pulse 1.5s infinite"}}><Icon name="zap" size={18} color={T.orange}/><div><div style={{fontSize:12,fontWeight:700,color:T.orange}}>{_lang==="en"?"Sleep window passed":"Janela de sono passou"}</div><div style={{fontSize:10,color:T.sub}}>{_lang==="en"?`${fmtDur(napSug.el)} awake`:`${fmtDur(napSug.el)} acordado(a)`}</div></div></div>}
         <MlGoalBar current={totalMl} goal={profile.mlGoal}/>
         <LastFeedCard entries={entries}/>
-        <WeeklyCard entries={entries}/>
-        <div style={{padding:"0 20px",marginBottom:14}}><div style={{display:"flex",background:T.glass,borderRadius:14,border:`1px solid ${T.gB}`}}>{[{i:"bottle",v:`${totalMl}`,u:"ml",c:T.green},{i:"breast",v:totalNursingMin>0?fmtDur(totalNursingMin):`${totalNursing}x`,c:T.blue},{i:"moon",v:fmtDur(totalSleep),c:T.purple},{i:"droplet",v:`${totalDiapers}`,c:T.pink}].map((p,idx)=><div key={idx} style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:5,padding:"10px 2px"}}><Icon name={p.i} size={14} color={p.c}/><span style={{fontSize:12,fontWeight:700,color:p.c}}>{p.v}{p.u?<span style={{fontSize:10,fontWeight:500,opacity:0.7}}>{p.u}</span>:null}</span></div>)}</div></div>
-        {entries.length>0&&<div style={{padding:"0 20px",marginBottom:14}}><button onClick={duplicateLast} style={{width:"100%",padding:"10px 14px",borderRadius:12,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}><Icon name="copy" size={14} color={T.sub}/><span style={{fontSize:12,fontWeight:600,color:T.sub}}>{L("repeatLast")}: {TL(entries[0].type)}</span></button></div>}
-        <div style={{padding:"0 20px"}}><div style={{fontSize:12,fontWeight:600,color:T.dim,marginBottom:8,textTransform:"uppercase",letterSpacing:0.8}}>{L("today")}</div>{todayE.length===0&&<div style={{textAlign:"center",padding:"32px 20px",color:T.dim}}><Icon name="star" size={32} color={T.dim} fill={T.dim}/><div style={{fontSize:13,marginTop:8}}>{_lang==="en"?"Tap + to add":"Toque + para registrar"}</div></div>}{todayE.map(e=><EntryRow key={e.id} entry={e} onDelete={deleteEntry} onEdit={startEdit}/>)}</div>
+        {!isNightMode&&<WeeklyCard entries={entries}/>}
+        {!isNightMode&&<div style={{padding:"0 20px",marginBottom:14}}><div style={{display:"flex",background:T.glass,borderRadius:14,border:`1px solid ${T.gB}`}}>{[{i:"bottle",v:`${totalMl}`,u:"ml",c:T.green},{i:"breast",v:totalNursingMin>0?fmtDur(totalNursingMin):`${totalNursing}x`,c:T.blue},{i:"moon",v:fmtDur(totalSleep),c:T.purple},{i:"droplet",v:`${totalDiapers}`,c:T.pink}].map((p,idx)=><div key={idx} style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:5,padding:"10px 2px"}}><Icon name={p.i} size={14} color={p.c}/><span style={{fontSize:12,fontWeight:700,color:p.c}}>{p.v}{p.u?<span style={{fontSize:10,fontWeight:500,opacity:0.7}}>{p.u}</span>:null}</span></div>)}</div></div>}
+        {!isNightMode&&entries.length>0&&<div style={{padding:"0 20px",marginBottom:14}}><button onClick={duplicateLast} style={{width:"100%",padding:"10px 14px",borderRadius:12,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}><Icon name="copy" size={14} color={T.sub}/><span style={{fontSize:12,fontWeight:600,color:T.sub}}>{L("repeatLast")}: {TL(entries[0].type)}</span></button></div>}
+        {!isNightMode&&<div style={{padding:"0 20px"}}><div style={{fontSize:12,fontWeight:600,color:T.dim,marginBottom:8,textTransform:"uppercase",letterSpacing:0.8}}>{L("today")}</div>{todayE.length===0&&<div style={{textAlign:"center",padding:"32px 20px",color:T.dim}}><Icon name="star" size={32} color={T.dim} fill={T.dim}/><div style={{fontSize:13,marginTop:8}}>{_lang==="en"?"Tap + to add":"Toque + para registrar"}</div></div>}{todayE.map(e=><EntryRow key={e.id} entry={e} onDelete={deleteEntry} onEdit={startEdit}/>)}</div>}
+        {isNightMode&&<div style={{padding:"0 20px"}}><div style={{fontSize:12,fontWeight:600,color:T.dim,marginBottom:8,textTransform:"uppercase",letterSpacing:0.8}}>{_lang==="en"?"Tonight":"Esta noite"}</div>{nightEvents.filter(e=>e.type!=="sleep"&&e.type!=="nap").length===0&&<div style={{textAlign:"center",padding:"20px",color:T.dim}}><Icon name="moon" size={24} color={T.purple}/><div style={{fontSize:12,marginTop:6,color:T.sub}}>{_lang==="en"?"Sweet dreams":"Bons sonhos"}</div></div>}{nightEvents.filter(e=>e.type!=="sleep"&&e.type!=="nap").map(e=><EntryRow key={e.id} entry={e} onDelete={deleteEntry} onEdit={startEdit}/>)}</div>}
       </div>}
       {page==="history"&&<HistoryPage entries={entries} onDelete={deleteEntry} onEdit={startEdit}/>}
       {page==="stats"&&<StatsPage entries={entries} onGrowth={()=>goTo("growth")}/>}
       {page==="growth"&&<GrowthPage entries={entries} birthDate={profile.birthDate} profile={profile} onBack={()=>goTo("stats")} onAddEntry={addEntry}/>}
       {/* Bottom spacer so content clears nav bar */}
-      <div style={{height:activeTimer?170:100}}/>
+      <div style={{height:activeTimer?.startTime?170:100}}/>
     </div>
 
     {/* Fade gradient above nav */}
@@ -1161,7 +1197,7 @@ function App(){
     </Sheet>
 
     {showProfile&&<ProfilePage profile={profile} onSave={async p=>await FB.saveProfile(p)} onBack={()=>setShowProfile(false)} onGrowth={()=>{setShowProfile(false);goTo("growth")}}/>}
-    <TimerBar activeTimer={activeTimer} onStop={stopTimer}/>
+    <TimerBar activeTimer={activeTimer} onStop={stopTimer} onNightWaking={nightWaking}/>
 
     <nav style={{position:"fixed",bottom:"calc(2px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 32px)",maxWidth:448,display:"flex",alignItems:"center",justifyContent:"space-around",padding:"8px 12px",background:"rgba(16,20,52,0.92)",backdropFilter:"blur(16px)",borderRadius:22,border:`1px solid ${T.gB}`,boxShadow:"0 8px 32px rgba(0,0,0,0.5)",zIndex:50}}>
       {[{icon:"home",label:L("home"),active:page==="home"&&!showAdd,action:()=>goTo("home")},{icon:"clock",label:L("history"),active:page==="history",action:()=>goTo("history")}].map(n=><button key={n.icon} onClick={n.action} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,padding:"4px 8px",opacity:n.active?1:0.4}}><Icon name={n.icon} size={20} color={n.active?T.accent:T.sub}/><span style={{fontSize:9,fontWeight:600,color:n.active?T.accent:T.dim}}>{n.label}</span></button>)}
