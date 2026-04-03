@@ -259,8 +259,9 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "3.6.0";
+const APP_VERSION = "3.7.0";
 const CHANGELOG = [
+  { v: "3.7.0", date: "2026-04-02", changes: "Ring v2: dots 36px anti-overlap (14° min gap), sleep arcs dominantes (48px glow), track fino 5px" },
   { v: "3.6.0", date: "2026-04-02", changes: "Ring Napper: sleep arcs, time-proportional dots, summary awake+sleep, wakeup/nightwaking removed, timezone fix" },
   { v: "3.5.0", date: "2026-04-02", changes: "Ring Napper-level: 300px, ícones 42px com glow+inner light+glass, até 12 eventos, texto 50px" },
   { v: "3.4.0", date: "2026-04-02", changes: "Awake for/Asleep for no ring (Napper-style), estrelas mais visíveis, Last Feed card, fix NightCard removido" },
@@ -506,11 +507,9 @@ function TL(type){return typeLabel(type,_lang)}
 function Ring({activeTimer,napSug,tick,recentEvents,lang}){
   const[tip,setTip]=useState(null);
   useEffect(()=>{if(tip!==null){const t=setTimeout(()=>setTip(null),3000);return()=>clearTimeout(t)}},[tip]);
-  const sz=340,cx=sz/2,cy=sz/2,R=148,stk=6;
-  const gapDeg=50,startAng=90+gapDeg/2,totalArc=360-gapDeg;
-  const iconSz=44,iconR=iconSz/2;
-
-  // Center text
+  const sz=340,cx=sz/2,cy=sz/2,R=148;
+  const gapDeg=55,startAng=90+gapDeg/2,totalArc=360-gapDeg;
+  const dotSz=36,sleepSz=36;
   let lbl="",sub="",col1=T.dim,col2=T.dim;
   if(activeTimer){
     const el=Math.max(0,Math.floor((Date.now()-new Date(activeTimer.startTime).getTime())/1000));const mins=Math.floor(el/60);
@@ -521,106 +520,47 @@ function Ring({activeTimer,napSug,tick,recentEvents,lang}){
     if(napSug.over){col1="#ea580c";col2="#fb923c"}else if(napSug.wind){col1="#d97706";col2="#fbbf24"}else{col1="#059669";col2="#34d399"}
   } else{sub="";lbl="\u2014"}
   const hasProgress=col1!==T.dim;
-
-  // Helpers
   const toMin=t=>{const[h,m]=(t||"12:00").split(":").map(Number);return h*60+m};
   const dayEnd=24*60;
   const descArc=(sA,eA)=>{const s=sA*Math.PI/180,e=eA*Math.PI/180;return`M ${cx+R*Math.cos(s)} ${cy+R*Math.sin(s)} A ${R} ${R} 0 ${eA-sA>180?1:0} 1 ${cx+R*Math.cos(e)} ${cy+R*Math.sin(e)}`};
-
-  // Separate sleep arcs from dot events
   const evs=(recentEvents||[]);
   const sleepEvs=evs.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin>0);
   const dotEvs=evs.filter(e=>!((e.type==="sleep"||e.type==="nap")&&e.durationMin>0));
-
-  // Sleep arcs
   const sleepArcs=sleepEvs.map(ev=>{
     const mins=toMin(ev.time),dur=ev.durationMin;
     const t1=mins/dayEnd,t2=Math.min((mins+dur)/dayEnd,1);
     const a1=startAng+t1*totalArc,a2=startAng+t2*totalArc;
     const midAng=(a1+a2)/2;const midRad=midAng*Math.PI/180;
-    return{ev,a1,a2,path:descArc(a1,a2),mx:cx+R*Math.cos(midRad),my:cy+R*Math.sin(midRad),col:TYPES[ev.type]?.color||T.purple};
+    return{ev,path:descArc(a1,a2),mx:cx+R*Math.cos(midRad),my:cy+R*Math.sin(midRad),col:TYPES[ev.type]?.color||T.purple};
   });
-
-  // Dot events positioned by time
-  const dots=dotEvs.map((ev,i)=>{
+  const MIN_GAP=14;
+  const rawDots=dotEvs.map(ev=>{
     const cfg=TYPES[ev.type];if(!cfg)return null;
-    const mins=toMin(ev.time);const t=mins/dayEnd;
-    const ang=(startAng+t*totalArc)*Math.PI/180;
-    return{ev,cfg,x:cx+R*Math.cos(ang),y:cy+R*Math.sin(ang),idx:i};
+    const mins=toMin(ev.time);const angDeg=startAng+(mins/dayEnd)*totalArc;
+    const angRad=angDeg*Math.PI/180;
+    return{ev,cfg,angDeg,x:cx+R*Math.cos(angRad),y:cy+R*Math.sin(angRad)};
   }).filter(Boolean);
-
-  // Totals for summary
+  const dots=[];
+  for(const d of rawDots){if(!dots.some(fd=>Math.abs(fd.angDeg-d.angDeg)<MIN_GAP))dots.push(d)}
   const totalSleepMin=evs.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin).reduce((s,e)=>s+e.durationMin,0);
-
   return(<div style={{position:"relative",width:sz,margin:"0 auto"}}>
     <div style={{position:"relative",width:sz,height:sz}}>
       <svg width={sz} height={sz} style={{overflow:"visible"}}>
-        <defs>
-          <filter id="slpG"><feGaussianBlur stdDeviation="6" result="b"/><feFlood floodColor={T.purple} floodOpacity="0.3" result="c"/><feComposite in="c" in2="b" operator="in" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-        </defs>
-        {/* Track */}
-        <path d={descArc(startAng,startAng+totalArc)} fill="none" stroke="rgba(40,48,100,0.25)" strokeWidth={stk} strokeLinecap="round"/>
-        {/* Sleep arcs - glow layer */}
-        {sleepArcs.map((sa,i)=><path key={"sg"+i} d={sa.path} fill="none" stroke={sa.col} strokeWidth={40} strokeLinecap="round" opacity={0.08} filter="url(#slpG)"/>)}
-        {/* Sleep arcs - fill layer */}
-        {sleepArcs.map((sa,i)=><path key={"sf"+i} d={sa.path} fill="none" stroke={sa.col} strokeWidth={36} strokeLinecap="round" opacity={0.15}/>)}
+        <defs><filter id="slpG"><feGaussianBlur stdDeviation="8" result="b"/><feFlood floodColor={T.purple} floodOpacity="0.35" result="c"/><feComposite in="c" in2="b" operator="in" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+        <path d={descArc(startAng,startAng+totalArc)} fill="none" stroke="rgba(40,48,100,0.2)" strokeWidth={5} strokeLinecap="round"/>
+        {sleepArcs.map((sa,i)=><path key={"sg"+i} d={sa.path} fill="none" stroke={sa.col} strokeWidth={48} strokeLinecap="round" opacity={0.06} filter="url(#slpG)"/>)}
+        {sleepArcs.map((sa,i)=><path key={"sf"+i} d={sa.path} fill="none" stroke={sa.col} strokeWidth={42} strokeLinecap="round" opacity={0.12}/>)}
+        {sleepArcs.map((sa,i)=><path key={"se"+i} d={sa.path} fill="none" stroke={sa.col} strokeWidth={2} strokeLinecap="round" opacity={0.35}/>)}
       </svg>
-
-      {/* Sleep icons on arcs */}
-      {sleepArcs.map((sa,i)=><div key={"si"+i} style={{
-        position:"absolute",left:sa.mx-20,top:sa.my-20,width:40,height:40,borderRadius:"50%",
-        background:"radial-gradient(circle at 35% 30%,rgba(50,40,100,0.95),rgba(20,16,50,0.98))",
-        border:`2.5px solid ${sa.col}`,display:"flex",alignItems:"center",justifyContent:"center",
-        boxShadow:`0 2px 12px rgba(0,0,0,0.4), 0 0 16px ${sa.col}30`,zIndex:3
-      }}>
-        <div style={{position:"absolute",top:"12%",left:"20%",width:"50%",height:"30%",background:`radial-gradient(ellipse,${sa.col}20,transparent)`,borderRadius:"50%",filter:"blur(3px)"}}/>
-        <Icon name={sa.ev.type==="nap"?"cloud":"moon"} size={18} color={sa.col}/>
-      </div>)}
-
-      {/* Dot events */}
-      {dots.map((d,i)=>{
-        const ev=d.ev,c=d.cfg.color;
-        let detail=TL(ev.type);
-        if(ev.ml)detail+=` \u00b7 ${ev.ml}ml`;
-        else if(ev.subtype)detail+=` \u00b7 ${({wet:L("wet"),dirty:L("dirty"),both:L("both")})[ev.subtype]||""}`;
-        else if(ev.name)detail+=` \u00b7 ${ev.name}`;
-        const active=tip===i;
-        return<div key={ev.id||i} onClick={(e)=>{e.stopPropagation();setTip(active?null:i)}} style={{
-          position:"absolute",left:d.x-iconR,top:d.y-iconR,width:iconSz,height:iconSz,borderRadius:"50%",
-          background:"radial-gradient(circle at 35% 30%,rgba(35,42,90,0.95),rgba(14,18,45,0.98))",
-          border:`2.5px solid ${active?c:c+"55"}`,display:"flex",alignItems:"center",justifyContent:"center",
-          boxShadow:`0 3px 12px rgba(0,0,0,0.5), 0 0 ${active?22:14}px ${c}${active?"44":"20"}, inset 0 1px 0 rgba(200,220,255,0.08), inset 0 -2px 4px rgba(0,0,0,0.2)`,
-          zIndex:active?10:2,transform:active?"scale(1.15)":"scale(1)",transition:"all .2s cubic-bezier(0.34,1.56,0.64,1)",overflow:"hidden"
-        }}>
-          <div style={{position:"absolute",top:"12%",left:"20%",width:"50%",height:"30%",background:`radial-gradient(ellipse,${c}15,transparent)`,borderRadius:"50%",filter:"blur(4px)"}}/>
-          <Icon name={d.cfg.icon} size={19} color={c}/>
-          {active&&<div style={{position:"absolute",bottom:iconSz+6,left:"50%",transform:"translateX(-50%)",whiteSpace:"nowrap",padding:"6px 14px",borderRadius:10,background:"rgba(8,12,35,0.96)",border:`1px solid ${c}30`,boxShadow:`0 4px 20px rgba(0,0,0,0.6), 0 0 12px ${c}15`,fontSize:11,fontWeight:600,color:c,zIndex:20,animation:"fadeIn .15s ease"}}>
-            {detail}<span style={{display:"block",fontSize:9,color:T.dim,fontWeight:400,marginTop:1}}>{ev.time}</span>
-            <div style={{position:"absolute",bottom:-5,left:"50%",transform:"translateX(-50%) rotate(45deg)",width:8,height:8,background:"rgba(8,12,35,0.96)",borderRight:`1px solid ${c}30`,borderBottom:`1px solid ${c}30`}}/>
-          </div>}
-        </div>})}
-
-      {/* Center text */}
-      <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}>
-        <span style={{fontSize:14,color:T.sub,fontWeight:500,letterSpacing:1.5}}>{sub}</span>
-        <span style={{fontSize:52,fontWeight:800,letterSpacing:-2,marginTop:4,background:hasProgress?`linear-gradient(135deg,${col2},${col1})`:`linear-gradient(135deg,${T.text},${T.sub})`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>{lbl}</span>
-      </div>
+      {sleepArcs.map((sa,i)=><div key={"si"+i} style={{position:"absolute",left:sa.mx-sleepSz/2,top:sa.my-sleepSz/2,width:sleepSz,height:sleepSz,borderRadius:"50%",background:"radial-gradient(circle at 35% 30%,rgba(45,35,90,0.9),rgba(18,14,45,0.95))",border:`2px solid ${sa.col}55`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 2px 10px rgba(0,0,0,0.4), 0 0 12px ${sa.col}20`,zIndex:3}}><div style={{position:"absolute",top:"10%",left:"18%",width:"50%",height:"30%",background:`radial-gradient(ellipse,${sa.col}22,transparent)`,borderRadius:"50%",filter:"blur(3px)"}}/><Icon name={sa.ev.type==="nap"?"cloud":"moon"} size={16} color={sa.col}/></div>)}
+      {dots.map((d,i)=>{const ev=d.ev,c=d.cfg.color;let detail=TL(ev.type);if(ev.ml)detail+=` \u00b7 ${ev.ml}ml`;else if(ev.subtype)detail+=` \u00b7 ${({wet:L("wet"),dirty:L("dirty"),both:L("both")})[ev.subtype]||""}`;else if(ev.name)detail+=` \u00b7 ${ev.name}`;const active=tip===i;return<div key={ev.id||i} onClick={(e)=>{e.stopPropagation();setTip(active?null:i)}} style={{position:"absolute",left:d.x-dotSz/2,top:d.y-dotSz/2,width:dotSz,height:dotSz,borderRadius:"50%",background:"radial-gradient(circle at 35% 30%,rgba(30,38,80,0.95),rgba(12,16,42,0.98))",border:`2px solid ${active?c:c+"44"}`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 2px 10px rgba(0,0,0,0.45), 0 0 ${active?18:10}px ${c}${active?"40":"18"}, inset 0 1px 0 rgba(200,220,255,0.06), inset 0 -1px 3px rgba(0,0,0,0.15)`,zIndex:active?10:2,transform:active?"scale(1.15)":"scale(1)",transition:"all .2s cubic-bezier(0.34,1.56,0.64,1)",overflow:"hidden"}}><div style={{position:"absolute",top:"10%",left:"18%",width:"50%",height:"28%",background:`radial-gradient(ellipse,${c}12,transparent)`,borderRadius:"50%",filter:"blur(3px)"}}/><Icon name={d.cfg.icon} size={15} color={c}/>{active&&<div style={{position:"absolute",bottom:dotSz+6,left:"50%",transform:"translateX(-50%)",whiteSpace:"nowrap",padding:"5px 12px",borderRadius:9,background:"rgba(8,12,35,0.96)",border:`1px solid ${c}25`,boxShadow:"0 4px 16px rgba(0,0,0,0.5)",fontSize:11,fontWeight:600,color:c,zIndex:20,animation:"fadeIn .15s ease"}}>{detail}<span style={{display:"block",fontSize:9,color:T.dim,fontWeight:400,marginTop:1}}>{ev.time}</span><div style={{position:"absolute",bottom:-4,left:"50%",transform:"translateX(-50%) rotate(45deg)",width:7,height:7,background:"rgba(8,12,35,0.96)",borderRight:`1px solid ${c}25`,borderBottom:`1px solid ${c}25`}}/></div>}</div>})}
+      <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}><span style={{fontSize:14,color:T.sub,fontWeight:500,letterSpacing:1.5}}>{sub}</span><span style={{fontSize:52,fontWeight:800,letterSpacing:-2,marginTop:4,background:hasProgress?`linear-gradient(135deg,${col2},${col1})`:`linear-gradient(135deg,${T.text},${T.sub})`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>{lbl}</span></div>
       {tip!==null&&<div onClick={()=>setTip(null)} style={{position:"absolute",inset:0,zIndex:1}}/>}
     </div>
-
-    {/* Summary below ring */}
-    {napSug&&<div style={{display:"flex",justifyContent:"center",gap:28,marginTop:4}}>
-      <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3}}>
-        <div style={{width:38,height:38,borderRadius:"50%",background:"linear-gradient(135deg,rgba(251,146,60,0.15),rgba(251,191,36,0.08))",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 16px rgba(251,146,60,0.1)"}}><Icon name="sun" size={18} color={T.orange}/></div>
-        <span style={{fontSize:12,fontWeight:700,color:T.orange}}>{fmtDur(napSug.el)}</span>
-      </div>
-      <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3}}>
-        <div style={{width:38,height:38,borderRadius:"50%",background:"linear-gradient(135deg,rgba(167,139,250,0.15),rgba(139,124,246,0.08))",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 16px rgba(139,124,246,0.1)"}}><Icon name="cloud" size={18} color={T.purple}/></div>
-        <span style={{fontSize:12,fontWeight:700,color:T.purple}}>{fmtDur(totalSleepMin)}</span>
-      </div>
-    </div>}
+    {napSug&&<div style={{display:"flex",justifyContent:"center",gap:28,marginTop:4}}><div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3}}><div style={{width:36,height:36,borderRadius:"50%",background:"linear-gradient(135deg,rgba(251,146,60,0.12),rgba(251,191,36,0.06))",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 14px rgba(251,146,60,0.08)"}}><Icon name="sun" size={17} color={T.orange}/></div><span style={{fontSize:12,fontWeight:700,color:T.orange}}>{fmtDur(napSug.el)}</span></div><div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3}}><div style={{width:36,height:36,borderRadius:"50%",background:"linear-gradient(135deg,rgba(167,139,250,0.12),rgba(139,124,246,0.06))",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 14px rgba(139,124,246,0.08)"}}><Icon name="cloud" size={17} color={T.purple}/></div><span style={{fontSize:12,fontWeight:700,color:T.purple}}>{fmtDur(totalSleepMin)}</span></div></div>}
   </div>);
 }
+
 
 function MlGoalBar({current,goal}){if(!goal||goal<=0)return null;const pct=Math.min(100,(current/goal)*100);const reached=current>=goal;return(<div style={{padding:"0 20px",marginBottom:16}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}><div style={{display:"flex",alignItems:"center",gap:6}}><Icon name="target" size={14} color={reached?T.green:T.sub}/><span style={{fontSize:11,fontWeight:600,color:T.sub}}>{L("dailyGoal")}</span></div><span style={{fontSize:12,fontWeight:700,color:reached?T.green:T.text}}>{current} / {goal} ml</span></div><div style={{height:6,borderRadius:3,background:T.bg3,overflow:"hidden"}}><div style={{height:"100%",borderRadius:3,width:`${pct}%`,background:reached?T.green:`linear-gradient(90deg,${T.accent},${T.purple})`,transition:"width .5s"}}/></div></div>)}
 
