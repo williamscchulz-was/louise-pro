@@ -3,6 +3,12 @@
   LOUISE PRO — BABY TRACKER — CHANGELOG
 ═══════════════════════════════════════════════════════════════
 
+  v4.1.0  03/04/2026  Day/night ambient background
+    • Fundo mais claro e quente durante o dia (6h-19h)
+    • Estrelas desvanecem de dia (30% opacidade) e brilham à noite
+    • Night mode: fundo mais escuro e profundo
+    • Transição suave de 2s entre modos
+
   v4.0.0  02/04/2026  Night mode (ring da noite)
     • Bedtime ativa modo noite: ring mostra só eventos noturnos
     • Night Waking: para timer mas fica no ring da noite
@@ -266,7 +272,9 @@ const db = firebase.firestore();
 // Firebase functions (global, accessed by React code)
 window.FB = {
   subEntries(cb) {
-    return db.collection('entries').orderBy('date','desc').onSnapshot(snap => {
+    const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 90);
+    const cutoffStr = `${cutoff.getFullYear()}-${String(cutoff.getMonth()+1).padStart(2,'0')}-${String(cutoff.getDate()).padStart(2,'0')}`;
+    return db.collection('entries').where('date','>=',cutoffStr).orderBy('date','desc').onSnapshot(snap => {
       const data = snap.docs.map(d => ({...d.data(), _docId: d.id}));
       data.sort((a,b) => (`${b.date}T${b.time}`).localeCompare(`${a.date}T${a.time}`));
       cb(data);
@@ -297,9 +305,11 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "4.0.0";
+const APP_VERSION = "4.2.0";
 const CHANGELOG = [
-  { v: "4.0.0", date: "2026-04-02", changes: "Night mode: ring da noite (bedtime→wake), Night Waking para timer sem sair do modo, botão Bom Dia, events filtrados por modo" },
+  { v: "4.2.0", date: "2026-04-03", changes: "Performance: stars memoizadas, tick 30s sem timer, Firestore 90d, React.memo EntryRow, haptic feedback, sleep engine v2, bottle pre-fill último ml" },
+  { v: "4.1.0", date: "2026-04-03", changes: "Day/night background: fundo mais claro de dia (6h-19h), estrelas desvanecem, escurece à noite" },
+  { v: "4.0.0", date: "2026-04-02", changes: "Night mode: ring da noite (bedtime→wake), Night Waking, Bom Dia, nursing timer L/R, last diaper/medicine cards, universo no fundo" },
   { v: "3.9.0", date: "2026-04-02", changes: "Timer live arc no ring (cresce enquanto dorme), nav mais baixo, estrelas mais vivas, ícones filled" },
   { v: "3.8.0", date: "2026-04-02", changes: "Ícones preenchidos com gradiente (Napper-style): bottle, moon, cloud, droplet, pill, thermo preenchidos" },
   { v: "3.7.0", date: "2026-04-02", changes: "Ring v2: dots 36px anti-overlap (14° min gap), sleep arcs dominantes (48px glow), track fino 5px" },
@@ -392,6 +402,7 @@ function getPercentile(value, table, ageMonths) {
 
 // ── HELPERS ──
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const tap=()=>{try{navigator.vibrate&&navigator.vibrate(8)}catch(e){}};
 const todayStr=()=>{const d=new Date();return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`};
 function nowTime(){const d=new Date();return`${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`}
 function calcAge(b){if(!b)return null;const p=b.split("-");const bi=new Date(+p[0],+p[1]-1,+p[2]);const n=new Date();const n0=new Date(n.getFullYear(),n.getMonth(),n.getDate());let m=(n0.getFullYear()-bi.getFullYear())*12+n0.getMonth()-bi.getMonth(),d=n0.getDate()-bi.getDate();if(d<0){m--;d+=new Date(n0.getFullYear(),n0.getMonth(),0).getDate()}const totalDays=Math.floor((n0-bi)/864e5);return{months:Math.max(0,m),days:Math.max(0,d),totalDays,totalWeeks:Math.floor(totalDays/7)}}
@@ -421,7 +432,20 @@ function splitMidnight(entry){
 const WW=[{maxW:4,min:30,max:60,naps:"4-5"},{maxW:8,min:45,max:75,naps:"4-5"},{maxW:12,min:60,max:90,naps:"3-4"},{maxW:16,min:75,max:120,naps:"3-4"},{maxW:28,min:120,max:180,naps:"2-3"},{maxW:40,min:150,max:210,naps:"2"},{maxW:56,min:180,max:240,naps:"1-2"},{maxW:104,min:240,max:360,naps:"1"}];
 function getGuideline(w){for(const g of WW)if(w<g.maxW)return g;return WW[WW.length-1]}
 function daysUntilSchedule(b){if(!b)return null;const t=new Date(b);t.setMonth(t.getMonth()+2);return Math.max(0,Math.ceil((t-new Date())/864e5))}
-function getSleepRec(entries,age,birth){if(!age)return null;const dl=daysUntilSchedule(birth),g=getGuideline(age.totalWeeks);if(dl>0)return{phase:1,dl,g};const sorted=[...entries].filter(e=>["wakeup","nightwaking","sleep","nap"].includes(e.type)).sort((a,b)=>new Date(`${b.date}T${b.time}`)-new Date(`${a.date}T${a.time}`));const wins=[];for(let i=0;i<sorted.length-1;i++){const c=sorted[i],p=sorted[i+1];if((c.type==="sleep"||c.type==="nap")&&(p.type==="wakeup"||p.type==="nightwaking")){const wm=Math.floor((new Date(`${c.date}T${c.time}`)-new Date(`${p.date}T${p.time}`))/6e4);if(wm>10&&wm<600)wins.push({wm})}}if(wins.length<3)return{phase:2,dl:0,g,a:null};const avg=Math.round(wins.reduce((s,w)=>s+w.wm,0)/wins.length);return{phase:2,dl:0,g,a:{avg,rec:Math.round(avg*0.7+((g.min+g.max)/2)*0.3),pts:wins.length}}}
+function getSleepRec(entries,age,birth){if(!age)return null;const dl=daysUntilSchedule(birth),g=getGuideline(age.totalWeeks);if(dl>0)return {phase:1,dl,g};
+  // Calculate wake windows from gaps between sleep/nap entries
+  const sleeps=[...entries].filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin).sort((a,b)=>new Date(`${a.date}T${a.time}`)-new Date(`${b.date}T${b.time}`));
+  const wins=[];
+  for(let i=0;i<sleeps.length-1;i++){
+    const endOfSleep=new Date(new Date(`${sleeps[i].date}T${sleeps[i].time}`).getTime()+sleeps[i].durationMin*60000);
+    const startOfNext=new Date(`${sleeps[i+1].date}T${sleeps[i+1].time}`);
+    const wm=Math.floor((startOfNext-endOfSleep)/6e4);
+    if(wm>10&&wm<600)wins.push({wm});
+  }
+  if(wins.length<3)return {phase:2,dl:0,g,a:null};
+  const avg=Math.round(wins.reduce((s,w)=>s+w.wm,0)/wins.length);
+  return {phase:2,dl:0,g,a:{avg,rec:Math.round(avg*0.7+((g.min+g.max)/2)*0.3),pts:wins.length}};
+}
 function getNapSug(entries,rec){
   if(!rec)return null;
   // Find when baby last woke: either a wakeup event OR end of last sleep/nap
@@ -738,17 +762,17 @@ function Modal({open,onClose,children}){const[vis,setVis]=useState(false),[show,
 function Fld({label,children}){return <div style={{marginBottom:18}}><label style={{fontSize:10,color:T.dim,fontWeight:600,marginBottom:6,display:"block",textTransform:"uppercase",letterSpacing:1.2}}>{label}</label>{children}</div>}
 function Seg({opts,val,set,color}){return <div style={{display:"flex",gap:6}}>{opts.map(o=><button key={o.v} onClick={()=>set(o.v)} style={{flex:1,padding:"12px 4px",borderRadius:10,fontSize:13,fontWeight:600,background:val===o.v?color:T.glass,color:val===o.v?T.bg1:T.text,border:`1px solid ${val===o.v?color:T.gB}`}}>{o.l}</button>)}</div>}
 
-function EntryRow({entry,onDelete,onEdit}){const[del,setDel]=useState(false);const cfg=TYPES[entry.type]||{label:entry.type,icon:"star",color:T.text,bg:T.glass};let detail="";if(entry.ml)detail=`${entry.ml} ml`;else if(entry.durationMin)detail=fmtDur(entry.durationMin);else if(entry.subtype)detail=({wet:"Xixi",dirty:"Cocô",both:"Ambos"})[entry.subtype]||"";else if(entry.name)detail=entry.name+(entry.dose?` · ${entry.dose}`:"");else if(entry.value)detail=`${entry.value}°C`;else if(entry.weightKg||entry.lengthCm||entry.headCm){const parts=[];if(entry.weightKg)parts.push(`${entry.weightKg}kg`);if(entry.lengthCm)parts.push(`${entry.lengthCm}cm`);if(entry.headCm)parts.push(`Cab. ${entry.headCm}cm`);detail=parts.join(" · ")}if(entry.type==="nursing"&&entry.side)detail=(detail?detail+" · ":"")+({left:"Esq",right:"Dir",both:"Ambos"}[entry.side]||"");return(<div style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",marginBottom:4,background:T.glass,borderRadius:12,borderLeft:`3px solid ${cfg.color}`}}>
+const EntryRow=React.memo(function EntryRow({entry,onDelete,onEdit}){const[del,setDel]=useState(false);const cfg=TYPES[entry.type]||{label:entry.type,icon:"star",color:T.text,bg:T.glass};let detail="";if(entry.ml)detail=`${entry.ml} ml`;else if(entry.durationMin)detail=fmtDur(entry.durationMin);else if(entry.subtype)detail=({wet:"Xixi",dirty:"Cocô",both:"Ambos"})[entry.subtype]||"";else if(entry.name)detail=entry.name+(entry.dose?` · ${entry.dose}`:"");else if(entry.value)detail=`${entry.value}°C`;else if(entry.weightKg||entry.lengthCm||entry.headCm){const parts=[];if(entry.weightKg)parts.push(`${entry.weightKg}kg`);if(entry.lengthCm)parts.push(`${entry.lengthCm}cm`);if(entry.headCm)parts.push(`Cab. ${entry.headCm}cm`);detail=parts.join(" · ")}if(entry.type==="nursing"&&entry.side)detail=(detail?detail+" · ":"")+({left:"Esq",right:"Dir",both:"Ambos"}[entry.side]||"");return(<div style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",marginBottom:4,background:T.glass,borderRadius:12,borderLeft:`3px solid ${cfg.color}`}}>
   <button onClick={()=>onEdit&&onEdit(entry)} style={{width:34,height:34,borderRadius:10,background:cfg.bg,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name={cfg.icon} size={16} color={cfg.color}/></button>
   <button onClick={()=>onEdit&&onEdit(entry)} style={{flex:1,textAlign:"left"}}><div style={{fontSize:13,fontWeight:600}}>{cfg.label[_lang]||cfg.label.en}</div>{detail&&<div style={{fontSize:11,color:T.sub}}>{detail}</div>}</button>
   <div style={{textAlign:"right",flexShrink:0}}><div style={{fontSize:13,fontWeight:600}}>{entry.time}</div><div style={{fontSize:9,color:T.dim}}>{timeSince(entry.date,entry.time)}</div></div>
   {!del?<button onClick={()=>setDel(true)} style={{padding:4,color:T.dim,opacity:0.4}}><Icon name="x" size={14} color={T.dim}/></button>:<button onClick={()=>onDelete(entry.id)} style={{padding:"4px 8px",borderRadius:6,fontSize:10,fontWeight:700,background:T.red,color:"#fff"}}>{L("delete")}</button>}
-</div>)}
+</div>)});
 
-function AddForm({type,onSave,savedMeds,onSaveMeds,editEntry}){const cfg=TYPES[type];const ed=editEntry||{};
+function AddForm({type,onSave,savedMeds,onSaveMeds,editEntry,lastMl}){const cfg=TYPES[type];const ed=editEntry||{};
   const[date,setDate]=useState(ed.date||todayStr());
   const[time,setTime]=useState(ed.time||nowTime());
-  const[ml,setMl]=useState(ed.ml?String(ed.ml):"");const[durH,setDurH]=useState(ed.durationMin?String(Math.floor(ed.durationMin/60)):"");const[durM,setDurM]=useState(ed.durationMin?String(ed.durationMin%60):"");
+  const[ml,setMl]=useState(ed.ml?String(ed.ml):(type==="bottle"&&lastMl?String(lastMl):""));const[durH,setDurH]=useState(ed.durationMin?String(Math.floor(ed.durationMin/60)):"");const[durM,setDurM]=useState(ed.durationMin?String(ed.durationMin%60):"");
   const[diaperT,setDiaperT]=useState(ed.subtype||"wet");const[medN,setMedN]=useState(ed.name||"");const[medD,setMedD]=useState(ed.dose||"");
   const[tempV,setTempV]=useState(ed.value?String(ed.value):"");const[side,setSide]=useState(ed.side||"left");const[nurseM,setNurseM]=useState(ed.durationMin&&type==="nursing"?String(ed.durationMin):"");
   const[pumpMl,setPumpMl]=useState(ed.ml&&type==="pumping"?String(ed.ml):"");const[weightKg,setWeightKg]=useState(ed.weightKg?String(ed.weightKg):"");const[lengthCm,setLengthCm]=useState(ed.lengthCm?String(ed.lengthCm):"");
@@ -1102,7 +1126,7 @@ function App(){
   const[splash,setSplash]=useState(true);
   useEffect(()=>{const t=setTimeout(()=>setSplash(false),1800);return()=>clearTimeout(t)},[]);
 
-  useEffect(()=>{const t=setInterval(()=>setTick(k=>k+1),1000);return()=>clearInterval(t)},[]);
+  useEffect(()=>{const interval=activeTimer?.startTime?1000:30000;const t=setInterval(()=>setTick(k=>k+1),interval);return()=>clearInterval(t)},[!!activeTimer?.startTime]);
 
   // Firebase real-time subscriptions
   useEffect(()=>{
@@ -1111,7 +1135,8 @@ function App(){
     const u1=FB.subEntries(d=>{setEntries(d);ready.e=true;check()});
     const u2=FB.subProfile(d=>{if(d)setProfile(d);ready.p=true;check()});
     const u3=FB.subMeds(d=>{setSavedMeds(d||[{name:"Simeticona",dose:""},{name:"Paracetamol",dose:""},{name:"Floripa",dose:""},{name:"Vita. D",dose:""}]);ready.m=true;check()});
-    const u4=FB.subTimer(d=>{const t=d?.cleared?null:d;if(t&&t.type==="sleep"&&t.startTime&&!t.nightStart){t.nightStart=t.startTime;FB.saveTimer(t)}setActiveTimer(t);ready.a=true;check()});
+    let _migrating=false;
+    const u4=FB.subTimer(d=>{const t=d?.cleared?null:d;if(t&&t.type==="sleep"&&t.startTime&&!t.nightStart&&!_migrating){_migrating=true;t.nightStart=t.startTime;FB.saveTimer(t).then(()=>{_migrating=false})}setActiveTimer(t);ready.a=true;check()});
     return()=>{u1();u2();u3();u4()};
   },[]);
 
@@ -1132,9 +1157,9 @@ function App(){
   const deleteEntry=useCallback(async id=>{const entry=entries.find(e=>e.id===id);await FB.delEntry(id);showToast(`${TL(entry?.type)||""} ${L("removed")}`,async()=>{if(entry)await FB.addEntry(entry)})},[entries]);
   const quickWakeup=useCallback(()=>addEntry({type:"wakeup",date:todayStr(),time:nowTime(),id:uid()}),[addEntry]);
 
-  const startTimer=useCallback(async type=>{const d={type,startTime:new Date().toISOString()};if(type==="sleep")d.nightStart=activeTimer?.nightStart||d.startTime;await FB.saveTimer(d);setShowAdd(false)},[activeTimer]);
-  const startNursing=useCallback(async(side)=>{const now=new Date().toISOString();await FB.saveTimer({type:"nursing",startTime:now,activeSide:side,leftMs:0,rightMs:0,sideStartTime:now});setShowAdd(false);setFormType(null)},[]);
-  const switchNursingSide=useCallback(async(newSide)=>{if(!activeTimer||activeTimer.type!=="nursing"||activeTimer.activeSide===newSide)return;const now=Date.now();const elapsed=now-new Date(activeTimer.sideStartTime).getTime();const update={...activeTimer,activeSide:newSide,sideStartTime:new Date().toISOString()};if(activeTimer.activeSide==="left")update.leftMs=(activeTimer.leftMs||0)+elapsed;else update.rightMs=(activeTimer.rightMs||0)+elapsed;await FB.saveTimer(update)},[activeTimer]);
+  const startTimer=useCallback(async type=>{tap();const d={type,startTime:new Date().toISOString()};if(type==="sleep")d.nightStart=activeTimer?.nightStart||d.startTime;await FB.saveTimer(d);setShowAdd(false)},[activeTimer]);
+  const startNursing=useCallback(async(side)=>{tap();const now=new Date().toISOString();await FB.saveTimer({type:"nursing",startTime:now,activeSide:side,leftMs:0,rightMs:0,sideStartTime:now});setShowAdd(false);setFormType(null)},[]);
+  const switchNursingSide=useCallback(async(newSide)=>{if(!activeTimer||activeTimer.type!=="nursing"||activeTimer.activeSide===newSide)return;tap();const now=Date.now();const elapsed=now-new Date(activeTimer.sideStartTime).getTime();const update={...activeTimer,activeSide:newSide,sideStartTime:new Date().toISOString()};if(activeTimer.activeSide==="left")update.leftMs=(activeTimer.leftMs||0)+elapsed;else update.rightMs=(activeTimer.rightMs||0)+elapsed;await FB.saveTimer(update)},[activeTimer]);
   const stopTimer=useCallback(async()=>{if(!activeTimer?.startTime)return;const s=new Date(activeTimer.startTime);if(activeTimer.type==="nursing"){const now=Date.now();const elapsed=now-new Date(activeTimer.sideStartTime).getTime();let lMs=activeTimer.leftMs||0,rMs=activeTimer.rightMs||0;if(activeTimer.activeSide==="left")lMs+=elapsed;else rMs+=elapsed;const totalMin=Math.max(1,Math.round((lMs+rMs)/60000));const side=lMs>0&&rMs>0?"both":lMs>0?"left":"right";const entry={type:"nursing",date:`${s.getFullYear()}-${String(s.getMonth()+1).padStart(2,"0")}-${String(s.getDate()).padStart(2,"0")}`,time:`${String(s.getHours()).padStart(2,"0")}:${String(s.getMinutes()).padStart(2,"0")}`,durationMin:totalMin,side,leftMin:Math.round(lMs/60000),rightMin:Math.round(rMs/60000),id:uid()};await FB.addEntry(entry);await FB.saveTimer(null);showToast(`${totalMin}min ${L("registered")}`,null)}else{const mins=Math.max(1,Math.round((Date.now()-s.getTime())/6e4));const entry={type:activeTimer.type,date:`${s.getFullYear()}-${String(s.getMonth()+1).padStart(2,"0")}-${String(s.getDate()).padStart(2,"0")}`,time:`${String(s.getHours()).padStart(2,"0")}:${String(s.getMinutes()).padStart(2,"0")}`,durationMin:mins,id:uid()};const parts=splitMidnight(entry);for(const p of parts) await FB.addEntry(p);await FB.saveTimer(null);showToast(`${mins}min ${L("registered")}`,null)}},[activeTimer]);
   const nightWaking=useCallback(async()=>{if(!activeTimer?.startTime)return;const s=new Date(activeTimer.startTime);const mins=Math.max(1,Math.round((Date.now()-s.getTime())/6e4));const entry={type:activeTimer.type,date:`${s.getFullYear()}-${String(s.getMonth()+1).padStart(2,"0")}-${String(s.getDate()).padStart(2,"0")}`,time:`${String(s.getHours()).padStart(2,"0")}:${String(s.getMinutes()).padStart(2,"0")}`,durationMin:mins,id:uid()};const parts=splitMidnight(entry);for(const p of parts) await FB.addEntry(p);await FB.saveTimer({nightStart:activeTimer.nightStart});showToast(`${mins}min ${L("registered")}`,null)},[activeTimer]);
   const editTimerStart=useCallback(async(timeStr)=>{if(!activeTimer)return;const[h,m]=timeStr.split(":").map(Number);const d=new Date();d.setHours(h,m,0,0);if(d>new Date())d.setDate(d.getDate()-1);const iso=d.toISOString();const update={...activeTimer,startTime:iso};if(update.nightStart)update.nightStart=iso;await FB.saveTimer(update)},[activeTimer]);
@@ -1189,10 +1214,19 @@ function App(){
     </div>
   );
   const goTo=p=>{setPage(p);setShowAdd(false);setFormType(null)};
+  const hour=new Date().getHours();
+  const isDaytime=hour>=6&&hour<19;
+  const bgGrad=isNightMode?"radial-gradient(ellipse at 50% 0%,#0c1030 0%,#050816 65%)":isDaytime?"radial-gradient(ellipse at 50% 0%,#1a2252 0%,#0e1338 50%,#0a0e28 100%)":"radial-gradient(ellipse at 50% 0%,#10153d 0%,#070b1e 65%)";
+  const starOpacity=isNightMode?1:isDaytime?0.3:0.8;
+  // Memoize star positions so they don't regenerate every render
+  const stars=useMemo(()=>{
+    const s=n=>Array.from({length:n},()=>({x:Math.random()*100,y:Math.random()*100,w:Math.random(),d:Math.random(),o:Math.random()}));
+    return{mw:s(40),deep:s(80),sm:s(50),md:s(20),bright:s(10)};
+  },[]);
 
-  return(<div style={{background:`radial-gradient(ellipse at 50% 0%,#10153d 0%,${T.bg1} 65%)`,height:"100%",overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch",overscrollBehavior:"none",color:T.text,maxWidth:480,margin:"0 auto",position:"relative"}}>
+  return (<div style={{background:bgGrad,height:"100%",overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch",overscrollBehavior:"none",color:T.text,maxWidth:480,margin:"0 auto",position:"relative"}}>
     {/* Starfield */}
-    <div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:0}}>
+    <div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:0,opacity:starOpacity,transition:"opacity 2s"}}>
       {/* Milky Way band — diagonal gradient */}
       <div style={{position:"absolute",width:"200%",height:"35%",top:"15%",left:"-30%",background:"linear-gradient(135deg, transparent 20%, rgba(140,120,220,0.04) 35%, rgba(180,160,255,0.06) 45%, rgba(200,180,255,0.07) 50%, rgba(160,140,230,0.05) 55%, rgba(120,100,200,0.03) 65%, transparent 80%)",transform:"rotate(-25deg)",filter:"blur(20px)",animation:"driftSlow 30s ease-in-out infinite"}}/>
       {/* Cosmic dust patches */}
@@ -1200,20 +1234,22 @@ function App(){
       <div style={{position:"absolute",width:"55%",height:"30%",bottom:"25%",left:"-8%",background:"radial-gradient(ellipse at 30% 50%, rgba(40,80,160,0.05) 0%, rgba(60,120,200,0.03) 35%, transparent 65%)",filter:"blur(30px)",animation:"shimmer 15s ease-in-out infinite 4s"}}/>
       <div style={{position:"absolute",width:"30%",height:"25%",top:"50%",right:"10%",background:"radial-gradient(ellipse, rgba(200,140,100,0.03) 0%, transparent 60%)",filter:"blur(25px)",animation:"shimmer 18s ease-in-out infinite 8s"}}/>
       {/* Star cluster along milky way */}
-      {Array.from({length:40}).map((_,i)=>{const band=25+Math.random()*30;const spread=Math.random()*100;return <div key={"mw"+i} style={{position:"absolute",width:Math.random()*0.8+0.3,height:Math.random()*0.8+0.3,background:`rgba(200,190,255,${Math.random()*0.4+0.1})`,borderRadius:"50%",top:band+"%",left:spread+"%",animation:`twinkle ${5+Math.random()*8}s ease-in-out infinite ${Math.random()*8}s`}}/>})}
+      {stars.mw.map((s,i)=> <div key={"mw"+i} style={{position:"absolute",width:s.w*0.8+0.3,height:s.w*0.8+0.3,background:"rgba(200,190,255,"+(s.o*0.4+0.1)+")",borderRadius:"50%",top:(25+s.y*30/100)+"%",left:s.x+"%",animation:"twinkle "+(5+s.d*8)+"s ease-in-out infinite "+(s.o*8)+"s"}}/>)}
       {/* Distant tiny stars — deep field */}
-      {Array.from({length:80}).map((_,i)=><div key={"d"+i} style={{position:"absolute",width:Math.random()*0.6+0.3,height:Math.random()*0.6+0.3,background:`rgba(200,210,240,${Math.random()*0.2+0.05})`,borderRadius:"50%",top:Math.random()*100+"%",left:Math.random()*100+"%"}}/>)}
+      {stars.deep.map((s,i)=> <div key={"d"+i} style={{position:"absolute",width:s.w*0.6+0.3,height:s.w*0.6+0.3,background:"rgba(200,210,240,"+(s.o*0.2+0.05)+")",borderRadius:"50%",top:s.y+"%",left:s.x+"%"}}/>)}
       {/* Small stars */}
-      {Array.from({length:50}).map((_,i)=><div key={"s"+i} style={{position:"absolute",width:Math.random()*1+0.6,height:Math.random()*1+0.6,background:`rgba(210,220,255,${Math.random()*0.35+0.15})`,borderRadius:"50%",top:Math.random()*100+"%",left:Math.random()*100+"%",animation:`twinkle ${4+Math.random()*6}s ease-in-out infinite ${Math.random()*6}s`}}/>)}
+      {stars.sm.map((s,i)=> <div key={"s"+i} style={{position:"absolute",width:s.w+0.6,height:s.w+0.6,background:"rgba(210,220,255,"+(s.o*0.35+0.15)+")",borderRadius:"50%",top:s.y+"%",left:s.x+"%",animation:"twinkle "+(4+s.d*6)+"s ease-in-out infinite "+(s.o*6)+"s"}}/>)}
       {/* Medium stars */}
-      {Array.from({length:20}).map((_,i)=><div key={"m"+i} style={{position:"absolute",width:Math.random()*1.5+1.2,height:Math.random()*1.5+1.2,background:`rgba(220,230,255,${Math.random()*0.5+0.25})`,borderRadius:"50%",top:Math.random()*100+"%",left:Math.random()*100+"%",boxShadow:`0 0 ${4+Math.random()*5}px rgba(220,230,255,0.35)`,animation:`twinkle ${3+Math.random()*4}s ease-in-out infinite ${Math.random()*4}s`}}/>)}
+      {stars.md.map((s,i)=> <div key={"m"+i} style={{position:"absolute",width:s.w*1.5+1.2,height:s.w*1.5+1.2,background:"rgba(220,230,255,"+(s.o*0.5+0.25)+")",borderRadius:"50%",top:s.y+"%",left:s.x+"%",boxShadow:"0 0 "+(4+s.d*5)+"px rgba(220,230,255,0.35)",animation:"twinkle "+(3+s.d*4)+"s ease-in-out infinite "+(s.o*4)+"s"}}/>)}
       {/* Bright accent stars */}
-      {Array.from({length:10}).map((_,i)=>{const colors=["rgba(251,191,36,0.6)","rgba(167,139,250,0.5)","rgba(52,211,153,0.4)","rgba(96,165,250,0.5)","rgba(244,114,182,0.35)","rgba(251,191,36,0.45)","rgba(200,210,255,0.65)","rgba(167,139,250,0.4)","rgba(255,200,150,0.4)","rgba(130,200,255,0.45)"];return <div key={"b"+i} style={{position:"absolute",width:2+Math.random()*1.5,height:2+Math.random()*1.5,background:colors[i%10],borderRadius:"50%",top:Math.random()*80+10+"%",left:Math.random()*90+5+"%",boxShadow:`0 0 10px ${colors[i%10]}, 0 0 3px ${colors[i%10]}`,animation:`twinkle ${2+Math.random()*3}s ease-in-out infinite ${Math.random()*3}s`}}/>})}
+      {stars.bright.map((s,i)=>{const colors=["rgba(251,191,36,0.6)","rgba(167,139,250,0.5)","rgba(52,211,153,0.4)","rgba(96,165,250,0.5)","rgba(244,114,182,0.35)","rgba(251,191,36,0.45)","rgba(200,210,255,0.65)","rgba(167,139,250,0.4)","rgba(255,200,150,0.4)","rgba(130,200,255,0.45)"];const c=colors[i%10];return <div key={"b"+i} style={{position:"absolute",width:2+s.w*1.5,height:2+s.w*1.5,background:c,borderRadius:"50%",top:(s.y*80/100+10)+"%",left:(s.x*90/100+5)+"%",boxShadow:"0 0 10px "+c+", 0 0 3px "+c,animation:"twinkle "+(2+s.d*3)+"s ease-in-out infinite "+(s.o*3)+"s"}}/>})}
       {/* Shooting stars */}
       <div style={{position:"absolute",top:"8%",left:"15%",width:60,height:1,background:"linear-gradient(90deg, rgba(255,255,255,0.8), rgba(200,180,255,0.4), transparent)",borderRadius:1,boxShadow:"0 0 6px rgba(200,180,255,0.5)",animation:"shootingStar 8s linear infinite 2s",opacity:0}}/>
       <div style={{position:"absolute",top:"35%",right:"10%",width:45,height:1,background:"linear-gradient(90deg, transparent, rgba(180,200,255,0.5), rgba(255,255,255,0.7))",borderRadius:1,boxShadow:"0 0 4px rgba(180,200,255,0.4)",animation:"shootingStar2 12s linear infinite 7s",opacity:0}}/>
       <div style={{position:"absolute",top:"55%",left:"40%",width:35,height:1,background:"linear-gradient(90deg, rgba(255,255,255,0.7), rgba(251,191,36,0.3), transparent)",borderRadius:1,boxShadow:"0 0 5px rgba(251,191,36,0.3)",animation:"shootingStar 15s linear infinite 12s",opacity:0}}/>
     </div>
+    {/* Daytime warm overlay */}
+    {isDaytime&&!isNightMode&&<div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:0,background:"linear-gradient(180deg, rgba(80,70,140,0.08) 0%, rgba(60,50,120,0.04) 40%, transparent 70%)",transition:"opacity 2s"}}/>}
     {toast&&<Toast message={toast} onUndo={undoRef.current?handleUndo:null} onClose={()=>setToast(null)}/>}
     <div style={{position:"relative",zIndex:1}}>
       {page==="home"&&<div style={{animation:"fadeIn .3s"}}>
@@ -1264,7 +1300,7 @@ function App(){
       {formType==="nursing"&&!editEntry?<div style={{padding:"0 20px 20px"}}>
         <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:20}}><div style={{width:32,height:32,borderRadius:10,background:T.blueS,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="breast" size={18} color={T.blue}/></div><span style={{fontSize:17,fontWeight:700}}>{TL("nursing")}</span></div>
         <div style={{display:"flex",gap:12}}><button onClick={()=>startNursing("left")} style={{flex:1,padding:"28px 12px",borderRadius:16,background:T.blueS,border:`1.5px solid ${T.blue}33`,textAlign:"center"}}><div style={{fontSize:32,fontWeight:800,color:T.blue}}>L</div><div style={{fontSize:13,fontWeight:600,color:T.blue,marginTop:6}}>{_lang==="en"?"Left":"Esquerdo"}</div></button><button onClick={()=>startNursing("right")} style={{flex:1,padding:"28px 12px",borderRadius:16,background:T.blueS,border:`1.5px solid ${T.blue}33`,textAlign:"center"}}><div style={{fontSize:32,fontWeight:800,color:T.blue}}>R</div><div style={{fontSize:13,fontWeight:600,color:T.blue,marginTop:6}}>{_lang==="en"?"Right":"Direito"}</div></button></div>
-      </div>:formType&&<AddForm type={formType} onSave={addEntry} savedMeds={savedMeds} onSaveMeds={async m=>await FB.saveMeds(m)} editEntry={editEntry}/>}
+      </div>:formType&&<AddForm type={formType} onSave={addEntry} savedMeds={savedMeds} onSaveMeds={async m=>await FB.saveMeds(m)} editEntry={editEntry} lastMl={entries.find(e=>e.type==="bottle"&&e.ml)?.ml}/>}
     </Sheet>
 
     {showProfile&&<ProfilePage profile={profile} onSave={async p=>await FB.saveProfile(p)} onBack={()=>setShowProfile(false)} onGrowth={()=>{setShowProfile(false);goTo("growth")}}/>}
