@@ -554,23 +554,25 @@ function Ring({activeTimer,napSug,tick,recentEvents,lang}){
   } else{sub="";lbl="\u2014"}
   const hasProgress=col1!==T.dim;
   const toMin=t=>{const[h,m]=(t||"12:00").split(":").map(Number);return h*60+m};
-  const dayEnd=24*60;
+  const dayStart=6*60,daySpan=18*60;
+  const toAng=mins=>{const t=Math.max(0,Math.min(1,(mins-dayStart)/daySpan));return startAng+t*totalArc};
   const descArc=(sA,eA)=>{const s=sA*Math.PI/180,e=eA*Math.PI/180;return`M ${cx+R*Math.cos(s)} ${cy+R*Math.sin(s)} A ${R} ${R} 0 ${eA-sA>180?1:0} 1 ${cx+R*Math.cos(e)} ${cy+R*Math.sin(e)}`};
   const evs=(recentEvents||[]);
-  const sleepEvs=evs.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin>0);
-  const dotEvs=evs.filter(e=>e.type==="bottle"||e.type==="nursing");
+  const sleepEvs=evs.filter(e=>e.type==="nap"&&e.durationMin>0);
+  const dotEvs=evs.filter(e=>e.type==="bottle"||e.type==="nursing"||e.type==="diaper"||e.type==="medicine");
   const sleepArcs=sleepEvs.map(ev=>{
     const mins=toMin(ev.time),dur=ev.durationMin;
-    const t1=mins/dayEnd,t2=Math.min((mins+dur)/dayEnd,1);
-    const a1=startAng+t1*totalArc,a2=startAng+t2*totalArc;
+    if(mins+dur<dayStart||mins>dayStart+daySpan)return null;
+    const a1=toAng(Math.max(mins,dayStart)),a2=toAng(Math.min(mins+dur,dayStart+daySpan));
     const midAng=(a1+a2)/2;const midRad=midAng*Math.PI/180;
     return{ev,path:descArc(a1,a2),mx:cx+R*Math.cos(midRad),my:cy+R*Math.sin(midRad),col:TYPES[ev.type]?.color||T.purple};
-  });
+  }).filter(Boolean);
   const MIN_GAP=22;
   const rawDots=dotEvs.map(ev=>{
     const cfg=TYPES[ev.type];if(!cfg)return null;
-    const mins=toMin(ev.time);const angDeg=startAng+(mins/dayEnd)*totalArc;
-    const angRad=angDeg*Math.PI/180;
+    const mins=toMin(ev.time);
+    if(mins<dayStart||mins>dayStart+daySpan)return null;
+    const angDeg=toAng(mins);const angRad=angDeg*Math.PI/180;
     return{ev,cfg,angDeg,x:cx+R*Math.cos(angRad),y:cy+R*Math.sin(angRad)};
   }).filter(Boolean);
   const groups=[];
@@ -578,25 +580,22 @@ function Ring({activeTimer,napSug,tick,recentEvents,lang}){
   const dots=groups.map(gr=>({primary:gr[0],items:gr}));
   const totalSleepMin=evs.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin).reduce((s,e)=>s+e.durationMin,0);
 
-  let anchorSun=null,anchorMoon=null;
+  // Anchor: sun at wake-up time
+  let anchorSun=null;
   const wakeEv=evs.find(e=>e.type==="wakeup"||e.type==="nightwaking");
-  if(wakeEv){const wm=toMin(wakeEv.time);const wa=startAng+(wm/dayEnd)*totalArc;const wr=wa*Math.PI/180;anchorSun={x:cx+R*Math.cos(wr),y:cy+R*Math.sin(wr),time:wakeEv.time}}
-  else{const ls=evs.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin>0).sort((a,b)=>(a.date+"T"+a.time).localeCompare(b.date+"T"+b.time))[0];if(ls){const em=toMin(ls.time)+ls.durationMin;if(em<dayEnd){const wa2=startAng+(em/dayEnd)*totalArc;const wr2=wa2*Math.PI/180;anchorSun={x:cx+R*Math.cos(wr2),y:cy+R*Math.sin(wr2),time:`${String(Math.floor(em/60)).padStart(2,"0")}:${String(em%60).padStart(2,"0")}`}}}}
-  const bedEv=evs.filter(e=>e.type==="sleep").sort((a,b)=>(b.date+"T"+b.time).localeCompare(a.date+"T"+a.time))[0];
-  if(bedEv){const bm=toMin(bedEv.time);const ba=startAng+(bm/dayEnd)*totalArc;const br=ba*Math.PI/180;anchorMoon={x:cx+R*Math.cos(br),y:cy+R*Math.sin(br),time:bedEv.time}}
+  if(wakeEv){const wm=toMin(wakeEv.time);if(wm>=dayStart){const wr=(toAng(wm))*Math.PI/180;anchorSun={x:cx+R*Math.cos(wr),y:cy+R*Math.sin(wr),time:wakeEv.time}}}
+  else{const ls=evs.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin>0).sort((a,b)=>(b.date+"T"+b.time).localeCompare(a.date+"T"+a.time))[0];if(ls){const em=toMin(ls.time)+ls.durationMin;if(em>=dayStart&&em<=dayStart+daySpan){const wr2=(toAng(em))*Math.PI/180;anchorSun={x:cx+R*Math.cos(wr2),y:cy+R*Math.sin(wr2),time:`${String(Math.floor(em/60)).padStart(2,"0")}:${String(em%60).padStart(2,"0")}`}}}}
 
-  // Live timer arc (growing while timer active)
+  // Live timer arc (nap only, during daytime)
   let timerArc=null;
-  if(activeTimer){
+  if(activeTimer&&activeTimer.type==="nap"){
     const st=new Date(activeTimer.startTime);
     const startMins=st.getHours()*60+st.getMinutes();
     const now=new Date();
     const nowMins=now.getHours()*60+now.getMinutes();
-    const a1=startAng+(startMins/dayEnd)*totalArc;
-    const a2=startAng+(Math.min(nowMins,dayEnd-1)/dayEnd)*totalArc;
-    if(a2>a1){
-      const midAng=(a1+a2)/2;const midRad=midAng*Math.PI/180;
-      timerArc={path:descArc(a1,a2),col:T.purple,mx:cx+R*Math.cos(midRad),my:cy+R*Math.sin(midRad)};
+    if(startMins>=dayStart){
+      const a1=toAng(startMins),a2=toAng(Math.min(nowMins,dayStart+daySpan-1));
+      if(a2>a1){const midAng=(a1+a2)/2;const midRad=midAng*Math.PI/180;timerArc={path:descArc(a1,a2),col:T.purple,mx:cx+R*Math.cos(midRad),my:cy+R*Math.sin(midRad)}}
     }
   }
 
@@ -629,7 +628,6 @@ function Ring({activeTimer,napSug,tick,recentEvents,lang}){
         </div>}
       </div>)})}
       {anchorSun&&<div style={{position:"absolute",left:anchorSun.x-20,top:anchorSun.y-20,display:"flex",flexDirection:"column",alignItems:"center",zIndex:1,pointerEvents:"none"}}><div style={{width:40,height:40,borderRadius:"50%",background:"radial-gradient(circle at 40% 30%,rgba(251,191,36,0.18),rgba(251,146,60,0.06))",border:"2px solid rgba(251,191,36,0.35)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 16px rgba(251,191,36,0.15)"}}><Icon name="sun" size={18} color="#fbbf24"/></div><span style={{fontSize:9,fontWeight:700,color:"#fbbf24",marginTop:2,textShadow:"0 1px 4px rgba(0,0,0,0.8)"}}>{anchorSun.time}</span></div>}
-      {anchorMoon&&<div style={{position:"absolute",left:anchorMoon.x-20,top:anchorMoon.y-20,display:"flex",flexDirection:"column",alignItems:"center",zIndex:1,pointerEvents:"none"}}><div style={{width:40,height:40,borderRadius:"50%",background:"radial-gradient(circle at 40% 30%,rgba(167,139,250,0.18),rgba(139,124,246,0.06))",border:"2px solid rgba(167,139,250,0.35)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 16px rgba(167,139,250,0.15)"}}><Icon name="moon" size={18} color="#a78bfa"/></div><span style={{fontSize:9,fontWeight:700,color:"#a78bfa",marginTop:2,textShadow:"0 1px 4px rgba(0,0,0,0.8)"}}>{anchorMoon.time}</span></div>}
       <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}><span style={{fontSize:14,color:T.sub,fontWeight:500,letterSpacing:1.5}}>{sub}</span><span style={{fontSize:52,fontWeight:800,letterSpacing:-2,marginTop:4,background:hasProgress?`linear-gradient(135deg,${col2},${col1})`:`linear-gradient(135deg,${T.text},${T.sub})`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>{lbl}</span></div>
       {tip!==null&&<div onClick={()=>setTip(null)} style={{position:"absolute",inset:0,zIndex:1}}/>}
     </div>
