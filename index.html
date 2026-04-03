@@ -3,19 +3,6 @@
   LOUISE PRO — BABY TRACKER — CHANGELOG
 ═══════════════════════════════════════════════════════════════
 
-  v4.1.0  03/04/2026  Day/night ambient background
-    • Fundo mais claro e quente durante o dia (6h-19h)
-    • Estrelas desvanecem de dia (30% opacidade) e brilham à noite
-    • Night mode: fundo mais escuro e profundo
-    • Transição suave de 2s entre modos
-
-  v4.0.0  02/04/2026  Night mode (ring da noite)
-    • Bedtime ativa modo noite: ring mostra só eventos noturnos
-    • Night Waking: para timer mas fica no ring da noite
-    • Botão "Bom dia" encerra modo noite e volta pro ring do dia
-    • Posicionamento timestamp-based no ring noturno
-    • Eventos filtrados: dia mostra dia, noite mostra noite
-
   v3.9.0  02/04/2026  Timer live + Nav + Stars + Icons
     • Timer ativo mostra pill crescendo no ring em tempo real
     • Ícone pulsando no meio do arc enquanto dorme
@@ -170,10 +157,7 @@
   window.onerror=function(msg,src,line,col,err){
     var d=document.getElementById('error-display');
     if(!d){d=document.createElement('div');d.id='error-display';d.style.cssText='position:fixed;inset:0;z-index:9999;background:#0a0e28;color:#f87171;padding:40px 20px;font-family:monospace;font-size:13px;overflow:auto;white-space:pre-wrap';document.body.appendChild(d);d.innerHTML='<div style="font-size:20px;font-weight:bold;color:#fbbf24;margin-bottom:16px">⚠ Louise Pro — Error</div>';}
-    var detail=msg;
-    if(err&&err.message)detail=err.message;
-    if(err&&err.stack)detail+='\n\n'+err.stack;
-    d.innerHTML+='<div style="margin-bottom:12px;padding:12px;background:rgba(248,113,113,0.1);border-radius:8px;border-left:3px solid #f87171"><b>'+detail.substring(0,2000)+'</b>\nLine: '+line+' Col: '+col+'\nSource: '+(src||'eval')+'</div>';
+    d.innerHTML+='<div style="margin-bottom:12px;padding:12px;background:rgba(248,113,113,0.1);border-radius:8px;border-left:3px solid #f87171"><b>'+msg+'</b>\nLine: '+line+' Col: '+col+'\n'+(err&&err.stack?err.stack:'')+'</div>';
     return false;
   };
   window.addEventListener('unhandledrejection',function(e){
@@ -196,10 +180,6 @@
     @keyframes slideDown{from{transform:translateX(-50%) translateY(-20px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
     @keyframes twinkle{0%,100%{opacity:.1}50%{opacity:.6}}
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
-    @keyframes shootingStar{0%{transform:translateX(0) translateY(0);opacity:0}5%{opacity:1}70%{opacity:1}100%{transform:translateX(300px) translateY(180px);opacity:0}}
-    @keyframes shootingStar2{0%{transform:translateX(0) translateY(0);opacity:0}8%{opacity:0.8}65%{opacity:0.6}100%{transform:translateX(-250px) translateY(200px);opacity:0}}
-    @keyframes driftSlow{0%{transform:translateX(0)}50%{transform:translateX(8px)}100%{transform:translateX(0)}}
-    @keyframes shimmer{0%,100%{opacity:0.03}50%{opacity:0.07}}
     @keyframes splashFade{0%{opacity:1}80%{opacity:1}100%{opacity:0}}
     @keyframes splashLogo{0%{transform:scale(0.8);opacity:0}40%{transform:scale(1.05);opacity:1}100%{transform:scale(1);opacity:1}}
     @keyframes splashText{0%{opacity:0;transform:translateY(8px)}50%{opacity:0}100%{opacity:1;transform:translateY(0)}}
@@ -302,10 +282,9 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "4.1.0";
+const APP_VERSION = "5.0.0";
 const CHANGELOG = [
-  { v: "4.1.0", date: "2026-04-03", changes: "Day/night background: fundo mais claro de dia (6h-19h), estrelas desvanecem, escurece à noite" },
-  { v: "4.0.0", date: "2026-04-02", changes: "Night mode: ring da noite (bedtime→wake), Night Waking, Bom Dia, nursing timer L/R, last diaper/medicine cards, universo no fundo" },
+  { v: "5.0.0", date: "2026-04-03", changes: "Napper-style: track 20px, dots 46px com glow, sono dominante, so bottle/nursing no ring, estrelas fixas" },
   { v: "3.9.0", date: "2026-04-02", changes: "Timer live arc no ring (cresce enquanto dorme), nav mais baixo, estrelas mais vivas, ícones filled" },
   { v: "3.8.0", date: "2026-04-02", changes: "Ícones preenchidos com gradiente (Napper-style): bottle, moon, cloud, droplet, pill, thermo preenchidos" },
   { v: "3.7.0", date: "2026-04-02", changes: "Ring v2: dots 36px anti-overlap (14° min gap), sleep arcs dominantes (48px glow), track fino 5px" },
@@ -558,78 +537,55 @@ function L(key){return I[key]?.[_lang]||I[key]?.en||key}
 function TL(type){return typeLabel(type,_lang)}
 
 // ── UI COMPONENTS ──
-function Ring({activeTimer,napSug,tick,recentEvents,lang,onEditNightStart}){
+function Ring({activeTimer,napSug,tick,recentEvents,lang}){
   const[tip,setTip]=useState(null);
-  const[editNS,setEditNS]=useState(null);
   useEffect(()=>{if(tip!==null){const t=setTimeout(()=>setTip(null),3000);return()=>clearTimeout(t)}},[tip]);
   const sz=340,cx=sz/2,cy=sz/2,R=148;
   const gapDeg=55,startAng=90+gapDeg/2,totalArc=360-gapDeg;
-  const dotSz=36,sleepSz=36;
-  const isNight=!!activeTimer?.nightStart;
-  const nightStartTs=isNight?new Date(activeTimer.nightStart).getTime():0;
-  const nightSpan=12*60; // 12h window in minutes
+  const dotSz=46,sleepSz=44;
   let lbl="",sub="",col1=T.dim,col2=T.dim;
-  if(activeTimer?.startTime){
+  if(activeTimer){
     const el=Math.max(0,Math.floor((Date.now()-new Date(activeTimer.startTime).getTime())/1000));const mins=Math.floor(el/60);
     lbl=mins<60?`${mins} min`:`${Math.floor(mins/60)}h ${String(mins%60).padStart(2,"0")}m`;
     sub=lang==="en"?"Asleep for":"Dormindo";col1="#7c3aed";col2="#c084fc";
-  } else if(isNight){
-    // Night mode, baby awake
-    const totalNightSleep=(recentEvents||[]).filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin).reduce((s,e)=>s+e.durationMin,0);
-    lbl=fmtDur(totalNightSleep);sub=lang==="en"?"Night sleep":"Sono noturno";col1="#7c3aed";col2="#a78bfa";
   } else if(napSug){
     lbl=fmtDur(napSug.el);sub=lang==="en"?"Awake for":"Acordado(a)";
     if(napSug.over){col1="#ea580c";col2="#fb923c"}else if(napSug.wind){col1="#d97706";col2="#fbbf24"}else{col1="#059669";col2="#34d399"}
   } else{sub="";lbl="\u2014"}
   const hasProgress=col1!==T.dim;
-  // Time mapping: night mode uses timestamps, day mode uses time-of-day
   const toMin=t=>{const[h,m]=(t||"12:00").split(":").map(Number);return h*60+m};
   const dayEnd=24*60;
-  const toRingPos=(ev)=>{
-    if(isNight){
-      const evTs=new Date(`${ev.date}T${ev.time}`).getTime();
-      const minsSince=(evTs-nightStartTs)/60000;
-      return Math.max(0,Math.min(1,minsSince/nightSpan));
-    }
-    return toMin(ev.time)/dayEnd;
-  };
   const descArc=(sA,eA)=>{const s=sA*Math.PI/180,e=eA*Math.PI/180;return`M ${cx+R*Math.cos(s)} ${cy+R*Math.sin(s)} A ${R} ${R} 0 ${eA-sA>180?1:0} 1 ${cx+R*Math.cos(e)} ${cy+R*Math.sin(e)}`};
   const evs=(recentEvents||[]);
   const sleepEvs=evs.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin>0);
-  const dotEvs=evs.filter(e=>!((e.type==="sleep"||e.type==="nap")&&e.durationMin>0));
+  const dotEvs=evs.filter(e=>e.type==="bottle"||e.type==="nursing");
   const sleepArcs=sleepEvs.map(ev=>{
-    const t1=toRingPos(ev);
-    const durFrac=isNight?ev.durationMin/nightSpan:ev.durationMin/dayEnd;
-    const t2=Math.min(t1+durFrac,1);
+    const mins=toMin(ev.time),dur=ev.durationMin;
+    const t1=mins/dayEnd,t2=Math.min((mins+dur)/dayEnd,1);
     const a1=startAng+t1*totalArc,a2=startAng+t2*totalArc;
     const midAng=(a1+a2)/2;const midRad=midAng*Math.PI/180;
     return{ev,path:descArc(a1,a2),mx:cx+R*Math.cos(midRad),my:cy+R*Math.sin(midRad),col:TYPES[ev.type]?.color||T.purple};
   });
-  const MIN_GAP=18;
+  const MIN_GAP=14;
   const rawDots=dotEvs.map(ev=>{
     const cfg=TYPES[ev.type];if(!cfg)return null;
-    const pos=toRingPos(ev);const angDeg=startAng+pos*totalArc;
+    const mins=toMin(ev.time);const angDeg=startAng+(mins/dayEnd)*totalArc;
     const angRad=angDeg*Math.PI/180;
-    return {ev,cfg,angDeg,x:cx+R*Math.cos(angRad),y:cy+R*Math.sin(angRad)};
-  }).filter(Boolean).sort((a,b)=>a.angDeg-b.angDeg);
+    return{ev,cfg,angDeg,x:cx+R*Math.cos(angRad),y:cy+R*Math.sin(angRad)};
+  }).filter(Boolean);
   const dots=[];
   for(const d of rawDots){if(!dots.some(fd=>Math.abs(fd.angDeg-d.angDeg)<MIN_GAP))dots.push(d)}
   const totalSleepMin=evs.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin).reduce((s,e)=>s+e.durationMin,0);
 
   // Live timer arc (growing while timer active)
   let timerArc=null;
-  if(activeTimer?.startTime){
+  if(activeTimer){
     const st=new Date(activeTimer.startTime);
-    let pos1,pos2;
-    if(isNight){
-      pos1=Math.max(0,(st.getTime()-nightStartTs)/60000/nightSpan);
-      pos2=Math.max(0,(Date.now()-nightStartTs)/60000/nightSpan);
-    }else{
-      const startMins=st.getHours()*60+st.getMinutes();
-      const now=new Date();const nowMins=now.getHours()*60+now.getMinutes();
-      pos1=startMins/dayEnd;pos2=Math.min(nowMins,dayEnd-1)/dayEnd;
-    }
-    const a1=startAng+pos1*totalArc,a2=startAng+pos2*totalArc;
+    const startMins=st.getHours()*60+st.getMinutes();
+    const now=new Date();
+    const nowMins=now.getHours()*60+now.getMinutes();
+    const a1=startAng+(startMins/dayEnd)*totalArc;
+    const a2=startAng+(Math.min(nowMins,dayEnd-1)/dayEnd)*totalArc;
     if(a2>a1){
       const midAng=(a1+a2)/2;const midRad=midAng*Math.PI/180;
       timerArc={path:descArc(a1,a2),col:T.purple,mx:cx+R*Math.cos(midRad),my:cy+R*Math.sin(midRad)};
@@ -639,21 +595,21 @@ function Ring({activeTimer,napSug,tick,recentEvents,lang,onEditNightStart}){
   return(<div style={{position:"relative",width:sz,margin:"0 auto"}}>
     <div style={{position:"relative",width:sz,height:sz}}>
       <svg width={sz} height={sz} style={{overflow:"visible"}}>
-        <defs><filter id="slpG"><feGaussianBlur stdDeviation="5" result="b"/><feFlood floodColor={T.purple} floodOpacity="0.2" result="c"/><feComposite in="c" in2="b" operator="in" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
-        <path d={descArc(startAng,startAng+totalArc)} fill="none" stroke="rgba(40,48,100,0.2)" strokeWidth={5} strokeLinecap="round"/>
+        <defs><filter id="slpG"><feGaussianBlur stdDeviation="8" result="b"/><feFlood floodColor={T.purple} floodOpacity="0.35" result="c"/><feComposite in="c" in2="b" operator="in" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+        <path d={descArc(startAng,startAng+totalArc)} fill="none" stroke="rgba(40,55,120,0.18)" strokeWidth={20} strokeLinecap="round"/>
         {/* Sleep pills */}
-        {sleepArcs.map((sa,i)=><path key={"sg"+i} d={sa.path} fill="none" stroke={sa.col} strokeWidth={32} strokeLinecap="round" opacity={0.1} filter="url(#slpG)"/>)}
-        {sleepArcs.map((sa,i)=><path key={"sb"+i} d={sa.path} fill="none" stroke={sa.col} strokeWidth={26} strokeLinecap="round" opacity={0.3}/>)}
-        {sleepArcs.map((sa,i)=><path key={"sf"+i} d={sa.path} fill="none" stroke="rgba(16,12,40,0.8)" strokeWidth={20} strokeLinecap="round"/>)}
+        {sleepArcs.map((sa,i)=><path key={"sg"+i} d={sa.path} fill="none" stroke={sa.col} strokeWidth={36} strokeLinecap="round" opacity={0.08} filter="url(#slpG)"/>)}
+        {sleepArcs.map((sa,i)=><path key={"sb"+i} d={sa.path} fill="none" stroke={sa.col} strokeWidth={30} strokeLinecap="round" opacity={0.4}/>)}
+        {sleepArcs.map((sa,i)=><path key={"sf"+i} d={sa.path} fill="none" stroke="rgba(16,12,40,0.85)" strokeWidth={24} strokeLinecap="round"/>)}
         {/* Live timer arc (growing) */}
-        {timerArc&&<g><path d={timerArc.path} fill="none" stroke={timerArc.col} strokeWidth={32} strokeLinecap="round" opacity={0.1} filter="url(#slpG)"/><path d={timerArc.path} fill="none" stroke={timerArc.col} strokeWidth={26} strokeLinecap="round" opacity={0.35}/><path d={timerArc.path} fill="none" stroke="rgba(16,12,40,0.8)" strokeWidth={20} strokeLinecap="round"/></g>}
+        {timerArc&&<g><path d={timerArc.path} fill="none" stroke={timerArc.col} strokeWidth={36} strokeLinecap="round" opacity={0.08} filter="url(#slpG)"/><path d={timerArc.path} fill="none" stroke={timerArc.col} strokeWidth={30} strokeLinecap="round" opacity={0.5}/><path d={timerArc.path} fill="none" stroke="rgba(16,12,40,0.85)" strokeWidth={24} strokeLinecap="round"/></g>}
       </svg>
       {/* Sleep icons centered on pills */}
-      {sleepArcs.map((sa,i)=><div key={"si"+i} style={{position:"absolute",left:sa.mx-sleepSz/2,top:sa.my-sleepSz/2,width:sleepSz,height:sleepSz,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",zIndex:3,filter:`drop-shadow(0 0 4px ${sa.col}44)`}}><Icon name={sa.ev.type==="nap"?"cloud":"moon"} size={16} color={sa.col}/></div>)}
+      {sleepArcs.map((sa,i)=><div key={"si"+i} style={{position:"absolute",left:sa.mx-sleepSz/2,top:sa.my-sleepSz/2,width:sleepSz,height:sleepSz,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",zIndex:3,filter:`drop-shadow(0 0 6px ${sa.col}55)`}}><Icon name={sa.ev.type==="nap"?"cloud":"moon"} size={18} color={sa.col}/></div>)}
       {/* Live timer icon */}
-      {timerArc&&<div style={{position:"absolute",left:timerArc.mx-sleepSz/2,top:timerArc.my-sleepSz/2,width:sleepSz,height:sleepSz,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",zIndex:4,filter:`drop-shadow(0 0 5px ${timerArc.col}55)`,animation:"pulse 2s infinite"}}><Icon name={activeTimer.type==="nap"?"cloud":"moon"} size={16} color={timerArc.col}/></div>}
-      {dots.map((d,i)=>{const ev=d.ev,c=d.cfg.color;let detail=TL(ev.type);if(ev.ml)detail+=` · ${ev.ml}ml`;else if(ev.subtype)detail+=` · ${({wet:L("wet"),dirty:L("dirty"),both:L("both")})[ev.subtype]||""}`;else if(ev.name)detail+=` · ${ev.name}`;const active=tip===i;return (<div key={ev.id||i}><div onClick={function(e){e.stopPropagation();setTip(active?null:i)}} style={{position:"absolute",left:d.x-dotSz/2,top:d.y-dotSz/2,width:dotSz,height:dotSz,borderRadius:"50%",background:"radial-gradient(circle at 35% 30%,rgba(30,38,80,0.95),rgba(12,16,42,0.98))",border:"2px solid "+(active?c:c+"55"),display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 2px 8px rgba(0,0,0,0.4), 0 0 "+(active?18:12)+"px "+c+(active?"44":"22"),zIndex:active?10:2,transform:active?"scale(1.12)":"scale(1)",transition:"all .2s"}}><Icon name={d.cfg.icon} size={15} color={c}/></div><div style={{position:"absolute",left:d.x,top:d.y+dotSz/2+2,transform:"translateX(-50%)",fontSize:9,fontWeight:600,color:T.dim,whiteSpace:"nowrap",pointerEvents:"none"}}>{ev.time}</div>{active?<div style={{position:"absolute",left:d.x,top:d.y-dotSz/2-32,transform:"translateX(-50%)",whiteSpace:"nowrap",padding:"5px 12px",borderRadius:9,background:"rgba(8,12,35,0.96)",border:"1px solid "+c+"25",boxShadow:"0 4px 16px rgba(0,0,0,0.5)",fontSize:11,fontWeight:600,color:c,zIndex:20,animation:"fadeIn .15s ease"}}>{detail}<div style={{position:"absolute",bottom:-4,left:"50%",transform:"translateX(-50%) rotate(45deg)",width:7,height:7,background:"rgba(8,12,35,0.96)",borderRight:"1px solid "+c+"25",borderBottom:"1px solid "+c+"25"}}/></div>:null}</div>)})}
-      <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}><span style={{fontSize:14,color:T.sub,fontWeight:500,letterSpacing:1.5,pointerEvents:"none"}}>{sub}</span><span style={{fontSize:52,fontWeight:800,letterSpacing:-2,marginTop:4,color:col2,pointerEvents:"none"}}>{lbl}</span>{isNight&&!editNS&&<button onClick={()=>{const d=new Date(activeTimer.nightStart);setEditNS(`${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`)}} style={{marginTop:6,fontSize:10,color:T.dim,padding:"3px 10px",borderRadius:8,background:T.glass,border:`1px solid ${T.gB}`}}>{_lang==="en"?"started":"início"} {new Date(activeTimer.nightStart).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit",hour12:false})}</button>}{editNS!==null&&<div style={{marginTop:6,display:"flex",alignItems:"center",gap:6}}><input type="time" value={editNS} onChange={e=>setEditNS(e.target.value)} style={{padding:"4px 8px",borderRadius:8,background:"rgba(14,18,48,0.9)",border:`1px solid ${T.gB}`,color:T.text,fontSize:13,colorScheme:"dark"}}/><button onClick={()=>{onEditNightStart&&onEditNightStart(editNS);setEditNS(null)}} style={{padding:"4px 10px",borderRadius:8,background:T.accent,color:"#fff",fontSize:11,fontWeight:700}}>OK</button><button onClick={()=>setEditNS(null)} style={{padding:"4px 6px",borderRadius:8,fontSize:11,color:T.dim}}>X</button></div>}</div>
+      {timerArc&&<div style={{position:"absolute",left:timerArc.mx-sleepSz/2,top:timerArc.my-sleepSz/2,width:sleepSz,height:sleepSz,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",zIndex:4,filter:`drop-shadow(0 0 8px ${timerArc.col}66)`,animation:"pulse 2s infinite"}}><Icon name={activeTimer.type==="nap"?"cloud":"moon"} size={18} color={timerArc.col}/></div>}
+      {dots.map((d,i)=>{const ev=d.ev,c=d.cfg.color;let detail=TL(ev.type);if(ev.ml)detail+=` \u00b7 ${ev.ml}ml`;else if(ev.subtype)detail+=` \u00b7 ${({wet:L("wet"),dirty:L("dirty"),both:L("both")})[ev.subtype]||""}`;else if(ev.name)detail+=` \u00b7 ${ev.name}`;const active=tip===i;return<div key={ev.id||i} onClick={(e)=>{e.stopPropagation();setTip(active?null:i)}} style={{position:"absolute",left:d.x-dotSz/2,top:d.y-dotSz/2,width:dotSz,height:dotSz,borderRadius:"50%",background:"radial-gradient(circle at 35% 30%,rgba(30,38,80,0.95),rgba(12,16,42,0.98))",border:`2.5px solid ${active?c:c+"77"}`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 2px 10px rgba(0,0,0,0.45), 0 0 ${active?22:16}px ${c}${active?"55":"30"}, inset 0 1px 0 rgba(200,220,255,0.06), inset 0 -1px 3px rgba(0,0,0,0.15)`,zIndex:active?10:2,transform:active?"scale(1.15)":"scale(1)",transition:"all .2s cubic-bezier(0.34,1.56,0.64,1)",overflow:"hidden",filter:`drop-shadow(0 0 5px ${c}44)`}}><div style={{position:"absolute",top:"10%",left:"18%",width:"50%",height:"28%",background:`radial-gradient(ellipse,${c}22,transparent)`,borderRadius:"50%",filter:"blur(3px)"}}/><Icon name={d.cfg.icon} size={16} color={c}/>{active&&<div style={{position:"absolute",bottom:dotSz+6,left:"50%",transform:"translateX(-50%)",whiteSpace:"nowrap",padding:"5px 12px",borderRadius:9,background:"rgba(8,12,35,0.96)",border:`1px solid ${c}25`,boxShadow:"0 4px 16px rgba(0,0,0,0.5)",fontSize:11,fontWeight:600,color:c,zIndex:20,animation:"fadeIn .15s ease"}}>{detail}<span style={{display:"block",fontSize:9,color:T.dim,fontWeight:400,marginTop:1}}>{ev.time}</span><div style={{position:"absolute",bottom:-4,left:"50%",transform:"translateX(-50%) rotate(45deg)",width:7,height:7,background:"rgba(8,12,35,0.96)",borderRight:`1px solid ${c}25`,borderBottom:`1px solid ${c}25`}}/></div>}</div>})}
+      <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}><span style={{fontSize:14,color:T.sub,fontWeight:500,letterSpacing:1.5}}>{sub}</span><span style={{fontSize:52,fontWeight:800,letterSpacing:-2,marginTop:4,background:hasProgress?`linear-gradient(135deg,${col2},${col1})`:`linear-gradient(135deg,${T.text},${T.sub})`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>{lbl}</span></div>
       {tip!==null&&<div onClick={()=>setTip(null)} style={{position:"absolute",inset:0,zIndex:1}}/>}
     </div>
     {napSug&&<div style={{display:"flex",justifyContent:"center",gap:28,marginTop:4}}><div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3}}><div style={{width:36,height:36,borderRadius:"50%",background:"linear-gradient(135deg,rgba(251,146,60,0.12),rgba(251,191,36,0.06))",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 14px rgba(251,146,60,0.08)"}}><Icon name="sun" size={17} color={T.orange}/></div><span style={{fontSize:12,fontWeight:700,color:T.orange}}>{fmtDur(napSug.el)}</span></div><div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3}}><div style={{width:36,height:36,borderRadius:"50%",background:"linear-gradient(135deg,rgba(167,139,250,0.12),rgba(139,124,246,0.06))",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 14px rgba(139,124,246,0.08)"}}><Icon name="cloud" size={17} color={T.purple}/></div><span style={{fontSize:12,fontWeight:700,color:T.purple}}>{fmtDur(totalSleepMin)}</span></div></div>}
@@ -661,7 +617,7 @@ function Ring({activeTimer,napSug,tick,recentEvents,lang,onEditNightStart}){
 }
 
 
-function MlGoalBar({current,goal}){if(!goal||goal<=0)return null;const pct=Math.min(100,(current/goal)*100);const reached=current>=goal;return(<div style={{padding:"0 20px",marginBottom:16}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}><div style={{display:"flex",alignItems:"center",gap:6}}><Icon name="target" size={14} color={reached?T.green:T.sub}/><span style={{fontSize:11,fontWeight:600,color:T.sub}}>{L("dailyGoal")}</span></div><span style={{fontSize:12,fontWeight:700,color:reached?T.green:T.text}}>{current} / {goal} ml</span></div><div style={{height:6,borderRadius:3,background:T.bg3,overflow:"hidden",filter:`drop-shadow(0 0 5px ${T.accent}44)`}}><div style={{height:"100%",borderRadius:3,width:`${pct}%`,background:reached?T.green:`linear-gradient(90deg,${T.accent},${T.purple})`,transition:"width .5s"}}/></div></div>)}
+function MlGoalBar({current,goal}){if(!goal||goal<=0)return null;const pct=Math.min(100,(current/goal)*100);const reached=current>=goal;return(<div style={{padding:"0 20px",marginBottom:16}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}><div style={{display:"flex",alignItems:"center",gap:6}}><Icon name="target" size={14} color={reached?T.green:T.sub}/><span style={{fontSize:11,fontWeight:600,color:T.sub}}>{L("dailyGoal")}</span></div><span style={{fontSize:12,fontWeight:700,color:reached?T.green:T.text}}>{current} / {goal} ml</span></div><div style={{height:6,borderRadius:3,background:T.bg3,overflow:"hidden",filter:`drop-shadow(0 0 5px ${c}44)`}}><div style={{height:"100%",borderRadius:3,width:`${pct}%`,background:reached?T.green:`linear-gradient(90deg,${T.accent},${T.purple})`,transition:"width .5s"}}/></div></div>)}
 
 // ── LAST FEED ──
 function LastFeedCard({entries}){
@@ -670,7 +626,7 @@ function LastFeedCard({entries}){
   const ago=timeSince(feed.date,feed.time);
   const isBottle=feed.type==="bottle";
   const detail=isBottle&&feed.ml?`${feed.ml}ml`:(feed.durationMin?fmtDur(feed.durationMin):TL(feed.type));
-  return(<div style={{padding:"0 20px",marginBottom:8}}>
+  return(<div style={{padding:"0 20px",marginBottom:14}}>
     <div style={{padding:"12px 16px",borderRadius:14,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",gap:12}}>
       <div style={{width:40,height:40,borderRadius:12,background:isBottle?T.greenS:T.blueS,display:"flex",alignItems:"center",justifyContent:"center"}}>
         <Icon name={isBottle?"bottle":"breast"} size={18} color={isBottle?T.green:T.blue}/>
@@ -687,53 +643,9 @@ function LastFeedCard({entries}){
   </div>);
 }
 
-function LastDiaperCard({entries}){
-  const d=entries.filter(e=>e.type==="diaper").sort((a,b)=>`${b.date}T${b.time}`.localeCompare(`${a.date}T${a.time}`))[0];
-  if(!d)return null;
-  const ago=timeSince(d.date,d.time);
-  const detail=({wet:_lang==="en"?"Wet":"Xixi",dirty:_lang==="en"?"Dirty":"Cocô",both:_lang==="en"?"Both":"Ambos"})[d.subtype]||TL("diaper");
-  return(<div style={{padding:"0 20px",marginBottom:8}}>
-    <div style={{padding:"12px 16px",borderRadius:14,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",gap:12}}>
-      <div style={{width:40,height:40,borderRadius:12,background:T.pinkS,display:"flex",alignItems:"center",justifyContent:"center"}}>
-        <Icon name="droplet" size={18} color={T.pink}/>
-      </div>
-      <div style={{flex:1}}>
-        <div style={{fontSize:11,color:T.sub,fontWeight:600}}>{_lang==="en"?"Last diaper":"Última fralda"}</div>
-        <div style={{fontSize:18,fontWeight:800,color:T.pink}}>{detail}</div>
-      </div>
-      <div style={{textAlign:"right"}}>
-        <div style={{fontSize:13,fontWeight:700,color:T.text}}>{d.time}</div>
-        <div style={{fontSize:10,color:T.dim}}>{ago}</div>
-      </div>
-    </div>
-  </div>);
-}
-
-function LastMedicineCard({entries}){
-  const m=entries.filter(e=>e.type==="medicine").sort((a,b)=>`${b.date}T${b.time}`.localeCompare(`${a.date}T${a.time}`))[0];
-  if(!m)return null;
-  const ago=timeSince(m.date,m.time);
-  const detail=m.name+(m.dose?` · ${m.dose}`:"");
-  return(<div style={{padding:"0 20px",marginBottom:14}}>
-    <div style={{padding:"12px 16px",borderRadius:14,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",gap:12}}>
-      <div style={{width:40,height:40,borderRadius:12,background:T.amberS,display:"flex",alignItems:"center",justifyContent:"center"}}>
-        <Icon name="pill" size={18} color={T.amber}/>
-      </div>
-      <div style={{flex:1}}>
-        <div style={{fontSize:11,color:T.sub,fontWeight:600}}>{_lang==="en"?"Last medicine":"Último remédio"}</div>
-        <div style={{fontSize:16,fontWeight:800,color:T.amber}}>{detail}</div>
-      </div>
-      <div style={{textAlign:"right"}}>
-        <div style={{fontSize:13,fontWeight:700,color:T.text}}>{m.time}</div>
-        <div style={{fontSize:10,color:T.dim}}>{ago}</div>
-      </div>
-    </div>
-  </div>);
-}
-
 function WeeklyCard({entries}){const tw=[],lw=[];for(let i=0;i<7;i++){const d1=dateOffset(todayStr(),-i),d2=dateOffset(todayStr(),-7-i);tw.push(...entries.filter(e=>e.date===d1));lw.push(...entries.filter(e=>e.date===d2))}const tMl=tw.filter(e=>e.type==="bottle").reduce((s,e)=>s+(e.ml||0),0);const lMl=lw.filter(e=>e.type==="bottle").reduce((s,e)=>s+(e.ml||0),0);const tSl=tw.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin).reduce((s,e)=>s+e.durationMin,0);const lSl=lw.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin).reduce((s,e)=>s+e.durationMin,0);if(!lMl&&!lSl)return null;const md=lMl>0?Math.round(((tMl-lMl)/lMl)*100):0;const sd=lSl>0?Math.round(((tSl-lSl)/lSl)*100):0;if(!md&&!sd)return null;return(<div style={{padding:"0 20px",marginBottom:16}}><div style={{padding:"12px 16px",borderRadius:14,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",gap:16}}>{md!==0&&<div style={{display:"flex",alignItems:"center",gap:6,flex:1}}><Icon name={md>0?"arrowUp":"arrowDown"} size={14} color={md>0?T.green:T.orange}/><span style={{fontSize:11,color:T.sub}}><span style={{fontWeight:700,color:md>0?T.green:T.orange}}>{Math.abs(md)}%</span> {L("milkVsWeek")}</span></div>}{sd!==0&&<div style={{display:"flex",alignItems:"center",gap:6,flex:1}}><Icon name={sd>0?"arrowUp":"arrowDown"} size={14} color={sd>0?T.green:T.orange}/><span style={{fontSize:11,color:T.sub}}><span style={{fontWeight:700,color:sd>0?T.green:T.orange}}>{Math.abs(sd)}%</span> sono</span></div>}</div></div>)}
 
-function TimerBar({activeTimer,onStop,onNightWaking,onSwitchSide,onEditStart}){const[tick,setTick]=useState(0);const[editTime,setEditTime]=useState(null);useEffect(()=>{if(!activeTimer?.startTime)return;const iv=setInterval(()=>setTick(k=>k+1),1000);return()=>clearInterval(iv)},[activeTimer?.startTime]);if(!activeTimer?.startTime)return null;const isNursing=activeTimer.type==="nursing";const isBedtime=!!activeTimer.nightStart;if(isNursing){const now=Date.now();const sideEl=Math.max(0,Math.floor((now-new Date(activeTimer.sideStartTime).getTime())/1000));let lSec=Math.floor((activeTimer.leftMs||0)/1000),rSec=Math.floor((activeTimer.rightMs||0)/1000);if(activeTimer.activeSide==="left")lSec+=sideEl;else rSec+=sideEl;const total=lSec+rSec;const isL=activeTimer.activeSide==="left";return(<div style={{position:"fixed",bottom:"calc(66px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 32px)",maxWidth:448,padding:"10px 12px",borderRadius:16,background:"rgba(20,26,66,0.92)",border:`1px solid ${T.blue}33`,backdropFilter:"blur(12px)",zIndex:60,boxShadow:"0 4px 24px rgba(0,0,0,0.4)"}}><div style={{display:"flex",gap:8,marginBottom:8}}><button onClick={()=>onSwitchSide("left")} style={{flex:1,padding:"10px 8px",borderRadius:12,background:isL?T.blueS:T.glass,border:`1.5px solid ${isL?T.blue:T.gB}`,textAlign:"center",transition:"all .2s"}}><div style={{fontSize:10,fontWeight:600,color:isL?T.blue:T.dim,textTransform:"uppercase",letterSpacing:1}}>{_lang==="en"?"Left":"Esq"}</div><div style={{fontSize:22,fontWeight:800,color:isL?T.blue:T.sub,fontVariantNumeric:"tabular-nums"}}>{fmtTimer(lSec)}</div>{isL&&<div style={{width:6,height:6,borderRadius:3,background:T.blue,margin:"4px auto 0",animation:"pulse 1s infinite"}}/>}</button><button onClick={()=>onSwitchSide("right")} style={{flex:1,padding:"10px 8px",borderRadius:12,background:!isL?T.blueS:T.glass,border:`1.5px solid ${!isL?T.blue:T.gB}`,textAlign:"center",transition:"all .2s"}}><div style={{fontSize:10,fontWeight:600,color:!isL?T.blue:T.dim,textTransform:"uppercase",letterSpacing:1}}>{_lang==="en"?"Right":"Dir"}</div><div style={{fontSize:22,fontWeight:800,color:!isL?T.blue:T.sub,fontVariantNumeric:"tabular-nums"}}>{fmtTimer(rSec)}</div>{!isL&&<div style={{width:6,height:6,borderRadius:3,background:T.blue,margin:"4px auto 0",animation:"pulse 1s infinite"}}/>}</button></div><div style={{display:"flex",alignItems:"center",gap:10}}><Icon name="breast" size={16} color={T.blue}/><div style={{flex:1}}><div style={{fontSize:11,fontWeight:600,color:T.sub}}>{TL("nursing")}</div><div style={{fontSize:16,fontWeight:800,fontVariantNumeric:"tabular-nums"}}>{fmtTimer(total)}</div></div><button onClick={onStop} style={{width:40,height:40,borderRadius:12,background:T.blueS,border:`1px solid ${T.blue}33`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="stop" size={16} color={T.blue}/></button></div></div>)}const secs=Math.max(0,Math.floor((Date.now()-new Date(activeTimer.startTime).getTime())/1000));const startH=new Date(activeTimer.startTime).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit",hour12:false});if(isBedtime){return(<div style={{position:"fixed",bottom:"calc(66px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 32px)",maxWidth:448,padding:"10px 12px",borderRadius:16,background:"rgba(20,26,66,0.92)",border:`1px solid ${T.purple}33`,backdropFilter:"blur(12px)",zIndex:60,boxShadow:"0 4px 24px rgba(0,0,0,0.4)"}}><div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}><div style={{width:36,height:36,borderRadius:10,background:T.purpleS,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="moon" size={18} color={T.purple}/></div><div style={{flex:1}}><div style={{fontSize:12,fontWeight:600,color:T.sub}}>Bedtime</div><div style={{display:"flex",alignItems:"baseline",gap:8}}><span style={{fontSize:22,fontWeight:800,fontVariantNumeric:"tabular-nums"}}>{fmtTimer(secs)}</span>{!editTime&&<button onClick={()=>setEditTime(startH)} style={{fontSize:10,color:T.dim,padding:"2px 6px",borderRadius:6,background:T.glass,border:`1px solid ${T.gB}`}}>{_lang==="en"?"from":"desde"} {startH}</button>}</div>{editTime!==null&&<div style={{display:"flex",alignItems:"center",gap:6,marginTop:4}}><input type="time" value={editTime} onChange={e=>setEditTime(e.target.value)} style={{padding:"4px 8px",borderRadius:8,background:"rgba(14,18,48,0.8)",border:`1px solid ${T.gB}`,color:T.text,fontSize:13,colorScheme:"dark"}}/><button onClick={()=>{onEditStart(editTime);setEditTime(null)}} style={{padding:"4px 10px",borderRadius:8,background:T.accent,color:"#fff",fontSize:11,fontWeight:700}}>OK</button><button onClick={()=>setEditTime(null)} style={{padding:"4px 8px",borderRadius:8,fontSize:11,color:T.dim}}>X</button></div>}</div></div><div style={{display:"flex",gap:8}}><button onClick={onNightWaking} style={{flex:1,padding:"10px 8px",borderRadius:12,background:T.orangeS,border:`1px solid ${T.orange}33`,display:"flex",alignItems:"center",justifyContent:"center",gap:6}}><Icon name="zap" size={14} color={T.orange}/><span style={{fontSize:11,fontWeight:700,color:T.orange}}>{_lang==="en"?"Night waking":"Acordou"}</span></button><button onClick={onStop} style={{flex:1,padding:"10px 8px",borderRadius:12,background:T.amberS,border:`1px solid ${T.amber}33`,display:"flex",alignItems:"center",justifyContent:"center",gap:6}}><Icon name="sun" size={14} color={T.amber}/><span style={{fontSize:11,fontWeight:700,color:T.amber}}>{_lang==="en"?"Good morning":"Bom dia"}</span></button></div></div>)}return(<div style={{position:"fixed",bottom:"calc(66px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 32px)",maxWidth:448,padding:"12px 16px",borderRadius:16,background:"rgba(20,26,66,0.92)",border:`1px solid ${T.purple}33`,backdropFilter:"blur(12px)",display:"flex",alignItems:"center",gap:12,zIndex:60,boxShadow:"0 4px 24px rgba(0,0,0,0.4)"}}><div style={{width:36,height:36,borderRadius:10,background:T.purpleS,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name={activeTimer.type==="nap"?"cloud":"moon"} size={18} color={T.purple}/></div><div style={{flex:1}}><div style={{fontSize:12,fontWeight:600,color:T.sub}}>{activeTimer.type==="nap"?TL("nap"):TL("sleep")}</div><div style={{fontSize:20,fontWeight:800,fontVariantNumeric:"tabular-nums"}}>{fmtTimer(secs)}</div></div><button onClick={onStop} style={{width:40,height:40,borderRadius:12,background:T.purpleS,border:`1px solid ${T.purple}33`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="stop" size={16} color={T.purple}/></button></div>)}
+function TimerBar({activeTimer,onStop}){const[secs,setSecs]=useState(0);useEffect(()=>{if(!activeTimer)return;const calc=()=>Math.max(0,Math.floor((Date.now()-new Date(activeTimer.startTime).getTime())/1000));setSecs(calc());const iv=setInterval(()=>setSecs(calc()),1000);return()=>clearInterval(iv)},[activeTimer]);if(!activeTimer)return null;return(<div style={{position:"fixed",bottom:"calc(66px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 32px)",maxWidth:448,padding:"12px 16px",borderRadius:16,background:"rgba(20,26,66,0.92)",border:`1px solid ${T.purple}33`,backdropFilter:"blur(12px)",display:"flex",alignItems:"center",gap:12,zIndex:60,boxShadow:"0 4px 24px rgba(0,0,0,0.4)"}}><div style={{width:36,height:36,borderRadius:10,background:T.purpleS,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name={activeTimer.type==="nap"?"cloud":"moon"} size={18} color={T.purple}/></div><div style={{flex:1}}><div style={{fontSize:12,fontWeight:600,color:T.sub}}>{activeTimer.type==="nap"?TL("nap"):TL("sleep")}</div><div style={{fontSize:20,fontWeight:800,fontVariantNumeric:"tabular-nums"}}>{fmtTimer(secs)}</div></div><button onClick={onStop} style={{width:40,height:40,borderRadius:12,background:T.purpleS,border:`1px solid ${T.purple}33`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="stop" size={16} color={T.purple}/></button></div>)}
 
 function Toast({message,onUndo,onClose}){const closeRef=useRef(onClose);closeRef.current=onClose;useEffect(()=>{const t=setTimeout(()=>closeRef.current(),2000);return()=>clearTimeout(t)},[]);return(<div style={{position:"fixed",top:"calc(20px + env(safe-area-inset-top))",left:"50%",transform:"translateX(-50%)",zIndex:300,padding:"10px 16px",borderRadius:14,background:"rgba(20,26,66,0.95)",border:`1px solid ${T.gB}`,backdropFilter:"blur(12px)",display:"flex",alignItems:"center",gap:10,boxShadow:"0 8px 24px rgba(0,0,0,0.5)",animation:"slideDown .3s ease"}}><span style={{fontSize:13,color:T.text}}>{message}</span>{onUndo&&<button onClick={onUndo} style={{padding:"4px 12px",borderRadius:8,background:T.accent,color:"#fff",fontSize:12,fontWeight:700}}>{L("undo")}</button>}</div>)}
 
@@ -741,8 +653,8 @@ function Sheet({open,onClose,children}){const[vis,setVis]=useState(false),[show,
 
 function Modal({open,onClose,children}){const[vis,setVis]=useState(false),[show,setShow]=useState(false);useEffect(()=>{if(open){setVis(true);requestAnimationFrame(()=>requestAnimationFrame(()=>setShow(true)))}else{setShow(false);const t=setTimeout(()=>setVis(false),300);return()=>clearTimeout(t)}},[open]);if(!vis)return null;return(<div style={{position:"fixed",inset:0,zIndex:150,display:"flex",alignItems:"center",justifyContent:"center",padding:24}} onClick={onClose}><div style={{position:"absolute",inset:0,background:"rgba(2,3,10,0.55)",backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",opacity:show?1:0,transition:"opacity .35s"}}/><div onClick={e=>e.stopPropagation()} style={{position:"relative",width:"100%",maxWidth:340,background:"rgba(14,18,52,0.85)",backdropFilter:"blur(40px)",WebkitBackdropFilter:"blur(40px)",borderRadius:24,border:"1px solid rgba(100,115,220,0.12)",boxShadow:"0 16px 48px rgba(0,0,0,0.5), inset 0 1px 0 rgba(140,150,255,0.06)",padding:28,transform:show?"scale(1)":"scale(0.92)",opacity:show?1:0,transition:"all .35s cubic-bezier(0.22,1,0.36,1)"}}><button onClick={onClose} style={{position:"absolute",top:16,right:16,padding:4,color:T.dim}}><Icon name="x" size={16} color={T.dim}/></button>{children}</div></div>)}
 
-function Fld({label,children}){return <div style={{marginBottom:18}}><label style={{fontSize:10,color:T.dim,fontWeight:600,marginBottom:6,display:"block",textTransform:"uppercase",letterSpacing:1.2}}>{label}</label>{children}</div>}
-function Seg({opts,val,set,color}){return <div style={{display:"flex",gap:6}}>{opts.map(o=><button key={o.v} onClick={()=>set(o.v)} style={{flex:1,padding:"12px 4px",borderRadius:10,fontSize:13,fontWeight:600,background:val===o.v?color:T.glass,color:val===o.v?T.bg1:T.text,border:`1px solid ${val===o.v?color:T.gB}`}}>{o.l}</button>)}</div>}
+function Fld({label,children}){return<div style={{marginBottom:18}}><label style={{fontSize:10,color:T.dim,fontWeight:600,marginBottom:6,display:"block",textTransform:"uppercase",letterSpacing:1.2}}>{label}</label>{children}</div>}
+function Seg({opts,val,set,color}){return<div style={{display:"flex",gap:6}}>{opts.map(o=><button key={o.v} onClick={()=>set(o.v)} style={{flex:1,padding:"12px 4px",borderRadius:10,fontSize:13,fontWeight:600,background:val===o.v?color:T.glass,color:val===o.v?T.bg1:T.text,border:`1px solid ${val===o.v?color:T.gB}`}}>{o.l}</button>)}</div>}
 
 function EntryRow({entry,onDelete,onEdit}){const[del,setDel]=useState(false);const cfg=TYPES[entry.type]||{label:entry.type,icon:"star",color:T.text,bg:T.glass};let detail="";if(entry.ml)detail=`${entry.ml} ml`;else if(entry.durationMin)detail=fmtDur(entry.durationMin);else if(entry.subtype)detail=({wet:"Xixi",dirty:"Cocô",both:"Ambos"})[entry.subtype]||"";else if(entry.name)detail=entry.name+(entry.dose?` · ${entry.dose}`:"");else if(entry.value)detail=`${entry.value}°C`;else if(entry.weightKg||entry.lengthCm||entry.headCm){const parts=[];if(entry.weightKg)parts.push(`${entry.weightKg}kg`);if(entry.lengthCm)parts.push(`${entry.lengthCm}cm`);if(entry.headCm)parts.push(`Cab. ${entry.headCm}cm`);detail=parts.join(" · ")}if(entry.type==="nursing"&&entry.side)detail=(detail?detail+" · ":"")+({left:"Esq",right:"Dir",both:"Ambos"}[entry.side]||"");return(<div style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",marginBottom:4,background:T.glass,borderRadius:12,borderLeft:`3px solid ${cfg.color}`}}>
   <button onClick={()=>onEdit&&onEdit(entry)} style={{width:34,height:34,borderRadius:10,background:cfg.bg,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name={cfg.icon} size={16} color={cfg.color}/></button>
@@ -897,8 +809,8 @@ function StatsPage({entries,onGrowth}){
     </div>
     {[{t:_lang==="en"?"Milk (ml)":"Leite (ml)",f:"ml",max:mxMl,c:T.green},{t:_lang==="en"?"Total sleep":"Sono total",f:"sl",max:mxSl,c:T.purple}].map(ch=>(
       <div key={ch.f} style={{marginBottom:22}}><div style={{fontSize:12,fontWeight:600,color:T.sub,marginBottom:8}}>{ch.t}</div>
-        <div style={{display:"flex",gap:numDays>20?1:numDays>14?2:5,alignItems:"flex-end",height:100,background:T.glass,borderRadius:14,padding:"12px 4px 6px",border:`1px solid ${T.gB}`,overflow:"hidden",filter:`drop-shadow(0 0 5px ${T.accent}44)`}}>
-          {data.map(d=>{const v=d[ch.f];return <div key={d.date} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2,minWidth:0}}>
+        <div style={{display:"flex",gap:numDays>20?1:numDays>14?2:5,alignItems:"flex-end",height:100,background:T.glass,borderRadius:14,padding:"12px 4px 6px",border:`1px solid ${T.gB}`,overflow:"hidden",filter:`drop-shadow(0 0 5px ${c}44)`}}>
+          {data.map(d=>{const v=d[ch.f];return<div key={d.date} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2,minWidth:0}}>
             {numDays<=14&&<span style={{fontSize:7,color:T.dim}}>{v>0?(ch.f==="sl"?fmtDur(v):v):""}</span>}
             <div style={{width:"85%",maxWidth:numDays>20?8:20,height:Math.max((v/ch.max)*65,2),borderRadius:numDays>20?2:5,background:v>0?ch.c:T.bg3,transition:"height .5s"}}/>
             {numDays<=14&&<span style={{fontSize:8,color:T.dim}}>{d.label}</span>}
@@ -1117,7 +1029,7 @@ function App(){
     const u1=FB.subEntries(d=>{setEntries(d);ready.e=true;check()});
     const u2=FB.subProfile(d=>{if(d)setProfile(d);ready.p=true;check()});
     const u3=FB.subMeds(d=>{setSavedMeds(d||[{name:"Simeticona",dose:""},{name:"Paracetamol",dose:""},{name:"Floripa",dose:""},{name:"Vita. D",dose:""}]);ready.m=true;check()});
-    const u4=FB.subTimer(d=>{const t=d?.cleared?null:d;if(t&&t.type==="sleep"&&t.startTime&&!t.nightStart){t.nightStart=t.startTime;FB.saveTimer(t)}setActiveTimer(t);ready.a=true;check()});
+    const u4=FB.subTimer(d=>{setActiveTimer(d?.cleared?null:d);ready.a=true;check()});
     return()=>{u1();u2();u3();u4()};
   },[]);
 
@@ -1137,19 +1049,11 @@ function App(){
   },[]);
   const deleteEntry=useCallback(async id=>{const entry=entries.find(e=>e.id===id);await FB.delEntry(id);showToast(`${TL(entry?.type)||""} ${L("removed")}`,async()=>{if(entry)await FB.addEntry(entry)})},[entries]);
   const quickWakeup=useCallback(()=>addEntry({type:"wakeup",date:todayStr(),time:nowTime(),id:uid()}),[addEntry]);
-
-  const startTimer=useCallback(async type=>{const d={type,startTime:new Date().toISOString()};if(type==="sleep")d.nightStart=activeTimer?.nightStart||d.startTime;await FB.saveTimer(d);setShowAdd(false)},[activeTimer]);
-  const startNursing=useCallback(async(side)=>{const now=new Date().toISOString();await FB.saveTimer({type:"nursing",startTime:now,activeSide:side,leftMs:0,rightMs:0,sideStartTime:now});setShowAdd(false);setFormType(null)},[]);
-  const switchNursingSide=useCallback(async(newSide)=>{if(!activeTimer||activeTimer.type!=="nursing"||activeTimer.activeSide===newSide)return;const now=Date.now();const elapsed=now-new Date(activeTimer.sideStartTime).getTime();const update={...activeTimer,activeSide:newSide,sideStartTime:new Date().toISOString()};if(activeTimer.activeSide==="left")update.leftMs=(activeTimer.leftMs||0)+elapsed;else update.rightMs=(activeTimer.rightMs||0)+elapsed;await FB.saveTimer(update)},[activeTimer]);
-  const stopTimer=useCallback(async()=>{if(!activeTimer?.startTime)return;const s=new Date(activeTimer.startTime);if(activeTimer.type==="nursing"){const now=Date.now();const elapsed=now-new Date(activeTimer.sideStartTime).getTime();let lMs=activeTimer.leftMs||0,rMs=activeTimer.rightMs||0;if(activeTimer.activeSide==="left")lMs+=elapsed;else rMs+=elapsed;const totalMin=Math.max(1,Math.round((lMs+rMs)/60000));const side=lMs>0&&rMs>0?"both":lMs>0?"left":"right";const entry={type:"nursing",date:`${s.getFullYear()}-${String(s.getMonth()+1).padStart(2,"0")}-${String(s.getDate()).padStart(2,"0")}`,time:`${String(s.getHours()).padStart(2,"0")}:${String(s.getMinutes()).padStart(2,"0")}`,durationMin:totalMin,side,leftMin:Math.round(lMs/60000),rightMin:Math.round(rMs/60000),id:uid()};await FB.addEntry(entry);await FB.saveTimer(null);showToast(`${totalMin}min ${L("registered")}`,null)}else{const mins=Math.max(1,Math.round((Date.now()-s.getTime())/6e4));const entry={type:activeTimer.type,date:`${s.getFullYear()}-${String(s.getMonth()+1).padStart(2,"0")}-${String(s.getDate()).padStart(2,"0")}`,time:`${String(s.getHours()).padStart(2,"0")}:${String(s.getMinutes()).padStart(2,"0")}`,durationMin:mins,id:uid()};const parts=splitMidnight(entry);for(const p of parts) await FB.addEntry(p);await FB.saveTimer(null);showToast(`${mins}min ${L("registered")}`,null)}},[activeTimer]);
-  const nightWaking=useCallback(async()=>{if(!activeTimer?.startTime)return;const s=new Date(activeTimer.startTime);const mins=Math.max(1,Math.round((Date.now()-s.getTime())/6e4));const entry={type:activeTimer.type,date:`${s.getFullYear()}-${String(s.getMonth()+1).padStart(2,"0")}-${String(s.getDate()).padStart(2,"0")}`,time:`${String(s.getHours()).padStart(2,"0")}:${String(s.getMinutes()).padStart(2,"0")}`,durationMin:mins,id:uid()};const parts=splitMidnight(entry);for(const p of parts) await FB.addEntry(p);await FB.saveTimer({nightStart:activeTimer.nightStart});showToast(`${mins}min ${L("registered")}`,null)},[activeTimer]);
-  const editTimerStart=useCallback(async(timeStr)=>{if(!activeTimer)return;const[h,m]=timeStr.split(":").map(Number);const d=new Date();d.setHours(h,m,0,0);if(d>new Date())d.setDate(d.getDate()-1);const iso=d.toISOString();const update={...activeTimer,startTime:iso};if(update.nightStart)update.nightStart=iso;await FB.saveTimer(update)},[activeTimer]);
-  const editNightStart=useCallback(async(timeStr)=>{if(!activeTimer?.nightStart)return;const[h,m]=timeStr.split(":").map(Number);const d=new Date();d.setHours(h,m,0,0);if(d>new Date())d.setDate(d.getDate()-1);const iso=d.toISOString();const update={...activeTimer,nightStart:iso};await FB.saveTimer(update)},[activeTimer]);
+  const duplicateLast=useCallback(()=>{if(!entries.length)return;const l=entries[0];addEntry({...l,id:uid(),date:todayStr(),time:nowTime(),_docId:undefined})},[entries,addEntry]);
+  const startTimer=useCallback(async type=>{await FB.saveTimer({type,startTime:new Date().toISOString()});setShowAdd(false)},[]);
+  const stopTimer=useCallback(async()=>{if(!activeTimer)return;const s=new Date(activeTimer.startTime);const mins=Math.max(1,Math.round((Date.now()-s.getTime())/6e4));const entry={type:activeTimer.type,date:`${s.getFullYear()}-${String(s.getMonth()+1).padStart(2,"0")}-${String(s.getDate()).padStart(2,"0")}`,time:`${String(s.getHours()).padStart(2,"0")}:${String(s.getMinutes()).padStart(2,"0")}`,durationMin:mins,id:uid()};const parts=splitMidnight(entry);for(const p of parts) await FB.addEntry(p);await FB.saveTimer(null);showToast(`${mins}min registrado`,null)},[activeTimer]);
 
   const today=todayStr();const todayE=useMemo(()=>entries.filter(e=>e.date===today),[entries,today]);
-  const isNightMode=!!activeTimer?.nightStart;
-  const nightEvents=useMemo(()=>{if(!activeTimer?.nightStart)return[];const nsTs=new Date(activeTimer.nightStart).getTime();return entries.filter(e=>{const eTs=new Date(`${e.date}T${e.time}`).getTime();return eTs>=nsTs})},[entries,activeTimer?.nightStart]);
-  const ringEvents=isNightMode?nightEvents:todayE;
   const totalMl=todayE.filter(e=>e.type==="bottle").reduce((s,e)=>s+(e.ml||0),0);
   const totalNursingMin=todayE.filter(e=>e.type==="nursing"&&e.durationMin).reduce((s,e)=>s+e.durationMin,0);
   const totalNursing=todayE.filter(e=>e.type==="nursing").length;
@@ -1157,23 +1061,22 @@ function App(){
   const totalDiapers=todayE.filter(e=>e.type==="diaper").length;
   const age=calcAge(profile.birthDate);const babyName=profile.name||"Bebê";
   const sleepRec=useMemo(()=>getSleepRec(entries,age,profile.birthDate),[entries,age,profile.birthDate]);
-  const napSug=useMemo(()=>!activeTimer?.startTime?getNapSug(todayE,sleepRec):null,[todayE,sleepRec,activeTimer,tick]);
+  const napSug=useMemo(()=>!activeTimer?getNapSug(todayE,sleepRec):null,[todayE,sleepRec,activeTimer,tick]);
   const daysLeft=sleepRec?.phase===1?sleepRec.dl:null;
 
   // Vibrate when sleep window warning triggers
   const prevWind=useRef(false);const prevOver=useRef(false);
   useEffect(()=>{
-    if(isNightMode)return; // No sleep alerts during bedtime
     if(napSug?.wind&&!prevWind.current&&navigator.vibrate)navigator.vibrate([200,100,200]);
     if(napSug?.over&&!prevOver.current&&navigator.vibrate)navigator.vibrate([300,150,300,150,300]);
     prevWind.current=!!napSug?.wind;prevOver.current=!!napSug?.over;
-  },[napSug?.wind,napSug?.over,isNightMode]);
+  },[napSug?.wind,napSug?.over]);
 
   if(splash||loading)return(
     <div style={{background:`radial-gradient(ellipse at 50% 40%,#10153d 0%,${T.bg1} 70%)`,minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",fontFamily:"'Outfit',sans-serif",overflow:"hidden",animation:!splash&&!loading?"":"",opacity:splash?1:0,transition:"opacity .4s"}}>
       <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
       {/* Stars */}
-      <div style={{position:"fixed",inset:0,pointerEvents:"none"}}>{Array.from({length:30}).map((_,i)=><div key={i} style={{position:"absolute",width:Math.random()*2+0.5,height:Math.random()*2+0.5,background:`rgba(160,170,255,${Math.random()*0.3+0.05})`,borderRadius:"50%",top:Math.random()*100+"%",left:Math.random()*100+"%",animation:`twinkle ${2+Math.random()*3}s ease-in-out infinite ${Math.random()*3}s`}}/>)}</div>
+      <div style={{position:"fixed",inset:0,pointerEvents:"none"}}>{Array.from({length:30}).map((_,i)=><div key={i} style={{position:"absolute",width:Math.random()*2+0.5,height:Math.random()*2+0.5,background:`rgba(160,170,255,${Math.random()*0.3+0.05})`,borderRadius:"50%",top:Math.random()*100+"%",left:Math.random()*100+"%"}}/>)}</div>
       {/* Moon logo */}
       <div style={{animation:"splashLogo 1s cubic-bezier(0.34,1.56,0.64,1)"}}>
         <svg width="90" height="90" viewBox="0 0 90 90">
@@ -1195,38 +1098,20 @@ function App(){
     </div>
   );
   const goTo=p=>{setPage(p);setShowAdd(false);setFormType(null)};
-  const hour=new Date().getHours();
-  const isDaytime=hour>=6&&hour<19;
-  const bgGrad=isNightMode?"radial-gradient(ellipse at 50% 0%,#0c1030 0%,#050816 65%)":isDaytime?"radial-gradient(ellipse at 50% 0%,#1a2252 0%,#0e1338 50%,#0a0e28 100%)":"radial-gradient(ellipse at 50% 0%,#10153d 0%,#070b1e 65%)";
-  const starOpacity=isNightMode?1:isDaytime?0.3:0.8;
 
-
-  return (<div style={{background:bgGrad,height:"100%",overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch",overscrollBehavior:"none",color:T.text,maxWidth:480,margin:"0 auto",position:"relative"}}>
+  return(<div style={{background:`radial-gradient(ellipse at 50% 0%,#10153d 0%,${T.bg1} 65%)`,height:"100%",overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch",overscrollBehavior:"none",color:T.text,maxWidth:480,margin:"0 auto",position:"relative"}}>
     {/* Starfield */}
-    <div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:0,opacity:starOpacity,transition:"opacity 2s"}}>
-      {/* Milky Way band — diagonal gradient */}
-      <div style={{position:"absolute",width:"200%",height:"35%",top:"15%",left:"-30%",background:"linear-gradient(135deg, transparent 20%, rgba(140,120,220,0.04) 35%, rgba(180,160,255,0.06) 45%, rgba(200,180,255,0.07) 50%, rgba(160,140,230,0.05) 55%, rgba(120,100,200,0.03) 65%, transparent 80%)",transform:"rotate(-25deg)",filter:"blur(20px)",animation:"driftSlow 30s ease-in-out infinite"}}/>
-      {/* Cosmic dust patches */}
-      <div style={{position:"absolute",width:"45%",height:"35%",top:"0%",right:"5%",background:"radial-gradient(ellipse at 60% 40%, rgba(100,60,180,0.06) 0%, rgba(140,100,220,0.03) 40%, transparent 70%)",filter:"blur(35px)",animation:"shimmer 12s ease-in-out infinite"}}/>
-      <div style={{position:"absolute",width:"55%",height:"30%",bottom:"25%",left:"-8%",background:"radial-gradient(ellipse at 30% 50%, rgba(40,80,160,0.05) 0%, rgba(60,120,200,0.03) 35%, transparent 65%)",filter:"blur(30px)",animation:"shimmer 15s ease-in-out infinite 4s"}}/>
-      <div style={{position:"absolute",width:"30%",height:"25%",top:"50%",right:"10%",background:"radial-gradient(ellipse, rgba(200,140,100,0.03) 0%, transparent 60%)",filter:"blur(25px)",animation:"shimmer 18s ease-in-out infinite 8s"}}/>
-      {/* Star cluster along milky way */}
-      {Array.from({length:40}).map((_,i)=>{const band=25+Math.random()*30;const spread=Math.random()*100;return <div key={"mw"+i} style={{position:"absolute",width:Math.random()*0.8+0.3,height:Math.random()*0.8+0.3,background:"rgba(200,190,255,"+(Math.random()*0.4+0.1)+")",borderRadius:"50%",top:band+"%",left:spread+"%",animation:"twinkle "+(5+Math.random()*8)+"s ease-in-out infinite "+(Math.random()*8)+"s"}}/>})}
-      {/* Distant tiny stars — deep field */}
-      {Array.from({length:80}).map((_,i)=> <div key={"d"+i} style={{position:"absolute",width:Math.random()*0.6+0.3,height:Math.random()*0.6+0.3,background:"rgba(200,210,240,"+(Math.random()*0.2+0.05)+")",borderRadius:"50%",top:Math.random()*100+"%",left:Math.random()*100+"%"}}/>)}
+    <div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:0}}>
+      {/* Nebula patches */}
+      <div style={{position:"absolute",width:"60%",height:"40%",top:"5%",right:"-10%",background:"radial-gradient(ellipse,rgba(120,80,200,0.06) 0%,transparent 70%)",filter:"blur(40px)"}}/>
+      <div style={{position:"absolute",width:"50%",height:"30%",bottom:"20%",left:"-5%",background:"radial-gradient(ellipse,rgba(60,100,180,0.05) 0%,transparent 70%)",filter:"blur(30px)"}}/>
       {/* Small stars */}
-      {Array.from({length:50}).map((_,i)=> <div key={"s"+i} style={{position:"absolute",width:Math.random()+0.6,height:Math.random()+0.6,background:"rgba(210,220,255,"+(Math.random()*0.35+0.15)+")",borderRadius:"50%",top:Math.random()*100+"%",left:Math.random()*100+"%",animation:"twinkle "+(4+Math.random()*6)+"s ease-in-out infinite "+(Math.random()*6)+"s"}}/>)}
-      {/* Medium stars */}
-      {Array.from({length:20}).map((_,i)=> <div key={"m"+i} style={{position:"absolute",width:Math.random()*1.5+1.2,height:Math.random()*1.5+1.2,background:"rgba(220,230,255,"+(Math.random()*0.5+0.25)+")",borderRadius:"50%",top:Math.random()*100+"%",left:Math.random()*100+"%",boxShadow:"0 0 "+(4+Math.random()*5)+"px rgba(220,230,255,0.35)",animation:"twinkle "+(3+Math.random()*4)+"s ease-in-out infinite "+(Math.random()*4)+"s"}}/>)}
+      {Array.from({length:60}).map((_,i)=><div key={"s"+i} style={{position:"absolute",width:Math.random()*1+0.6,height:Math.random()*1+0.6,background:`rgba(210,220,255,${Math.random()*0.35+0.15})`,borderRadius:"50%",top:Math.random()*100+"%",left:Math.random()*100+"%"}}/>)}
+      {/* Medium stars - clearly visible */}
+      {Array.from({length:25}).map((_,i)=><div key={"m"+i} style={{position:"absolute",width:Math.random()*1.5+1.2,height:Math.random()*1.5+1.2,background:`rgba(220,230,255,${Math.random()*0.5+0.25})`,borderRadius:"50%",top:Math.random()*100+"%",left:Math.random()*100+"%",boxShadow:`0 0 ${4+Math.random()*5}px rgba(220,230,255,0.4)`}}/>)}
       {/* Bright accent stars */}
-      {Array.from({length:10}).map((_,i)=>{const colors=["rgba(251,191,36,0.6)","rgba(167,139,250,0.5)","rgba(52,211,153,0.4)","rgba(96,165,250,0.5)","rgba(244,114,182,0.35)","rgba(251,191,36,0.45)","rgba(200,210,255,0.65)","rgba(167,139,250,0.4)","rgba(255,200,150,0.4)","rgba(130,200,255,0.45)"];const c=colors[i%10];return <div key={"b"+i} style={{position:"absolute",width:2+Math.random()*1.5,height:2+Math.random()*1.5,background:c,borderRadius:"50%",top:(Math.random()*80+10)+"%",left:(Math.random()*90+5)+"%",boxShadow:"0 0 10px "+c+", 0 0 3px "+c,animation:"twinkle "+(2+Math.random()*3)+"s ease-in-out infinite "+(Math.random()*3)+"s"}}/>})}
-      {/* Shooting stars */}
-      <div style={{position:"absolute",top:"8%",left:"15%",width:60,height:1,background:"linear-gradient(90deg, rgba(255,255,255,0.8), rgba(200,180,255,0.4), transparent)",borderRadius:1,boxShadow:"0 0 6px rgba(200,180,255,0.5)",animation:"shootingStar 8s linear infinite 2s",opacity:0}}/>
-      <div style={{position:"absolute",top:"35%",right:"10%",width:45,height:1,background:"linear-gradient(90deg, transparent, rgba(180,200,255,0.5), rgba(255,255,255,0.7))",borderRadius:1,boxShadow:"0 0 4px rgba(180,200,255,0.4)",animation:"shootingStar2 12s linear infinite 7s",opacity:0}}/>
-      <div style={{position:"absolute",top:"55%",left:"40%",width:35,height:1,background:"linear-gradient(90deg, rgba(255,255,255,0.7), rgba(251,191,36,0.3), transparent)",borderRadius:1,boxShadow:"0 0 5px rgba(251,191,36,0.3)",animation:"shootingStar 15s linear infinite 12s",opacity:0}}/>
+      {Array.from({length:8}).map((_,i)=>{const colors=["rgba(251,191,36,0.6)","rgba(167,139,250,0.5)","rgba(52,211,153,0.45)","rgba(96,165,250,0.5)","rgba(244,114,182,0.4)","rgba(251,191,36,0.5)","rgba(200,210,255,0.6)","rgba(167,139,250,0.45)"];return<div key={"b"+i} style={{position:"absolute",width:2.5+Math.random(),height:2.5+Math.random(),background:colors[i],borderRadius:"50%",top:Math.random()*80+10+"%",left:Math.random()*90+5+"%",boxShadow:`0 0 12px ${colors[i]}, 0 0 4px ${colors[i]}`}}/>})}
     </div>
-    {/* Daytime warm overlay */}
-    {isDaytime&&!isNightMode&&<div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:0,background:"linear-gradient(180deg, rgba(80,70,140,0.08) 0%, rgba(60,50,120,0.04) 40%, transparent 70%)",transition:"opacity 2s"}}/>}
     {toast&&<Toast message={toast} onUndo={undoRef.current?handleUndo:null} onClose={()=>setToast(null)}/>}
     <div style={{position:"relative",zIndex:1}}>
       {page==="home"&&<div style={{animation:"fadeIn .3s"}}>
@@ -1235,36 +1120,35 @@ function App(){
           <div style={{flex:1}}><h1 style={{fontSize:20,fontWeight:800,margin:0,letterSpacing:-0.5}}>{babyName}</h1><div style={{fontSize:11,color:T.sub,marginTop:2}}>{age&&<>{age.months>0?`${age.months} ${_lang==="en"?(age.months===1?"month":"months"):(age.months===1?"mês":"meses")}${_lang==="en"?" and ":" e "}`:""}{age.days} {_lang==="en"?"days":"dias"}</>}</div></div>
           <div style={{textAlign:"right"}}><div style={{fontSize:10,color:T.dim}}>{new Date().toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{day:"numeric",month:"short"})}</div><div style={{fontSize:8,color:T.dim,opacity:0.5,marginTop:2}}>v{APP_VERSION}</div></div>
         </div>
-        <div style={{padding:"4px 0 0"}}><Ring activeTimer={activeTimer} napSug={napSug} tick={tick} recentEvents={ringEvents} lang={lang} onEditNightStart={editNightStart}/></div>
-        <div style={{display:"flex",gap:8,padding:"0 20px",marginBottom:14}}>{!activeTimer?.startTime&&!isNightMode&&<><button onClick={()=>{setFormType("bottle");setShowAdd(false)}} style={{flex:1,padding:"10px 0",borderRadius:12,background:T.greenS,border:`1px solid ${T.green}22`,display:"flex",alignItems:"center",justifyContent:"center",gap:5}}><Icon name="bottle" size={13} color={T.green}/><span style={{fontSize:11,fontWeight:700,color:T.green}}>{_lang==="en"?"Bottle":"Mamad."}</span></button><button onClick={()=>startTimer("nap")} style={{flex:1,padding:"10px 0",borderRadius:12,background:`${T.accent}15`,border:`1px solid ${T.accent}22`,display:"flex",alignItems:"center",justifyContent:"center",gap:5}}><Icon name="play" size={12} color={T.accent}/><span style={{fontSize:11,fontWeight:700,color:T.accent}}>{_lang==="en"?"Nap":"Soneca"}</span></button><button onClick={()=>startTimer("sleep")} style={{flex:1,padding:"10px 0",borderRadius:12,background:T.purpleS,border:`1px solid ${T.purple}22`,display:"flex",alignItems:"center",justifyContent:"center",gap:5}}><Icon name="play" size={12} color={T.purple}/><span style={{fontSize:11,fontWeight:700,color:T.purple}}>{_lang==="en"?"Sleep":"Sono"}</span></button></>}{!activeTimer?.startTime&&isNightMode&&<><button onClick={()=>{setFormType("bottle");setShowAdd(false)}} style={{flex:1,padding:"10px 0",borderRadius:12,background:T.greenS,border:`1px solid ${T.green}22`,display:"flex",alignItems:"center",justifyContent:"center",gap:5}}><Icon name="bottle" size={13} color={T.green}/><span style={{fontSize:11,fontWeight:700,color:T.green}}>{_lang==="en"?"Bottle":"Mamad."}</span></button><button onClick={()=>startTimer("sleep")} style={{flex:1,padding:"10px 0",borderRadius:12,background:T.purpleS,border:`1px solid ${T.purple}22`,display:"flex",alignItems:"center",justifyContent:"center",gap:5}}><Icon name="play" size={12} color={T.purple}/><span style={{fontSize:11,fontWeight:700,color:T.purple}}>{_lang==="en"?"Sleep":"Dormir"}</span></button><button onClick={async()=>{await FB.saveTimer(null);showToast(_lang==="en"?"Good morning!":"Bom dia!",null)}} style={{flex:1,padding:"10px 0",borderRadius:12,background:T.amberS,border:`1px solid ${T.amber}22`,display:"flex",alignItems:"center",justifyContent:"center",gap:5}}><Icon name="sun" size={13} color={T.amber}/><span style={{fontSize:11,fontWeight:700,color:T.amber}}>{_lang==="en"?"Morning":"Bom dia"}</span></button></>}</div>
-        {!isNightMode&&napSug?.wind&&<div style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:T.amberS,border:`1px solid ${T.amber}22`,display:"flex",alignItems:"center",gap:10,animation:"pulse 2s infinite"}}><Icon name="bell" size={18} color={T.amber}/><div><div style={{fontSize:12,fontWeight:700,color:T.amber}}>{_lang==="en"?"Get ready for sleep":"Preparar para dormir"}</div><div style={{fontSize:10,color:T.sub}}>{_lang==="en"?`~${napSug.rem}min left`:`~${napSug.rem}min restantes`}</div></div></div>}
-        {!isNightMode&&napSug?.over&&<div style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:T.orangeS,border:`1px solid ${T.orange}22`,display:"flex",alignItems:"center",gap:10,animation:"pulse 1.5s infinite"}}><Icon name="zap" size={18} color={T.orange}/><div><div style={{fontSize:12,fontWeight:700,color:T.orange}}>{_lang==="en"?"Sleep window passed":"Janela de sono passou"}</div><div style={{fontSize:10,color:T.sub}}>{_lang==="en"?`${fmtDur(napSug.el)} awake`:`${fmtDur(napSug.el)} acordado(a)`}</div></div></div>}
+        <div style={{padding:"4px 0 0"}}><Ring activeTimer={activeTimer} napSug={napSug} tick={tick} recentEvents={todayE} lang={lang}/></div>
+        <div style={{display:"flex",gap:8,padding:"0 20px",marginBottom:14}}>{!activeTimer&&<><button onClick={()=>{setFormType("bottle");setShowAdd(false)}} style={{flex:1,padding:"10px 0",borderRadius:12,background:T.greenS,border:`1px solid ${T.green}22`,display:"flex",alignItems:"center",justifyContent:"center",gap:5}}><Icon name="bottle" size={13} color={T.green}/><span style={{fontSize:11,fontWeight:700,color:T.green}}>{_lang==="en"?"Bottle":"Mamad."}</span></button><button onClick={()=>startTimer("nap")} style={{flex:1,padding:"10px 0",borderRadius:12,background:`${T.accent}15`,border:`1px solid ${T.accent}22`,display:"flex",alignItems:"center",justifyContent:"center",gap:5}}><Icon name="play" size={12} color={T.accent}/><span style={{fontSize:11,fontWeight:700,color:T.accent}}>{_lang==="en"?"Nap":"Soneca"}</span></button><button onClick={()=>startTimer("sleep")} style={{flex:1,padding:"10px 0",borderRadius:12,background:T.purpleS,border:`1px solid ${T.purple}22`,display:"flex",alignItems:"center",justifyContent:"center",gap:5}}><Icon name="play" size={12} color={T.purple}/><span style={{fontSize:11,fontWeight:700,color:T.purple}}>{_lang==="en"?"Sleep":"Sono"}</span></button></>}</div>
+        {napSug?.wind&&<div style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:T.amberS,border:`1px solid ${T.amber}22`,display:"flex",alignItems:"center",gap:10,animation:"pulse 2s infinite"}}><Icon name="bell" size={18} color={T.amber}/><div><div style={{fontSize:12,fontWeight:700,color:T.amber}}>{_lang==="en"?"Get ready for sleep":"Preparar para dormir"}</div><div style={{fontSize:10,color:T.sub}}>{_lang==="en"?`~${napSug.rem}min left`:`~${napSug.rem}min restantes`}</div></div></div>}
+        {napSug?.over&&<div style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:T.orangeS,border:`1px solid ${T.orange}22`,display:"flex",alignItems:"center",gap:10,animation:"pulse 1.5s infinite"}}><Icon name="zap" size={18} color={T.orange}/><div><div style={{fontSize:12,fontWeight:700,color:T.orange}}>{_lang==="en"?"Sleep window passed":"Janela de sono passou"}</div><div style={{fontSize:10,color:T.sub}}>{_lang==="en"?`${fmtDur(napSug.el)} awake`:`${fmtDur(napSug.el)} acordado(a)`}</div></div></div>}
+        <MlGoalBar current={totalMl} goal={profile.mlGoal}/>
         <LastFeedCard entries={entries}/>
-        <LastDiaperCard entries={entries}/>
-        <LastMedicineCard entries={entries}/>
-        {!isNightMode&&<WeeklyCard entries={entries}/>}
-        {!isNightMode&&<div style={{padding:"0 20px",marginBottom:14}}><div style={{display:"flex",background:T.glass,borderRadius:14,border:`1px solid ${T.gB}`}}>{[{i:"bottle",v:`${totalMl}`,u:"ml",c:T.green},{i:"breast",v:totalNursingMin>0?fmtDur(totalNursingMin):`${totalNursing}x`,c:T.blue},{i:"moon",v:fmtDur(totalSleep),c:T.purple},{i:"droplet",v:`${totalDiapers}`,c:T.pink}].map((p,idx)=><div key={idx} style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:5,padding:"10px 2px"}}><Icon name={p.i} size={14} color={p.c}/><span style={{fontSize:12,fontWeight:700,color:p.c}}>{p.v}{p.u?<span style={{fontSize:10,fontWeight:500,opacity:0.7}}>{p.u}</span>:null}</span></div>)}</div></div>}
-        {!isNightMode&&<div style={{padding:"0 20px"}}><div style={{fontSize:12,fontWeight:600,color:T.dim,marginBottom:8,textTransform:"uppercase",letterSpacing:0.8}}>{L("today")}</div>{todayE.length===0&&<div style={{textAlign:"center",padding:"32px 20px",color:T.dim}}><Icon name="star" size={32} color={T.dim} fill={T.dim}/><div style={{fontSize:13,marginTop:8}}>{_lang==="en"?"Tap + to add":"Toque + para registrar"}</div></div>}{todayE.map(e=><EntryRow key={e.id} entry={e} onDelete={deleteEntry} onEdit={startEdit}/>)}</div>}
-        {isNightMode&&<div style={{padding:"0 20px"}}><div style={{fontSize:12,fontWeight:600,color:T.dim,marginBottom:8,textTransform:"uppercase",letterSpacing:0.8}}>{_lang==="en"?"Tonight":"Esta noite"}</div>{nightEvents.filter(e=>e.type!=="sleep"&&e.type!=="nap").length===0&&<div style={{textAlign:"center",padding:"20px",color:T.dim}}><Icon name="moon" size={24} color={T.purple}/><div style={{fontSize:12,marginTop:6,color:T.sub}}>{_lang==="en"?"Sweet dreams":"Bons sonhos"}</div></div>}{nightEvents.filter(e=>e.type!=="sleep"&&e.type!=="nap").map(e=><EntryRow key={e.id} entry={e} onDelete={deleteEntry} onEdit={startEdit}/>)}</div>}
+        <WeeklyCard entries={entries}/>
+        <div style={{padding:"0 20px",marginBottom:14}}><div style={{display:"flex",background:T.glass,borderRadius:14,border:`1px solid ${T.gB}`}}>{[{i:"bottle",v:`${totalMl}`,u:"ml",c:T.green},{i:"breast",v:totalNursingMin>0?fmtDur(totalNursingMin):`${totalNursing}x`,c:T.blue},{i:"moon",v:fmtDur(totalSleep),c:T.purple},{i:"droplet",v:`${totalDiapers}`,c:T.pink}].map((p,idx)=><div key={idx} style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:5,padding:"10px 2px"}}><Icon name={p.i} size={14} color={p.c}/><span style={{fontSize:12,fontWeight:700,color:p.c}}>{p.v}{p.u?<span style={{fontSize:10,fontWeight:500,opacity:0.7}}>{p.u}</span>:null}</span></div>)}</div></div>
+        {entries.length>0&&<div style={{padding:"0 20px",marginBottom:14}}><button onClick={duplicateLast} style={{width:"100%",padding:"10px 14px",borderRadius:12,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}><Icon name="copy" size={14} color={T.sub}/><span style={{fontSize:12,fontWeight:600,color:T.sub}}>{L("repeatLast")}: {TL(entries[0].type)}</span></button></div>}
+        <div style={{padding:"0 20px"}}><div style={{fontSize:12,fontWeight:600,color:T.dim,marginBottom:8,textTransform:"uppercase",letterSpacing:0.8}}>{L("today")}</div>{todayE.length===0&&<div style={{textAlign:"center",padding:"32px 20px",color:T.dim}}><Icon name="star" size={32} color={T.dim} fill={T.dim}/><div style={{fontSize:13,marginTop:8}}>{_lang==="en"?"Tap + to add":"Toque + para registrar"}</div></div>}{todayE.map(e=><EntryRow key={e.id} entry={e} onDelete={deleteEntry} onEdit={startEdit}/>)}</div>
       </div>}
       {page==="history"&&<HistoryPage entries={entries} onDelete={deleteEntry} onEdit={startEdit}/>}
       {page==="stats"&&<StatsPage entries={entries} onGrowth={()=>goTo("growth")}/>}
       {page==="growth"&&<GrowthPage entries={entries} birthDate={profile.birthDate} profile={profile} onBack={()=>goTo("stats")} onAddEntry={addEntry}/>}
       {/* Bottom spacer so content clears nav bar */}
-      <div style={{height:activeTimer?.startTime?170:100}}/>
+      <div style={{height:activeTimer?170:100}}/>
     </div>
 
     {/* Fade gradient above nav */}
     <div style={{position:"fixed",bottom:0,left:0,right:0,maxWidth:480,margin:"0 auto",height:100,background:`linear-gradient(to bottom, transparent 0%, ${T.bg1}ee 50%, ${T.bg1} 100%)`,pointerEvents:"none",zIndex:40}}/>
 
     <Modal open={showSleepInfo} onClose={()=>setShowSleepInfo(false)}>
-      {sleepRec?.phase===1&&<><div style={{textAlign:"center",marginBottom:16}}><Icon name="star" size={40} color={T.accent} fill={T.accent}/></div><div style={{textAlign:"center",fontSize:22,fontWeight:800,marginBottom:6}}>{sleepRec.dl} {_lang==="en"?"days":"dias"}</div><div style={{textAlign:"center",fontSize:13,color:T.sub,marginBottom:16}}>{_lang==="en"?`until ${babyName}'s sleep plan`:`para o plano de sono de ${babyName}`}</div><div style={{height:4,borderRadius:2,background:T.bg1,marginBottom:16,overflow:"hidden",filter:`drop-shadow(0 0 5px ${T.accent}44)`}}><div style={{height:"100%",width:`${Math.max(0,Math.min(100,((60-sleepRec.dl)/60)*100))}%`,background:T.accent,borderRadius:2}}/></div><div style={{fontSize:12,color:T.sub,lineHeight:1.6}}>{_lang==="en"?"At 2 months the circadian rhythm matures. Keep tracking.":"Aos 2 meses o ritmo circadiano amadurece. Continue registrando."}</div><div style={{marginTop:14,padding:"10px 12px",borderRadius:10,background:"rgba(14,18,48,0.6)",fontSize:11,color:T.dim}}>{_lang==="en"?"Window":"Janela"}: {sleepRec.g.min}–{sleepRec.g.max} min · {sleepRec.g.naps} {_lang==="en"?"naps/day":"sonecas/dia"}</div></>}
+      {sleepRec?.phase===1&&<><div style={{textAlign:"center",marginBottom:16}}><Icon name="star" size={40} color={T.accent} fill={T.accent}/></div><div style={{textAlign:"center",fontSize:22,fontWeight:800,marginBottom:6}}>{sleepRec.dl} {_lang==="en"?"days":"dias"}</div><div style={{textAlign:"center",fontSize:13,color:T.sub,marginBottom:16}}>{_lang==="en"?`until ${babyName}'s sleep plan`:`para o plano de sono de ${babyName}`}</div><div style={{height:4,borderRadius:2,background:T.bg1,marginBottom:16,overflow:"hidden",filter:`drop-shadow(0 0 5px ${c}44)`}}><div style={{height:"100%",width:`${Math.max(0,Math.min(100,((60-sleepRec.dl)/60)*100))}%`,background:T.accent,borderRadius:2}}/></div><div style={{fontSize:12,color:T.sub,lineHeight:1.6}}>{_lang==="en"?"At 2 months the circadian rhythm matures. Keep tracking.":"Aos 2 meses o ritmo circadiano amadurece. Continue registrando."}</div><div style={{marginTop:14,padding:"10px 12px",borderRadius:10,background:"rgba(14,18,48,0.6)",fontSize:11,color:T.dim}}>{_lang==="en"?"Window":"Janela"}: {sleepRec.g.min}–{sleepRec.g.max} min · {sleepRec.g.naps} {_lang==="en"?"naps/day":"sonecas/dia"}</div></>}
       {sleepRec?.phase===2&&<><div style={{textAlign:"center",marginBottom:12}}><Icon name="check" size={36} color={T.green}/></div><div style={{textAlign:"center",fontSize:16,fontWeight:700,marginBottom:14}}>{_lang==="en"?"Sleep plan active":"Plano de sono ativo"}</div>{sleepRec.a?<><div style={{padding:10,borderRadius:10,background:T.greenS,textAlign:"center",marginBottom:14}}><div style={{fontSize:9,color:T.sub,textTransform:"uppercase",marginBottom:4}}>{_lang==="en"?"Recommended":"Recomendado"}</div><div style={{fontSize:18,fontWeight:800,color:T.green}}>{fmtDur(sleepRec.a.rec)}</div></div><div style={{fontSize:11,color:T.dim}}>{_lang==="en"?`Based on ${sleepRec.a.pts} observations`:`Baseado em ${sleepRec.a.pts} observações`}</div></>:<div style={{fontSize:12,color:T.sub}}>{_lang==="en"?"Track more data to personalize.":"Registre mais dados para personalizar."}</div>}</>}
     </Modal>
 
     <Sheet open={showAdd&&!formType} onClose={()=>setShowAdd(false)}>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"10px 0",padding:"0 16px"}}>{["bottle","nursing","sleep","nap","diaper","medicine","temperature","pumping"].map((type,i)=>{const cfg=TYPES[type];const last=entries.find(e=>e.type===type);const agoRaw=last?timeSince(last.date,last.time):null;const ago=agoRaw==="now"?"Just now":agoRaw;return(<button key={type} onClick={()=>setFormType(type)} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:10,padding:"12px 4px 8px",animation:`slideUp .3s ease ${i*0.035}s both`}}>
-        <div style={{width:70,height:70,borderRadius:"50%",background:`radial-gradient(circle at 35% 30%, rgba(50,60,120,0.95), rgba(18,22,55,0.98))`,border:`1.5px solid ${cfg.color}25`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 4px 20px rgba(0,0,0,0.4), 0 0 24px ${cfg.color}18, 0 0 48px ${cfg.color}08, inset 0 1px 0 rgba(200,210,255,0.08), inset 0 -2px 4px rgba(0,0,0,0.2)`,position:"relative",overflow:"hidden",filter:`drop-shadow(0 0 5px ${cfg.color}44)`}}>
+        <div style={{width:70,height:70,borderRadius:"50%",background:`radial-gradient(circle at 35% 30%, rgba(50,60,120,0.95), rgba(18,22,55,0.98))`,border:`1.5px solid ${cfg.color}25`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 4px 20px rgba(0,0,0,0.4), 0 0 24px ${cfg.color}18, 0 0 48px ${cfg.color}08, inset 0 1px 0 rgba(200,210,255,0.08), inset 0 -2px 4px rgba(0,0,0,0.2)`,position:"relative",overflow:"hidden",filter:`drop-shadow(0 0 5px ${c}44)`}}>
           {/* Inner glow spot */}
           <div style={{position:"absolute",top:"15%",left:"25%",width:"40%",height:"30%",background:`radial-gradient(ellipse,${cfg.color}12,transparent)`,borderRadius:"50%",filter:"blur(6px)"}}/>
           <Icon name={cfg.icon} size={27} color={cfg.color}/>
@@ -1274,14 +1158,11 @@ function App(){
     </Sheet>
 
     <Sheet open={!!formType} onClose={()=>{setFormType(null);setEditEntry(null)}}>
-      {formType==="nursing"&&!editEntry?<div style={{padding:"0 20px 20px"}}>
-        <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:20}}><div style={{width:32,height:32,borderRadius:10,background:T.blueS,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="breast" size={18} color={T.blue}/></div><span style={{fontSize:17,fontWeight:700}}>{TL("nursing")}</span></div>
-        <div style={{display:"flex",gap:12}}><button onClick={()=>startNursing("left")} style={{flex:1,padding:"28px 12px",borderRadius:16,background:T.blueS,border:`1.5px solid ${T.blue}33`,textAlign:"center"}}><div style={{fontSize:32,fontWeight:800,color:T.blue}}>L</div><div style={{fontSize:13,fontWeight:600,color:T.blue,marginTop:6}}>{_lang==="en"?"Left":"Esquerdo"}</div></button><button onClick={()=>startNursing("right")} style={{flex:1,padding:"28px 12px",borderRadius:16,background:T.blueS,border:`1.5px solid ${T.blue}33`,textAlign:"center"}}><div style={{fontSize:32,fontWeight:800,color:T.blue}}>R</div><div style={{fontSize:13,fontWeight:600,color:T.blue,marginTop:6}}>{_lang==="en"?"Right":"Direito"}</div></button></div>
-      </div>:formType&&<AddForm type={formType} onSave={addEntry} savedMeds={savedMeds} onSaveMeds={async m=>await FB.saveMeds(m)} editEntry={editEntry}/>}
+      {formType&&<AddForm type={formType} onSave={addEntry} savedMeds={savedMeds} onSaveMeds={async m=>await FB.saveMeds(m)} editEntry={editEntry}/>}
     </Sheet>
 
     {showProfile&&<ProfilePage profile={profile} onSave={async p=>await FB.saveProfile(p)} onBack={()=>setShowProfile(false)} onGrowth={()=>{setShowProfile(false);goTo("growth")}}/>}
-    <TimerBar activeTimer={activeTimer} onStop={stopTimer} onNightWaking={nightWaking} onSwitchSide={switchNursingSide} onEditStart={editTimerStart}/>
+    <TimerBar activeTimer={activeTimer} onStop={stopTimer}/>
 
     <nav style={{position:"fixed",bottom:"calc(2px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 32px)",maxWidth:448,display:"flex",alignItems:"center",justifyContent:"space-around",padding:"8px 12px",background:"rgba(16,20,52,0.92)",backdropFilter:"blur(16px)",borderRadius:22,border:`1px solid ${T.gB}`,boxShadow:"0 8px 32px rgba(0,0,0,0.5)",zIndex:50}}>
       {[{icon:"home",label:L("home"),active:page==="home"&&!showAdd,action:()=>goTo("home")},{icon:"clock",label:L("history"),active:page==="history",action:()=>goTo("history")}].map(n=><button key={n.icon} onClick={n.action} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,padding:"4px 8px",opacity:n.active?1:0.4}}><Icon name={n.icon} size={20} color={n.active?T.accent:T.sub}/><span style={{fontSize:9,fontWeight:600,color:n.active?T.accent:T.dim}}>{n.label}</span></button>)}
