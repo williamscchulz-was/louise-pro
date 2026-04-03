@@ -560,7 +560,11 @@ function Ring({activeTimer,napSug,tick,recentEvents,lang}){
   const wakeEv=evs.find(e=>e.type==="wakeup"||e.type==="nightwaking");
   if(wakeEv){wakeMin=toMin(wakeEv.time)}
   else{const ls=evs.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin>0).sort((a,b)=>(b.date+"T"+b.time).localeCompare(a.date+"T"+a.time))[0];if(ls){const em=toMin(ls.time)+ls.durationMin;if(em>=5*60&&em<=12*60)wakeMin=em}}
-  const dayStart=wakeMin,daySpan=Math.max(1,24*60-dayStart);
+  const dayStart=wakeMin;
+  let dayEnd=24*60;
+  let bedMin=null;
+  if(activeTimer&&activeTimer.type==="sleep"){const st=new Date(activeTimer.startTime);bedMin=st.getHours()*60+st.getMinutes();if(bedMin>dayStart)dayEnd=bedMin}
+  const daySpan=Math.max(1,dayEnd-dayStart);
   const toAng=mins=>{const t=Math.max(0,Math.min(1,(mins-dayStart)/daySpan));return startAng+t*totalArc};
   const descArc=(sA,eA)=>{const s=sA*Math.PI/180,e=eA*Math.PI/180;return`M ${cx+R*Math.cos(s)} ${cy+R*Math.sin(s)} A ${R} ${R} 0 ${eA-sA>180?1:0} 1 ${cx+R*Math.cos(e)} ${cy+R*Math.sin(e)}`};
   const sleepEvs=evs.filter(e=>e.type==="nap"&&e.durationMin>0);
@@ -585,11 +589,12 @@ function Ring({activeTimer,napSug,tick,recentEvents,lang}){
   const dots=groups.map(gr=>({primary:gr[0],items:gr}));
   const totalSleepMin=evs.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin).reduce((s,e)=>s+e.durationMin,0);
 
-  // Anchor: sun at wake-up (ring start)
-  let anchorSun=null;
+  // Anchor: sun at wake-up (ring start), moon at bedtime (ring end)
   const wakeTimeStr=`${String(Math.floor(wakeMin/60)).padStart(2,"0")}:${String(wakeMin%60).padStart(2,"0")}`;
   const sunAng=toAng(wakeMin);const sunRad=sunAng*Math.PI/180;
-  anchorSun={x:cx+R*Math.cos(sunRad),y:cy+R*Math.sin(sunRad),time:wakeTimeStr};
+  const anchorSun={x:cx+R*Math.cos(sunRad),y:cy+R*Math.sin(sunRad),time:wakeTimeStr};
+  let anchorMoon=null;
+  if(bedMin){const bedTimeStr=`${String(Math.floor(bedMin/60)).padStart(2,"0")}:${String(bedMin%60).padStart(2,"0")}`;const moonAng=toAng(bedMin);const moonRad=moonAng*Math.PI/180;anchorMoon={x:cx+R*Math.cos(moonRad),y:cy+R*Math.sin(moonRad),time:bedTimeStr}}
 
   // Live timer arc (nap only, during daytime)
   let timerArc=null;
@@ -633,6 +638,7 @@ function Ring({activeTimer,napSug,tick,recentEvents,lang}){
         </div>}
       </div>)})}
       {anchorSun&&<div style={{position:"absolute",left:anchorSun.x-20,top:anchorSun.y-20,display:"flex",flexDirection:"column",alignItems:"center",zIndex:1,pointerEvents:"none"}}><div style={{width:40,height:40,borderRadius:"50%",background:"radial-gradient(circle at 40% 30%,rgba(251,191,36,0.18),rgba(251,146,60,0.06))",border:"2px solid rgba(251,191,36,0.35)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 16px rgba(251,191,36,0.15)"}}><Icon name="sun" size={18} color="#fbbf24"/></div><span style={{fontSize:9,fontWeight:700,color:"#fbbf24",marginTop:2,textShadow:"0 1px 4px rgba(0,0,0,0.8)"}}>{anchorSun.time}</span></div>}
+      {anchorMoon&&<div style={{position:"absolute",left:anchorMoon.x-20,top:anchorMoon.y-20,display:"flex",flexDirection:"column",alignItems:"center",zIndex:1,pointerEvents:"none"}}><div style={{width:40,height:40,borderRadius:"50%",background:"radial-gradient(circle at 40% 30%,rgba(167,139,250,0.18),rgba(139,124,246,0.06))",border:"2px solid rgba(167,139,250,0.35)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 16px rgba(167,139,250,0.15)"}}><Icon name="moon" size={18} color="#a78bfa"/></div><span style={{fontSize:9,fontWeight:700,color:"#a78bfa",marginTop:2,textShadow:"0 1px 4px rgba(0,0,0,0.8)"}}>{anchorMoon.time}</span></div>}
       <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}><span style={{fontSize:14,color:T.sub,fontWeight:500,letterSpacing:1.5}}>{sub}</span><span style={{fontSize:52,fontWeight:800,letterSpacing:-2,marginTop:4,background:hasProgress?`linear-gradient(135deg,${col2},${col1})`:`linear-gradient(135deg,${T.text},${T.sub})`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>{lbl}</span></div>
       {tip!==null&&<div onClick={()=>setTip(null)} style={{position:"absolute",inset:0,zIndex:1}}/>}
     </div>
