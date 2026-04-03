@@ -338,14 +338,14 @@ function getPercentile(value, table, ageMonths) {
 
 // ── HELPERS ──
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
-const todayStr=()=>new Date().toISOString().slice(0,10);
+const todayStr=()=>{const d=new Date();return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`};
 function nowTime(){const d=new Date();return`${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`}
 function calcAge(b){if(!b)return null;const p=b.split("-");const bi=new Date(+p[0],+p[1]-1,+p[2]);const n=new Date();const n0=new Date(n.getFullYear(),n.getMonth(),n.getDate());let m=(n0.getFullYear()-bi.getFullYear())*12+n0.getMonth()-bi.getMonth(),d=n0.getDate()-bi.getDate();if(d<0){m--;d+=new Date(n0.getFullYear(),n0.getMonth(),0).getDate()}const totalDays=Math.floor((n0-bi)/864e5);return{months:Math.max(0,m),days:Math.max(0,d),totalDays,totalWeeks:Math.floor(totalDays/7)}}
 function fmtDur(m){if(!m)return"0min";const h=Math.floor(m/60),r=m%60;return h>0?(r>0?`${h}h${r}m`:`${h}h`):`${r}min`}
 function fmtTimer(s){return`${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`}
 function timeSince(d,t){if(!d||!t)return"";const diff=Math.floor((new Date()-new Date(`${d}T${t}`))/6e4);if(diff<1)return"now";if(diff<60)return`${diff}min ago`;const h=Math.floor(diff/60);return h<24?`${h}h ago`:`${Math.floor(h/24)}d ago`}
 function minSince(d,t){if(!d||!t)return null;return Math.max(0,Math.floor((new Date()-new Date(`${d}T${t}`))/6e4))}
-function dateOffset(b,o){const d=new Date(b+"T12:00:00");d.setDate(d.getDate()+o);return d.toISOString().slice(0,10)}
+function dateOffset(b,o){const d=new Date(b+"T12:00:00");d.setDate(d.getDate()+o);return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
 
 // Split sleep entry that crosses midnight into two entries
 function splitMidnight(entry){
@@ -738,7 +738,7 @@ function ProfilePage({profile,onSave,onBack,onGrowth}){
 
 function StatsPage({entries,onGrowth}){
   const[period,setPeriod]=useState(7);
-  const days=period==="all"?[...new Set(entries.map(e=>e.date))].sort():Array.from({length:period},(_,i)=>{const d=new Date();d.setDate(d.getDate()-((period-1)-i));return d.toISOString().slice(0,10)});
+  const days=period==="all"?[...new Set(entries.map(e=>e.date))].sort():Array.from({length:period},(_,i)=>{const d=new Date();d.setDate(d.getDate()-((period-1)-i));return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`});
   const numDays=days.length||1;
   const data=days.map(dt=>{const de=entries.filter(e=>e.date===dt);return{date:dt,label:numDays<=14?new Date(dt+"T12:00").toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{weekday:"short"}).replace(".",""):new Date(dt+"T12:00").toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{day:"numeric",month:"numeric"}).replace(/\/\d{4}/,""),ml:de.filter(e=>e.type==="bottle").reduce((s,e)=>s+(e.ml||0),0),sl:de.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin).reduce((s,e)=>s+e.durationMin,0)}});
   const mxMl=Math.max(...data.map(d=>d.ml),1),mxSl=Math.max(...data.map(d=>d.sl),1);
