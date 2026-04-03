@@ -3,6 +3,29 @@
   LOUISE PRO — BABY TRACKER — CHANGELOG
 ═══════════════════════════════════════════════════════════════
 
+  v3.9.0  02/04/2026  Timer live + Nav + Stars + Icons
+    • Timer ativo mostra pill crescendo no ring em tempo real
+    • Ícone pulsando no meio do arc enquanto dorme
+    • Nav bar mais perto do bottom (2px)
+    • Estrelas mais vivas: maiores, glow mais forte, accent duplo
+    • Fix Firebase CDN: revertido pra v9.23.0
+
+  v3.8.0  02/04/2026  Ícones preenchidos (Napper-style)
+    • Todos ícones baby (bottle, moon, cloud, droplet, pill, thermo)
+      preenchidos com linearGradient (40% → 12% opacidade)
+    • Stroke 1.5px refinado em vez de 1.8px
+    • Ícones UI (home, gear, plus) mantidos stroke-only
+    • Cada SVG com <defs> e gradient ID único
+
+  v3.7.0  02/04/2026  Ring v2: anti-overlap + pills dominantes
+    • Dots 36px (era 44px), anti-overlap com gap mínimo 14°
+    • Sleep pills: 3 camadas (glow 52px + borda 44px + fill 38px)
+    • Track fino 5px, quase invisível
+    • Bordas mais vibrantes, glow + drop-shadow em todos ícones
+    • Woke up e Night waking removidos do menu +
+    • Botões rápidos: Bottle · Nap · Sleep
+    • Fix timezone: todayStr() usa hora local
+
   v3.6.0  02/04/2026  Ring Napper-level rewrite
     • Sono/soneca como ARCOS no ring (pill shape roxo com glow)
     • Duração proporcional: sono de 3h ocupa mais que soneca 30min
