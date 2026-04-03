@@ -259,8 +259,9 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "3.7.2";
+const APP_VERSION = "3.8.0";
 const CHANGELOG = [
+  { v: "3.8.0", date: "2026-04-02", changes: "Ícones preenchidos com gradiente (Napper-style): bottle, moon, cloud, droplet, pill, thermo preenchidos" },
   { v: "3.7.0", date: "2026-04-02", changes: "Ring v2: dots 36px anti-overlap (14° min gap), sleep arcs dominantes (48px glow), track fino 5px" },
   { v: "3.6.0", date: "2026-04-02", changes: "Ring Napper: sleep arcs, time-proportional dots, summary awake+sleep, wakeup/nightwaking removed, timezone fix" },
   { v: "3.5.0", date: "2026-04-02", changes: "Ring Napper-level: 300px, ícones 42px com glow+inner light+glass, até 12 eventos, texto 50px" },
@@ -403,43 +404,50 @@ function getNapSug(entries,rec){
   return{el,rem,prog:Math.min(1,el/tgt),wind:rem<=15&&rem>0,over:rem===0&&el>0};
 }
 
-// ── ICON ──
+// ── ICON (filled + gradient for baby icons, stroke for UI) ──
+let _ic=0;
 function Icon({name,size=20,color="currentColor",fill="none"}){
-  const p={width:size,height:size,viewBox:"0 0 24 24",fill,stroke:color,strokeWidth:1.8,strokeLinecap:"round",strokeLinejoin:"round"};
+  const id="ig"+(++_ic);
+  const s=size,v="0 0 24 24",sw=1.5,lc="round",lj="round";
+  const gFill=`url(#${id})`;
+  const grad=<defs><linearGradient id={id} x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor={color} stopOpacity="0.4"/><stop offset="100%" stopColor={color} stopOpacity="0.12"/></linearGradient></defs>;
+  const p={width:s,height:s,viewBox:v,fill:"none",stroke:color,strokeWidth:sw,strokeLinecap:lc,strokeLinejoin:lj};
+  const pu={width:s,height:s,viewBox:v,fill:"none",stroke:color,strokeWidth:2,strokeLinecap:lc,strokeLinejoin:lj};
   const icons={
-    bottle:<svg {...p}><path d="M6 10v9a2 2 0 002 2h8a2 2 0 002-2v-9"/><path d="M6 10l1-4h10l1 4"/><rect x="9" y="2" width="6" height="4" rx="1"/></svg>,
-    breast:<svg {...p}><path d="M12 21c-4-2-7-5-7-9a4.5 4.5 0 019 0 4.5 4.5 0 019 0c0 4-3 7-7 9l-2 1-2-1z"/></svg>,
-    moon:<svg {...p}><path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/></svg>,
-    sun:<svg {...p}><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>,
-    cloud:<svg {...p}><path d="M18 10h1a4 4 0 010 8H7a5 5 0 01-.5-9.96A7 7 0 0118 10z"/></svg>,
-    zap:<svg {...p}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
-    droplet:<svg {...p}><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg>,
-    pill:<svg {...p}><rect x="3" y="7" width="18" height="10" rx="5"/><line x1="12" y1="7" x2="12" y2="17"/></svg>,
-    thermo:<svg {...p}><path d="M14 14.76V3a2 2 0 10-4 0v11.76a4 4 0 104 0z"/></svg>,
-    pump:<svg {...p}><path d="M8 2h8l-1 6H9L8 2z"/><path d="M9 8v10a3 3 0 006 0V8"/><path d="M7 12h10"/></svg>,
-    home:<svg {...p} strokeWidth={2}><path d="M3 12l9-8 9 8"/><path d="M5 10v9a1 1 0 001 1h4v-5h4v5h4a1 1 0 001-1v-9"/></svg>,
-    clock:<svg {...p} strokeWidth={2}><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>,
-    chart:<svg {...p} strokeWidth={2}><line x1="4" y1="20" x2="4" y2="14"/><line x1="10" y1="20" x2="10" y2="8"/><line x1="16" y1="20" x2="16" y2="4"/></svg>,
+    bottle:<svg {...p}>{grad}<rect x="9" y="1.5" width="6" height="4" rx="1.5" fill={gFill} stroke={color} strokeWidth={sw}/><path d="M6.5 10l1-3.5h9l1 3.5"/><rect x="6" y="10" width="12" height="10" rx="2.5" fill={gFill}/><line x1="6" y1="14" x2="18" y2="14" stroke={color} strokeWidth="0.6" opacity="0.25"/></svg>,
+    breast:<svg {...p}>{grad}<path d="M12 21c-4-2-7-5-7-9a4.5 4.5 0 019 0 4.5 4.5 0 019 0c0 4-3 7-7 9l-2 1-2-1z" fill={gFill}/></svg>,
+    moon:<svg {...p}>{grad}<path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z" fill={gFill}/></svg>,
+    sun:<svg {...p}>{grad}<circle cx="12" cy="12" r="5" fill={gFill}/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>,
+    cloud:<svg {...p}>{grad}<path d="M18 10h1a4 4 0 010 8H7a5 5 0 01-.5-9.96A7 7 0 0118 10z" fill={gFill}/></svg>,
+    zap:<svg {...p}>{grad}<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill={gFill}/></svg>,
+    droplet:<svg {...p}>{grad}<path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z" fill={gFill}/></svg>,
+    pill:<svg {...p}>{grad}<rect x="3" y="7" width="18" height="10" rx="5" fill={gFill}/><line x1="12" y1="7" x2="12" y2="17" stroke={color} strokeWidth="0.8" opacity="0.4"/></svg>,
+    thermo:<svg {...p}>{grad}<path d="M14 14.76V3.5a2 2 0 10-4 0v11.26a4 4 0 104 0z" fill={gFill}/><circle cx="12" cy="17" r="1.5" fill={color} opacity="0.5"/></svg>,
+    pump:<svg {...p}>{grad}<path d="M8 2h8l-1 6H9L8 2z" fill={gFill}/><path d="M9 8v10a3 3 0 006 0V8" fill={gFill}/><line x1="7" y1="12" x2="17" y2="12" stroke={color} strokeWidth="0.8" opacity="0.35"/></svg>,
+    home:<svg {...pu}><path d="M3 12l9-8 9 8"/><path d="M5 10v9a1 1 0 001 1h4v-5h4v5h4a1 1 0 001-1v-9"/></svg>,
+    clock:<svg {...pu}><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>,
+    chart:<svg {...pu}><line x1="4" y1="20" x2="4" y2="14"/><line x1="10" y1="20" x2="10" y2="8"/><line x1="16" y1="20" x2="16" y2="4"/></svg>,
     gear:<svg {...p}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-2.82 1.18V21a2 2 0 01-4 0v-.09a1.65 1.65 0 00-1.08-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09a1.65 1.65 0 001.51-1.08 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06a1.65 1.65 0 003.33-.33V3a2 2 0 014 0v.09a1.65 1.65 0 001.08 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06a1.65 1.65 0 00.33 3.33H21a2 2 0 010 4h-.09"/></svg>,
-    plus:<svg {...p} strokeWidth={2.5}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
-    back:<svg {...p} strokeWidth={2.5}><polyline points="15 18 9 12 15 6"/></svg>,
-    forward:<svg {...p} strokeWidth={2.5}><polyline points="9 18 15 12 9 6"/></svg>,
-    check:<svg {...p} strokeWidth={2.5}><polyline points="20 6 9 17 4 12"/></svg>,
-    x:<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2} strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
-    list:<svg {...p} strokeWidth={2}><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/></svg>,
-    star:<svg width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke={color} strokeWidth={1.8} strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
+    plus:<svg width={s} height={s} viewBox={v} fill="none" stroke={color} strokeWidth={2.5} strokeLinecap={lc}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
+    back:<svg width={s} height={s} viewBox={v} fill="none" stroke={color} strokeWidth={2.5} strokeLinecap={lc} strokeLinejoin={lj}><polyline points="15 18 9 12 15 6"/></svg>,
+    forward:<svg width={s} height={s} viewBox={v} fill="none" stroke={color} strokeWidth={2.5} strokeLinecap={lc} strokeLinejoin={lj}><polyline points="9 18 15 12 9 6"/></svg>,
+    check:<svg width={s} height={s} viewBox={v} fill="none" stroke={color} strokeWidth={2.5} strokeLinecap={lc} strokeLinejoin={lj}><polyline points="20 6 9 17 4 12"/></svg>,
+    x:<svg width={s} height={s} viewBox={v} fill="none" stroke={color} strokeWidth={2} strokeLinecap={lc}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+    list:<svg {...pu}><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/></svg>,
+    star:<svg width={s} height={s} viewBox={v} fill={fill} stroke={color} strokeWidth={1.8} strokeLinejoin={lj}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
     bell:<svg {...p}><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>,
-    play:<svg {...p}><polygon points="5 3 19 12 5 21 5 3" fill={color} stroke="none"/></svg>,
-    stop:<svg {...p}><rect x="5" y="5" width="14" height="14" fill={color} stroke="none" rx="2"/></svg>,
+    play:<svg width={s} height={s} viewBox={v}><polygon points="5 3 19 12 5 21 5 3" fill={color} stroke="none"/></svg>,
+    stop:<svg width={s} height={s} viewBox={v}><rect x="5" y="5" width="14" height="14" fill={color} stroke="none" rx="2"/></svg>,
     copy:<svg {...p}><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>,
-    download:<svg {...p} strokeWidth={2}><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>,
+    download:<svg {...pu}><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>,
     target:<svg {...p}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
-    arrowUp:<svg {...p} strokeWidth={2}><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>,
-    arrowDown:<svg {...p} strokeWidth={2}><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>,
-    ruler:<svg {...p}><path d="M21 3L3 21"/><path d="M6 18l-2 2"/><path d="M9 15l-2 2"/><path d="M12 12l-2 2"/><path d="M15 9l-2 2"/><path d="M18 6l-2 2"/></svg>,
+    arrowUp:<svg {...pu}><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>,
+    arrowDown:<svg {...pu}><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>,
+    ruler:<svg {...p}><path d="M21 3L3 21"/><path d="M6 18l-2 2M9 15l-2 2M12 12l-2 2M15 9l-2 2M18 6l-2 2"/></svg>,
   };
   return icons[name]||<svg {...p}><circle cx="12" cy="12" r="8"/></svg>;
 }
+
 
 // ── THEME ──
 const T={bg1:"#070b1e",bg2:"#0d1133",bg3:"#141a42",glass:"rgba(22,28,60,0.6)",gB:"rgba(90,100,180,0.12)",text:"#e4e6f5",sub:"#8b90b8",dim:"#555a80",accent:"#8b7cf6",green:"#34d399",greenS:"rgba(52,211,153,0.1)",purple:"#a78bfa",purpleS:"rgba(167,139,250,0.1)",pink:"#f472b6",pinkS:"rgba(244,114,182,0.1)",amber:"#fbbf24",amberS:"rgba(251,191,36,0.1)",orange:"#fb923c",orangeS:"rgba(251,146,60,0.1)",blue:"#60a5fa",blueS:"rgba(96,165,250,0.1)",red:"#f87171",redS:"rgba(248,113,113,0.1)",cyan:"#22d3ee",cyanS:"rgba(34,211,238,0.1)"};
