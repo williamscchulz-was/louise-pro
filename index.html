@@ -3,6 +3,15 @@
   LOUISE PRO — BABY TRACKER — CHANGELOG
 ═══════════════════════════════════════════════════════════════
 
+  v5.0.0  03/04/2026  Redesign Napper-style completo
+    • Dots 46px com icon 22px, sleep icons 20px
+    • Stacked grouping: dots proximos agrupados com "..."
+    • Anchor dots: sol (wake-up) e lua (bedtime) no ring
+    • Toast contextual: "Mamadeira registrada! Xml hoje"
+    • Starfield memoizado (useMemo), tick adaptativo 1s/30s
+    • Bottle pre-fill com ultimo ml, haptic vibrate(8)
+    • Removidos LastFeedCard e WeeklyCard (ring mostra tudo)
+
   v3.9.0  02/04/2026  Timer live + Nav + Stars + Icons
     • Timer ativo mostra pill crescendo no ring em tempo real
     • Ícone pulsando no meio do arc enquanto dorme
@@ -284,7 +293,7 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ╚═══════════════════════════════════════════════╝
 const APP_VERSION = "5.0.0";
 const CHANGELOG = [
-  { v: "5.0.0", date: "2026-04-03", changes: "Napper-style: track 20px, dots 46px com glow, sono dominante, so bottle/nursing no ring, estrelas fixas" },
+  { v: "5.0.0", date: "2026-04-03", changes: "Napper-style: track 20px, dots 46px/icon 22px, stacked grouping, anchor sol/lua, toast contextual, starfield memo, tick adaptativo, bottle pre-fill, haptic" },
   { v: "3.9.0", date: "2026-04-02", changes: "Timer live arc no ring (cresce enquanto dorme), nav mais baixo, estrelas mais vivas, ícones filled" },
   { v: "3.8.0", date: "2026-04-02", changes: "Ícones preenchidos com gradiente (Napper-style): bottle, moon, cloud, droplet, pill, thermo preenchidos" },
   { v: "3.7.0", date: "2026-04-02", changes: "Ring v2: dots 36px anti-overlap (14° min gap), sleep arcs dominantes (48px glow), track fino 5px" },
@@ -566,16 +575,35 @@ function Ring({activeTimer,napSug,tick,recentEvents,lang}){
     const midAng=(a1+a2)/2;const midRad=midAng*Math.PI/180;
     return{ev,path:descArc(a1,a2),mx:cx+R*Math.cos(midRad),my:cy+R*Math.sin(midRad),col:TYPES[ev.type]?.color||T.purple};
   });
-  const MIN_GAP=14;
-  const rawDots=dotEvs.map(ev=>{
-    const cfg=TYPES[ev.type];if(!cfg)return null;
-    const mins=toMin(ev.time);const angDeg=startAng+(mins/dayEnd)*totalArc;
-    const angRad=angDeg*Math.PI/180;
-    return{ev,cfg,angDeg,x:cx+R*Math.cos(angRad),y:cy+R*Math.sin(angRad)};
+  const MIN_GAP=22;
+  const rawDots=dotEvs.map(function(ev){
+    var cfg=TYPES[ev.type];if(!cfg)return null;
+    var mins=toMin(ev.time);var angDeg=startAng+(mins/dayEnd)*totalArc;
+    var angRad=angDeg*Math.PI/180;
+    return{ev:ev,cfg:cfg,angDeg:angDeg,x:cx+R*Math.cos(angRad),y:cy+R*Math.sin(angRad)};
   }).filter(Boolean);
-  const dots=[];
-  for(const d of rawDots){if(!dots.some(fd=>Math.abs(fd.angDeg-d.angDeg)<MIN_GAP))dots.push(d)}
+  var groups=[];
+  rawDots.forEach(function(d){
+    var found=false;
+    for(var g=0;g<groups.length;g++){
+      if(Math.abs(groups[g][0].angDeg-d.angDeg)<MIN_GAP){groups[g].push(d);found=true;break}
+    }
+    if(!found)groups.push([d]);
+  });
+  var dots=groups.map(function(grp){
+    return{primary:grp[0],items:grp};
+  });
   const totalSleepMin=evs.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin).reduce((s,e)=>s+e.durationMin,0);
+
+  // Anchor dots: sun at wake-up, moon at bedtime
+  var anchorSun=null;var anchorMoon=null;
+  var wakeEv=evs.find(function(e){return e.type==="wakeup"||e.type==="nightwaking"});
+  if(!wakeEv){
+    var lastSleep=evs.filter(function(e){return(e.type==="sleep"||e.type==="nap")&&e.durationMin>0}).sort(function(a,b){return(a.date+"T"+a.time).localeCompare(b.date+"T"+b.time)})[0];
+    if(lastSleep){var endMin=toMin(lastSleep.time)+lastSleep.durationMin;if(endMin<dayEnd){var wAng=startAng+(endMin/dayEnd)*totalArc;var wRad=wAng*Math.PI/180;anchorSun={x:cx+R*Math.cos(wRad),y:cy+R*Math.sin(wRad),time:String(Math.floor(endMin/60)).padStart(2,"0")+":"+String(endMin%60).padStart(2,"0")}}}
+  } else {var wMin=toMin(wakeEv.time);var wAng2=startAng+(wMin/dayEnd)*totalArc;var wRad2=wAng2*Math.PI/180;anchorSun={x:cx+R*Math.cos(wRad2),y:cy+R*Math.sin(wRad2),time:wakeEv.time}}
+  var bedEv=evs.filter(function(e){return e.type==="sleep"}).sort(function(a,b){return(b.date+"T"+b.time).localeCompare(a.date+"T"+a.time)})[0];
+  if(bedEv){var bMin=toMin(bedEv.time);var bAng=startAng+(bMin/dayEnd)*totalArc;var bRad=bAng*Math.PI/180;anchorMoon={x:cx+R*Math.cos(bRad),y:cy+R*Math.sin(bRad),time:bedEv.time}}
 
   // Live timer arc (growing while timer active)
   let timerArc=null;
@@ -605,10 +633,23 @@ function Ring({activeTimer,napSug,tick,recentEvents,lang}){
         {timerArc&&<g><path d={timerArc.path} fill="none" stroke={timerArc.col} strokeWidth={36} strokeLinecap="round" opacity={0.08} filter="url(#slpG)"/><path d={timerArc.path} fill="none" stroke={timerArc.col} strokeWidth={30} strokeLinecap="round" opacity={0.5}/><path d={timerArc.path} fill="none" stroke="rgba(16,12,40,0.85)" strokeWidth={24} strokeLinecap="round"/></g>}
       </svg>
       {/* Sleep icons centered on pills */}
-      {sleepArcs.map((sa,i)=><div key={"si"+i} style={{position:"absolute",left:sa.mx-sleepSz/2,top:sa.my-sleepSz/2,width:sleepSz,height:sleepSz,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",zIndex:3,filter:`drop-shadow(0 0 6px ${sa.col}55)`}}><Icon name={sa.ev.type==="nap"?"cloud":"moon"} size={18} color={sa.col}/></div>)}
+      {sleepArcs.map((sa,i)=><div key={"si"+i} style={{position:"absolute",left:sa.mx-sleepSz/2,top:sa.my-sleepSz/2,width:sleepSz,height:sleepSz,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",zIndex:3,filter:`drop-shadow(0 0 6px ${sa.col}55)`}}><Icon name={sa.ev.type==="nap"?"cloud":"moon"} size={20} color={sa.col}/></div>)}
       {/* Live timer icon */}
-      {timerArc&&<div style={{position:"absolute",left:timerArc.mx-sleepSz/2,top:timerArc.my-sleepSz/2,width:sleepSz,height:sleepSz,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",zIndex:4,filter:`drop-shadow(0 0 8px ${timerArc.col}66)`,animation:"pulse 2s infinite"}}><Icon name={activeTimer.type==="nap"?"cloud":"moon"} size={18} color={timerArc.col}/></div>}
-      {dots.map((d,i)=>{const ev=d.ev,c=d.cfg.color;let detail=TL(ev.type);if(ev.ml)detail+=` \u00b7 ${ev.ml}ml`;else if(ev.subtype)detail+=` \u00b7 ${({wet:L("wet"),dirty:L("dirty"),both:L("both")})[ev.subtype]||""}`;else if(ev.name)detail+=` \u00b7 ${ev.name}`;const active=tip===i;return<div key={ev.id||i} onClick={(e)=>{e.stopPropagation();setTip(active?null:i)}} style={{position:"absolute",left:d.x-dotSz/2,top:d.y-dotSz/2,width:dotSz,height:dotSz,borderRadius:"50%",background:"radial-gradient(circle at 35% 30%,rgba(30,38,80,0.95),rgba(12,16,42,0.98))",border:`2.5px solid ${active?c:c+"77"}`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 2px 10px rgba(0,0,0,0.45), 0 0 ${active?22:16}px ${c}${active?"55":"30"}, inset 0 1px 0 rgba(200,220,255,0.06), inset 0 -1px 3px rgba(0,0,0,0.15)`,zIndex:active?10:2,transform:active?"scale(1.15)":"scale(1)",transition:"all .2s cubic-bezier(0.34,1.56,0.64,1)",overflow:"hidden",filter:`drop-shadow(0 0 5px ${c}44)`}}><div style={{position:"absolute",top:"10%",left:"18%",width:"50%",height:"28%",background:`radial-gradient(ellipse,${c}22,transparent)`,borderRadius:"50%",filter:"blur(3px)"}}/><Icon name={d.cfg.icon} size={16} color={c}/>{active&&<div style={{position:"absolute",bottom:dotSz+6,left:"50%",transform:"translateX(-50%)",whiteSpace:"nowrap",padding:"5px 12px",borderRadius:9,background:"rgba(8,12,35,0.96)",border:`1px solid ${c}25`,boxShadow:"0 4px 16px rgba(0,0,0,0.5)",fontSize:11,fontWeight:600,color:c,zIndex:20,animation:"fadeIn .15s ease"}}>{detail}<span style={{display:"block",fontSize:9,color:T.dim,fontWeight:400,marginTop:1}}>{ev.time}</span><div style={{position:"absolute",bottom:-4,left:"50%",transform:"translateX(-50%) rotate(45deg)",width:7,height:7,background:"rgba(8,12,35,0.96)",borderRight:`1px solid ${c}25`,borderBottom:`1px solid ${c}25`}}/></div>}</div>})}
+      {timerArc&&<div style={{position:"absolute",left:timerArc.mx-sleepSz/2,top:timerArc.my-sleepSz/2,width:sleepSz,height:sleepSz,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",zIndex:4,filter:`drop-shadow(0 0 8px ${timerArc.col}66)`,animation:"pulse 2s infinite"}}><Icon name={activeTimer.type==="nap"?"cloud":"moon"} size={20} color={timerArc.col}/></div>}
+      {dots.map(function(grp,i){var d=grp.primary;var c=d.cfg.color;var isGroup=grp.items.length>1;var active=tip===i;var detailLines=grp.items.map(function(it){var line=TL(it.ev.type);if(it.ev.ml)line=line+" \u00b7 "+it.ev.ml+"ml";else if(it.ev.subtype){var st=it.ev.subtype;line=line+" \u00b7 "+(st==="wet"?L("wet"):st==="dirty"?L("dirty"):L("both"))}return line+" \u00b7 "+it.ev.time});return(<div key={d.ev.id||i} style={{position:"absolute",left:d.x-dotSz/2,top:d.y-dotSz/2}}>
+        {isGroup&&grp.items.slice(1,3).map(function(sd,si){return <div key={"st"+si} style={{position:"absolute",left:4*(si+1),top:4*(si+1),width:dotSz,height:dotSz,borderRadius:"50%",background:"radial-gradient(circle at 35% 30%,rgba(24,30,65,0.9),rgba(8,12,35,0.95))",border:"2px solid "+sd.cfg.color+"44",zIndex:0,boxShadow:"0 2px 8px rgba(0,0,0,0.3)"}}/>})}
+        <div onClick={function(e){e.stopPropagation();setTip(active?null:i)}} style={{position:"relative",width:dotSz,height:dotSz,borderRadius:"50%",background:"radial-gradient(circle at 35% 30%,rgba(30,38,80,0.95),rgba(12,16,42,0.98))",border:"2.5px solid "+(active?c:c+"77"),display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 2px 10px rgba(0,0,0,0.45), 0 0 "+(active?22:16)+"px "+c+(active?"55":"30")+", inset 0 1px 0 rgba(200,220,255,0.06), inset 0 -1px 3px rgba(0,0,0,0.15)",zIndex:active?10:2,transform:active?"scale(1.15)":"scale(1)",transition:"all .2s cubic-bezier(0.34,1.56,0.64,1)",overflow:"hidden",filter:"drop-shadow(0 0 5px "+c+"44)"}}>
+          <div style={{position:"absolute",top:"10%",left:"18%",width:"50%",height:"28%",background:"radial-gradient(ellipse,"+c+"22,transparent)",borderRadius:"50%",filter:"blur(3px)"}}/>
+          <Icon name={d.cfg.icon} size={22} color={c}/>
+          {isGroup&&<div style={{position:"absolute",bottom:2,left:"50%",transform:"translateX(-50%)",display:"flex",gap:2}}><div style={{width:3,height:3,borderRadius:"50%",background:"rgba(255,255,255,0.7)"}}/><div style={{width:3,height:3,borderRadius:"50%",background:"rgba(255,255,255,0.7)"}}/><div style={{width:3,height:3,borderRadius:"50%",background:"rgba(255,255,255,0.7)"}}/></div>}
+        </div>
+        {active&&<div style={{position:"absolute",bottom:dotSz+6,left:"50%",transform:"translateX(-50%)",whiteSpace:"nowrap",padding:"6px 12px",borderRadius:9,background:"rgba(8,12,35,0.96)",border:"1px solid "+c+"25",boxShadow:"0 4px 16px rgba(0,0,0,0.5)",zIndex:20,animation:"fadeIn .15s ease"}}>
+          {detailLines.map(function(ln,li){return <div key={li} style={{fontSize:11,fontWeight:600,color:c,marginBottom:li<detailLines.length-1?3:0}}>{ln}</div>})}
+          <div style={{position:"absolute",bottom:-4,left:"50%",transform:"translateX(-50%) rotate(45deg)",width:7,height:7,background:"rgba(8,12,35,0.96)",borderRight:"1px solid "+c+"25",borderBottom:"1px solid "+c+"25"}}/>
+        </div>}
+      </div>)})}
+      {anchorSun&&<div style={{position:"absolute",left:anchorSun.x-20,top:anchorSun.y-20,display:"flex",flexDirection:"column",alignItems:"center",zIndex:1,pointerEvents:"none"}}><div style={{width:40,height:40,borderRadius:"50%",background:"radial-gradient(circle at 40% 30%,rgba(251,191,36,0.18),rgba(251,146,60,0.06))",border:"2px solid rgba(251,191,36,0.35)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 16px rgba(251,191,36,0.15)"}}><Icon name="sun" size={18} color="#fbbf24"/></div><span style={{fontSize:9,fontWeight:700,color:"#fbbf24",marginTop:2,textShadow:"0 1px 4px rgba(0,0,0,0.8)"}}>{anchorSun.time}</span></div>}
+      {anchorMoon&&<div style={{position:"absolute",left:anchorMoon.x-20,top:anchorMoon.y-20,display:"flex",flexDirection:"column",alignItems:"center",zIndex:1,pointerEvents:"none"}}><div style={{width:40,height:40,borderRadius:"50%",background:"radial-gradient(circle at 40% 30%,rgba(167,139,250,0.18),rgba(139,124,246,0.06))",border:"2px solid rgba(167,139,250,0.35)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 16px rgba(167,139,250,0.15)"}}><Icon name="moon" size={18} color="#a78bfa"/></div><span style={{fontSize:9,fontWeight:700,color:"#a78bfa",marginTop:2,textShadow:"0 1px 4px rgba(0,0,0,0.8)"}}>{anchorMoon.time}</span></div>}
       <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}><span style={{fontSize:14,color:T.sub,fontWeight:500,letterSpacing:1.5}}>{sub}</span><span style={{fontSize:52,fontWeight:800,letterSpacing:-2,marginTop:4,background:hasProgress?`linear-gradient(135deg,${col2},${col1})`:`linear-gradient(135deg,${T.text},${T.sub})`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>{lbl}</span></div>
       {tip!==null&&<div onClick={()=>setTip(null)} style={{position:"absolute",inset:0,zIndex:1}}/>}
     </div>
@@ -653,8 +694,8 @@ function Sheet({open,onClose,children}){const[vis,setVis]=useState(false),[show,
 
 function Modal({open,onClose,children}){const[vis,setVis]=useState(false),[show,setShow]=useState(false);useEffect(()=>{if(open){setVis(true);requestAnimationFrame(()=>requestAnimationFrame(()=>setShow(true)))}else{setShow(false);const t=setTimeout(()=>setVis(false),300);return()=>clearTimeout(t)}},[open]);if(!vis)return null;return(<div style={{position:"fixed",inset:0,zIndex:150,display:"flex",alignItems:"center",justifyContent:"center",padding:24}} onClick={onClose}><div style={{position:"absolute",inset:0,background:"rgba(2,3,10,0.55)",backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",opacity:show?1:0,transition:"opacity .35s"}}/><div onClick={e=>e.stopPropagation()} style={{position:"relative",width:"100%",maxWidth:340,background:"rgba(14,18,52,0.85)",backdropFilter:"blur(40px)",WebkitBackdropFilter:"blur(40px)",borderRadius:24,border:"1px solid rgba(100,115,220,0.12)",boxShadow:"0 16px 48px rgba(0,0,0,0.5), inset 0 1px 0 rgba(140,150,255,0.06)",padding:28,transform:show?"scale(1)":"scale(0.92)",opacity:show?1:0,transition:"all .35s cubic-bezier(0.22,1,0.36,1)"}}><button onClick={onClose} style={{position:"absolute",top:16,right:16,padding:4,color:T.dim}}><Icon name="x" size={16} color={T.dim}/></button>{children}</div></div>)}
 
-function Fld({label,children}){return<div style={{marginBottom:18}}><label style={{fontSize:10,color:T.dim,fontWeight:600,marginBottom:6,display:"block",textTransform:"uppercase",letterSpacing:1.2}}>{label}</label>{children}</div>}
-function Seg({opts,val,set,color}){return<div style={{display:"flex",gap:6}}>{opts.map(o=><button key={o.v} onClick={()=>set(o.v)} style={{flex:1,padding:"12px 4px",borderRadius:10,fontSize:13,fontWeight:600,background:val===o.v?color:T.glass,color:val===o.v?T.bg1:T.text,border:`1px solid ${val===o.v?color:T.gB}`}}>{o.l}</button>)}</div>}
+function Fld({label,children}){return <div style={{marginBottom:18}}><label style={{fontSize:10,color:T.dim,fontWeight:600,marginBottom:6,display:"block",textTransform:"uppercase",letterSpacing:1.2}}>{label}</label>{children}</div>}
+function Seg({opts,val,set,color}){return <div style={{display:"flex",gap:6}}>{opts.map(o=><button key={o.v} onClick={()=>set(o.v)} style={{flex:1,padding:"12px 4px",borderRadius:10,fontSize:13,fontWeight:600,background:val===o.v?color:T.glass,color:val===o.v?T.bg1:T.text,border:`1px solid ${val===o.v?color:T.gB}`}}>{o.l}</button>)}</div>}
 
 function EntryRow({entry,onDelete,onEdit}){const[del,setDel]=useState(false);const cfg=TYPES[entry.type]||{label:entry.type,icon:"star",color:T.text,bg:T.glass};let detail="";if(entry.ml)detail=`${entry.ml} ml`;else if(entry.durationMin)detail=fmtDur(entry.durationMin);else if(entry.subtype)detail=({wet:"Xixi",dirty:"Cocô",both:"Ambos"})[entry.subtype]||"";else if(entry.name)detail=entry.name+(entry.dose?` · ${entry.dose}`:"");else if(entry.value)detail=`${entry.value}°C`;else if(entry.weightKg||entry.lengthCm||entry.headCm){const parts=[];if(entry.weightKg)parts.push(`${entry.weightKg}kg`);if(entry.lengthCm)parts.push(`${entry.lengthCm}cm`);if(entry.headCm)parts.push(`Cab. ${entry.headCm}cm`);detail=parts.join(" · ")}if(entry.type==="nursing"&&entry.side)detail=(detail?detail+" · ":"")+({left:"Esq",right:"Dir",both:"Ambos"}[entry.side]||"");return(<div style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",marginBottom:4,background:T.glass,borderRadius:12,borderLeft:`3px solid ${cfg.color}`}}>
   <button onClick={()=>onEdit&&onEdit(entry)} style={{width:34,height:34,borderRadius:10,background:cfg.bg,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name={cfg.icon} size={16} color={cfg.color}/></button>
@@ -663,10 +704,10 @@ function EntryRow({entry,onDelete,onEdit}){const[del,setDel]=useState(false);con
   {!del?<button onClick={()=>setDel(true)} style={{padding:4,color:T.dim,opacity:0.4}}><Icon name="x" size={14} color={T.dim}/></button>:<button onClick={()=>onDelete(entry.id)} style={{padding:"4px 8px",borderRadius:6,fontSize:10,fontWeight:700,background:T.red,color:"#fff"}}>{L("delete")}</button>}
 </div>)}
 
-function AddForm({type,onSave,savedMeds,onSaveMeds,editEntry}){const cfg=TYPES[type];const ed=editEntry||{};
+function AddForm({type,onSave,savedMeds,onSaveMeds,editEntry,lastBottleMl}){const cfg=TYPES[type];const ed=editEntry||{};
   const[date,setDate]=useState(ed.date||todayStr());
   const[time,setTime]=useState(ed.time||nowTime());
-  const[ml,setMl]=useState(ed.ml?String(ed.ml):"");const[durH,setDurH]=useState(ed.durationMin?String(Math.floor(ed.durationMin/60)):"");const[durM,setDurM]=useState(ed.durationMin?String(ed.durationMin%60):"");
+  const[ml,setMl]=useState(ed.ml?String(ed.ml):(type==="bottle"&&lastBottleMl&&!editEntry?String(lastBottleMl):""));const[durH,setDurH]=useState(ed.durationMin?String(Math.floor(ed.durationMin/60)):"");const[durM,setDurM]=useState(ed.durationMin?String(ed.durationMin%60):"");
   const[diaperT,setDiaperT]=useState(ed.subtype||"wet");const[medN,setMedN]=useState(ed.name||"");const[medD,setMedD]=useState(ed.dose||"");
   const[tempV,setTempV]=useState(ed.value?String(ed.value):"");const[side,setSide]=useState(ed.side||"left");const[nurseM,setNurseM]=useState(ed.durationMin&&type==="nursing"?String(ed.durationMin):"");
   const[pumpMl,setPumpMl]=useState(ed.ml&&type==="pumping"?String(ed.ml):"");const[weightKg,setWeightKg]=useState(ed.weightKg?String(ed.weightKg):"");const[lengthCm,setLengthCm]=useState(ed.lengthCm?String(ed.lengthCm):"");
@@ -1020,7 +1061,7 @@ function App(){
   const[splash,setSplash]=useState(true);
   useEffect(()=>{const t=setTimeout(()=>setSplash(false),1800);return()=>clearTimeout(t)},[]);
 
-  useEffect(()=>{const t=setInterval(()=>setTick(k=>k+1),1000);return()=>clearInterval(t)},[]);
+  useEffect(()=>{const iv=activeTimer?1000:30000;const t=setInterval(()=>setTick(k=>k+1),iv);return()=>clearInterval(t)},[activeTimer]);
 
   // Firebase real-time subscriptions
   useEffect(()=>{
@@ -1036,11 +1077,20 @@ function App(){
   const showToast=(msg,fn)=>{undoRef.current=fn;setToast(msg)};
   const handleUndo=()=>{if(undoRef.current)undoRef.current();setToast(null)};
   const addEntry=useCallback(async e=>{
+    if(navigator.vibrate)navigator.vibrate(8);
     const parts=splitMidnight(e);
     for(const p of parts) await FB.addEntry(p);
     setFormType(null);setShowAdd(false);setEditEntry(null);
-    showToast(`${TL(e.type)||e.type} ${editEntry?L("updated"):L("registered")}`,async()=>{for(const p of parts) await FB.delEntry(p.id)});
-  },[editEntry]);
+    var tmsg=TL(e.type)+" "+(editEntry?L("updated"):L("registered"));
+    if(!editEntry){
+      var td=todayStr();
+      var todayAll=entries.filter(function(x){return x.date===td});
+      if(e.type==="bottle"){var mlNow=todayAll.filter(function(x){return x.type==="bottle"}).reduce(function(s,x){return s+(x.ml||0)},0)+(e.ml||0);tmsg=(_lang==="en"?"Bottle logged! ":"Mamadeira registrada! ")+mlNow+"ml "+(_lang==="en"?"today":"hoje")}
+      if(e.type==="diaper"){var dNow=todayAll.filter(function(x){return x.type==="diaper"}).length+1;tmsg=(_lang==="en"?"Diaper logged! ":"Fralda registrada! ")+dNow+"x "+(_lang==="en"?"today":"hoje")}
+      if(e.type==="nursing"){tmsg=_lang==="en"?"Nursing logged!":"Amamentação registrada!"}
+    }
+    showToast(tmsg,async()=>{for(const p of parts) await FB.delEntry(p.id)});
+  },[editEntry,entries]);
 
   const startEdit=useCallback((entry)=>{
     setEditEntry(entry);
@@ -1055,6 +1105,7 @@ function App(){
 
   const today=todayStr();const todayE=useMemo(()=>entries.filter(e=>e.date===today),[entries,today]);
   const totalMl=todayE.filter(e=>e.type==="bottle").reduce((s,e)=>s+(e.ml||0),0);
+  const lastBottleMl=useMemo(function(){var b=entries.find(function(e){return e.type==="bottle"&&e.ml});return b?b.ml:0},[entries]);
   const totalNursingMin=todayE.filter(e=>e.type==="nursing"&&e.durationMin).reduce((s,e)=>s+e.durationMin,0);
   const totalNursing=todayE.filter(e=>e.type==="nursing").length;
   const totalSleep=todayE.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin).reduce((s,e)=>s+e.durationMin,0);
@@ -1071,6 +1122,14 @@ function App(){
     if(napSug?.over&&!prevOver.current&&navigator.vibrate)navigator.vibrate([300,150,300,150,300]);
     prevWind.current=!!napSug?.wind;prevOver.current=!!napSug?.over;
   },[napSug?.wind,napSug?.over]);
+
+  var starfield=useMemo(function(){
+    var small=Array.from({length:60}).map(function(_,i){return{k:"s"+i,w:Math.random()*1+0.6,h:Math.random()*1+0.6,o:Math.random()*0.35+0.15,t:Math.random()*100,l:Math.random()*100}});
+    var med=Array.from({length:25}).map(function(_,i){return{k:"m"+i,w:Math.random()*1.5+1.2,h:Math.random()*1.5+1.2,o:Math.random()*0.5+0.25,t:Math.random()*100,l:Math.random()*100,g:4+Math.random()*5}});
+    var cols=["rgba(251,191,36,0.6)","rgba(167,139,250,0.5)","rgba(52,211,153,0.45)","rgba(96,165,250,0.5)","rgba(244,114,182,0.4)","rgba(251,191,36,0.5)","rgba(200,210,255,0.6)","rgba(167,139,250,0.45)"];
+    var bright=Array.from({length:8}).map(function(_,i){return{k:"b"+i,w:2.5+Math.random(),h:2.5+Math.random(),c:cols[i],t:Math.random()*80+10,l:Math.random()*90+5}});
+    return{small:small,med:med,bright:bright};
+  },[]);
 
   if(splash||loading)return(
     <div style={{background:`radial-gradient(ellipse at 50% 40%,#10153d 0%,${T.bg1} 70%)`,minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",fontFamily:"'Outfit',sans-serif",overflow:"hidden",animation:!splash&&!loading?"":"",opacity:splash?1:0,transition:"opacity .4s"}}>
@@ -1106,11 +1165,11 @@ function App(){
       <div style={{position:"absolute",width:"60%",height:"40%",top:"5%",right:"-10%",background:"radial-gradient(ellipse,rgba(120,80,200,0.06) 0%,transparent 70%)",filter:"blur(40px)"}}/>
       <div style={{position:"absolute",width:"50%",height:"30%",bottom:"20%",left:"-5%",background:"radial-gradient(ellipse,rgba(60,100,180,0.05) 0%,transparent 70%)",filter:"blur(30px)"}}/>
       {/* Small stars */}
-      {Array.from({length:60}).map((_,i)=><div key={"s"+i} style={{position:"absolute",width:Math.random()*1+0.6,height:Math.random()*1+0.6,background:`rgba(210,220,255,${Math.random()*0.35+0.15})`,borderRadius:"50%",top:Math.random()*100+"%",left:Math.random()*100+"%"}}/>)}
-      {/* Medium stars - clearly visible */}
-      {Array.from({length:25}).map((_,i)=><div key={"m"+i} style={{position:"absolute",width:Math.random()*1.5+1.2,height:Math.random()*1.5+1.2,background:`rgba(220,230,255,${Math.random()*0.5+0.25})`,borderRadius:"50%",top:Math.random()*100+"%",left:Math.random()*100+"%",boxShadow:`0 0 ${4+Math.random()*5}px rgba(220,230,255,0.4)`}}/>)}
+      {starfield.small.map(function(s){return <div key={s.k} style={{position:"absolute",width:s.w,height:s.h,background:"rgba(210,220,255,"+s.o+")",borderRadius:"50%",top:s.t+"%",left:s.l+"%"}}/>})}
+      {/* Medium stars */}
+      {starfield.med.map(function(s){return <div key={s.k} style={{position:"absolute",width:s.w,height:s.h,background:"rgba(220,230,255,"+s.o+")",borderRadius:"50%",top:s.t+"%",left:s.l+"%",boxShadow:"0 0 "+s.g+"px rgba(220,230,255,0.4)"}}/>})}
       {/* Bright accent stars */}
-      {Array.from({length:8}).map((_,i)=>{const colors=["rgba(251,191,36,0.6)","rgba(167,139,250,0.5)","rgba(52,211,153,0.45)","rgba(96,165,250,0.5)","rgba(244,114,182,0.4)","rgba(251,191,36,0.5)","rgba(200,210,255,0.6)","rgba(167,139,250,0.45)"];return<div key={"b"+i} style={{position:"absolute",width:2.5+Math.random(),height:2.5+Math.random(),background:colors[i],borderRadius:"50%",top:Math.random()*80+10+"%",left:Math.random()*90+5+"%",boxShadow:`0 0 12px ${colors[i]}, 0 0 4px ${colors[i]}`}}/>})}
+      {starfield.bright.map(function(s){return <div key={s.k} style={{position:"absolute",width:s.w,height:s.h,background:s.c,borderRadius:"50%",top:s.t+"%",left:s.l+"%",boxShadow:"0 0 12px "+s.c+", 0 0 4px "+s.c}}/>})}
     </div>
     {toast&&<Toast message={toast} onUndo={undoRef.current?handleUndo:null} onClose={()=>setToast(null)}/>}
     <div style={{position:"relative",zIndex:1}}>
@@ -1125,8 +1184,6 @@ function App(){
         {napSug?.wind&&<div style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:T.amberS,border:`1px solid ${T.amber}22`,display:"flex",alignItems:"center",gap:10,animation:"pulse 2s infinite"}}><Icon name="bell" size={18} color={T.amber}/><div><div style={{fontSize:12,fontWeight:700,color:T.amber}}>{_lang==="en"?"Get ready for sleep":"Preparar para dormir"}</div><div style={{fontSize:10,color:T.sub}}>{_lang==="en"?`~${napSug.rem}min left`:`~${napSug.rem}min restantes`}</div></div></div>}
         {napSug?.over&&<div style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:T.orangeS,border:`1px solid ${T.orange}22`,display:"flex",alignItems:"center",gap:10,animation:"pulse 1.5s infinite"}}><Icon name="zap" size={18} color={T.orange}/><div><div style={{fontSize:12,fontWeight:700,color:T.orange}}>{_lang==="en"?"Sleep window passed":"Janela de sono passou"}</div><div style={{fontSize:10,color:T.sub}}>{_lang==="en"?`${fmtDur(napSug.el)} awake`:`${fmtDur(napSug.el)} acordado(a)`}</div></div></div>}
         <MlGoalBar current={totalMl} goal={profile.mlGoal}/>
-        <LastFeedCard entries={entries}/>
-        <WeeklyCard entries={entries}/>
         <div style={{padding:"0 20px",marginBottom:14}}><div style={{display:"flex",background:T.glass,borderRadius:14,border:`1px solid ${T.gB}`}}>{[{i:"bottle",v:`${totalMl}`,u:"ml",c:T.green},{i:"breast",v:totalNursingMin>0?fmtDur(totalNursingMin):`${totalNursing}x`,c:T.blue},{i:"moon",v:fmtDur(totalSleep),c:T.purple},{i:"droplet",v:`${totalDiapers}`,c:T.pink}].map((p,idx)=><div key={idx} style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:5,padding:"10px 2px"}}><Icon name={p.i} size={14} color={p.c}/><span style={{fontSize:12,fontWeight:700,color:p.c}}>{p.v}{p.u?<span style={{fontSize:10,fontWeight:500,opacity:0.7}}>{p.u}</span>:null}</span></div>)}</div></div>
         {entries.length>0&&<div style={{padding:"0 20px",marginBottom:14}}><button onClick={duplicateLast} style={{width:"100%",padding:"10px 14px",borderRadius:12,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}><Icon name="copy" size={14} color={T.sub}/><span style={{fontSize:12,fontWeight:600,color:T.sub}}>{L("repeatLast")}: {TL(entries[0].type)}</span></button></div>}
         <div style={{padding:"0 20px"}}><div style={{fontSize:12,fontWeight:600,color:T.dim,marginBottom:8,textTransform:"uppercase",letterSpacing:0.8}}>{L("today")}</div>{todayE.length===0&&<div style={{textAlign:"center",padding:"32px 20px",color:T.dim}}><Icon name="star" size={32} color={T.dim} fill={T.dim}/><div style={{fontSize:13,marginTop:8}}>{_lang==="en"?"Tap + to add":"Toque + para registrar"}</div></div>}{todayE.map(e=><EntryRow key={e.id} entry={e} onDelete={deleteEntry} onEdit={startEdit}/>)}</div>
@@ -1158,7 +1215,7 @@ function App(){
     </Sheet>
 
     <Sheet open={!!formType} onClose={()=>{setFormType(null);setEditEntry(null)}}>
-      {formType&&<AddForm type={formType} onSave={addEntry} savedMeds={savedMeds} onSaveMeds={async m=>await FB.saveMeds(m)} editEntry={editEntry}/>}
+      {formType&&<AddForm type={formType} onSave={addEntry} savedMeds={savedMeds} onSaveMeds={async m=>await FB.saveMeds(m)} editEntry={editEntry} lastBottleMl={lastBottleMl}/>}
     </Sheet>
 
     {showProfile&&<ProfilePage profile={profile} onSave={async p=>await FB.saveProfile(p)} onBack={()=>setShowProfile(false)} onGrowth={()=>{setShowProfile(false);goTo("growth")}}/>}
