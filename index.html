@@ -246,10 +246,7 @@
 
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
-    html{background:#070b1e}
-    html::after{content:'';position:fixed;top:-50px;left:-50px;right:-50px;bottom:-50px;background:#070b1e;z-index:-1;pointer-events:none}
-    body{height:100%;overflow:hidden;overscroll-behavior:none;background:#070b1e}
-    :root{--sab:env(safe-area-inset-bottom,0px)}
+    html,body{height:100%;overflow:hidden;overscroll-behavior:none;background:#070b1e}
     body{font-family:'Outfit',sans-serif;
       -webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
     #root{height:100%;overflow:hidden}
@@ -830,7 +827,7 @@ function TimerBar({activeTimer,onStop,onSwitch,onPause}){const[tick,setTick]=use
     const lSecs=Math.floor(lMs/1000),rSecs=Math.floor(rMs/1000);
     const isL=activeTimer.side==="left";
     const bc=T.blue;
-    return(<div style={{position:"fixed",bottom:"calc(54px + var(--sab))",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 32px)",maxWidth:448,padding:"10px 12px",borderRadius:16,background:"rgba(20,26,66,0.95)",border:`1px solid ${bc}33`,backdropFilter:"blur(12px)",display:"flex",alignItems:"center",gap:8,zIndex:60,boxShadow:`0 4px 24px rgba(0,0,0,0.4), 0 0 20px ${bc}15`}}>
+    return(<div style={{position:"fixed",bottom:"calc(58px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 32px)",maxWidth:448,padding:"10px 12px",borderRadius:16,background:"rgba(20,26,66,0.95)",border:`1px solid ${bc}33`,backdropFilter:"blur(12px)",display:"flex",alignItems:"center",gap:8,zIndex:60,boxShadow:`0 4px 24px rgba(0,0,0,0.4), 0 0 20px ${bc}15`}}>
       <div style={{width:36,height:36,borderRadius:10,background:`${bc}15`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 0 12px ${bc}20`}}><Icon name="breast" size={18} color={bc}/></div>
       <button onClick={()=>onSwitch("left")} style={{flex:1,padding:"6px 4px",borderRadius:10,background:isL?`${bc}20`:"transparent",border:isL?`1px solid ${bc}40`:"1px solid transparent",display:"flex",alignItems:"center",justifyContent:"center",gap:6,position:"relative"}}>
         <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:1}}>
@@ -850,7 +847,7 @@ function TimerBar({activeTimer,onStop,onSwitch,onPause}){const[tick,setTick]=use
     </div>)
   }
   const secs=Math.max(0,Math.floor((Date.now()-new Date(activeTimer.startTime).getTime())/1000));
-  return(<div style={{position:"fixed",bottom:"calc(54px + var(--sab))",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 32px)",maxWidth:448,padding:"12px 16px",borderRadius:16,background:"rgba(20,26,66,0.92)",border:`1px solid ${T.purple}33`,backdropFilter:"blur(12px)",display:"flex",alignItems:"center",gap:12,zIndex:60,boxShadow:"0 4px 24px rgba(0,0,0,0.4)"}}><div style={{width:36,height:36,borderRadius:10,background:T.purpleS,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name={activeTimer.type==="nap"?"cloud":"moon"} size={18} color={T.purple}/></div><div style={{flex:1}}><div style={{fontSize:12,fontWeight:600,color:T.sub}}>{activeTimer.type==="nap"?TL("nap"):TL("sleep")}</div><div style={{fontSize:20,fontWeight:800,fontVariantNumeric:"tabular-nums"}}>{fmtTimer(secs)}</div></div><button onClick={onStop} style={{width:40,height:40,borderRadius:12,background:T.purpleS,border:`1px solid ${T.purple}33`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="stop" size={16} color={T.purple}/></button></div>)}
+  return(<div style={{position:"fixed",bottom:"calc(58px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 32px)",maxWidth:448,padding:"12px 16px",borderRadius:16,background:"rgba(20,26,66,0.92)",border:`1px solid ${T.purple}33`,backdropFilter:"blur(12px)",display:"flex",alignItems:"center",gap:12,zIndex:60,boxShadow:"0 4px 24px rgba(0,0,0,0.4)"}}><div style={{width:36,height:36,borderRadius:10,background:T.purpleS,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name={activeTimer.type==="nap"?"cloud":"moon"} size={18} color={T.purple}/></div><div style={{flex:1}}><div style={{fontSize:12,fontWeight:600,color:T.sub}}>{activeTimer.type==="nap"?TL("nap"):TL("sleep")}</div><div style={{fontSize:20,fontWeight:800,fontVariantNumeric:"tabular-nums"}}>{fmtTimer(secs)}</div></div><button onClick={onStop} style={{width:40,height:40,borderRadius:12,background:T.purpleS,border:`1px solid ${T.purple}33`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="stop" size={16} color={T.purple}/></button></div>)}
 
 function CuriosityCard({age,lang,tick}){
   const[vis,setVis]=useState(false);const[fading,setFading]=useState(false);const shownRef=useRef(null);
@@ -1474,7 +1471,7 @@ function App(){
       {page==="stats"&&<StatsPage entries={entries} onGrowth={()=>goTo("growth")}/>}
       {page==="growth"&&<GrowthPage entries={entries} birthDate={profile.birthDate} profile={profile} onBack={()=>goTo("stats")} onAddEntry={addEntry}/>}
       {/* Bottom spacer so content clears nav bar */}
-      <div style={{height:activeTimer?120:70}}/>
+      <div style={{height:activeTimer?160:90}}/>
     </div>
 
     {/* Fade gradient above nav */}
@@ -1517,7 +1514,7 @@ function App(){
     {showProfile&&<ProfilePage profile={profile} onSave={async p=>await FB.saveProfile(p)} onBack={()=>setShowProfile(false)} onGrowth={()=>{setShowProfile(false);goTo("growth")}}/>}
     <TimerBar activeTimer={activeTimer} onStop={stopTimer} onSwitch={switchSide} onPause={pauseNursing}/>
 
-    <nav style={{position:"fixed",bottom:"var(--sab)",left:"50%",transform:"translateX(-50%)",display:"flex",alignItems:"center",gap:4,padding:"6px 10px",background:"rgba(8,10,28,0.95)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",borderRadius:40,border:"1px solid rgba(80,90,160,0.06)",boxShadow:"0 4px 24px rgba(0,0,0,0.6)",zIndex:50}}>
+    <nav style={{position:"fixed",bottom:"calc(2px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",display:"flex",alignItems:"center",gap:4,padding:"6px 10px",background:"rgba(8,10,28,0.95)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",borderRadius:40,border:"1px solid rgba(80,90,160,0.06)",boxShadow:"0 4px 24px rgba(0,0,0,0.6)",zIndex:50}}>
       {[{icon:"home",label:"HOME",active:page==="home"&&!showAdd,action:()=>goTo("home")},{icon:"clock",label:_lang==="en"?"HISTORY":"HIST.",active:page==="history",action:()=>goTo("history")}].map(n=><button key={n.icon} onClick={n.action} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,padding:"6px 10px",borderRadius:14,background:n.active?"rgba(139,124,246,0.12)":"transparent"}}><Icon name={n.icon} size={18} color={n.active?T.accent:T.dim}/>{n.active&&<span style={{fontSize:7,fontWeight:700,color:T.accent,letterSpacing:0.5}}>{n.label}</span>}</button>)}
       <button onClick={()=>{setShowAdd(!showAdd);setFormType(null);setPage("home")}} style={{width:46,height:46,borderRadius:"50%",background:`linear-gradient(135deg,#7c3aed,${T.accent})`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 4px 20px ${T.accent}55`,transition:"transform .2s cubic-bezier(0.34,1.56,0.64,1)",transform:showAdd?"rotate(45deg) scale(1.05)":"scale(1)",margin:"-4px 2px"}}><Icon name="plus" size={22} color="#fff"/></button>
       {[{icon:"chart",label:"STATS",active:page==="stats"||page==="growth",action:()=>goTo("stats")},{icon:"gear",label:_lang==="en"?"SETTINGS":"CONFIG",active:false,action:()=>setShowProfile(true)}].map(n=><button key={n.icon} onClick={n.action} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,padding:"6px 10px",borderRadius:14,background:n.active?"rgba(139,124,246,0.12)":"transparent"}}><Icon name={n.icon} size={18} color={n.active?T.accent:T.dim}/>{n.active&&<span style={{fontSize:7,fontWeight:700,color:T.accent,letterSpacing:0.5}}>{n.label}</span>}</button>)}
