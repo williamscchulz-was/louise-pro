@@ -1,4 +1,4 @@
-l<!--
+<!--
 ═══════════════════════════════════════════════════════════════
   LOUISE PRO — BABY TRACKER — CHANGELOG
 ═══════════════════════════════════════════════════════════════
@@ -1251,21 +1251,21 @@ function App(){
   const todayE=useMemo(()=>entries.filter(e=>e.date===today),[entries,today]);
   const totalMl=todayE.filter(e=>e.type==="bottle").reduce((s,e)=>s+(e.ml||0),0);
   const lastBottleMl=useMemo(()=>{const b=entries.find(e=>e.type==="bottle"&&e.ml);return b?b.ml:0},[entries]);
-  const totalNursingMin=cycleE.filter(e=>e.type==="nursing"&&e.durationMin).reduce((s,e)=>s+e.durationMin,0);
-  const totalNursing=cycleE.filter(e=>e.type==="nursing").length;
-  const totalSleep=cycleE.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin).reduce((s,e)=>s+e.durationMin,0);
-  const totalDiapers=cycleE.filter(e=>e.type==="diaper").length;
-  const napNums=useMemo(()=>{const naps=[...cycleE].reverse().filter(e=>e.type==="nap");const m={};naps.forEach((n,i)=>{m[n.id]=i+1});return m},[cycleE]);
+  const totalNursingMin=todayE.filter(e=>e.type==="nursing"&&e.durationMin).reduce((s,e)=>s+e.durationMin,0);
+  const totalNursing=todayE.filter(e=>e.type==="nursing").length;
+  const totalSleep=todayE.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin).reduce((s,e)=>s+e.durationMin,0);
+  const totalDiapers=todayE.filter(e=>e.type==="diaper").length;
+  const napNums=useMemo(()=>{const naps=[...todayE].reverse().filter(e=>e.type==="nap");const m={};naps.forEach((n,i)=>{m[n.id]=i+1});return m},[todayE]);
   const age=calcAge(profile.birthDate);const babyName=profile.name||"Bebê";
   const sleepRec=useMemo(()=>getSleepRec(entries,age,profile.birthDate),[entries,age,profile.birthDate]);
   const sleepPattern=useMemo(()=>analyzeSleepPatterns(entries,7),[entries]);
   const daySchedule=useMemo(()=>{
     if(!sleepPattern)return[];
-    let wm=6*60;const wk=cycleE.find(e=>e.type==="wakeup");
-    if(wk){wm=toMinutes(wk.time)}else{const ls=cycleE.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin>0).sort((a,b)=>b.time.localeCompare(a.time))[0];if(ls){const em=toMinutes(ls.time)+ls.durationMin;if(em>=300&&em<=720)wm=em}}
-    return projectSchedule(wm,sleepPattern,cycleE);
-  },[sleepPattern,cycleE]);
-  const dayInsights=useMemo(()=>getDayInsights(cycleE,sleepPattern,sleepRec?.g),[cycleE,sleepPattern,sleepRec]);
+    let wm=6*60;const wk=todayE.find(e=>e.type==="wakeup");
+    if(wk){wm=toMinutes(wk.time)}else{const ls=todayE.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin>0).sort((a,b)=>b.time.localeCompare(a.time))[0];if(ls){const em=toMinutes(ls.time)+ls.durationMin;if(em>=300&&em<=720)wm=em}}
+    return projectSchedule(wm,sleepPattern,todayE);
+  },[sleepPattern,todayE]);
+  const dayInsights=useMemo(()=>getDayInsights(todayE,sleepPattern,sleepRec?.g),[todayE,sleepPattern,sleepRec]);
   const napSug=useMemo(()=>!activeTimer?getNapSug(cycleE,sleepRec):null,[cycleE,sleepRec,activeTimer,tick]);
   const daysLeft=sleepRec?.phase===1?sleepRec.dl:null;
 
@@ -1339,7 +1339,7 @@ function App(){
         {sleepRec?.phase===2&&dayInsights.map((h,i)=><div key={"hi"+i} style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:h.type==="good"?T.greenS:T.orangeS,border:`1px solid ${h.type==="good"?T.green:T.orange}22`,display:"flex",alignItems:"center",gap:10}}><Icon name={h.type==="good"?"check":"zap"} size={18} color={h.type==="good"?T.green:T.orange}/><div><div style={{fontSize:12,fontWeight:700,color:h.type==="good"?T.green:T.orange}}>{h.title}</div><div style={{fontSize:10,color:T.sub}}>{h.sub}</div></div></div>)}
         <MlGoalBar current={totalMl} goal={profile.mlGoal}/>
         <div style={{padding:"0 20px",marginBottom:14}}><div style={{display:"flex",background:T.glass,borderRadius:14,border:`1px solid ${T.gB}`}}>{[{i:"bottle",v:`${totalMl}`,u:"ml",c:T.green,t:["bottle"]},{i:"breast",v:totalNursingMin>0?fmtDur(totalNursingMin):`${totalNursing}x`,c:T.blue,t:["nursing"]},{i:"moon",v:fmtDur(totalSleep),c:T.purple,t:["sleep","nap"]},{i:"diaper",v:`${totalDiapers}`,c:T.pink,t:["diaper"]}].map((p,idx)=>{const last=entries.find(e=>p.t.includes(e.type));const ago=last?timeSince(last.date,last.time):null;return<div key={idx} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:2,padding:"10px 2px"}}><div style={{display:"flex",alignItems:"center",gap:4}}><Icon name={p.i} size={14} color={p.c}/><span style={{fontSize:12,fontWeight:700,color:p.c}}>{p.v}{p.u?<span style={{fontSize:10,fontWeight:500,opacity:0.7}}>{p.u}</span>:null}</span></div>{ago&&<span style={{fontSize:9,color:T.dim}}>{ago}</span>}</div>})}</div></div>
-        <div style={{padding:"0 20px"}}><div style={{fontSize:12,fontWeight:600,color:T.dim,marginBottom:8,textTransform:"uppercase",letterSpacing:0.8}}>{_lang==="en"?"Since wakeup":"Desde acordou"}</div>{cycleE.length===0&&<div style={{textAlign:"center",padding:"32px 20px",color:T.dim}}><Icon name="star" size={32} color={T.dim} fill={T.dim}/><div style={{fontSize:13,marginTop:8}}>{_lang==="en"?"Tap + to add":"Toque + para registrar"}</div></div>}{cycleE.map(e=><EntryRow key={e.id} entry={e} onDelete={deleteEntry} onEdit={startEdit} napNum={napNums[e.id]||null}/>)}</div>
+        <div style={{padding:"0 20px"}}><div style={{fontSize:12,fontWeight:600,color:T.dim,marginBottom:8,textTransform:"uppercase",letterSpacing:0.8}}>{L("today")}</div>{todayE.length===0&&<div style={{textAlign:"center",padding:"32px 20px",color:T.dim}}><Icon name="star" size={32} color={T.dim} fill={T.dim}/><div style={{fontSize:13,marginTop:8}}>{_lang==="en"?"Tap + to add":"Toque + para registrar"}</div></div>}{todayE.map(e=><EntryRow key={e.id} entry={e} onDelete={deleteEntry} onEdit={startEdit} napNum={napNums[e.id]||null}/>)}</div>
       </div>}
       {page==="history"&&<HistoryPage entries={entries} onDelete={deleteEntry} onEdit={startEdit}/>}
       {page==="stats"&&<StatsPage entries={entries} onGrowth={()=>goTo("growth")}/>}
