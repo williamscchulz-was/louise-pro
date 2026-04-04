@@ -344,6 +344,8 @@ dbg('Firebase ready');
 } catch(e) { dbg('Firebase Error: '+e.message); throw e; }
 </script>
 
+<script src="sleep-engine.js"></script>
+
 <script type="text/babel">
 const {useState, useEffect, useCallback, useRef, useMemo} = React;
 
@@ -524,96 +526,10 @@ function splitMidnight(entry){
   ];
 }
 
-// ── SLEEP ENGINE ──
-const WW=[{maxW:4,min:30,max:60,naps:"4-5"},{maxW:8,min:45,max:75,naps:"4-5"},{maxW:12,min:60,max:90,naps:"3-4"},{maxW:16,min:75,max:120,naps:"3-4"},{maxW:28,min:120,max:180,naps:"2-3"},{maxW:40,min:150,max:210,naps:"2"},{maxW:56,min:180,max:240,naps:"1-2"},{maxW:104,min:240,max:360,naps:"1"}];
-function getGuideline(w){for(const g of WW)if(w<g.maxW)return g;return WW[WW.length-1]}
-function daysUntilSchedule(b){if(!b)return null;const t=new Date(b);t.setMonth(t.getMonth()+2);return Math.max(0,Math.ceil((t-new Date())/864e5))}
-function getSleepRec(entries,age,birth){if(!age)return null;const dl=daysUntilSchedule(birth),g=getGuideline(age.totalWeeks);if(dl>0)return{phase:1,dl,g};const sorted=[...entries].filter(e=>["wakeup","nightwaking","sleep","nap"].includes(e.type)).sort((a,b)=>new Date(`${b.date}T${b.time}`)-new Date(`${a.date}T${a.time}`));const wins=[];for(let i=0;i<sorted.length-1;i++){const c=sorted[i],p=sorted[i+1];if((c.type==="sleep"||c.type==="nap")&&(p.type==="wakeup"||p.type==="nightwaking")){const wm=Math.floor((new Date(`${c.date}T${c.time}`)-new Date(`${p.date}T${p.time}`))/6e4);if(wm>10&&wm<600)wins.push({wm})}}if(wins.length<3)return{phase:2,dl:0,g,a:null};const avg=Math.round(wins.reduce((s,w)=>s+w.wm,0)/wins.length);return{phase:2,dl:0,g,a:{avg,rec:Math.round(avg*0.7+((g.min+g.max)/2)*0.3),pts:wins.length}}}
-function getNapSug(entries,rec){
-  if(!rec)return null;
-  let lastWakeTime=null;
-  for(const e of entries){
-    if(e.type==="wakeup"||e.type==="nightwaking"){
-      const t=new Date(`${e.date}T${e.time}`);
-      if(!lastWakeTime||t>lastWakeTime)lastWakeTime=t;
-    }
-    if((e.type==="sleep"||e.type==="nap")&&e.durationMin){
-      const start=new Date(`${e.date}T${e.time}`);
-      const end=new Date(start.getTime()+e.durationMin*60000);
-      if(!lastWakeTime||end>lastWakeTime)lastWakeTime=end;
-    }
-  }
-  if(!lastWakeTime)return null;
-  const el=Math.max(0,Math.floor((Date.now()-lastWakeTime)/60000));
-  const tgt=rec.phase===2&&rec.a?rec.a.rec:(rec.g.min+rec.g.max)/2;
-  const rem=Math.max(0,Math.round(tgt-el));
-  return{el,rem,prog:Math.min(1,el/tgt),wind:rem<=15&&rem>0,over:rem===0&&el>0};
-}
-
-// ── SLEEP ENGINE v2 ──
-function toMinutes(t){const[h,m]=(t||"12:00").split(":").map(Number);return h*60+m}
-function minToTime(m){return`${String(Math.floor(m/60)).padStart(2,"0")}:${String(Math.round(m%60)).padStart(2,"0")}`}
-
-function analyzeSleepPatterns(allEntries,numDays){
-  const today=todayStr();
-  const days=[];
-  for(let d=0;d<numDays;d++){
-    const date=dateOffset(today,-d);
-    const de=allEntries.filter(e=>e.date===date);
-    let wakeMin=null;
-    const wk=de.find(e=>e.type==="wakeup");
-    if(wk){wakeMin=toMinutes(wk.time)}
-    else{const sl=de.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin>0).sort((a,b)=>a.time.localeCompare(b.time));if(sl.length>0){const em=toMinutes(sl[0].time)+sl[0].durationMin;if(em>=300&&em<=720)wakeMin=em}}
-    if(!wakeMin)continue;
-    const naps=de.filter(e=>e.type==="nap"&&e.durationMin>0).sort((a,b)=>a.time.localeCompare(b.time));
-    if(naps.length===0)continue;
-    const nd=[];let prev=wakeMin;
-    for(let i=0;i<naps.length;i++){const ns=toMinutes(naps[i].time);const ww=ns-prev;const dur=naps[i].durationMin;if(ww>0&&ww<600)nd.push({pos:i+1,ww,dur});prev=ns+dur}
-    const bed=de.find(e=>e.type==="sleep");
-    const bww=bed?(toMinutes(bed.time)-prev):null;
-    days.push({date,wakeMin,naps:nd,napCount:naps.length,bedWW:bww&&bww>0?bww:null});
-  }
-  if(days.length<2)return null;
-  const maxPos=Math.max(...days.map(d=>d.napCount));
-  const positions=[];
-  for(let p=1;p<=Math.min(maxPos,8);p++){
-    const wws=days.map(d=>{const n=d.naps.find(x=>x.pos===p);return n?n.ww:null}).filter(Boolean);
-    const durs=days.map(d=>{const n=d.naps.find(x=>x.pos===p);return n?n.dur:null}).filter(Boolean);
-    if(wws.length>=2)positions.push({pos:p,avgWW:Math.round(wws.reduce((s,v)=>s+v,0)/wws.length),minWW:Math.min(...wws),maxWW:Math.max(...wws),avgDur:Math.round(durs.reduce((s,v)=>s+v,0)/durs.length),minDur:Math.min(...durs),maxDur:Math.max(...durs),pts:wws.length});
-  }
-  const avgNaps=Math.round(days.reduce((s,d)=>s+d.napCount,0)/days.length);
-  const bwws=days.map(d=>d.bedWW).filter(Boolean);
-  const avgBedWW=bwws.length>=2?Math.round(bwws.reduce((s,v)=>s+v,0)/bwws.length):null;
-  const totalSleepPerDay=days.map(d=>d.naps.reduce((s,n)=>s+n.dur,0));
-  const avgTotalSleep=Math.round(totalSleepPerDay.reduce((s,v)=>s+v,0)/totalSleepPerDay.length);
-  return{days:days.length,positions,avgNaps,avgBedWW,avgTotalSleep};
-}
-
-function projectSchedule(wakeMin,pattern,todayNaps){
-  if(!pattern||!pattern.positions.length)return[];
-  const done=todayNaps.filter(e=>e.type==="nap"&&e.durationMin>0).sort((a,b)=>a.time.localeCompare(b.time));
-  const sched=[];let cursor=wakeMin;
-  for(let i=0;i<pattern.positions.length;i++){
-    const p=pattern.positions[i];
-    if(i<done.length){const ns=toMinutes(done[i].time);const dur=done[i].durationMin;sched.push({pos:p.pos,startMin:ns,durMin:dur,ww:ns-cursor,status:"done"});cursor=ns+dur}
-    else{const ns=cursor+p.avgWW;sched.push({pos:p.pos,startMin:ns,durMin:p.avgDur,ww:p.avgWW,avgDur:p.avgDur,durRange:p.minDur+"-"+p.maxDur+"min",status:i===done.length?"next":"later"});cursor=ns+p.avgDur}
-  }
-  if(pattern.avgBedWW){sched.push({pos:0,startMin:cursor+pattern.avgBedWW,durMin:0,ww:pattern.avgBedWW,status:done.length>=pattern.positions.length?"next":"later",bed:true})}
-  return sched;
-}
-
-function getDayInsights(todayE,pattern,guideline){
-  if(!pattern)return[];
-  const hints=[];
-  const naps=todayE.filter(e=>e.type==="nap"&&e.durationMin>0);
-  const totalSleep=naps.reduce((s,e)=>s+e.durationMin,0);
-  if(naps.length>=2){
-    const avgDur=Math.round(totalSleep/naps.length);
-    if(avgDur<pattern.avgTotalSleep/pattern.avgNaps*0.7)hints.push({type:"warn",title:_lang==="en"?"Shorter naps today":"Sonecas mais curtas hoje",sub:_lang==="en"?`Avg ${avgDur}min vs usual ${Math.round(pattern.avgTotalSleep/pattern.avgNaps)}min`:`Media ${avgDur}min vs usual ${Math.round(pattern.avgTotalSleep/pattern.avgNaps)}min`});
-  }
-  if(naps.length>=pattern.avgNaps&&totalSleep>=pattern.avgTotalSleep*0.85)hints.push({type:"good",title:_lang==="en"?"Great sleep day!":"Otimo dia de sono!",sub:_lang==="en"?`${naps.length} naps · ${fmtDur(totalSleep)} total`:`${naps.length} sonecas · ${fmtDur(totalSleep)} total`});
-  return hints;
-}
+// ── SLEEP ENGINE (loaded from sleep-engine.js) ──
+const {getSleepRec, getNapSug, analyzeSleepPatterns, projectSchedule, getDayInsights: _getDayInsights, getGuideline, toMinutes, minToTime, WW} = SleepEngine;
+// Wrap getDayInsights to auto-inject current language
+function getDayInsights(todayE, pattern, guideline) { return _getDayInsights(todayE, pattern, guideline, _lang); }
 
 // ── ICON (filled + gradient for baby icons, stroke for UI) ──
 let _ic=0;
