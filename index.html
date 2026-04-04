@@ -559,12 +559,13 @@ function Ring({activeTimer,napSug,tick,recentEvents,lang}){
   const sz=340,cx=sz/2,cy=sz/2,R=148;
   const gapDeg=55,startAng=90+gapDeg/2,totalArc=360-gapDeg;
   const dotSz=46,sleepSz=44;
-  let lbl="",sub="",col1=T.dim,col2=T.dim;
+  let lbl="",sub="",col1=T.dim,col2=T.dim,isBedtime=false;
   if(activeTimer){
     const el=Math.max(0,Math.floor((Date.now()-new Date(activeTimer.startTime).getTime())/1000));const mins=Math.floor(el/60);
     lbl=mins<60?`${mins} min`:`${Math.floor(mins/60)}h ${String(mins%60).padStart(2,"0")}m`;
     if(activeTimer.type==="nursing"){sub=lang==="en"?"Nursing":"Amamentando";col1="#2563eb";col2="#60a5fa"}
-    else{sub=lang==="en"?"Asleep for":"Dormindo";col1="#7c3aed";col2="#c084fc"}
+    else if(activeTimer.type==="nap"){sub=lang==="en"?"Napping":"Soneca";col1="#7c3aed";col2="#c084fc"}
+    else{sub=lang==="en"?"Bedtime":"Boa noite";col1="#7c3aed";col2="#c084fc";isBedtime=true}
   } else if(napSug){
     lbl=fmtDur(napSug.el);sub=lang==="en"?"Awake for":"Acordado(a)";
     if(napSug.over){col1="#ea580c";col2="#fb923c"}else if(napSug.wind){col1="#d97706";col2="#fbbf24"}else{col1="#059669";col2="#34d399"}
@@ -656,7 +657,7 @@ function Ring({activeTimer,napSug,tick,recentEvents,lang}){
       </div>)})}
       {anchorSun&&<div style={{position:"absolute",left:anchorSun.x-20,top:anchorSun.y-20,display:"flex",flexDirection:"column",alignItems:"center",zIndex:1,pointerEvents:"none"}}><div style={{width:40,height:40,borderRadius:"50%",background:"radial-gradient(circle at 40% 30%,rgba(251,191,36,0.18),rgba(251,146,60,0.06))",border:"2px solid rgba(251,191,36,0.35)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 16px rgba(251,191,36,0.15)"}}><Icon name="sun" size={18} color="#fbbf24"/></div><span style={{fontSize:9,fontWeight:700,color:"#fbbf24",marginTop:2,textShadow:"0 1px 4px rgba(0,0,0,0.8)"}}>{anchorSun.time}</span></div>}
       {anchorMoon&&<div style={{position:"absolute",left:anchorMoon.x-20,top:anchorMoon.y-20,display:"flex",flexDirection:"column",alignItems:"center",zIndex:1,pointerEvents:"none"}}><div style={{width:40,height:40,borderRadius:"50%",background:"radial-gradient(circle at 40% 30%,rgba(167,139,250,0.18),rgba(139,124,246,0.06))",border:"2px solid rgba(167,139,250,0.35)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 16px rgba(167,139,250,0.15)"}}><Icon name="moon" size={18} color="#a78bfa"/></div><span style={{fontSize:9,fontWeight:700,color:"#a78bfa",marginTop:2,textShadow:"0 1px 4px rgba(0,0,0,0.8)"}}>{anchorMoon.time}</span></div>}
-      <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}><span style={{fontSize:14,color:T.sub,fontWeight:500,letterSpacing:1.5}}>{sub}</span><span style={{fontSize:52,fontWeight:800,letterSpacing:-2,marginTop:4,background:hasProgress?`linear-gradient(135deg,${col2},${col1})`:`linear-gradient(135deg,${T.text},${T.sub})`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>{lbl}</span></div>
+      <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}><span style={{fontSize:14,color:isBedtime?"#c084fc":T.sub,fontWeight:500,letterSpacing:1.5,display:"flex",alignItems:"center",gap:5}}>{isBedtime&&<Icon name="moon" size={14} color="#c084fc"/>}{sub}</span><span style={{fontSize:52,fontWeight:800,letterSpacing:-2,marginTop:4,background:hasProgress?`linear-gradient(135deg,${col2},${col1})`:`linear-gradient(135deg,${T.text},${T.sub})`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>{lbl}</span></div>
       {tip!==null&&<div onClick={()=>setTip(null)} style={{position:"absolute",inset:0,zIndex:1}}/>}
     </div>
   </div>);
