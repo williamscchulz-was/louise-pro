@@ -604,7 +604,6 @@ function Icon({name,size=20,color="currentColor",fill="none"}){
     bath:<svg {...p}>{grad}<path d="M4 12h16" strokeWidth="2"/><path d="M5 12v4c0 2 2 4 7 4s7-2 7-4v-4" fill={gFill}/><path d="M6 4v8" strokeWidth="1.5"/><path d="M6 4c0-1 1-2 2.5-2S11 3 11 4v1" strokeWidth="1.2"/><circle cx="9" cy="8" r="0.8" fill={color} opacity="0.4"/><circle cx="11" cy="7" r="0.6" fill={color} opacity="0.3"/></svg>,
     pill:<svg {...p}>{grad}<rect x="3" y="7" width="18" height="10" rx="5" fill={gFill}/><line x1="12" y1="7" x2="12" y2="17" stroke={color} strokeWidth="0.8" opacity="0.4"/></svg>,
     thermo:<svg {...p}>{grad}<path d="M14 14.76V3.5a2 2 0 10-4 0v11.26a4 4 0 104 0z" fill={gFill}/><circle cx="12" cy="17" r="1.5" fill={color} opacity="0.5"/></svg>,
-    pump:<svg {...p}>{grad}<path d="M8 2h8l-1 6H9L8 2z" fill={gFill}/><path d="M9 8v10a3 3 0 006 0V8" fill={gFill}/><line x1="7" y1="12" x2="17" y2="12" stroke={color} strokeWidth="0.8" opacity="0.35"/></svg>,
     home:<svg {...pu}><path d="M3 12l9-8 9 8"/><path d="M5 10v9a1 1 0 001 1h4v-5h4v5h4a1 1 0 001-1v-9"/></svg>,
     clock:<svg {...pu}><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>,
     chart:<svg {...pu}><line x1="4" y1="20" x2="4" y2="14"/><line x1="10" y1="20" x2="10" y2="8"/><line x1="16" y1="20" x2="16" y2="4"/></svg>,
@@ -634,7 +633,7 @@ function Icon({name,size=20,color="currentColor",fill="none"}){
 
 // ── THEME ──
 const T={bg1:"#070b1e",bg2:"#0d1133",bg3:"#141a42",glass:"rgba(22,28,60,0.6)",gB:"rgba(90,100,180,0.12)",text:"#e4e6f5",sub:"#8b90b8",dim:"#555a80",accent:"#8b7cf6",green:"#34d399",greenS:"rgba(52,211,153,0.1)",purple:"#a78bfa",purpleS:"rgba(167,139,250,0.1)",pink:"#f472b6",pinkS:"rgba(244,114,182,0.1)",amber:"#fbbf24",amberS:"rgba(251,191,36,0.1)",orange:"#fb923c",orangeS:"rgba(251,146,60,0.1)",blue:"#38bdf8",blueS:"rgba(56,189,248,0.12)",red:"#f87171",redS:"rgba(248,113,113,0.1)",cyan:"#22d3ee",cyanS:"rgba(34,211,238,0.1)"};
-const TYPES={bottle:{label:{pt:"Mamadeira",en:"Bottle"},icon:"bottle",color:T.green,bg:T.greenS},nursing:{label:{pt:"Amamentação",en:"Nursing"},icon:"breast",color:T.blue,bg:T.blueS},sleep:{label:{pt:"Sono",en:"Bedtime"},icon:"moon",color:T.purple,bg:T.purpleS},wakeup:{label:{pt:"Acordou",en:"Woke up"},icon:"sun",color:T.amber,bg:T.amberS},nap:{label:{pt:"Soneca",en:"Nap"},icon:"cloud",color:T.purple,bg:T.purpleS},nightwaking:{label:{pt:"Acordou à noite",en:"Night waking"},icon:"zap",color:T.orange,bg:T.orangeS},diaper:{label:{pt:"Fralda",en:"Diaper"},icon:"diaper",color:T.pink,bg:T.pinkS},medicine:{label:{pt:"Medicamento",en:"Medicine"},icon:"pill",color:T.amber,bg:T.amberS},temperature:{label:{pt:"Temperatura",en:"Temperature"},icon:"thermo",color:T.red,bg:T.redS},pumping:{label:{pt:"Extração",en:"Pumping"},icon:"pump",color:T.cyan,bg:T.cyanS},bath:{label:{pt:"Banho",en:"Bath"},icon:"bath",color:T.cyan,bg:T.cyanS},growth:{label:{pt:"Crescimento",en:"Growth"},icon:"ruler",color:"#a3e635",bg:"rgba(163,230,53,0.1)"}};
+const TYPES={bottle:{label:{pt:"Mamadeira",en:"Bottle"},icon:"bottle",color:T.green,bg:T.greenS},nursing:{label:{pt:"Amamentação",en:"Nursing"},icon:"breast",color:T.blue,bg:T.blueS},sleep:{label:{pt:"Sono",en:"Bedtime"},icon:"moon",color:T.purple,bg:T.purpleS},wakeup:{label:{pt:"Acordou",en:"Woke up"},icon:"sun",color:T.amber,bg:T.amberS},nap:{label:{pt:"Soneca",en:"Nap"},icon:"cloud",color:T.purple,bg:T.purpleS},nightwaking:{label:{pt:"Acordou à noite",en:"Night waking"},icon:"zap",color:T.orange,bg:T.orangeS},diaper:{label:{pt:"Fralda",en:"Diaper"},icon:"diaper",color:T.pink,bg:T.pinkS},medicine:{label:{pt:"Medicamento",en:"Medicine"},icon:"pill",color:T.amber,bg:T.amberS},temperature:{label:{pt:"Temperatura",en:"Temperature"},icon:"thermo",color:T.red,bg:T.redS},bath:{label:{pt:"Banho",en:"Bath"},icon:"bath",color:T.cyan,bg:T.cyanS},growth:{label:{pt:"Crescimento",en:"Growth"},icon:"ruler",color:"#a3e635",bg:"rgba(163,230,53,0.1)"}};
 
 // ── i18n ──
 const I={
@@ -934,7 +933,7 @@ function AddForm({type,onSave,savedMeds,onSaveMeds,editEntry,lastBottleMl,topMl}
   const[ml,setMl]=useState(ed.ml?String(ed.ml):(type==="bottle"&&lastBottleMl&&!editEntry?String(lastBottleMl):""));const[durH,setDurH]=useState(ed.durationMin?String(Math.floor(ed.durationMin/60)):"");const[durM,setDurM]=useState(ed.durationMin?String(ed.durationMin%60):"");
   const[diaperT,setDiaperT]=useState(ed.subtype||"wet");const[medN,setMedN]=useState(ed.name||"");const[medD,setMedD]=useState(ed.dose||"");
   const[tempV,setTempV]=useState(ed.value?String(ed.value):"");const[side,setSide]=useState(ed.side||"left");const[nurseM,setNurseM]=useState(ed.durationMin&&type==="nursing"?String(ed.durationMin):"");
-  const[pumpMl,setPumpMl]=useState(ed.ml&&type==="pumping"?String(ed.ml):"");const[weightKg,setWeightKg]=useState(ed.weightKg?String(ed.weightKg):"");const[lengthCm,setLengthCm]=useState(ed.lengthCm?String(ed.lengthCm):"");
+  const[weightKg,setWeightKg]=useState(ed.weightKg?String(ed.weightKg):"");const[lengthCm,setLengthCm]=useState(ed.lengthCm?String(ed.lengthCm):"");
   const[headCm,setHeadCm]=useState(ed.headCm?String(ed.headCm):"");const[notes,setNotes]=useState(ed.notes||"");const[showML,setShowML]=useState(false);
   const[endTime,setEndTime]=useState("");const[durMode,setDurMode]=useState("dur");
   const[nMN,setNMN]=useState("");const[nMD,setNMD]=useState("");const mRef=useRef(null);
@@ -954,7 +953,6 @@ function AddForm({type,onSave,savedMeds,onSaveMeds,editEntry,lastBottleMl,topMl}
     else if(type==="diaper")onSave({...b,subtype:diaperT});
     else if(type==="medicine"){if(!medN.trim())return;onSave({...b,name:medN.trim(),dose:medD.trim()||undefined})}
     else if(type==="temperature"){if(!tempV)return;onSave({...b,value:parseFloat(tempV)})}
-    else if(type==="pumping"){if(!pumpMl)return;onSave({...b,ml:parseInt(pumpMl)})}
     else if(type==="growth"){onSave({...b,weightKg:weightKg?parseFloat(weightKg):undefined,lengthCm:lengthCm?parseFloat(lengthCm):undefined,headCm:headCm?parseFloat(headCm):undefined})}
   };
   const inp={width:"100%",padding:"13px 16px",background:"rgba(14,18,48,0.8)",border:`1px solid ${T.gB}`,borderRadius:12,color:T.text,fontSize:15,outline:"none"};
@@ -998,7 +996,6 @@ function AddForm({type,onSave,savedMeds,onSaveMeds,editEntry,lastBottleMl,topMl}
         <Fld label={L("dose")}><input type="text" placeholder="Ex: 3 gotas" value={medD} onChange={e=>setMedD(e.target.value)} style={inp}/></Fld></>}
       </>}
       {type==="temperature"&&<Fld label="Temperatura (°C)"><input type="number" inputMode="decimal" step="0.1" placeholder="36.5" value={tempV} onChange={e=>setTempV(e.target.value)} style={{...inp,fontSize:36,fontWeight:800,textAlign:"center"}}/></Fld>}
-      {type==="pumping"&&<Fld label="Quantidade (ml)"><input type="number" inputMode="numeric" placeholder="0" value={pumpMl} onChange={e=>setPumpMl(e.target.value)} style={{...inp,fontSize:28,fontWeight:800,textAlign:"center"}}/></Fld>}
       {type==="growth"&&<><Fld label="Peso (kg)"><input type="number" inputMode="decimal" step="0.01" placeholder="Ex: 4.5" value={weightKg} onChange={e=>setWeightKg(e.target.value)} style={{...inp,fontSize:28,fontWeight:800,textAlign:"center"}}/></Fld><Fld label="Comprimento (cm)"><input type="number" inputMode="decimal" step="0.1" placeholder="Ex: 55.0" value={lengthCm} onChange={e=>setLengthCm(e.target.value)} style={{...inp,fontSize:28,fontWeight:800,textAlign:"center"}}/></Fld><Fld label="Cabeça (cm)"><input type="number" inputMode="decimal" step="0.1" placeholder="Ex: 37.0" value={headCm} onChange={e=>setHeadCm(e.target.value)} style={{...inp,fontSize:28,fontWeight:800,textAlign:"center"}}/></Fld></>}
       <Fld label={L("notes")}><textarea placeholder={_lang==="en"?"Note...":"Anotação..."} value={notes} onChange={e=>setNotes(e.target.value)} rows={2} style={{...inp,resize:"vertical"}}/></Fld>
       <button onClick={doSave} style={{width:"100%",padding:14,borderRadius:12,background:cfg.color,color:T.bg1,fontSize:15,fontWeight:700}}>{isEdit?L("update"):L("save")}</button>
@@ -1019,7 +1016,7 @@ function ProfilePage({profile,onSave,onBack,onGrowth}){
   const handlePhoto=e=>{const f=e.target.files?.[0];if(!f)return;const rd=new FileReader();rd.onload=ev=>{const img=new Image();img.onload=()=>{const c=document.createElement("canvas"),mx=200;let w=img.width,h=img.height;if(w>h){h=(h/w)*mx;w=mx}else{w=(w/h)*mx;h=mx}c.width=w;c.height=h;c.getContext("2d").drawImage(img,0,0,w,h);setPhoto(c.toDataURL("image/jpeg",0.8))};img.src=ev.target.result};rd.readAsDataURL(f)};
   const doSave=()=>{onSave({name:name.trim(),birthDate:birth,photo,mlGoal:parseInt(mlGoal)||0,birthWeight:parseFloat(birthWeight)||0,birthLength:parseFloat(birthLength)||0,birthHead:parseFloat(birthHead)||0,lang:langSel});onBack()};
   const inp={width:"100%",padding:"14px 16px",background:"rgba(14,18,48,0.8)",border:`1px solid ${T.gB}`,borderRadius:12,color:T.text,fontSize:15,outline:"none"};
-  return(<div style={{position:"fixed",inset:0,zIndex:200,maxWidth:480,margin:"0 auto",background:T.bg1,overflowY:"auto",paddingTop:"env(safe-area-inset-top)",paddingBottom:"calc(40px + env(safe-area-inset-bottom))"}}>
+  return(<div style={{position:"fixed",inset:0,zIndex:200,maxWidth:480,margin:"0 auto",background:T.bg1,overflowY:"auto",overscrollBehavior:"contain",WebkitOverflowScrolling:"touch",paddingTop:"env(safe-area-inset-top)",paddingBottom:"calc(40px + env(safe-area-inset-bottom))"}}>
     <div style={{display:"flex",alignItems:"center",gap:14,padding:"16px 20px"}}><button onClick={onBack} style={{width:36,height:36,borderRadius:10,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="back" size={18} color={T.sub}/></button><span style={{fontSize:17,fontWeight:700}}>{L("profile")}</span></div>
     <div style={{padding:"0 20px"}}>
       <div style={{display:"flex",flexDirection:"column",alignItems:"center",marginBottom:28}}><button onClick={()=>fr.current?.click()} style={{width:88,height:88,borderRadius:"50%",overflow:"hidden",background:T.glass,border:`2px solid ${T.accent}33`,display:"flex",alignItems:"center",justifyContent:"center"}}>{photo?<img src={photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<Icon name="sun" size={32} color={T.sub}/>}</button><input ref={fr} type="file" accept="image/*" style={{display:"none"}} onChange={handlePhoto}/><span style={{fontSize:11,color:T.dim,marginTop:8}}>{_lang==="en"?"Tap to change":"Toque para alterar"}</span></div>
@@ -1064,7 +1061,7 @@ function StatsPage({entries,onGrowth}){
   const avgSl=Math.round(data.reduce((s,d)=>s+d.sl,0)/numDays);
   const periodLabel=period==="all"?L("all"):`${period} ${_lang==="en"?"days":"dias"}`;
   const exportCSV=()=>{const h="Data,Hora,Tipo,Detalhe,Notas\n";const rows=entries.map(e=>{let d="";if(e.ml)d=`${e.ml}ml`;else if(e.durationMin)d=fmtDur(e.durationMin);else if(e.name)d=e.name;else if(e.value)d=`${e.value}°C`;else if(e.subtype)d=e.subtype;return`${e.date},${e.time},${TL(e.type)||e.type},${d},${e.notes||""}`}).join("\n");const blob=new Blob([h+rows],{type:"text/csv"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=`louise-pro-${todayStr()}.csv`;a.click();URL.revokeObjectURL(url)};
-  return(<div style={{padding:"16px 20px 0"}}>
+  return(<div style={{padding:"calc(16px + env(safe-area-inset-top)) 20px 0"}}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
       <h2 style={{fontSize:17,fontWeight:700,margin:0}}>{L("summary")}</h2>
       <div style={{display:"flex",gap:6}}>
@@ -1112,7 +1109,7 @@ function HistoryPage({entries,onDelete,onEdit}){
   const dLbl=new Date(viewDate+"T12:00").toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{weekday:"long",day:"numeric",month:"long"});
   const isToday=dateIdx===0;
   const filters=[{v:"all",l:L("all"),c:T.accent},{v:"feed",l:L("milk"),c:T.green},{v:"sleep",l:L("sleepLabel"),c:T.purple},{v:"diaper",l:typeLabel("diaper",_lang),c:T.pink},{v:"medicine",l:_lang==="en"?"Meds":"Med.",c:T.amber}];
-  return(<div style={{padding:"16px 20px 0"}}>
+  return(<div style={{padding:"calc(16px + env(safe-area-inset-top)) 20px 0"}}>
     <h2 style={{fontSize:17,fontWeight:700,marginBottom:12}}>{L("history")}</h2>
     {/* Date navigator */}
     <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}>
@@ -1257,7 +1254,7 @@ function GrowthPage({entries,birthDate,profile,onBack,onAddEntry}){
 
   const inp={width:"100%",padding:"12px",background:"rgba(14,18,48,0.8)",border:`1px solid ${T.gB}`,borderRadius:10,color:T.text,fontSize:15,outline:"none",textAlign:"center"};
 
-  return(<div style={{padding:"16px 20px 0"}}>
+  return(<div style={{padding:"calc(16px + env(safe-area-inset-top)) 20px 0"}}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
       <div style={{display:"flex",alignItems:"center",gap:10}}><button onClick={onBack} style={{width:32,height:32,borderRadius:10,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="back" size={16} color={T.sub}/></button><h2 style={{fontSize:17,fontWeight:700,margin:0}}>{L("growth")}</h2></div>
       <button onClick={()=>setShowForm(!showForm)} style={{padding:"6px 12px",borderRadius:10,background:"rgba(163,230,53,0.1)",border:"1px solid rgba(163,230,53,0.2)",fontSize:12,fontWeight:700,color:"#a3e635"}}>{showForm?"Cancelar":"+ Medição"}</button>
@@ -1503,7 +1500,7 @@ function App(){
     </Modal>
 
     <Sheet open={showAdd&&!formType} onClose={()=>setShowAdd(false)}>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"10px 0",padding:"0 16px"}}>{["wakeup","bottle","nursing","sleep","nap","diaper","bath","medicine","temperature","pumping"].map((type,i)=>{const cfg=TYPES[type];const last=entries.find(e=>e.type===type);const agoRaw=last?timeSince(last.date,last.time):null;const ago=agoRaw==="now"?"Just now":agoRaw;return(<button key={type} onClick={()=>setFormType(type)} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:10,padding:"12px 4px 8px",animation:`slideUp .3s ease ${i*0.035}s both`}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"10px 0",padding:"0 16px"}}>{["wakeup","bottle","nursing","sleep","nap","diaper","bath","medicine","temperature"].map((type,i)=>{const cfg=TYPES[type];const last=entries.find(e=>e.type===type);const agoRaw=last?timeSince(last.date,last.time):null;const ago=agoRaw==="now"?"Just now":agoRaw;return(<button key={type} onClick={()=>setFormType(type)} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:10,padding:"12px 4px 8px",animation:`slideUp .3s ease ${i*0.035}s both`}}>
         <div style={{width:70,height:70,borderRadius:"50%",background:`radial-gradient(circle at 35% 30%, rgba(50,60,120,0.95), rgba(18,22,55,0.98))`,border:`1.5px solid ${cfg.color}25`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 4px 20px rgba(0,0,0,0.4), 0 0 24px ${cfg.color}18, 0 0 48px ${cfg.color}08, inset 0 1px 0 rgba(200,210,255,0.08), inset 0 -2px 4px rgba(0,0,0,0.2)`,position:"relative",overflow:"hidden",filter:`drop-shadow(0 0 5px ${cfg.color}44)`}}>
           {/* Inner glow spot */}
           <div style={{position:"absolute",top:"15%",left:"25%",width:"40%",height:"30%",background:`radial-gradient(ellipse,${cfg.color}12,transparent)`,borderRadius:"50%",filter:"blur(6px)"}}/>
