@@ -829,7 +829,7 @@ function CuriosityCard({age,lang,tick}){
   useEffect(()=>{
     if(!age)return;
     const h=new Date().getHours();
-    if(h<9||h>11){setVis(false);return}
+    if(h<9||h>=10){setVis(false);return}
     const key=`${age.totalDays}-${h}`;
     if(shownRef.current===key)return;
     shownRef.current=key;setVis(true);setFading(false);
