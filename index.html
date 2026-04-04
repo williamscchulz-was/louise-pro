@@ -11,7 +11,9 @@
     • Sleep end time: timeline mostra "21:15-23:50" range + ago do fim
     • Timeline separators: gaps >=30min mostram "--- 1h 45m ---", WW apos naps
     • Nav bar: label no item ativo (HOME/HIST./STATS), botao + com gradient
-    • Botao + com gradient linear (7c3aed->a78bfa) e sombra mais forte
+    • Profile page redesign: gradient bg, cards agrupados, sem scroll lateral
+    • Traducoes: todas as labels respeitam idioma selecionado
+    • Botao Save com gradient e sombra
 
   v5.4.0  04/04/2026  UX Polish + Splash Elegante
     • Splash: icone oficial com bordas dissolvidas, LOUISE PRO gradiente
@@ -346,7 +348,7 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ╚═══════════════════════════════════════════════╝
 const APP_VERSION = "5.5.0";
 const CHANGELOG = [
-  { v: "5.5.0", date: "2026-04-04", changes: "UI redesign: header, quick buttons verticais, summary 2x2, daily goal enhanced, timeline separators com WW, nav com labels, sleep end time range" },
+  { v: "5.5.0", date: "2026-04-04", changes: "UI redesign: header, quick buttons verticais, summary 2x2, daily goal enhanced, timeline separators com WW, nav com labels, sleep end time range, profile page redesign com cards, traducoes corrigidas" },
   { v: "5.4.0", date: "2026-04-04", changes: "Splash Elegante com icone oficial, swipe-to-delete fix, summary tappable, last nursing side L/R, bottle smart fill, mini timeline History, safe-area fix, pumping removido, traducoes corrigidas" },
   { v: "5.3.0", date: "2026-04-04", changes: "Sleep Engine v2: analise de padroes 7 dias, rotina projetada, next nap alert, day insights, nap counting, banho" },
   { v: "5.2.0", date: "2026-04-03", changes: "Nursing timer L/R com troca de lado, botao rapido Nurse, timer bar azul com L/R" },
@@ -1019,8 +1021,8 @@ function AddForm({type,onSave,savedMeds,onSaveMeds,editEntry,lastBottleMl,topMl}
         {showML&&<><Fld label={L("name")}><input type="text" placeholder={L("name")} value={medN} onChange={e=>setMedN(e.target.value)} style={inp}/></Fld>
         <Fld label={L("dose")}><input type="text" placeholder="Ex: 3 gotas" value={medD} onChange={e=>setMedD(e.target.value)} style={inp}/></Fld></>}
       </>}
-      {type==="temperature"&&<Fld label="Temperatura (°C)"><input type="number" inputMode="decimal" step="0.1" placeholder="36.5" value={tempV} onChange={e=>setTempV(e.target.value)} style={{...inp,fontSize:36,fontWeight:800,textAlign:"center"}}/></Fld>}
-      {type==="growth"&&<><Fld label="Peso (kg)"><input type="number" inputMode="decimal" step="0.01" placeholder="Ex: 4.5" value={weightKg} onChange={e=>setWeightKg(e.target.value)} style={{...inp,fontSize:28,fontWeight:800,textAlign:"center"}}/></Fld><Fld label="Comprimento (cm)"><input type="number" inputMode="decimal" step="0.1" placeholder="Ex: 55.0" value={lengthCm} onChange={e=>setLengthCm(e.target.value)} style={{...inp,fontSize:28,fontWeight:800,textAlign:"center"}}/></Fld><Fld label="Cabeça (cm)"><input type="number" inputMode="decimal" step="0.1" placeholder="Ex: 37.0" value={headCm} onChange={e=>setHeadCm(e.target.value)} style={{...inp,fontSize:28,fontWeight:800,textAlign:"center"}}/></Fld></>}
+      {type==="temperature"&&<Fld label={`${_lang==="en"?"Temperature":"Temperatura"} (°C)`}><input type="number" inputMode="decimal" step="0.1" placeholder="36.5" value={tempV} onChange={e=>setTempV(e.target.value)} style={{...inp,fontSize:36,fontWeight:800,textAlign:"center"}}/></Fld>}
+      {type==="growth"&&<><Fld label={`${L("weight")} (kg)`}><input type="number" inputMode="decimal" step="0.01" placeholder="Ex: 4.5" value={weightKg} onChange={e=>setWeightKg(e.target.value)} style={{...inp,fontSize:28,fontWeight:800,textAlign:"center"}}/></Fld><Fld label={`${_lang==="en"?"Length":"Comprimento"} (cm)`}><input type="number" inputMode="decimal" step="0.1" placeholder="Ex: 55.0" value={lengthCm} onChange={e=>setLengthCm(e.target.value)} style={{...inp,fontSize:28,fontWeight:800,textAlign:"center"}}/></Fld><Fld label={`${L("head")} (cm)`}><input type="number" inputMode="decimal" step="0.1" placeholder="Ex: 37.0" value={headCm} onChange={e=>setHeadCm(e.target.value)} style={{...inp,fontSize:28,fontWeight:800,textAlign:"center"}}/></Fld></>}
       <Fld label={L("notes")}><textarea placeholder={_lang==="en"?"Note...":"Anotação..."} value={notes} onChange={e=>setNotes(e.target.value)} rows={2} style={{...inp,resize:"vertical"}}/></Fld>
       <button onClick={doSave} style={{width:"100%",padding:14,borderRadius:12,background:cfg.color,color:T.bg1,fontSize:15,fontWeight:700}}>{isEdit?L("update"):L("save")}</button>
     </div>
@@ -1040,37 +1042,36 @@ function ProfilePage({profile,onSave,onBack,onGrowth}){
   const handlePhoto=e=>{const f=e.target.files?.[0];if(!f)return;const rd=new FileReader();rd.onload=ev=>{const img=new Image();img.onload=()=>{const c=document.createElement("canvas"),mx=200;let w=img.width,h=img.height;if(w>h){h=(h/w)*mx;w=mx}else{w=(w/h)*mx;h=mx}c.width=w;c.height=h;c.getContext("2d").drawImage(img,0,0,w,h);setPhoto(c.toDataURL("image/jpeg",0.8))};img.src=ev.target.result};rd.readAsDataURL(f)};
   const doSave=()=>{onSave({name:name.trim(),birthDate:birth,photo,mlGoal:parseInt(mlGoal)||0,birthWeight:parseFloat(birthWeight)||0,birthLength:parseFloat(birthLength)||0,birthHead:parseFloat(birthHead)||0,lang:langSel});onBack()};
   const inp={width:"100%",padding:"14px 16px",background:"rgba(14,18,48,0.8)",border:`1px solid ${T.gB}`,borderRadius:12,color:T.text,fontSize:15,outline:"none"};
-  return(<div style={{position:"fixed",inset:0,zIndex:200,maxWidth:480,margin:"0 auto",background:T.bg1,overflowY:"auto",overscrollBehavior:"contain",WebkitOverflowScrolling:"touch",paddingTop:"env(safe-area-inset-top)",paddingBottom:"calc(40px + env(safe-area-inset-bottom))"}}>
+  return(<div style={{position:"fixed",inset:0,zIndex:200,maxWidth:480,margin:"0 auto",background:`radial-gradient(ellipse at 50% 0%,#10153d,${T.bg1} 65%)`,overflowY:"auto",overflowX:"hidden",overscrollBehavior:"contain",WebkitOverflowScrolling:"touch",paddingTop:"env(safe-area-inset-top)",paddingBottom:"calc(40px + env(safe-area-inset-bottom))"}}>
     <div style={{display:"flex",alignItems:"center",gap:14,padding:"16px 20px"}}><button onClick={onBack} style={{width:36,height:36,borderRadius:10,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="back" size={18} color={T.sub}/></button><span style={{fontSize:17,fontWeight:700}}>{L("profile")}</span></div>
     <div style={{padding:"0 20px"}}>
-      <div style={{display:"flex",flexDirection:"column",alignItems:"center",marginBottom:28}}><button onClick={()=>fr.current?.click()} style={{width:88,height:88,borderRadius:"50%",overflow:"hidden",background:T.glass,border:`2px solid ${T.accent}33`,display:"flex",alignItems:"center",justifyContent:"center"}}>{photo?<img src={photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<Icon name="sun" size={32} color={T.sub}/>}</button><input ref={fr} type="file" accept="image/*" style={{display:"none"}} onChange={handlePhoto}/><span style={{fontSize:11,color:T.dim,marginTop:8}}>{_lang==="en"?"Tap to change":"Toque para alterar"}</span></div>
-      <Fld label={L("name")}><input type="text" placeholder={_lang==="en"?"e.g. Louise":"Ex: Louise"} value={name} onChange={e=>setName(e.target.value)} style={inp}/></Fld>
-      <Fld label={L("birthDate")}><input type="date" value={birth} onChange={e=>setBirth(e.target.value)} style={{...inp,colorScheme:"dark"}}/></Fld>
-      <Fld label={L("dailyMilkGoal")}><input type="number" inputMode="numeric" placeholder={_lang==="en"?"e.g. 600":"Ex: 600"} value={mlGoal} onChange={e=>setMlGoal(e.target.value)} style={inp}/></Fld>
-      
-      {/* Birth measurements */}
-      {/* Language toggle */}
-      <Fld label={langSel==="en"?"Language":"Idioma"}>
-        <div style={{display:"flex",gap:4,background:T.glass,borderRadius:10,padding:3,border:`1px solid ${T.gB}`}}>
-          <button onClick={()=>setLangSel("en")} style={{flex:1,padding:"10px 0",borderRadius:8,fontSize:13,fontWeight:700,background:langSel==="en"?T.accent:"transparent",color:langSel==="en"?"#fff":T.sub}}>English</button>
-          <button onClick={()=>setLangSel("pt")} style={{flex:1,padding:"10px 0",borderRadius:8,fontSize:13,fontWeight:700,background:langSel==="pt"?T.accent:"transparent",color:langSel==="pt"?"#fff":T.sub}}>Português</button>
-        </div>
-      </Fld>
-      
-      <div style={{fontSize:12,fontWeight:700,color:T.sub,marginTop:20,marginBottom:12,textTransform:"uppercase",letterSpacing:1}}>{L("birthData")}</div>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:20}}>
-        <Fld label="Peso (kg)"><input type="number" inputMode="decimal" step="0.01" placeholder="3.2" value={birthWeight} onChange={e=>setBirthWeight(e.target.value)} style={{...inp,textAlign:"center",padding:"12px 8px"}}/></Fld>
-        <Fld label="Comp. (cm)"><input type="number" inputMode="decimal" step="0.1" placeholder="49" value={birthLength} onChange={e=>setBirthLength(e.target.value)} style={{...inp,textAlign:"center",padding:"12px 8px"}}/></Fld>
-        <Fld label="Cabeça (cm)"><input type="number" inputMode="decimal" step="0.1" placeholder="34" value={birthHead} onChange={e=>setBirthHead(e.target.value)} style={{...inp,textAlign:"center",padding:"12px 8px"}}/></Fld>
+      <div style={{display:"flex",flexDirection:"column",alignItems:"center",marginBottom:24}}><button onClick={()=>fr.current?.click()} style={{width:88,height:88,borderRadius:"50%",overflow:"hidden",background:T.glass,border:`2px solid ${T.accent}33`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 4px 20px rgba(0,0,0,0.3)"}}>{photo?<img src={photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<Icon name="sun" size={32} color={T.sub}/>}</button><input ref={fr} type="file" accept="image/*" style={{display:"none"}} onChange={handlePhoto}/><span style={{fontSize:11,color:T.dim,marginTop:8}}>{_lang==="en"?"Tap to change":"Toque para alterar"}</span></div>
+      <div style={{background:"rgba(22,28,60,0.4)",borderRadius:16,border:`1px solid ${T.gB}`,padding:16,marginBottom:12}}>
+        <Fld label={L("name")}><input type="text" placeholder={_lang==="en"?"e.g. Louise":"Ex: Louise"} value={name} onChange={e=>setName(e.target.value)} style={inp}/></Fld>
+        <Fld label={L("birthDate")}><input type="date" value={birth} onChange={e=>setBirth(e.target.value)} style={{...inp,colorScheme:"dark"}}/></Fld>
+        <Fld label={L("dailyMilkGoal")}><input type="number" inputMode="numeric" placeholder={_lang==="en"?"e.g. 600":"Ex: 600"} value={mlGoal} onChange={e=>setMlGoal(e.target.value)} style={inp}/></Fld>
       </div>
-      
-      {/* Growth page link */}
-      <button onClick={()=>{doSave();onGrowth()}} style={{width:"100%",padding:14,borderRadius:12,marginBottom:12,background:"rgba(163,230,53,0.1)",border:"1px solid rgba(163,230,53,0.2)",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+      <div style={{background:"rgba(22,28,60,0.4)",borderRadius:16,border:`1px solid ${T.gB}`,padding:16,marginBottom:12}}>
+        <Fld label={langSel==="en"?"Language":"Idioma"}>
+          <div style={{display:"flex",gap:4,background:"rgba(14,18,48,0.6)",borderRadius:10,padding:3,border:`1px solid ${T.gB}`}}>
+            <button onClick={()=>setLangSel("en")} style={{flex:1,padding:"10px 0",borderRadius:8,fontSize:13,fontWeight:700,background:langSel==="en"?T.accent:"transparent",color:langSel==="en"?"#fff":T.sub}}>English</button>
+            <button onClick={()=>setLangSel("pt")} style={{flex:1,padding:"10px 0",borderRadius:8,fontSize:13,fontWeight:700,background:langSel==="pt"?T.accent:"transparent",color:langSel==="pt"?"#fff":T.sub}}>Português</button>
+          </div>
+        </Fld>
+      </div>
+      <div style={{background:"rgba(22,28,60,0.4)",borderRadius:16,border:`1px solid ${T.gB}`,padding:16,marginBottom:16}}>
+        <div style={{fontSize:10,fontWeight:700,color:T.dim,marginBottom:10,textTransform:"uppercase",letterSpacing:1.2}}>{L("birthData")}</div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
+          <Fld label={`${L("weight")} (kg)`}><input type="number" inputMode="decimal" step="0.01" placeholder="3.2" value={birthWeight} onChange={e=>setBirthWeight(e.target.value)} style={{...inp,textAlign:"center",padding:"12px 8px"}}/></Fld>
+          <Fld label={`${_lang==="en"?"Length":"Comp."} (cm)`}><input type="number" inputMode="decimal" step="0.1" placeholder="49" value={birthLength} onChange={e=>setBirthLength(e.target.value)} style={{...inp,textAlign:"center",padding:"12px 8px"}}/></Fld>
+          <Fld label={`${L("head")} (cm)`}><input type="number" inputMode="decimal" step="0.1" placeholder="34" value={birthHead} onChange={e=>setBirthHead(e.target.value)} style={{...inp,textAlign:"center",padding:"12px 8px"}}/></Fld>
+        </div>
+      </div>
+      <button onClick={()=>{doSave();onGrowth()}} style={{width:"100%",padding:14,borderRadius:12,marginBottom:10,background:"rgba(163,230,53,0.08)",border:"1px solid rgba(163,230,53,0.15)",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
         <Icon name="ruler" size={16} color="#a3e635"/><span style={{fontSize:14,fontWeight:700,color:"#a3e635"}}>{L("viewGrowth")}</span>
       </button>
-      
-      <button onClick={doSave} style={{width:"100%",padding:14,borderRadius:12,background:T.accent,color:"#fff",fontSize:15,fontWeight:700}}>Salvar</button>
-      <div style={{marginTop:24,padding:14,background:T.glass,borderRadius:12,border:`1px solid ${T.gB}`}}><div style={{fontSize:12,fontWeight:700,color:T.sub,marginBottom:8}}>Louise Pro v{APP_VERSION}</div>{CHANGELOG.map((c,i)=><div key={i} style={{fontSize:10,color:T.dim,marginBottom:4}}><span style={{fontWeight:700}}>v{c.v}</span> ({c.date}) — {c.changes}</div>)}</div>
+      <button onClick={doSave} style={{width:"100%",padding:14,borderRadius:12,background:`linear-gradient(135deg,#7c3aed,${T.accent})`,color:"#fff",fontSize:15,fontWeight:700,boxShadow:`0 4px 16px ${T.accent}33`}}>{L("save")}</button>
+      <div style={{marginTop:20,padding:14,background:"rgba(22,28,60,0.4)",borderRadius:12,border:`1px solid ${T.gB}`}}><div style={{fontSize:12,fontWeight:700,color:T.sub,marginBottom:8}}>Louise Pro v{APP_VERSION}</div>{CHANGELOG.map((c,i)=><div key={i} style={{fontSize:10,color:T.dim,marginBottom:4}}><span style={{fontWeight:700}}>v{c.v}</span> ({c.date}) — {c.changes}</div>)}</div>
     </div>
   </div>);
 }
@@ -1268,10 +1269,10 @@ function GrowthPage({entries,birthDate,profile,onBack,onAddEntry}){
         </div>
         <span style={{fontSize:14,fontWeight:800,color:pColor,minWidth:35,textAlign:"right"}}>P{p}</span>
       </div>
-      <div style={{fontSize:10,color:T.sub,marginTop:4}}>Mediana OMS: {result.median.toFixed(1)} {unit}</div></>}
+      <div style={{fontSize:10,color:T.sub,marginTop:4}}>{_lang==="en"?"WHO Median":"Mediana OMS"}: {result.median.toFixed(1)} {unit}</div></>}
       {adding&&<div style={{display:"flex",gap:8,marginTop:10,alignItems:"center"}}>
         <input type="number" inputMode="decimal" step="0.01" placeholder={`${label} em ${unit}`} value={val} onChange={e=>setVal(e.target.value)} autoFocus style={{flex:1,padding:"10px 12px",background:"rgba(14,18,48,0.8)",border:`1px solid ${T.gB}`,borderRadius:10,color:T.text,fontSize:15,outline:"none",textAlign:"center"}}/>
-        <button onClick={()=>{if(!val)return;onQuickAdd(field,parseFloat(val));setVal("");setAdding(false)}} style={{padding:"10px 16px",borderRadius:10,background:"#a3e635",color:T.bg1,fontSize:13,fontWeight:700}}>Salvar</button>
+        <button onClick={()=>{if(!val)return;onQuickAdd(field,parseFloat(val));setVal("");setAdding(false)}} style={{padding:"10px 16px",borderRadius:10,background:"#a3e635",color:T.bg1,fontSize:13,fontWeight:700}}>{L("save")}</button>
       </div>}
     </div>);
   }
@@ -1281,15 +1282,15 @@ function GrowthPage({entries,birthDate,profile,onBack,onAddEntry}){
   return(<div style={{padding:"calc(16px + env(safe-area-inset-top)) 20px 0"}}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
       <div style={{display:"flex",alignItems:"center",gap:10}}><button onClick={onBack} style={{width:32,height:32,borderRadius:10,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="back" size={16} color={T.sub}/></button><h2 style={{fontSize:17,fontWeight:700,margin:0}}>{L("growth")}</h2></div>
-      <button onClick={()=>setShowForm(!showForm)} style={{padding:"6px 12px",borderRadius:10,background:"rgba(163,230,53,0.1)",border:"1px solid rgba(163,230,53,0.2)",fontSize:12,fontWeight:700,color:"#a3e635"}}>{showForm?"Cancelar":"+ Medição"}</button>
+      <button onClick={()=>setShowForm(!showForm)} style={{padding:"6px 12px",borderRadius:10,background:"rgba(163,230,53,0.1)",border:"1px solid rgba(163,230,53,0.2)",fontSize:12,fontWeight:700,color:"#a3e635"}}>{showForm?L("cancel"):(_lang==="en"?"+ Measure":"+ Medição")}</button>
     </div>
 
     {showForm&&<div style={{background:T.glass,borderRadius:14,padding:16,marginBottom:16,border:`1px solid ${T.gB}`}}>
       <div style={{fontSize:12,fontWeight:700,color:T.sub,marginBottom:12}}>{_lang==="en"?"New measurement":"Nova medição"}</div>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:12}}>
-        <Fld label="Peso (kg)"><input type="number" inputMode="decimal" step="0.01" placeholder="4.5" value={wK} onChange={e=>setWK(e.target.value)} style={inp}/></Fld>
-        <Fld label="Comp. (cm)"><input type="number" inputMode="decimal" step="0.1" placeholder="55" value={lC} onChange={e=>setLC(e.target.value)} style={inp}/></Fld>
-        <Fld label="Cabeça (cm)"><input type="number" inputMode="decimal" step="0.1" placeholder="37" value={hC} onChange={e=>setHC(e.target.value)} style={inp}/></Fld>
+        <Fld label={`${L("weight")} (kg)`}><input type="number" inputMode="decimal" step="0.01" placeholder="4.5" value={wK} onChange={e=>setWK(e.target.value)} style={inp}/></Fld>
+        <Fld label={`${_lang==="en"?"Length":"Comp."} (cm)`}><input type="number" inputMode="decimal" step="0.1" placeholder="55" value={lC} onChange={e=>setLC(e.target.value)} style={inp}/></Fld>
+        <Fld label={`${L("head")} (cm)`}><input type="number" inputMode="decimal" step="0.1" placeholder="37" value={hC} onChange={e=>setHC(e.target.value)} style={inp}/></Fld>
       </div>
       <button onClick={doAdd} style={{width:"100%",padding:12,borderRadius:10,background:"#a3e635",color:T.bg1,fontSize:14,fontWeight:700}}>{_lang==="en"?"Save measurement":L("save")+" medição"}</button>
     </div>}
@@ -1305,9 +1306,9 @@ function GrowthPage({entries,birthDate,profile,onBack,onAddEntry}){
     {/* Growth charts */}
     {allPoints.length>0&&<>
       <div style={{fontSize:12,fontWeight:600,color:T.dim,marginTop:16,marginBottom:10,textTransform:"uppercase",letterSpacing:0.8}}>{_lang==="en"?"Growth curves":"Curvas de crescimento"}</div>
-      <GrowthChart label="Peso (kg)" field="weightKg" table={WHO_GIRLS.weight} color={T.green}/>
-      <GrowthChart label="Comprimento (cm)" field="lengthCm" table={WHO_GIRLS.length} color={T.blue}/>
-      <GrowthChart label="Cabeça (cm)" field="headCm" table={WHO_GIRLS.head} color={T.amber}/>
+      <GrowthChart label={`${L("weight")} (kg)`} field="weightKg" table={WHO_GIRLS.weight} color={T.green}/>
+      <GrowthChart label={`${L("length")} (cm)`} field="lengthCm" table={WHO_GIRLS.length} color={T.blue}/>
+      <GrowthChart label={`${L("head")} (cm)`} field="headCm" table={WHO_GIRLS.head} color={T.amber}/>
     </>}
 
     {/* History table */}
