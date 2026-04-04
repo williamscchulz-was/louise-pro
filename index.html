@@ -1326,8 +1326,11 @@ function App(){
   const today=todayStr();
   const cycleStart=useMemo(()=>{
     const sorted=[...entries].sort((a,b)=>`${b.date}T${b.time}`.localeCompare(`${a.date}T${a.time}`));
+    // First: find most recent wakeup
+    const wk=sorted.find(e=>e.type==="wakeup");
+    if(wk)return new Date(`${wk.date}T${wk.time}`);
+    // Fallback: find end of a sleep/nap that ended 4-12am
     for(const e of sorted){
-      if(e.type==="wakeup")return new Date(`${e.date}T${e.time}`);
       if((e.type==="sleep"||e.type==="nap")&&e.durationMin>0){const end=new Date(new Date(`${e.date}T${e.time}`).getTime()+e.durationMin*60000);const h=end.getHours();if(h>=4&&h<=12)return end}
     }
     const todayEvs=entries.filter(e=>e.date===today);
