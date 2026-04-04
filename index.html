@@ -3,6 +3,13 @@
   LOUISE PRO — BABY TRACKER — CHANGELOG
 ═══════════════════════════════════════════════════════════════
 
+  v6.0.0  04/04/2026  Ring Napper-style + Nav flush
+    • Timer ativo (nap/sleep): dashed orbit girando 8s + glow 3 camadas + icon breathing
+    • Ultimo evento dot: dashed ring 88% opacity + glow forte + ring expand
+    • Nav bar: bottom:0, borderRadius top-only, safe-area como padding interno
+    • Duration labels nos arcos de sono (22min, 35min etc.)
+    • Opacidades reforçadas em todos os efeitos glow
+
   v5.7.0  04/04/2026  Bug fixes batch
     • CuriosityCard: separou show/dismiss em 2 effects, timer agora funciona (15s)
     • Stats: valores das barras fontSize 7→10px, color T.sub, fontWeight 600
@@ -363,8 +370,9 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "5.8.0";
+const APP_VERSION = "6.0.0";
 const CHANGELOG = [
+  { v: "6.0.0", date: "2026-04-04", changes: "Ring Napper-style: timer ativo (nap/sleep) com dashed orbit girando + glow 3 camadas, ultimo evento dot com dashed ring + glow forte, nav bar colado no fundo (bottom:0 com safe-area interno), duration labels nos arcos, opacidades reforçadas" },
   { v: "5.8.0", date: "2026-04-04", changes: "Ring refinements: duration labels on sleep arcs, last event pulses with 3-layer glow animation (Napper-style), CuriosityCard window 9-10h" },
   { v: "5.7.0", date: "2026-04-04", changes: "Bug fixes: CuriosityCard auto-dismiss timer, stats bar values legibility (7→10px), date input overflow on mobile, nav bar closer to bottom (8→2px gap)" },
   { v: "5.6.0", date: "2026-04-04", changes: "Time-ago legibility: summary cards 8→12px cor da categoria, timeline 9→11px, bottom sheet 10→12px, tudo com peso 500-600 e cor mais visivel" },
@@ -746,10 +754,15 @@ function Ring({activeTimer,napSug,tick,recentEvents,lang,showOrbit}){
       </svg>
       {/* Sleep icons centered on pills */}
       {sleepArcs.map((sa,i)=><div key={"si"+i} style={{position:"absolute",left:sa.mx-sleepSz/2,top:sa.my-sleepSz/2,width:sleepSz,height:sleepSz,borderRadius:"50%",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",zIndex:3,filter:`drop-shadow(0 0 6px ${sa.col}55)`}}><Icon name={sa.ev.type==="nap"?"cloud":"moon"} size={20} color={sa.col}/><span style={{fontSize:9,fontWeight:700,color:`${sa.col}88`,marginTop:1}}>{fmtDur(sa.ev.durationMin)}</span></div>)}
-      {/* Live timer icon */}
-      {timerArc&&<div style={{position:"absolute",left:timerArc.mx-sleepSz/2,top:timerArc.my-sleepSz/2,width:sleepSz,height:sleepSz,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",zIndex:4,filter:`drop-shadow(0 0 8px ${timerArc.col}66)`,animation:"pulse 2s infinite"}}><Icon name={activeTimer.type==="nap"?"cloud":"moon"} size={20} color={timerArc.col}/></div>}
+      {/* Live timer icon — Napper-style glow */}
+      {timerArc&&<div style={{position:"absolute",left:timerArc.mx-sleepSz/2-12,top:timerArc.my-sleepSz/2-12,width:sleepSz+24,height:sleepSz+24,zIndex:4,pointerEvents:"none"}}>
+        <div style={{position:"absolute",left:"50%",top:"50%",width:sleepSz+22,height:sleepSz+22,borderRadius:"50%",border:`2px dashed ${timerArc.col}66`,animation:"dashedSpin 8s linear infinite"}}/>
+        <div style={{position:"absolute",left:"50%",top:"50%",width:sleepSz+16,height:sleepSz+16,borderRadius:"50%",background:`radial-gradient(circle,${timerArc.col}25,transparent)`,transform:"translate(-50%,-50%)",animation:"glowBreathe 2s ease-in-out infinite"}}/>
+        <div style={{position:"absolute",left:"50%",top:"50%",width:sleepSz+10,height:sleepSz+10,borderRadius:"50%",border:`1.5px solid ${timerArc.col}55`,transform:"translate(-50%,-50%)",animation:"ringExpand 2s ease-in-out infinite"}}/>
+        <div style={{position:"absolute",left:"50%",top:"50%",transform:"translate(-50%,-50%)",width:sleepSz,height:sleepSz,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",filter:`drop-shadow(0 0 12px ${timerArc.col}88)`,animation:"glowBreathe 2s ease-in-out infinite"}}><Icon name={activeTimer.type==="nap"?"cloud":"moon"} size={22} color={timerArc.col}/></div>
+      </div>}
       {dots.map((gr,i)=>{const d=gr.primary,c=d.cfg.color,isGrp=gr.items.length>1,active=tip===i;const isLast=i===lastDotIdx&&!activeTimer;const lines=gr.items.map(it=>{let l=TL(it.ev.type);if(it.ev.ml)l+=` \u00b7 ${it.ev.ml}ml`;else if(it.ev.subtype)l+=` \u00b7 ${({wet:L("wet"),dirty:L("dirty"),both:L("both")})[it.ev.subtype]||""}`;return`${l} \u00b7 ${it.ev.time}`});return(<div key={d.ev.id||i} style={{position:"absolute",left:d.x-dotSz/2,top:d.y-dotSz/2}}>
-        {isLast&&<><div style={{position:"absolute",left:"50%",top:"50%",width:dotSz+24,height:dotSz+24,borderRadius:"50%",border:`2px dashed ${c}55`,animation:"dashedSpin 8s linear infinite",pointerEvents:"none",zIndex:0}}/><div style={{position:"absolute",left:"50%",top:"50%",width:dotSz+18,height:dotSz+18,borderRadius:"50%",background:`radial-gradient(circle,${c}20,transparent)`,transform:"translate(-50%,-50%)",animation:"glowBreathe 2s ease-in-out infinite",pointerEvents:"none",zIndex:0}}/><div style={{position:"absolute",left:"50%",top:"50%",width:dotSz+12,height:dotSz+12,borderRadius:"50%",border:`1.5px solid ${c}66`,transform:"translate(-50%,-50%)",animation:"ringExpand 2s ease-in-out infinite",pointerEvents:"none",zIndex:1}}/></>}
+        {isLast&&<><div style={{position:"absolute",left:"50%",top:"50%",width:dotSz+24,height:dotSz+24,borderRadius:"50%",border:`2px dashed ${c}88`,animation:"dashedSpin 8s linear infinite",pointerEvents:"none",zIndex:0}}/><div style={{position:"absolute",left:"50%",top:"50%",width:dotSz+18,height:dotSz+18,borderRadius:"50%",background:`radial-gradient(circle,${c}25,transparent)`,transform:"translate(-50%,-50%)",animation:"glowBreathe 2s ease-in-out infinite",pointerEvents:"none",zIndex:0}}/><div style={{position:"absolute",left:"50%",top:"50%",width:dotSz+12,height:dotSz+12,borderRadius:"50%",border:`1.5px solid ${c}77`,transform:"translate(-50%,-50%)",animation:"ringExpand 2s ease-in-out infinite",pointerEvents:"none",zIndex:1}}/></>}
         {isGrp&&gr.items.slice(1,3).map((sd,si)=><div key={"st"+si} style={{position:"absolute",left:4*(si+1),top:4*(si+1),width:dotSz,height:dotSz,borderRadius:"50%",background:"radial-gradient(circle at 35% 30%,rgba(24,30,65,0.9),rgba(8,12,35,0.95))",border:`2px solid ${sd.cfg.color}44`,zIndex:0,boxShadow:"0 2px 8px rgba(0,0,0,0.3)"}}/>)}
         <div onClick={e=>{e.stopPropagation();setTip(active?null:i)}} style={{position:"relative",width:dotSz,height:dotSz,borderRadius:"50%",background:"radial-gradient(circle at 35% 30%,rgba(30,38,80,0.95),rgba(12,16,42,0.98))",border:`2.5px solid ${active||isLast?c:c+"77"}`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 2px 10px rgba(0,0,0,0.45), 0 0 ${active?22:isLast?24:16}px ${c}${active?"55":isLast?"55":"30"}${isLast?`, 0 0 40px ${c}20`:""}, inset 0 1px 0 rgba(200,220,255,0.06), inset 0 -1px 3px rgba(0,0,0,0.15)`,zIndex:active?10:isLast?5:2,transform:active?"scale(1.15)":"scale(1)",transition:"all .2s cubic-bezier(0.34,1.56,0.64,1)",overflow:"hidden",filter:`drop-shadow(0 0 ${isLast?10:5}px ${c}${isLast?"77":"44"})`,animation:isLast?"glowBreathe 2s ease-in-out infinite":"none"}}>
           <div style={{position:"absolute",top:"10%",left:"18%",width:"50%",height:"28%",background:`radial-gradient(ellipse,${c}22,transparent)`,borderRadius:"50%",filter:"blur(3px)"}}/>
