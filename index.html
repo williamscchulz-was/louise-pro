@@ -420,6 +420,53 @@ function timeSince(d,t){if(!d||!t)return"";const diff=Math.floor((new Date()-new
 function minSince(d,t){if(!d||!t)return null;return Math.max(0,Math.floor((new Date()-new Date(`${d}T${t}`))/6e4))}
 function dateOffset(b,o){const d=new Date(b+"T12:00:00");d.setDate(d.getDate()+o);return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
 
+// ── CURIOSITIES ──
+const CURIOSITIES=[
+  {pt:{t:"Bem-vinda ao mundo!",b:"Recém-nascidos só enxergam de 20-30cm. O mundo é preto, branco e tons de cinza. Seu rosto é a coisa favorita!"},en:{t:"Welcome to the world!",b:"Newborns can only see 20-30cm away. The world is black, white and shades of gray. Your face is her favorite thing!"}},
+  {pt:{t:"O olfato é o superpoder",b:"Seu bebê reconhece o cheiro da mãe desde o primeiro dia. É o sentido mais desenvolvido ao nascer!"},en:{t:"Smell is the superpower",b:"Your baby recognizes mom's scent from day one. It's the most developed sense at birth!"}},
+  {pt:{t:"Reflexos incríveis",b:"O reflexo de preensão é tão forte que o bebê consegue suportar seu próprio peso segurando seus dedos!"},en:{t:"Incredible reflexes",b:"The grip reflex is so strong that your baby could support their own weight holding your fingers!"}},
+  {pt:{t:"Sono de recém-nascido",b:"Bebês dormem 16-17h por dia, mas em ciclos de 2-4h. Cada ciclo de sono dura só 50 minutos (adulto: 90min)."},en:{t:"Newborn sleep",b:"Babies sleep 16-17h/day but in 2-4h cycles. Each sleep cycle is only 50 minutes (adult: 90min)."}},
+  {pt:{t:"O choro é comunicação",b:"Seu bebê já tem pelo menos 3 tipos de choro diferentes: fome, sono e desconforto. Com o tempo você vai distinguir cada um!"},en:{t:"Crying is communication",b:"Your baby already has at least 3 different cry types: hunger, sleep and discomfort. You'll learn to tell them apart!"}},
+  {pt:{t:"Crescimento acelerado",b:"O cérebro do bebê cresce 1% ao dia nesta fase. Aos 3 meses terá dobrado de tamanho em relação ao nascimento!"},en:{t:"Rapid growth",b:"Your baby's brain grows 1% per day at this stage. By 3 months it will have doubled in size from birth!"}},
+  {pt:{t:"O cordão vai cair logo",b:"Entre 7-21 dias o coto do cordão seca e cai naturalmente. Mantenha limpo e seco — não precisa puxar!"},en:{t:"The cord will fall soon",b:"Between 7-21 days the cord stump dries and falls naturally. Keep it clean and dry — no need to pull!"}},
+  {pt:{t:"Pele a pele é remédio",b:"O contato pele a pele regula temperatura, batimentos cardíacos e reduz o estresse. 1 hora por dia faz diferença enorme!"},en:{t:"Skin to skin is medicine",b:"Skin-to-skin contact regulates temperature, heart rate and reduces stress. 1 hour daily makes a huge difference!"}},
+  {pt:{t:"Ela ouve sua voz",b:"Bebês preferem vozes femininas e agudas. Aquela voz fina que você faz sem pensar? É instinto — e funciona!"},en:{t:"She hears your voice",b:"Babies prefer female, high-pitched voices. That silly voice you make without thinking? It's instinct — and it works!"}},
+  {pt:{t:"O leite muda de cor",b:"O leite materno muda de composição ao longo do dia: mais gordura à noite para ajudar o sono, mais energia de manhã!"},en:{t:"Milk changes color",b:"Breast milk changes composition throughout the day: more fat at night to help sleep, more energy in the morning!"}},
+  {pt:{t:"Bebês nascem nadadores",b:"O reflexo de mergulho faz o bebê prender a respiração automaticamente quando o rosto toca a água. Incrível, né?"},en:{t:"Babies are born swimmers",b:"The diving reflex makes babies automatically hold their breath when their face touches water. Amazing, right?"}},
+  {pt:{t:"O sorriso está chegando",b:"Os primeiros sorrisos reflexos já podem aparecer, especialmente durante o sono. O sorriso social vem por volta de 6-8 semanas!"},en:{t:"The smile is coming",b:"First reflex smiles may already appear, especially during sleep. The social smile comes around 6-8 weeks!"}},
+  {pt:{t:"Ela já sonha!",b:"Bebês passam 50% do sono em fase REM (adultos: 20%). Cientistas acreditam que eles já sonham — provavelmente com você!"},en:{t:"She already dreams!",b:"Babies spend 50% of sleep in REM phase (adults: 20%). Scientists believe they already dream — probably about you!"}},
+  {pt:{t:"Recuperou o peso!",b:"A maioria dos bebês perde 5-10% do peso nos primeiros dias e recupera por volta do dia 10-14. Ela está crescendo!"},en:{t:"Weight recovered!",b:"Most babies lose 5-10% of birth weight in first days and regain it by day 10-14. She's growing perfectly!"}},
+  {pt:{t:"Micro expressões",b:"Seu bebê já imita expressões faciais! Se você mostrar a língua bem devagar, ela pode tentar copiar. Teste!"},en:{t:"Micro expressions",b:"Your baby already mimics facial expressions! If you slowly stick out your tongue, she may try to copy. Try it!"}},
+  {pt:{t:"Barulho branco é calmante",b:"Sons como secador, aspirador ou 'shhhh' lembram o útero (que era barulhento!). Pode usar para acalmar o choro."},en:{t:"White noise is soothing",b:"Sounds like hair dryers, vacuums or 'shhhh' remind them of the womb (which was noisy!). Great for calming crying."}},
+  {pt:{t:"A fontanela pulsa",b:"A moleira do bebê pulsa com os batimentos cardíacos. É normal! Ela protege o cérebro e permite que a cabeça cresça."},en:{t:"The fontanelle pulses",b:"The baby's soft spot pulses with the heartbeat. It's normal! It protects the brain and allows the head to grow."}},
+  {pt:{t:"Sem lágrimas ainda",b:"Recém-nascidos choram sem lágrimas! As glândulas lacrimais só amadurecem por volta de 3-4 semanas."},en:{t:"No tears yet",b:"Newborns cry without tears! The tear glands only mature around 3-4 weeks."}},
+  {pt:{t:"O toque é aprendizado",b:"Cada vez que você toca seu bebê, milhares de conexões neurais se formam. Massagem infantil é estimulação pura!"},en:{t:"Touch is learning",b:"Every time you touch your baby, thousands of neural connections form. Baby massage is pure stimulation!"}},
+  {pt:{t:"Ela reconhece idiomas",b:"Bebês conseguem distinguir todos os fonemas de todos os idiomas. Essa habilidade diminui aos 10 meses, focando na língua materna."},en:{t:"She recognizes languages",b:"Babies can distinguish all phonemes from all languages. This ability decreases by 10 months, focusing on the native language."}},
+  {pt:{t:"Padrão de sono formando",b:"As janelas de sono vão ficando mais definidas. O ritmo circadiano começa a se formar, orientado pela luz do dia."},en:{t:"Sleep pattern forming",b:"Wake windows are becoming more defined. The circadian rhythm is starting to form, guided by daylight."}},
+  {pt:{t:"O estômago é minúsculo",b:"O estômago do recém-nascido tem o tamanho de uma cereja no dia 1, uma noz no dia 3, e um ovo aos 10 dias!"},en:{t:"The stomach is tiny",b:"A newborn's stomach is the size of a cherry on day 1, a walnut by day 3, and an egg by day 10!"}},
+  {pt:{t:"Bebês preferem padrões",b:"Seu bebê prefere olhar para padrões de alto contraste — listras preto e branco são mais interessantes que cores!"},en:{t:"Babies prefer patterns",b:"Your baby prefers looking at high-contrast patterns — black and white stripes are more interesting than colors!"}},
+  {pt:{t:"A voz do pai acalma",b:"Estudos mostram que a voz grave do pai pode ser tão calmante quanto a da mãe. Converse, cante — ela está ouvindo!"},en:{t:"Dad's voice calms",b:"Studies show that dad's deep voice can be as soothing as mom's. Talk, sing — she's listening!"}},
+  {pt:{t:"Movimentos reflexos",b:"Os movimentos 'de susto' (reflexo de Moro) são normais e vão diminuir até os 4 meses. O swaddle ajuda!"},en:{t:"Reflex movements",b:"The 'startle' movements (Moro reflex) are normal and will decrease by 4 months. Swaddling helps!"}},
+  {pt:{t:"Ela reconhece seu rosto!",b:"Com 4 semanas, bebês focam em objetos de 20-30cm — a distância do seu rosto durante a amamentação. Ela estuda cada detalhe!"},en:{t:"She recognizes your face!",b:"At 4 weeks, babies focus on objects 20-30cm away — the distance to your face during breastfeeding. She's studying every detail!"}},
+  {pt:{t:"O intestino está aprendendo",b:"Cólicas são comuns entre 2-12 semanas. O sistema digestivo ainda está amadurecendo — vai melhorar!"},en:{t:"The gut is learning",b:"Colic is common between 2-12 weeks. The digestive system is still maturing — it will get better!"}},
+  {pt:{t:"Quase 1 mês!",b:"Em 28 dias, o cérebro cresceu 15%. Ela já segue objetos com os olhos e reconhece sua voz entre outras. Incrível evolução!"},en:{t:"Almost 1 month!",b:"In 28 days, the brain has grown 15%. She already follows objects with her eyes and recognizes your voice among others!"}},
+  {pt:{t:"Músculos do pescoço",b:"O bebê já começa a tentar erguer a cabeça brevemente durante o tummy time. Cada segundo fortalece os músculos!"},en:{t:"Neck muscles",b:"Your baby is starting to briefly lift her head during tummy time. Every second strengthens the muscles!"}},
+  {pt:{t:"1 mês completo! 🎉",b:"Parabéns! Seu bebê já cresceu cerca de 3-4cm e ganhou ~700g. O período mais intenso está passando. Vocês estão indo muito bem!"},en:{t:"1 month complete! 🎉",b:"Congratulations! Your baby has grown about 3-4cm and gained ~700g. The most intense period is passing. You're doing great!"}},
+];
+const MILESTONES=[
+  {m:2,pt:{t:"2 meses completos! 🎉",b:"O ritmo circadiano está amadurecendo! O sono começa a ficar mais previsível. O Sleep Engine agora aprende a rotina pessoal da Louise."},en:{t:"2 months complete! 🎉",b:"The circadian rhythm is maturing! Sleep is becoming more predictable. The Sleep Engine is now learning Louise's personal routine."}},
+  {m:3,pt:{t:"3 meses! O sorriso social chegou! 😊",b:"Louise já sorri intencionalmente e pode começar a balbuciar. Ela segue objetos com os olhos e está descobrindo as próprias mãos!"},en:{t:"3 months! The social smile is here! 😊",b:"Louise now smiles intentionally and may start cooing. She follows objects with her eyes and is discovering her own hands!"}},
+  {m:4,pt:{t:"4 meses! Risadas! 😂",b:"Prepare-se para as primeiras gargalhadas! Ela já rola de bruços para costas e pode começar a pegar objetos com as mãos."},en:{t:"4 months! Laughs! 😂",b:"Get ready for the first giggles! She already rolls from tummy to back and may start grasping objects."}},
+  {m:5,pt:{t:"5 meses! Curiosa 🔍",b:"Tudo vai pra boca! Ela está explorando texturas e pode começar a sentar com apoio."},en:{t:"5 months! Curious 🔍",b:"Everything goes to the mouth! She's exploring textures and may start sitting with support."}},
+  {m:6,pt:{t:"6 meses! Introdução alimentar 🥕",b:"Hora da papinha! O sistema digestivo está pronto para alimentos sólidos. Um novo mundo de sabores começa!"},en:{t:"6 months! Solid food time 🥕",b:"Time for solids! The digestive system is ready for solid food. A whole new world of flavors begins!"}},
+  {m:7,pt:{t:"7 meses! Sentando sozinha 💪",b:"Louise provavelmente já senta sem apoio! Pode começar a engatinhar ou se arrastar. O mundo ficou maior!"},en:{t:"7 months! Sitting alone 💪",b:"Louise probably sits without support now! She may start crawling or scooting. The world just got bigger!"}},
+  {m:8,pt:{t:"8 meses! Ansiedade de separação",b:"É normal ela estranhar outras pessoas. Significa que o vínculo com vocês está forte. Paciência — passa!"},en:{t:"8 months! Separation anxiety",b:"It's normal for her to be wary of others. It means the bond with you is strong. Patience — it passes!"}},
+  {m:9,pt:{t:"9 meses! Exploradora 🧭",b:"Engatinhando ou se puxando pra ficar de pé. O 'não' começa a ter significado. Hora de revisar a segurança da casa!"},en:{t:"9 months! Explorer 🧭",b:"Crawling or pulling to stand. 'No' starts to have meaning. Time to baby-proof the house!"}},
+  {m:10,pt:{t:"10 meses! Pinça fina ✌️",b:"Ela já pega objetos pequenos com polegar e indicador. Adora bater palmas e dar tchau!"},en:{t:"10 months! Pincer grasp ✌️",b:"She now picks up small objects with thumb and index finger. Loves clapping and waving!"}},
+  {m:11,pt:{t:"11 meses! Quase andando 🚶‍♀️",b:"Ficando de pé sozinha e dando os primeiros passos segurando em móveis. As primeiras palavras podem aparecer!"},en:{t:"11 months! Almost walking 🚶‍♀️",b:"Standing alone and taking first steps holding furniture. First words may appear!"}},
+  {m:12,pt:{t:"1 ANO! 🎂🎉",b:"Parabéns!! De um recém-nascido a uma pessoinha cheia de personalidade. Que jornada incrível! Louise e vocês são demais!"},en:{t:"1 YEAR! 🎂🎉",b:"Congratulations!! From a newborn to a little person full of personality. What an incredible journey! Louise and you are amazing!"}},
+];
+
 // Split sleep entry that crosses midnight into two entries
 function splitMidnight(entry){
   if(!entry.durationMin || (entry.type!=="sleep"&&entry.type!=="nap")) return [entry];
@@ -569,6 +616,7 @@ function Icon({name,size=20,color="currentColor",fill="none"}){
     arrowUp:<svg {...pu}><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>,
     arrowDown:<svg {...pu}><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>,
     ruler:<svg {...p}><path d="M21 3L3 21"/><path d="M6 18l-2 2M9 15l-2 2M12 12l-2 2M15 9l-2 2M18 6l-2 2"/></svg>,
+    gift:<svg {...p}>{grad}<path d="M20 12v6a2 2 0 01-2 2H6a2 2 0 01-2-2v-6" fill={gFill}/><rect x="2" y="7" width="20" height="5" rx="2" fill={gFill}/><line x1="12" y1="7" x2="12" y2="22"/><path d="M12 7c-1.5-2-4-2.5-4-1s2 3.5 4 3.5c2 0 4-2 4-3.5s-2.5-1-4 1z" fill={gFill}/></svg>,
   };
   return icons[name]||<svg {...p}><circle cx="12" cy="12" r="8"/></svg>;
 }
@@ -810,6 +858,44 @@ function TimerBar({activeTimer,onStop,onSwitch,onPause}){const[tick,setTick]=use
   }
   const secs=Math.max(0,Math.floor((Date.now()-new Date(activeTimer.startTime).getTime())/1000));
   return(<div style={{position:"fixed",bottom:"calc(66px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 32px)",maxWidth:448,padding:"12px 16px",borderRadius:16,background:"rgba(20,26,66,0.92)",border:`1px solid ${T.purple}33`,backdropFilter:"blur(12px)",display:"flex",alignItems:"center",gap:12,zIndex:60,boxShadow:"0 4px 24px rgba(0,0,0,0.4)"}}><div style={{width:36,height:36,borderRadius:10,background:T.purpleS,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name={activeTimer.type==="nap"?"cloud":"moon"} size={18} color={T.purple}/></div><div style={{flex:1}}><div style={{fontSize:12,fontWeight:600,color:T.sub}}>{activeTimer.type==="nap"?TL("nap"):TL("sleep")}</div><div style={{fontSize:20,fontWeight:800,fontVariantNumeric:"tabular-nums"}}>{fmtTimer(secs)}</div></div><button onClick={onStop} style={{width:40,height:40,borderRadius:12,background:T.purpleS,border:`1px solid ${T.purple}33`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="stop" size={16} color={T.purple}/></button></div>)}
+
+function CuriosityCard({age,birthDate,lang,onDismiss,dismissed}){
+  if(!age||!birthDate)return null;
+  const dayNum=age.totalDays;const monthNum=age.totalMonths;
+  const colors=["#fbbf24","#34d399","#38bdf8","#a78bfa","#f472b6","#fb923c"];
+  // Daily curiosity (day 1-30)
+  if(dayNum>=1&&dayNum<=30){
+    if(dismissed>=dayNum)return null;
+    const c=CURIOSITIES[dayNum-1];if(!c)return null;
+    const txt=lang==="en"?c.en:c.pt;const col=colors[(dayNum-1)%colors.length];
+    return(<div style={{margin:"0 16px 12px",padding:"14px 16px",borderRadius:16,background:`linear-gradient(135deg,${col}12,${col}06)`,border:`1px solid ${col}22`,position:"relative",animation:"fadeIn .3s"}}>
+      <button onClick={()=>onDismiss(dayNum,null)} style={{position:"absolute",top:10,right:12,width:24,height:24,borderRadius:8,background:"rgba(255,255,255,0.05)",display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="x" size={12} color={T.dim}/></button>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+        <div style={{width:28,height:28,borderRadius:8,background:`${col}20`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="star" size={14} color={col} fill={col}/></div>
+        <span style={{fontSize:9,fontWeight:700,letterSpacing:1,textTransform:"uppercase",padding:"2px 8px",borderRadius:5,background:`${col}18`,color:col}}>{lang==="en"?`Day ${dayNum}`:`Dia ${dayNum}`}</span>
+      </div>
+      <div style={{fontSize:14,fontWeight:700,marginBottom:4,paddingRight:20}}>{txt.t}</div>
+      <div style={{fontSize:12,color:T.sub,lineHeight:1.5}}>{txt.b}</div>
+      <div style={{fontSize:10,color:T.dim,marginTop:8}}>{lang==="en"?`${30-dayNum} days left`:`${30-dayNum} dias restantes`}</div>
+    </div>)
+  }
+  // Monthly milestone (month 2-12)
+  if(monthNum>=2&&monthNum<=12){
+    if(dismissed===null||dismissed===undefined){}else if(dismissed>=monthNum+100)return null;
+    const ms=MILESTONES.find(m=>m.m===monthNum);if(!ms)return null;
+    const txt=lang==="en"?ms.en:ms.pt;const col=colors[(monthNum-1)%colors.length];
+    return(<div style={{margin:"0 16px 12px",padding:"14px 16px",borderRadius:16,background:`linear-gradient(135deg,${col}12,${col}06)`,border:`1px solid ${col}22`,position:"relative",animation:"fadeIn .3s"}}>
+      <button onClick={()=>onDismiss(null,monthNum)} style={{position:"absolute",top:10,right:12,width:24,height:24,borderRadius:8,background:"rgba(255,255,255,0.05)",display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="x" size={12} color={T.dim}/></button>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+        <div style={{width:28,height:28,borderRadius:8,background:`${col}20`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="gift" size={14} color={col}/></div>
+        <span style={{fontSize:9,fontWeight:700,letterSpacing:1,textTransform:"uppercase",padding:"2px 8px",borderRadius:5,background:`${col}18`,color:col}}>{lang==="en"?`${monthNum} months`:`${monthNum} meses`}</span>
+      </div>
+      <div style={{fontSize:14,fontWeight:700,marginBottom:4,paddingRight:20}}>{txt.t}</div>
+      <div style={{fontSize:12,color:T.sub,lineHeight:1.5}}>{txt.b}</div>
+    </div>)
+  }
+  return null;
+}
 
 function Toast({message,onUndo,onClose}){const closeRef=useRef(onClose);closeRef.current=onClose;useEffect(()=>{const t=setTimeout(()=>closeRef.current(),2000);return()=>clearTimeout(t)},[]);return(<div style={{position:"fixed",top:"calc(20px + env(safe-area-inset-top))",left:"50%",transform:"translateX(-50%)",zIndex:300,padding:"10px 16px",borderRadius:14,background:"rgba(20,26,66,0.95)",border:`1px solid ${T.gB}`,backdropFilter:"blur(12px)",display:"flex",alignItems:"center",gap:10,boxShadow:"0 8px 24px rgba(0,0,0,0.5)",animation:"slideDown .3s ease"}}><span style={{fontSize:13,color:T.text}}>{message}</span>{onUndo&&<button onClick={onUndo} style={{padding:"4px 12px",borderRadius:8,background:T.accent,color:"#fff",fontSize:12,fontWeight:700}}>{L("undo")}</button>}</div>)}
 
@@ -1332,6 +1418,7 @@ function App(){
           <div style={{flex:1}}><h1 style={{fontSize:20,fontWeight:800,margin:0,letterSpacing:-0.5}}>{babyName}</h1><div style={{fontSize:11,color:T.sub,marginTop:2}}>{age&&<>{age.months>0?`${age.months} ${_lang==="en"?(age.months===1?"month":"months"):(age.months===1?"mês":"meses")}${_lang==="en"?" and ":" e "}`:""}{age.days} {_lang==="en"?"days":"dias"}</>}</div></div>
           <div style={{textAlign:"right"}}><div style={{fontSize:10,color:T.dim}}>{new Date().toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{day:"numeric",month:"short"})}</div><div style={{fontSize:8,color:T.dim,opacity:0.5,marginTop:2}}>v{APP_VERSION}</div></div>
         </div>
+        <CuriosityCard age={age} birthDate={profile.birthDate} lang={lang} dismissed={profile.dismissedCuriosity||0} onDismiss={async(day,month)=>{const v=day||((month||0)+100);await FB.saveProfile({...profile,dismissedCuriosity:v});setProfile(p=>({...p,dismissedCuriosity:v}))}}/>
         <div style={{padding:"4px 0 0"}}><Ring activeTimer={activeTimer} napSug={napSug} tick={tick} recentEvents={cycleE} lang={lang} showOrbit={showOrbit}/></div>
         <div style={{display:"flex",gap:6,padding:"0 20px",marginBottom:14}}>{!activeTimer&&<><button onClick={()=>{setFormType("bottle");setShowAdd(false)}} style={{flex:1,padding:"10px 0",borderRadius:12,background:T.greenS,border:`1px solid ${T.green}22`,display:"flex",alignItems:"center",justifyContent:"center",gap:4}}><Icon name="bottle" size={12} color={T.green}/><span style={{fontSize:10,fontWeight:700,color:T.green}}>{_lang==="en"?"Bottle":"Mamad."}</span></button><button onClick={()=>startTimer("nursing","left")} style={{flex:1,padding:"10px 0",borderRadius:12,background:T.blueS,border:`1px solid ${T.blue}22`,display:"flex",alignItems:"center",justifyContent:"center",gap:4}}><Icon name="play" size={11} color={T.blue}/><span style={{fontSize:10,fontWeight:700,color:T.blue}}>{_lang==="en"?"Nurse":"Amam."}</span></button><button onClick={()=>startTimer("nap")} style={{flex:1,padding:"10px 0",borderRadius:12,background:`${T.accent}15`,border:`1px solid ${T.accent}22`,display:"flex",alignItems:"center",justifyContent:"center",gap:4}}><Icon name="play" size={11} color={T.accent}/><span style={{fontSize:10,fontWeight:700,color:T.accent}}>{_lang==="en"?"Nap":"Soneca"}</span></button><button onClick={()=>startTimer("sleep")} style={{flex:1,padding:"10px 0",borderRadius:12,background:T.purpleS,border:`1px solid ${T.purple}22`,display:"flex",alignItems:"center",justifyContent:"center",gap:4}}><Icon name="play" size={11} color={T.purple}/><span style={{fontSize:10,fontWeight:700,color:T.purple}}>{_lang==="en"?"Sleep":"Sono"}</span></button></>}</div>
         {napSug?.wind&&<div style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:T.amberS,border:`1px solid ${T.amber}22`,display:"flex",alignItems:"center",gap:10,animation:"pulse 2s infinite"}}><Icon name="bell" size={18} color={T.amber}/><div><div style={{fontSize:12,fontWeight:700,color:T.amber}}>{_lang==="en"?"Get ready for sleep":"Preparar para dormir"}</div><div style={{fontSize:10,color:T.sub}}>{_lang==="en"?`~${napSug.rem}min left`:`~${napSug.rem}min restantes`}</div></div></div>}
