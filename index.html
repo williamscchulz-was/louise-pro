@@ -373,8 +373,9 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "6.0.1";
+const APP_VERSION = "6.0.2";
 const CHANGELOG = [
+  { v: "6.0.2", date: "2026-04-04", changes: "Revert CSS hacks (html::after, --sab, nuclear div) que quebraram scroll/nav. Volta ao padrao calc+env. Splash gradient fix. Glow animations fix (glowCenter/glowBreathe split)." },
   { v: "6.0.0", date: "2026-04-04", changes: "Ring Napper-style: last event global (dots+arcs), timer ativo com dashes fluindo + comet tip, ultimo sleep arc com dashes + glow forte, ultimo dot com dashed orbit, nav bar colado no fundo, duration labels, Sleep Engine separado" },
   { v: "5.8.0", date: "2026-04-04", changes: "Ring refinements: duration labels on sleep arcs, last event pulses with 3-layer glow animation (Napper-style), CuriosityCard window 9-10h" },
   { v: "5.7.0", date: "2026-04-04", changes: "Bug fixes: CuriosityCard auto-dismiss timer, stats bar values legibility (7→10px), date input overflow on mobile, nav bar closer to bottom (8→2px gap)" },
