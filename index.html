@@ -1,4 +1,4 @@
-<!--
+l<!--
 ═══════════════════════════════════════════════════════════════
   LOUISE PRO — BABY TRACKER — CHANGELOG
 ═══════════════════════════════════════════════════════════════
@@ -473,7 +473,7 @@ function analyzeSleepPatterns(allEntries,numDays){
     const date=dateOffset(today,-d);
     const de=allEntries.filter(e=>e.date===date);
     let wakeMin=null;
-    const wk=de.find(e=>e.type==="wakeup"||e.type==="nightwaking");
+    const wk=de.find(e=>e.type==="wakeup");
     if(wk){wakeMin=toMinutes(wk.time)}
     else{const sl=de.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin>0).sort((a,b)=>a.time.localeCompare(b.time));if(sl.length>0){const em=toMinutes(sl[0].time)+sl[0].durationMin;if(em>=300&&em<=720)wakeMin=em}}
     if(!wakeMin)continue;
@@ -659,7 +659,7 @@ function Ring({activeTimer,napSug,tick,recentEvents,lang,showOrbit}){
   const evs=(recentEvents||[]);
   // Day window: from wake-up to midnight
   let wakeMin=6*60;let hasWakeup=false;
-  const wakeEv=evs.find(e=>e.type==="wakeup"||e.type==="nightwaking");
+  const wakeEv=evs.find(e=>e.type==="wakeup");
   if(wakeEv){wakeMin=toMin(wakeEv.time);hasWakeup=true}
   else{const ls=evs.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin>0).sort((a,b)=>(b.date+"T"+b.time).localeCompare(a.date+"T"+a.time))[0];if(ls){const em=toMin(ls.time)+ls.durationMin;if(em>=5*60&&em<=12*60){wakeMin=em;hasWakeup=true}}
   else{const firstEv=[...evs].sort((a,b)=>a.time.localeCompare(b.time))[0];if(firstEv)wakeMin=Math.max(0,toMin(firstEv.time)-15)}}
@@ -1240,7 +1240,7 @@ function App(){
   const cycleStart=useMemo(()=>{
     const sorted=[...entries].sort((a,b)=>`${b.date}T${b.time}`.localeCompare(`${a.date}T${a.time}`));
     for(const e of sorted){
-      if(e.type==="wakeup"||e.type==="nightwaking")return new Date(`${e.date}T${e.time}`);
+      if(e.type==="wakeup")return new Date(`${e.date}T${e.time}`);
       if((e.type==="sleep"||e.type==="nap")&&e.durationMin>0){const end=new Date(new Date(`${e.date}T${e.time}`).getTime()+e.durationMin*60000);const h=end.getHours();if(h>=4&&h<=12)return end}
     }
     const todayEvs=entries.filter(e=>e.date===today);
@@ -1261,7 +1261,7 @@ function App(){
   const sleepPattern=useMemo(()=>analyzeSleepPatterns(entries,7),[entries]);
   const daySchedule=useMemo(()=>{
     if(!sleepPattern)return[];
-    let wm=6*60;const wk=cycleE.find(e=>e.type==="wakeup"||e.type==="nightwaking");
+    let wm=6*60;const wk=cycleE.find(e=>e.type==="wakeup");
     if(wk){wm=toMinutes(wk.time)}else{const ls=cycleE.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin>0).sort((a,b)=>b.time.localeCompare(a.time))[0];if(ls){const em=toMinutes(ls.time)+ls.durationMin;if(em>=300&&em<=720)wm=em}}
     return projectSchedule(wm,sleepPattern,cycleE);
   },[sleepPattern,cycleE]);
