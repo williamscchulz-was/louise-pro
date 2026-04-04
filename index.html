@@ -658,10 +658,11 @@ function Ring({activeTimer,napSug,tick,recentEvents,lang,showOrbit}){
   const toMin=t=>{const[h,m]=(t||"12:00").split(":").map(Number);return h*60+m};
   const evs=(recentEvents||[]);
   // Day window: from wake-up to midnight
-  let wakeMin=6*60;
+  let wakeMin=6*60;let hasWakeup=false;
   const wakeEv=evs.find(e=>e.type==="wakeup"||e.type==="nightwaking");
-  if(wakeEv){wakeMin=toMin(wakeEv.time)}
-  else{const ls=evs.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin>0).sort((a,b)=>(b.date+"T"+b.time).localeCompare(a.date+"T"+a.time))[0];if(ls){const em=toMin(ls.time)+ls.durationMin;if(em>=5*60&&em<=12*60)wakeMin=em}}
+  if(wakeEv){wakeMin=toMin(wakeEv.time);hasWakeup=true}
+  else{const ls=evs.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin>0).sort((a,b)=>(b.date+"T"+b.time).localeCompare(a.date+"T"+a.time))[0];if(ls){const em=toMin(ls.time)+ls.durationMin;if(em>=5*60&&em<=12*60){wakeMin=em;hasWakeup=true}}
+  else{const firstEv=[...evs].sort((a,b)=>a.time.localeCompare(b.time))[0];if(firstEv)wakeMin=Math.max(0,toMin(firstEv.time)-15)}}
   const dayStart=wakeMin;
   let dayEnd=24*60;
   let bedMin=null;
@@ -695,7 +696,7 @@ function Ring({activeTimer,napSug,tick,recentEvents,lang,showOrbit}){
   // Anchor: sun at wake-up (ring start), moon at bedtime (ring end)
   const wakeTimeStr=`${String(Math.floor(wakeMin/60)).padStart(2,"0")}:${String(wakeMin%60).padStart(2,"0")}`;
   const sunAng=toAng(wakeMin);const sunRad=sunAng*Math.PI/180;
-  const anchorSun={x:cx+R*Math.cos(sunRad),y:cy+R*Math.sin(sunRad),time:wakeTimeStr};
+  const anchorSun=hasWakeup?{x:cx+R*Math.cos(sunRad),y:cy+R*Math.sin(sunRad),time:wakeTimeStr}:null;
   let anchorMoon=null;
   if(bedMin){const bedTimeStr=`${String(Math.floor(bedMin/60)).padStart(2,"0")}:${String(bedMin%60).padStart(2,"0")}`;const moonAng=toAng(bedMin);const moonRad=moonAng*Math.PI/180;anchorMoon={x:cx+R*Math.cos(moonRad),y:cy+R*Math.sin(moonRad),time:bedTimeStr}}
 
@@ -1242,9 +1243,11 @@ function App(){
       if(e.type==="wakeup"||e.type==="nightwaking")return new Date(`${e.date}T${e.time}`);
       if((e.type==="sleep"||e.type==="nap")&&e.durationMin>0){const end=new Date(new Date(`${e.date}T${e.time}`).getTime()+e.durationMin*60000);const h=end.getHours();if(h>=4&&h<=12)return end}
     }
-    return new Date(today+"T06:00");
+    const todayEvs=entries.filter(e=>e.date===today);
+    if(todayEvs.length>0){const first=[...todayEvs].sort((a,b)=>a.time.localeCompare(b.time))[0];return new Date(`${first.date}T${first.time}`)}
+    return null;
   },[entries,today]);
-  const cycleE=useMemo(()=>entries.filter(e=>new Date(`${e.date}T${e.time}`)>=cycleStart),[entries,cycleStart]);
+  const cycleE=useMemo(()=>{if(!cycleStart)return entries.filter(e=>e.date===today);return entries.filter(e=>new Date(`${e.date}T${e.time}`)>=cycleStart)},[entries,cycleStart,today]);
   const todayE=useMemo(()=>entries.filter(e=>e.date===today),[entries,today]);
   const totalMl=todayE.filter(e=>e.type==="bottle").reduce((s,e)=>s+(e.ml||0),0);
   const lastBottleMl=useMemo(()=>{const b=entries.find(e=>e.type==="bottle"&&e.ml);return b?b.ml:0},[entries]);
