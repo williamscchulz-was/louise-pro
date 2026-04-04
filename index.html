@@ -215,6 +215,8 @@
     @keyframes fadeIn{from{opacity:0}to{opacity:1}}
     @keyframes slideUp{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
     @keyframes slideDown{from{transform:translateX(-50%) translateY(-20px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
+    @keyframes curiosityIn{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
+    @keyframes curiosityOut{from{transform:translateY(0);opacity:1}to{transform:translateY(-12px);opacity:0}}
     @keyframes twinkle{0%,100%{opacity:.1}50%{opacity:.6}}
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
     @keyframes orbitComet{0%{transform:rotate(207.5deg);opacity:0}5%{opacity:1}85%{opacity:0.8}100%{transform:rotate(512.5deg);opacity:0}}
@@ -866,42 +868,42 @@ function TimerBar({activeTimer,onStop,onSwitch,onPause}){const[tick,setTick]=use
   const secs=Math.max(0,Math.floor((Date.now()-new Date(activeTimer.startTime).getTime())/1000));
   return(<div style={{position:"fixed",bottom:"calc(66px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 32px)",maxWidth:448,padding:"12px 16px",borderRadius:16,background:"rgba(20,26,66,0.92)",border:`1px solid ${T.purple}33`,backdropFilter:"blur(12px)",display:"flex",alignItems:"center",gap:12,zIndex:60,boxShadow:"0 4px 24px rgba(0,0,0,0.4)"}}><div style={{width:36,height:36,borderRadius:10,background:T.purpleS,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name={activeTimer.type==="nap"?"cloud":"moon"} size={18} color={T.purple}/></div><div style={{flex:1}}><div style={{fontSize:12,fontWeight:600,color:T.sub}}>{activeTimer.type==="nap"?TL("nap"):TL("sleep")}</div><div style={{fontSize:20,fontWeight:800,fontVariantNumeric:"tabular-nums"}}>{fmtTimer(secs)}</div></div><button onClick={onStop} style={{width:40,height:40,borderRadius:12,background:T.purpleS,border:`1px solid ${T.purple}33`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="stop" size={16} color={T.purple}/></button></div>)}
 
-function CuriosityCard({age,birthDate,lang,onDismiss,dismissed}){
-  if(!age||!birthDate)return null;
+function CuriosityCard({age,lang,tick}){
+  const[vis,setVis]=useState(false);const[fading,setFading]=useState(false);const shownRef=useRef(null);
+  useEffect(()=>{
+    if(!age)return;
+    const h=new Date().getHours();
+    if(h<9||h>11)return void setVis(false);
+    const key=`${age.totalDays}-${h}`;
+    if(shownRef.current===key)return;
+    shownRef.current=key;setVis(true);setFading(false);
+    const t1=setTimeout(()=>setFading(true),13500);
+    const t2=setTimeout(()=>setVis(false),15000);
+    return()=>{clearTimeout(t1);clearTimeout(t2)};
+  },[age,tick]);
+  if(!vis||!age)return null;
   const dayNum=age.totalDays;const monthNum=age.totalMonths;
   const colors=["#fbbf24","#34d399","#38bdf8","#a78bfa","#f472b6","#fb923c"];
-  // Daily curiosity (day 1-30)
+  let txt=null,col=colors[0],tagLabel="",daysLeft=null;
   if(dayNum>=1&&dayNum<=30){
-    if(dismissed>=dayNum)return null;
     const c=CURIOSITIES[dayNum-1];if(!c)return null;
-    const txt=lang==="en"?c.en:c.pt;const col=colors[(dayNum-1)%colors.length];
-    return(<div style={{margin:"0 16px 12px",padding:"14px 16px",borderRadius:16,background:`linear-gradient(135deg,${col}12,${col}06)`,border:`1px solid ${col}22`,position:"relative",animation:"fadeIn .3s"}}>
-      <button onClick={()=>onDismiss(dayNum,null)} style={{position:"absolute",top:10,right:12,width:24,height:24,borderRadius:8,background:"rgba(255,255,255,0.05)",display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="x" size={12} color={T.dim}/></button>
-      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
-        <div style={{width:28,height:28,borderRadius:8,background:`${col}20`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="star" size={14} color={col} fill={col}/></div>
-        <span style={{fontSize:9,fontWeight:700,letterSpacing:1,textTransform:"uppercase",padding:"2px 8px",borderRadius:5,background:`${col}18`,color:col}}>{lang==="en"?`Day ${dayNum}`:`Dia ${dayNum}`}</span>
-      </div>
-      <div style={{fontSize:14,fontWeight:700,marginBottom:4,paddingRight:20}}>{txt.t}</div>
-      <div style={{fontSize:12,color:T.sub,lineHeight:1.5}}>{txt.b}</div>
-      <div style={{fontSize:10,color:T.dim,marginTop:8}}>{lang==="en"?`${30-dayNum} days left`:`${30-dayNum} dias restantes`}</div>
-    </div>)
-  }
-  // Monthly milestone (month 2-12)
-  if(monthNum>=2&&monthNum<=12){
-    if(dismissed===null||dismissed===undefined){}else if(dismissed>=monthNum+100)return null;
+    txt=lang==="en"?c.en:c.pt;col=colors[(dayNum-1)%colors.length];
+    tagLabel=lang==="en"?`Day ${dayNum}`:`Dia ${dayNum}`;daysLeft=30-dayNum;
+  }else if(monthNum>=2&&monthNum<=12){
     const ms=MILESTONES.find(m=>m.m===monthNum);if(!ms)return null;
-    const txt=lang==="en"?ms.en:ms.pt;const col=colors[(monthNum-1)%colors.length];
-    return(<div style={{margin:"0 16px 12px",padding:"14px 16px",borderRadius:16,background:`linear-gradient(135deg,${col}12,${col}06)`,border:`1px solid ${col}22`,position:"relative",animation:"fadeIn .3s"}}>
-      <button onClick={()=>onDismiss(null,monthNum)} style={{position:"absolute",top:10,right:12,width:24,height:24,borderRadius:8,background:"rgba(255,255,255,0.05)",display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="x" size={12} color={T.dim}/></button>
-      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
-        <div style={{width:28,height:28,borderRadius:8,background:`${col}20`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="gift" size={14} color={col}/></div>
-        <span style={{fontSize:9,fontWeight:700,letterSpacing:1,textTransform:"uppercase",padding:"2px 8px",borderRadius:5,background:`${col}18`,color:col}}>{lang==="en"?`${monthNum} months`:`${monthNum} meses`}</span>
-      </div>
-      <div style={{fontSize:14,fontWeight:700,marginBottom:4,paddingRight:20}}>{txt.t}</div>
-      <div style={{fontSize:12,color:T.sub,lineHeight:1.5}}>{txt.b}</div>
-    </div>)
+    txt=lang==="en"?ms.en:ms.pt;col=colors[(monthNum-1)%colors.length];
+    tagLabel=lang==="en"?`${monthNum} months`:`${monthNum} meses`;
   }
-  return null;
+  if(!txt)return null;
+  return(<div style={{margin:"0 16px 12px",padding:"12px 14px",borderRadius:14,background:`linear-gradient(135deg,${col}08,${col}04)`,border:`1px solid ${col}15`,position:"relative",overflow:"hidden",animation:fading?"curiosityOut .5s ease forwards":"curiosityIn .5s ease"}}>
+    <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:8}}>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill={`${col}40`} stroke={col} strokeWidth="1.5"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="1" y1="12" x2="3" y2="12"/></svg>
+      <span style={{fontSize:9,fontWeight:700,letterSpacing:1,textTransform:"uppercase",color:col}}>{tagLabel}</span>
+      {daysLeft!==null&&<span style={{fontSize:8,color:T.dim,marginLeft:"auto"}}>{lang==="en"?`${daysLeft} days left`:`${daysLeft} dias restantes`}</span>}
+    </div>
+    <div style={{fontSize:13,fontWeight:700,marginBottom:3,lineHeight:1.3}}>{txt.t}</div>
+    <div style={{fontSize:11,color:T.sub,lineHeight:1.5}}>{txt.b}</div>
+  </div>);
 }
 
 function Toast({message,onUndo,onClose}){const closeRef=useRef(onClose);closeRef.current=onClose;useEffect(()=>{const t=setTimeout(()=>closeRef.current(),2000);return()=>clearTimeout(t)},[]);return(<div style={{position:"fixed",top:"calc(20px + env(safe-area-inset-top))",left:"50%",transform:"translateX(-50%)",zIndex:300,padding:"10px 16px",borderRadius:14,background:"rgba(20,26,66,0.95)",border:`1px solid ${T.gB}`,backdropFilter:"blur(12px)",display:"flex",alignItems:"center",gap:10,boxShadow:"0 8px 24px rgba(0,0,0,0.5)",animation:"slideDown .3s ease"}}><span style={{fontSize:13,color:T.text}}>{message}</span>{onUndo&&<button onClick={onUndo} style={{padding:"4px 12px",borderRadius:8,background:T.accent,color:"#fff",fontSize:12,fontWeight:700}}>{L("undo")}</button>}</div>)}
@@ -913,7 +915,7 @@ function Modal({open,onClose,children}){const[vis,setVis]=useState(false),[show,
 function Fld({label,children}){return<div style={{marginBottom:18}}><label style={{fontSize:10,color:T.dim,fontWeight:600,marginBottom:6,display:"block",textTransform:"uppercase",letterSpacing:1.2}}>{label}</label>{children}</div>}
 function Seg({opts,val,set,color}){return<div style={{display:"flex",gap:6}}>{opts.map(o=><button key={o.v} onClick={()=>set(o.v)} style={{flex:1,padding:"12px 4px",borderRadius:10,fontSize:13,fontWeight:600,background:val===o.v?color:T.glass,color:val===o.v?T.bg1:T.text,border:`1px solid ${val===o.v?color:T.gB}`}}>{o.l}</button>)}</div>}
 
-function EntryRow({entry,onDelete,onEdit,napNum}){const[del,setDel]=useState(false);const cfg=TYPES[entry.type]||{label:entry.type,icon:"star",color:T.text,bg:T.glass};let detail="";if(entry.ml)detail=`${entry.ml} ml`;else if(entry.durationMin)detail=fmtDur(entry.durationMin);else if(entry.subtype)detail=({wet:"Xixi",dirty:"Cocô",both:"Ambos"})[entry.subtype]||"";else if(entry.name)detail=entry.name+(entry.dose?` · ${entry.dose}`:"");else if(entry.value)detail=`${entry.value}°C`;else if(entry.weightKg||entry.lengthCm||entry.headCm){const parts=[];if(entry.weightKg)parts.push(`${entry.weightKg}kg`);if(entry.lengthCm)parts.push(`${entry.lengthCm}cm`);if(entry.headCm)parts.push(`Cab. ${entry.headCm}cm`);detail=parts.join(" · ")}if(entry.type==="nursing"&&entry.side){const sideLabel=({left:"Esq",right:"Dir",both:"Ambos"}[entry.side]||"");if(entry.leftMin||entry.rightMin){detail=(detail?detail+" · ":"")+"L:"+String(entry.leftMin||0)+"m R:"+String(entry.rightMin||0)+"m"}else{detail=(detail?detail+" · ":"")+sideLabel}};const napLabel=napNum?(_lang==="en"?["","1st","2nd","3rd","4th","5th","6th","7th","8th"][napNum]||napNum+"th":[""," 1a"," 2a"," 3a"," 4a"," 5a"," 6a"," 7a"," 8a"][napNum]||napNum+"a"):null;return(<div style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",marginBottom:4,background:T.glass,borderRadius:12,borderLeft:`3px solid ${cfg.color}`}}>
+function EntryRow({entry,onDelete,onEdit,napNum}){const[del,setDel]=useState(false);const cfg=TYPES[entry.type]||{label:entry.type,icon:"star",color:T.text,bg:T.glass};let detail="";if(entry.ml)detail=`${entry.ml} ml`;else if(entry.durationMin)detail=fmtDur(entry.durationMin);else if(entry.subtype)detail=L(entry.subtype)||entry.subtype;else if(entry.name)detail=entry.name+(entry.dose?` · ${entry.dose}`:"");else if(entry.value)detail=`${entry.value}°C`;else if(entry.weightKg||entry.lengthCm||entry.headCm){const parts=[];if(entry.weightKg)parts.push(`${entry.weightKg}kg`);if(entry.lengthCm)parts.push(`${entry.lengthCm}cm`);if(entry.headCm)parts.push(`${_lang==="en"?"Head":"Cab."} ${entry.headCm}cm`);detail=parts.join(" · ")}if(entry.type==="nursing"&&entry.side){if(entry.leftMin||entry.rightMin){detail=(detail?detail+" · ":"")+"L:"+String(entry.leftMin||0)+"m R:"+String(entry.rightMin||0)+"m"}else{detail=(detail?detail+" · ":"")+(L(entry.side)||entry.side)}};const napLabel=napNum?(_lang==="en"?["","1st","2nd","3rd","4th","5th","6th","7th","8th"][napNum]||napNum+"th":[""," 1a"," 2a"," 3a"," 4a"," 5a"," 6a"," 7a"," 8a"][napNum]||napNum+"a"):null;return(<div style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",marginBottom:4,background:T.glass,borderRadius:12,borderLeft:`3px solid ${cfg.color}`}}>
   <button onClick={()=>onEdit&&onEdit(entry)} style={{width:34,height:34,borderRadius:10,background:cfg.bg,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name={cfg.icon} size={16} color={cfg.color}/></button>
   <button onClick={()=>onEdit&&onEdit(entry)} style={{flex:1,textAlign:"left"}}><div style={{fontSize:13,fontWeight:600}}>{napLabel&&<span style={{display:"inline-block",padding:"1px 6px",borderRadius:5,background:`${cfg.color}20`,color:cfg.color,fontSize:9,fontWeight:700,marginRight:4}}>{napLabel}</span>}{cfg.label[_lang]||cfg.label.en}</div>{detail&&<div style={{fontSize:11,color:T.sub}}>{detail}</div>}</button>
   <div style={{textAlign:"right",flexShrink:0}}><div style={{fontSize:13,fontWeight:600}}>{entry.time}</div><div style={{fontSize:9,color:T.dim}}>{timeSince(entry.date,entry.time)}</div></div>
@@ -975,7 +977,7 @@ function AddForm({type,onSave,savedMeds,onSaveMeds,editEntry,lastBottleMl}){cons
         :<Fld label={L("wokeAt")}><input type="time" value={endTime} onChange={e=>setEndTime(e.target.value)} style={{...inp,colorScheme:"dark",fontSize:28,fontWeight:800,textAlign:"center",padding:"14px 16px"}}/></Fld>}
         {durMode==="end"&&endTime&&time&&<div style={{fontSize:11,color:T.sub,marginBottom:12,textAlign:"center"}}>{(()=>{const[sh,sm]=time.split(":").map(Number);const[eh,em]=endTime.split(":").map(Number);let d=(eh*60+em)-(sh*60+sm);if(d<=0)d+=1440;return`Duração: ${fmtDur(d)}${d>720?" (próximo dia)":""}`})()}</div>}
       </>}
-      {type==="diaper"&&<Fld label="Tipo"><Seg opts={[{v:"wet",l:L("wet")},{v:"dirty",l:L("dirty")},{v:"both",l:L("both")}]} val={diaperT} set={setDiaperT} color={cfg.color}/></Fld>}
+      {type==="diaper"&&<Fld label={_lang==="en"?"Type":"Tipo"}><Seg opts={[{v:"wet",l:L("wet")},{v:"dirty",l:L("dirty")},{v:"both",l:L("both")}]} val={diaperT} set={setDiaperT} color={cfg.color}/></Fld>}
       {type==="medicine"&&<>
         <div style={{display:"flex",flexWrap:"wrap",gap:8,marginBottom:18}}>
           {savedMeds.map((m,i)=><button key={i} onClick={()=>{setMedN(m.name);setMedD(m.dose||"");setShowML(false)}} style={{flex:"1 1 calc(50% - 4px)",padding:"10px 14px",borderRadius:12,background:medN===m.name?`${T.amber}20`:T.glass,border:`1px solid ${medN===m.name?`${T.amber}55`:T.gB}`,textAlign:"left",boxShadow:medN===m.name?`0 0 12px ${T.amber}15`:"none"}}>
@@ -1116,7 +1118,7 @@ function HistoryPage({entries,onDelete,onEdit}){
     <div style={{display:"flex",gap:4,marginBottom:14,overflowX:"auto",paddingBottom:2}}>
       {filters.map(f=><button key={f.v} onClick={()=>setFilter(f.v)} style={{padding:"6px 12px",borderRadius:8,fontSize:11,fontWeight:600,whiteSpace:"nowrap",background:filter===f.v?`${f.c}20`:"transparent",color:filter===f.v?f.c:T.dim,border:`1px solid ${filter===f.v?f.c+"30":T.gB}`}}>{f.l}</button>)}
     </div>
-    {filtered.length===0&&<p style={{color:T.dim,textAlign:"center",padding:40,fontSize:13}}>Nenhum registro{filter!=="all"?" desse tipo":""}</p>}
+    {filtered.length===0&&<p style={{color:T.dim,textAlign:"center",padding:40,fontSize:13}}>{L("noEntries")}{filter!=="all"?(_lang==="en"?" of this type":" desse tipo"):""}</p>}
     {filtered.map(e=><EntryRow key={e.id} entry={e} onDelete={onDelete} onEdit={onEdit}/>)}
   </div>);
 }
@@ -1428,6 +1430,7 @@ function App(){
           <div style={{flex:1}}><h1 style={{fontSize:20,fontWeight:800,margin:0,letterSpacing:-0.5}}>{babyName}</h1><div style={{fontSize:11,color:T.sub,marginTop:2}}>{age&&<>{age.months>0?`${age.months} ${_lang==="en"?(age.months===1?"month":"months"):(age.months===1?"mês":"meses")}${_lang==="en"?" and ":" e "}`:""}{age.days} {_lang==="en"?"days":"dias"}</>}</div></div>
           <div style={{textAlign:"right"}}><div style={{fontSize:10,color:T.dim}}>{new Date().toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{day:"numeric",month:"short"})}</div><div style={{fontSize:8,color:T.dim,opacity:0.5,marginTop:2}}>v{APP_VERSION}</div></div>
         </div>
+        <CuriosityCard age={age} lang={lang} tick={tick}/>
         <div style={{padding:"4px 0 0"}}><Ring activeTimer={activeTimer} napSug={napSug} tick={tick} recentEvents={cycleE} lang={lang} showOrbit={showOrbit}/></div>
         <div style={{display:"flex",gap:6,padding:"0 20px",marginBottom:14}}>{!activeTimer&&<><button onClick={()=>{setFormType("bottle");setShowAdd(false)}} style={{flex:1,padding:"10px 0",borderRadius:12,background:T.greenS,border:`1px solid ${T.green}22`,display:"flex",alignItems:"center",justifyContent:"center",gap:4}}><Icon name="bottle" size={12} color={T.green}/><span style={{fontSize:10,fontWeight:700,color:T.green}}>{_lang==="en"?"Bottle":"Mamad."}</span></button><button onClick={()=>startTimer("nursing","left")} style={{flex:1,padding:"10px 0",borderRadius:12,background:T.blueS,border:`1px solid ${T.blue}22`,display:"flex",alignItems:"center",justifyContent:"center",gap:4}}><Icon name="play" size={11} color={T.blue}/><span style={{fontSize:10,fontWeight:700,color:T.blue}}>{_lang==="en"?"Nurse":"Amam."}</span></button><button onClick={()=>startTimer("nap")} style={{flex:1,padding:"10px 0",borderRadius:12,background:`${T.accent}15`,border:`1px solid ${T.accent}22`,display:"flex",alignItems:"center",justifyContent:"center",gap:4}}><Icon name="play" size={11} color={T.accent}/><span style={{fontSize:10,fontWeight:700,color:T.accent}}>{_lang==="en"?"Nap":"Soneca"}</span></button><button onClick={()=>startTimer("sleep")} style={{flex:1,padding:"10px 0",borderRadius:12,background:T.purpleS,border:`1px solid ${T.purple}22`,display:"flex",alignItems:"center",justifyContent:"center",gap:4}}><Icon name="play" size={11} color={T.purple}/><span style={{fontSize:10,fontWeight:700,color:T.purple}}>{_lang==="en"?"Sleep":"Sono"}</span></button></>}</div>
         {napSug?.wind&&<div style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:T.amberS,border:`1px solid ${T.amber}22`,display:"flex",alignItems:"center",gap:10,animation:"pulse 2s infinite"}}><Icon name="bell" size={18} color={T.amber}/><div><div style={{fontSize:12,fontWeight:700,color:T.amber}}>{_lang==="en"?"Get ready for sleep":"Preparar para dormir"}</div><div style={{fontSize:10,color:T.sub}}>{_lang==="en"?`~${napSug.rem}min left`:`~${napSug.rem}min restantes`}</div></div></div>}
