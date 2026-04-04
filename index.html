@@ -666,8 +666,9 @@ function Ring({activeTimer,napSug,tick,recentEvents,lang,showOrbit}){
   const dayStart=wakeMin;
   let dayEnd=24*60;
   let bedMin=null;
-  if(activeTimer&&activeTimer.type==="sleep"){const st=new Date(activeTimer.startTime);bedMin=st.getHours()*60+st.getMinutes();if(bedMin>dayStart)dayEnd=bedMin}
-  if(!bedMin){const bedEv=evs.find(e=>e.type==="sleep");if(bedEv){bedMin=toMin(bedEv.time);if(bedMin>dayStart)dayEnd=bedMin}}
+  const bedEv=[...evs].filter(e=>e.type==="sleep").sort((a,b)=>a.time.localeCompare(b.time))[0];
+  if(bedEv){bedMin=toMin(bedEv.time);if(bedMin>dayStart)dayEnd=bedMin}
+  if(!bedMin&&activeTimer&&activeTimer.type==="sleep"){const st=new Date(activeTimer.startTime);const bm=st.getHours()*60+st.getMinutes();const adjBm=bm<dayStart?bm+1440:bm;bedMin=adjBm;if(adjBm>dayStart)dayEnd=adjBm}
   const daySpan=Math.max(1,dayEnd-dayStart);
   const toAng=mins=>{const t=Math.max(0,Math.min(1,(mins-dayStart)/daySpan));return startAng+t*totalArc};
   const descArc=(sA,eA)=>{const s=sA*Math.PI/180,e=eA*Math.PI/180;return`M ${cx+R*Math.cos(s)} ${cy+R*Math.sin(s)} A ${R} ${R} 0 ${eA-sA>180?1:0} 1 ${cx+R*Math.cos(e)} ${cy+R*Math.sin(e)}`};
