@@ -281,9 +281,13 @@
       // Bedtime
       var bed = de.find(function(e) { return e.type === "sleep"; });
       var bedMin = bed ? toMinutes(bed.time) : null;
+      var nightSleepMin = bed && bed.durationMin ? bed.durationMin : null;
 
       // Diapers
       var diapers = de.filter(function(e) { return e.type === "diaper"; });
+
+      // Total nap minutes this day
+      var napTotalMin = naps.reduce(function(s, n) { return s + (n.durationMin || 0); }, 0);
 
       dayData.push({
         date: date,
@@ -292,6 +296,9 @@
         wakeMin: wakeMin,
         naps: naps,
         napCount: naps.length,
+        napTotalMin: napTotalMin,
+        nightSleepMin: nightSleepMin,
+        totalSleepMin: napTotalMin + (nightSleepMin || 0),
         feeds: feeds,
         feedCount: feeds.length,
         baths: baths,
@@ -402,6 +409,38 @@
       allWWWeights.push(positions[pi].pts);
     }
     var overallAvgWW = allWWVals.length > 0 ? weightedAvg(allWWVals, allWWWeights) : null;
+
+    // ═══════════════════════════
+    // NIGHT SLEEP ANALYSIS
+    // ═══════════════════════════
+
+    var nightVals = [], nightWeights = [];
+    var totalDailyVals = [], totalDailyWeights = [];
+    for (var ni2 = 0; ni2 < dayData.length; ni2++) {
+      var ndd = dayData[ni2];
+      if (ndd.nightSleepMin && ndd.nightSleepMin > 60) {
+        nightVals.push(ndd.nightSleepMin);
+        nightWeights.push(ndd.weight);
+      }
+      if (ndd.totalSleepMin > 0 && ndd.nightSleepMin) {
+        totalDailyVals.push(ndd.totalSleepMin);
+        totalDailyWeights.push(ndd.weight);
+      }
+    }
+
+    var nightSleepAnalysis = {
+      avgDuration: nightVals.length >= 2 ? weightedAvg(nightVals, nightWeights) : null,
+      minDuration: nightVals.length >= 2 ? Math.min.apply(null, nightVals) : null,
+      maxDuration: nightVals.length >= 2 ? Math.max.apply(null, nightVals) : null,
+      pts: nightVals.length
+    };
+
+    var totalDailySleep = {
+      avg: totalDailyVals.length >= 2 ? weightedAvg(totalDailyVals, totalDailyWeights) : null,
+      min: totalDailyVals.length >= 2 ? Math.min.apply(null, totalDailyVals) : null,
+      max: totalDailyVals.length >= 2 ? Math.max.apply(null, totalDailyVals) : null,
+      pts: totalDailyVals.length
+    };
 
     // ═══════════════════════════
     // FEED ANALYSIS
@@ -560,7 +599,9 @@
         avgNaps: avgNaps,
         avgBedWW: avgBedWW,
         avgTotalSleep: avgTotalSleep,
-        overallAvgWW: overallAvgWW
+        overallAvgWW: overallAvgWW,
+        nightSleep: nightSleepAnalysis,
+        totalDaily: totalDailySleep
       },
 
       feeds: feedAnalysis,
@@ -1169,35 +1210,119 @@
     return sched;
   }
 
-  // getDayInsights(todayE, pattern, guideline)
+  // getDayInsights(todayE, pattern, guideline, lang)
   // Returns: [{ type, title, sub }] — backward compat shape
+  // Includes: total sleep (naps+night) vs WHO, compensation, quality
   function getDayInsights(todayE, pattern, guideline, lang) {
     if (!pattern) return [];
     var l = lang || "en";
     var hints = [];
     var naps = todayE.filter(function(e) { return e.type === "nap" && e.durationMin > 0; });
-    var totalSleep = naps.reduce(function(s, e) { return s + e.durationMin; }, 0);
+    var napTotal = naps.reduce(function(s, e) { return s + e.durationMin; }, 0);
 
+    // Find WHO guideline for total sleep
+    var whoTotal = null;
+    if (guideline) {
+      for (var gi = 0; gi < GUIDELINES.length; gi++) {
+        if (GUIDELINES[gi].ww.min === guideline.min && GUIDELINES[gi].ww.max === guideline.max) {
+          whoTotal = GUIDELINES[gi].totalSleep;
+          break;
+        }
+      }
+    }
+    if (!whoTotal) whoTotal = { min: 14, max: 17 };
+
+    // Night sleep from pattern (average)
+    var avgNightMin = (pattern.fullPattern && pattern.fullPattern.sleep &&
+      pattern.fullPattern.sleep.nightSleep && pattern.fullPattern.sleep.nightSleep.avgDuration)
+      ? pattern.fullPattern.sleep.nightSleep.avgDuration : null;
+
+    // Estimated total daily sleep (naps today + avg night)
+    var estTotalMin = avgNightMin ? (napTotal + avgNightMin) : null;
+    var whoMinMin = whoTotal.min * 60;
+    var whoMaxMin = whoTotal.max * 60;
+
+    // 1. Shorter naps today
     if (naps.length >= 2) {
-      var avgDur = Math.round(totalSleep / naps.length);
-      var usualAvg = pattern.avgNaps > 0
-        ? Math.round(pattern.avgTotalSleep / pattern.avgNaps)
-        : 0;
-      if (usualAvg > 0 && avgDur < usualAvg * 0.7) {
-        hints.push({
-          type: "warn",
-          title: l === "en" ? "Shorter naps today" : "Sonecas mais curtas hoje",
-          sub: (l === "en" ? "Avg " : "Media ") + avgDur + "min vs usual " + usualAvg + "min"
-        });
+      var avgDur = Math.round(napTotal / naps.length);
+      var usualAvgDur = pattern.avgNaps > 0
+        ? Math.round(pattern.avgTotalSleep / pattern.avgNaps) : 0;
+
+      if (usualAvgDur > 0 && avgDur < usualAvgDur * 0.7) {
+        var compensates = avgNightMin && estTotalMin && estTotalMin >= whoMinMin;
+        if (compensates) {
+          hints.push({
+            type: "info",
+            title: l === "en" ? "Short naps, good night" : "Sonecas curtas, boa noite",
+            sub: l === "en"
+              ? "Nap avg " + avgDur + "min (usual " + usualAvgDur + "min) but night sleep compensates"
+              : "Media " + avgDur + "min (usual " + usualAvgDur + "min) mas sono noturno compensa"
+          });
+        } else {
+          hints.push({
+            type: "warn",
+            title: l === "en" ? "Shorter naps today" : "Sonecas mais curtas hoje",
+            sub: l === "en"
+              ? "Avg " + avgDur + "min vs usual " + usualAvgDur + "min. May need earlier bedtime."
+              : "Media " + avgDur + "min vs usual " + usualAvgDur + "min. Pode precisar dormir mais cedo."
+          });
+        }
       }
     }
 
-    if (naps.length >= (pattern.avgNaps || 0) && totalSleep >= (pattern.avgTotalSleep || 0) * 0.85) {
+    // 2. Total sleep vs WHO
+    if (estTotalMin && naps.length >= Math.floor(pattern.avgNaps || 0)) {
+      var estTotalHrs = Math.round(estTotalMin / 6) / 10;
+
+      if (estTotalMin >= whoMinMin && estTotalMin <= whoMaxMin) {
+        hints.push({
+          type: "good",
+          title: l === "en" ? "Great sleep day!" : "Otimo dia de sono!",
+          sub: l === "en"
+            ? "~" + estTotalHrs + "h total (WHO: " + whoTotal.min + "-" + whoTotal.max + "h) " + naps.length + " naps + " + fmtDur(avgNightMin) + " night"
+            : "~" + estTotalHrs + "h total (OMS: " + whoTotal.min + "-" + whoTotal.max + "h) " + naps.length + " sonecas + " + fmtDur(avgNightMin) + " noite"
+        });
+      } else if (estTotalMin < whoMinMin) {
+        var deficit = Math.round(whoMinMin - estTotalMin);
+        hints.push({
+          type: "warn",
+          title: l === "en" ? "Below recommended sleep" : "Abaixo do sono recomendado",
+          sub: l === "en"
+            ? "~" + estTotalHrs + "h total (WHO: " + whoTotal.min + "-" + whoTotal.max + "h). " + fmtDur(deficit) + " short."
+            : "~" + estTotalHrs + "h total (OMS: " + whoTotal.min + "-" + whoTotal.max + "h). Faltam " + fmtDur(deficit) + "."
+        });
+      } else if (estTotalMin > whoMaxMin * 1.1) {
+        hints.push({
+          type: "info",
+          title: l === "en" ? "Sleeping a lot today" : "Dormindo bastante hoje",
+          sub: l === "en"
+            ? "~" + estTotalHrs + "h (above " + whoTotal.max + "h). Could be a growth spurt!"
+            : "~" + estTotalHrs + "h (acima de " + whoTotal.max + "h). Pode ser salto de crescimento!"
+        });
+      }
+    } else if (!estTotalMin && naps.length >= Math.floor(pattern.avgNaps || 0) &&
+               napTotal >= (pattern.avgTotalSleep || 0) * 0.85) {
       hints.push({
         type: "good",
-        title: l === "en" ? "Great sleep day!" : "Otimo dia de sono!",
-        sub: naps.length + (l === "en" ? " naps, " : " sonecas, ") + fmtDur(totalSleep) + " total"
+        title: l === "en" ? "Good nap day!" : "Bom dia de sonecas!",
+        sub: naps.length + (l === "en" ? " naps, " : " sonecas, ") + fmtDur(napTotal) + " total"
       });
+    }
+
+    // 3. Night sleep consistency insight
+    if (pattern.fullPattern && pattern.fullPattern.sleep &&
+        pattern.fullPattern.sleep.nightSleep && pattern.fullPattern.sleep.nightSleep.pts >= 3) {
+      var ns = pattern.fullPattern.sleep.nightSleep;
+      var nightSpread = (ns.maxDuration || 0) - (ns.minDuration || 0);
+      if (nightSpread <= 60 && ns.avgDuration) {
+        hints.push({
+          type: "good",
+          title: l === "en" ? "Consistent night sleep" : "Sono noturno consistente",
+          sub: l === "en"
+            ? "Avg " + fmtDur(ns.avgDuration) + "/night (" + ns.pts + " nights, <1h variation)"
+            : "Media " + fmtDur(ns.avgDuration) + "/noite (" + ns.pts + " noites, <1h variacao)"
+        });
+      }
     }
 
     return hints;
