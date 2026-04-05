@@ -373,8 +373,9 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "6.0.8";
+const APP_VERSION = "6.0.9";
 const CHANGELOG = [
+  { v: "6.0.9", date: "2026-04-04", changes: "Nav bar test: bottom fixo 4px sem calc/env para diagnosticar posicionamento" },
   { v: "6.0.8", date: "2026-04-04", changes: "Nav bar mais rente: safe-area - 22px, ~12px da borda inferior" },
   { v: "6.0.7", date: "2026-04-04", changes: "Nav bar rente: bottom calc(safe-area - 14px) para ficar mais proximo do Home Indicator estilo Nubank" },
   { v: "6.0.2", date: "2026-04-04", changes: "Revert CSS hacks (html::after, --sab, nuclear div) que quebraram scroll/nav. Volta ao padrao calc+env. Splash gradient fix. Glow animations fix (glowCenter/glowBreathe split)." },
@@ -1517,7 +1518,7 @@ function App(){
     {showProfile&&<ProfilePage profile={profile} onSave={async p=>await FB.saveProfile(p)} onBack={()=>setShowProfile(false)} onGrowth={()=>{setShowProfile(false);goTo("growth")}}/>}
     <TimerBar activeTimer={activeTimer} onStop={stopTimer} onSwitch={switchSide} onPause={pauseNursing}/>
 
-    <nav style={{position:"fixed",bottom:"calc(env(safe-area-inset-bottom) - 22px)",left:"50%",transform:"translateX(-50%)",display:"flex",alignItems:"center",gap:4,padding:"6px 10px",background:"rgba(8,10,28,0.95)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",borderRadius:40,border:"1px solid rgba(80,90,160,0.06)",boxShadow:"0 4px 24px rgba(0,0,0,0.6)",zIndex:50}}>
+    <nav style={{position:"fixed",bottom:"4px",left:"50%",transform:"translateX(-50%)",display:"flex",alignItems:"center",gap:4,padding:"6px 10px",background:"rgba(8,10,28,0.95)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",borderRadius:40,border:"1px solid rgba(80,90,160,0.06)",boxShadow:"0 4px 24px rgba(0,0,0,0.6)",zIndex:50}}>
       {[{icon:"home",label:"HOME",active:page==="home"&&!showAdd,action:()=>goTo("home")},{icon:"clock",label:_lang==="en"?"HISTORY":"HIST.",active:page==="history",action:()=>goTo("history")}].map(n=><button key={n.icon} onClick={n.action} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,padding:"6px 10px",borderRadius:14,background:n.active?"rgba(139,124,246,0.12)":"transparent"}}><Icon name={n.icon} size={18} color={n.active?T.accent:T.dim}/>{n.active&&<span style={{fontSize:7,fontWeight:700,color:T.accent,letterSpacing:0.5}}>{n.label}</span>}</button>)}
       <button onClick={()=>{setShowAdd(!showAdd);setFormType(null);setPage("home")}} style={{width:46,height:46,borderRadius:"50%",background:`linear-gradient(135deg,#7c3aed,${T.accent})`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 4px 20px ${T.accent}55`,transition:"transform .2s cubic-bezier(0.34,1.56,0.64,1)",transform:showAdd?"rotate(45deg) scale(1.05)":"scale(1)",margin:"-4px 2px"}}><Icon name="plus" size={22} color="#fff"/></button>
       {[{icon:"chart",label:"STATS",active:page==="stats"||page==="growth",action:()=>goTo("stats")},{icon:"gear",label:_lang==="en"?"SETTINGS":"CONFIG",active:false,action:()=>setShowProfile(true)}].map(n=><button key={n.icon} onClick={n.action} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,padding:"6px 10px",borderRadius:14,background:n.active?"rgba(139,124,246,0.12)":"transparent"}}><Icon name={n.icon} size={18} color={n.active?T.accent:T.dim}/>{n.active&&<span style={{fontSize:7,fontWeight:700,color:T.accent,letterSpacing:0.5}}>{n.label}</span>}</button>)}
