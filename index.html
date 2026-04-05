@@ -3,6 +3,42 @@
   LOUISE PRO — BABY TRACKER — CHANGELOG
 ═══════════════════════════════════════════════════════════════
 
+  v8.0.0  05/04/2026  MAJOR: Night Wake + Smart Hints + Waking Intelligence
+
+    NIGHT WAKE (feature completa)
+    • Botao Night Wake aparece quando sleep timer ativo
+    • Toggle liga modo waking, habilita quick buttons Bottle/Nurse/Diaper
+    • Eventos registrados durante night wake viram wakings no sleep
+    • stopTimer consolida wakings pendentes ao parar sono
+    • Data model: sleep.wakings[] + event.nightWake ref (backward compatible)
+    • SleepBlock component: renderiza sleep com wakings como bloco unico
+    • Mini timeline visual com marcadores azuis nos wakings
+    • Expand/collapse pra ver lista de wakings + eventos linkados
+    • Engine calcula sono real = tempo na cama - duracao dos wakings
+    • Eventos filhos de waking filtrados da timeline (home + history)
+
+    SMART HINTS (9 dicas inteligentes)
+    • Feed before nap - correlacao feed-nap >=60%
+    • Bedtime approaching - 30-45min antes do bedtime habitual
+    • Bath time soon - 20-40min antes se banho e rotina 3+ dias
+    • Last feed of the day - 15-45min antes do bedtime
+    • Excellent nap! - soneca >=130% da media e >=45min
+    • Feed overdue - passou 40% alem do intervalo usual
+    • Cluster feeding detected - 3 mamadas em <=90min
+    • Diaper check / Few diapers today - sem troca 4h+ ou <4 apos 18h
+    • Feed volume WHO - ml total abaixo/acima do recomendado
+
+    WAKING INTELLIGENCE
+    • Analise de wakings: avgPerNight, mostCommonTime (cluster +/-30min),
+      mostCommonType, trend (improving/worsening)
+    • Classificacao automatica: feed / diaper / other (comfort)
+    • Insights: Sleeping through, Night wake pattern, Waking cause pattern,
+      Wakings decreasing! / Mais despertares ultimamente
+    • Trend detection: compara metade recente vs metade antiga
+
+    Todas as dicas respeitam contexto (nao mostra se dormindo/ja feito),
+    tem anti-ruido, sao bilingues EN/PT e usam auto-dismiss 15s.
+
   v7.0.0  04/04/2026  Routine Engine v2
     • Routine Engine v2: substitui Sleep Engine, analisa sono+mamada+banho+fralda
     • Desbloqueio inteligente: phase 2 ativa com 3+ dias de dados (nao espera 2 meses)
@@ -390,8 +426,9 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "7.0.0";
+const APP_VERSION = "8.0.0";
 const CHANGELOG = [
+  { v: "8.0.0", date: "2026-04-05", changes: "MAJOR: Night Wake feature completa (botao toggle, wakings salvos no sleep, SleepBlock visual com marcadores, engine calcula sono real) + 9 Smart Hints (pre-feed, bedtime approaching, bath reminder, last feed, excellent nap, feed overdue, cluster feeding, diaper check, feed volume WHO) + Waking intelligence (frequencia, cluster de horario, tipo, trend improving/worsening). Engine agora tem memoria completa da rotina." },
   { v: "7.0.0", date: "2026-04-04", changes: "Routine Engine v2: analisa sono+mamada+banho, 5 estados no ring (calm/opening/sweet/stretching/overdue), horario previsto no centro, desbloqueio com 3+ dias de dados, WW por posicao, recency decay, blend com WHO/AAP, modal rotina com feeds+banho" },
   { v: "6.1.0", date: "2026-04-04", changes: "Nav bar wider pill: gap 6, padding 8/16, icons 20px, botao + 50px, buttons 8/14px" },
   { v: "6.0.9", date: "2026-04-04", changes: "Nav bar test: bottom fixo 4px sem calc/env para diagnosticar posicionamento" },
@@ -944,6 +981,73 @@ function Modal({open,onClose,children}){const[vis,setVis]=useState(false),[show,
 function Fld({label,children}){return<div style={{marginBottom:18}}><label style={{fontSize:10,color:T.dim,fontWeight:600,marginBottom:6,display:"block",textTransform:"uppercase",letterSpacing:1.2}}>{label}</label>{children}</div>}
 function Seg({opts,val,set,color}){return<div style={{display:"flex",gap:6}}>{opts.map(o=><button key={o.v} onClick={()=>set(o.v)} style={{flex:1,padding:"12px 4px",borderRadius:10,fontSize:13,fontWeight:600,background:val===o.v?color:T.glass,color:val===o.v?T.bg1:T.text,border:`1px solid ${val===o.v?color:T.gB}`}}>{o.l}</button>)}</div>}
 
+function SleepBlock({entry,onDelete,onEdit,entries}){
+  const[expanded,setExpanded]=useState(false);
+  const wakings=entry.wakings||[];
+  const totalMin=entry.durationMin||0;
+  const awakeMin=wakings.reduce((s,w)=>s+(w.durationMin||0),0);
+  const realSleepMin=Math.max(0,totalMin-awakeMin);
+  const endMs=new Date(`${entry.date}T${entry.time}`).getTime()+totalMin*60000;
+  const endD=new Date(endMs);
+  const endT=`${String(endD.getHours()).padStart(2,"0")}:${String(endD.getMinutes()).padStart(2,"0")}`;
+  const endDt=`${endD.getFullYear()}-${String(endD.getMonth()+1).padStart(2,"0")}-${String(endD.getDate()).padStart(2,"0")}`;
+  const startMin=(()=>{const[h,m]=entry.time.split(":").map(Number);return h*60+m})();
+  // Resolve linked events from entries array
+  const findEvent=id=>entries.find(e=>e.id===id);
+  return(<div style={{marginBottom:4,borderRadius:12,background:"rgba(167,139,250,0.05)",border:"1px solid rgba(167,139,250,0.15)",overflow:"hidden"}}>
+    <button onClick={()=>setExpanded(!expanded)} style={{width:"100%",padding:"12px 14px",display:"flex",alignItems:"center",gap:10,textAlign:"left"}}>
+      <div style={{width:34,height:34,borderRadius:10,background:"rgba(167,139,250,0.15)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+        <Icon name="moon" size={16} color="#a78bfa"/>
+      </div>
+      <div style={{flex:1}}>
+        <div style={{fontSize:13,fontWeight:700,color:"#c084fc"}}>{entry.time}–{endT}</div>
+        <div style={{fontSize:10,color:T.sub,marginTop:1}}>{fmtDur(realSleepMin)} {_lang==="en"?"sleep":"sono"}{awakeMin>0?` · ${fmtDur(awakeMin)} ${_lang==="en"?"awake":"acordada"}`:""}</div>
+      </div>
+      {wakings.length>0&&<span style={{fontSize:9,fontWeight:700,padding:"3px 8px",borderRadius:10,background:"rgba(96,165,250,0.12)",color:"#60a5fa",marginRight:6}}>{wakings.length}x</span>}
+      <div style={{textAlign:"right",flexShrink:0}}>
+        <div style={{fontSize:11,color:T.sub,fontWeight:500}}>{timeSince(endDt,endT)}</div>
+      </div>
+    </button>
+    {/* Mini timeline with waking marks */}
+    {wakings.length>0&&<div style={{margin:"0 14px 10px",position:"relative",height:8,background:"rgba(167,139,250,0.12)",borderRadius:4,overflow:"hidden"}}>
+      <div style={{position:"absolute",inset:0,background:"linear-gradient(90deg,rgba(167,139,250,0.3),rgba(167,139,250,0.2))"}}/>
+      {wakings.map((w,i)=>{
+        const[wh,wm]=w.time.split(":").map(Number);
+        let wMin=wh*60+wm;
+        // Handle cross-midnight: if waking time is before sleep start, add 24h
+        if(wMin<startMin)wMin+=1440;
+        const leftPct=Math.max(0,Math.min(100,((wMin-startMin)/totalMin)*100));
+        const widthPct=Math.max(1.5,(w.durationMin/totalMin)*100);
+        return<div key={i} style={{position:"absolute",top:0,bottom:0,left:`${leftPct}%`,width:`${widthPct}%`,background:"rgba(96,165,250,0.6)",borderLeft:"1.5px solid #60a5fa",borderRight:"1.5px solid #60a5fa"}}/>
+      })}
+    </div>}
+    {/* Expanded wakings list */}
+    {expanded&&wakings.length>0&&<div style={{padding:"0 14px 12px",borderTop:"1px dashed rgba(167,139,250,0.2)",marginTop:4}}>
+      <div style={{fontSize:9,fontWeight:700,color:T.dim,textTransform:"uppercase",letterSpacing:0.8,padding:"10px 0 6px"}}>{_lang==="en"?"Night wakes":"Despertares"}</div>
+      {wakings.map((w,i)=>{
+        const linkedEvents=(w.events||[]).map(findEvent).filter(Boolean);
+        const labels=linkedEvents.map(le=>{
+          if(le.type==="bottle")return`${_lang==="en"?"Bottle":"Mamadeira"} ${le.ml||"?"}ml`;
+          if(le.type==="nursing")return`${_lang==="en"?"Nurse":"Amam."} ${le.durationMin||"?"}min`;
+          if(le.type==="diaper")return _lang==="en"?"Diaper":"Fralda";
+          return TL(le.type);
+        });
+        return<div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"6px 0",borderTop:i>0?"1px solid rgba(167,139,250,0.08)":"none"}}>
+          <span style={{fontSize:11,fontWeight:700,color:"#60a5fa",minWidth:42}}>{w.time}</span>
+          <div style={{flex:1}}>
+            <div style={{fontSize:11,color:T.text,fontWeight:500}}>{labels.length>0?labels.join(" · "):(_lang==="en"?"Woke up":"Acordou")}</div>
+          </div>
+          <span style={{fontSize:9,color:T.dim,fontWeight:600}}>{fmtDur(w.durationMin)}</span>
+        </div>
+      })}
+    </div>}
+    {expanded&&<div style={{padding:"8px 14px 10px",display:"flex",gap:8,borderTop:"1px solid rgba(167,139,250,0.1)"}}>
+      <button onClick={()=>onEdit&&onEdit(entry)} style={{flex:1,padding:"6px 10px",borderRadius:8,background:"rgba(167,139,250,0.08)",fontSize:10,fontWeight:600,color:"#a78bfa"}}>{_lang==="en"?"Edit":"Editar"}</button>
+      <button onClick={()=>onDelete&&onDelete(entry.id)} style={{padding:"6px 12px",borderRadius:8,background:"rgba(248,113,113,0.08)",fontSize:10,fontWeight:600,color:T.red}}><Icon name="trash" size={12} color={T.red}/></button>
+    </div>}
+  </div>);
+}
+
 function EntryRow({entry,onDelete,onEdit,napNum}){const[swipe,setSwipe]=useState(0);const[swiping,setSwiping]=useState(false);const startX=useRef(0);const cfg=TYPES[entry.type]||{label:entry.type,icon:"star",color:T.text,bg:T.glass};let detail="";if(entry.ml)detail=`${entry.ml} ml`;else if(entry.durationMin)detail=fmtDur(entry.durationMin);else if(entry.subtype)detail=L(entry.subtype)||entry.subtype;else if(entry.name)detail=entry.name+(entry.dose?` · ${entry.dose}`:"");else if(entry.value)detail=`${entry.value}°C`;else if(entry.weightKg||entry.lengthCm||entry.headCm){const parts=[];if(entry.weightKg)parts.push(`${entry.weightKg}kg`);if(entry.lengthCm)parts.push(`${entry.lengthCm}cm`);if(entry.headCm)parts.push(`${_lang==="en"?"Head":"Cab."} ${entry.headCm}cm`);detail=parts.join(" · ")}if(entry.type==="nursing"&&entry.side){if(entry.leftMin||entry.rightMin){detail=(detail?detail+" · ":"")+"L:"+String(entry.leftMin||0)+"m R:"+String(entry.rightMin||0)+"m"}else{detail=(detail?detail+" · ":"")+(L(entry.side)||entry.side)}};const napLabel=napNum?(_lang==="en"?["","1st","2nd","3rd","4th","5th","6th","7th","8th"][napNum]||napNum+"th":[""," 1a"," 2a"," 3a"," 4a"," 5a"," 6a"," 7a"," 8a"][napNum]||napNum+"a"):null;
   const onTS=e=>{startX.current=e.touches[0].clientX;setSwiping(true)};
   const onTM=e=>{if(!swiping)return;const dx=startX.current-e.touches[0].clientX;setSwipe(Math.max(0,Math.min(70,dx)))};
@@ -1189,7 +1293,7 @@ function HistoryPage({entries,onDelete,onEdit}){
       </div>
     })()}
     {filtered.length===0&&<p style={{color:T.dim,textAlign:"center",padding:40,fontSize:13}}>{L("noEntries")}{filter!=="all"?(_lang==="en"?" of this type":" desse tipo"):""}</p>}
-    {filtered.map(e=><EntryRow key={e.id} entry={e} onDelete={onDelete} onEdit={onEdit}/>)}
+    {filtered.filter(e=>!e.nightWake).map(e=>(e.type==="sleep"&&e.wakings&&e.wakings.length>0)?<SleepBlock key={e.id} entry={e} onDelete={onDelete} onEdit={onEdit} entries={entries}/>:<EntryRow key={e.id} entry={e} onDelete={onDelete} onEdit={onEdit}/>)}
   </div>);
 }
 
@@ -1376,6 +1480,12 @@ function App(){
   const handleUndo=()=>{if(undoRef.current)undoRef.current();setToast(null)};
   const addEntry=useCallback(async e=>{
     if(navigator.vibrate)navigator.vibrate(8);
+    // If night wake is active, tag this event as part of the waking
+    if(activeTimer&&activeTimer.type==="sleep"&&activeTimer.nightWake&&(e.type==="bottle"||e.type==="nursing"||e.type==="diaper")){
+      e.nightWake=activeTimer.startTime; // link to parent sleep via its startTime
+      const updatedNw={...activeTimer.nightWake,events:[...(activeTimer.nightWake.events||[]),e.id]};
+      await FB.saveTimer({...activeTimer,nightWake:updatedNw});
+    }
     const parts=splitMidnight(e);
     for(const p of parts) await FB.addEntry(p);
     setFormType(null);setShowAdd(false);setEditEntry(null);
@@ -1387,7 +1497,7 @@ function App(){
     }
     showToast(tmsg,async()=>{for(const p of parts) await FB.delEntry(p.id)});
     setShowOrbit(true);setTimeout(()=>setShowOrbit(false),1200);
-  },[editEntry,entries]);
+  },[editEntry,entries,activeTimer]);
 
   const startEdit=useCallback((entry)=>{
     setEditEntry(entry);
@@ -1400,7 +1510,47 @@ function App(){
   const startTimer=useCallback(async(type,side)=>{const data={type,startTime:new Date().toISOString()};if(type==="nursing"){data.side=side||"left";data.leftMs=0;data.rightMs=0;data.sideStart=new Date().toISOString()}await FB.saveTimer(data);setShowAdd(false);setFormType(null)},[]);
   const switchSide=useCallback(async(newSide)=>{if(!activeTimer||activeTimer.type!=="nursing")return;const now=Date.now();const elapsed=activeTimer.paused?0:(now-new Date(activeTimer.sideStart).getTime());const updated={...activeTimer,side:newSide,sideStart:new Date().toISOString(),paused:false};if(activeTimer.side==="left")updated.leftMs=(activeTimer.leftMs||0)+elapsed;else updated.rightMs=(activeTimer.rightMs||0)+elapsed;await FB.saveTimer(updated)},[activeTimer]);
   const pauseNursing=useCallback(async()=>{if(!activeTimer||activeTimer.type!=="nursing")return;if(activeTimer.paused){await FB.saveTimer({...activeTimer,paused:false,sideStart:new Date().toISOString()})}else{const now=Date.now();const elapsed=now-new Date(activeTimer.sideStart).getTime();const updated={...activeTimer,paused:true};if(activeTimer.side==="left")updated.leftMs=(activeTimer.leftMs||0)+elapsed;else updated.rightMs=(activeTimer.rightMs||0)+elapsed;await FB.saveTimer(updated)}},[activeTimer]);
-  const stopTimer=useCallback(async()=>{if(!activeTimer)return;const s=new Date(activeTimer.startTime);if(activeTimer.type==="nursing"){const now=Date.now();const elapsed=activeTimer.paused?0:(now-new Date(activeTimer.sideStart).getTime());let lMs=(activeTimer.leftMs||0),rMs=(activeTimer.rightMs||0);if(!activeTimer.paused){if(activeTimer.side==="left")lMs+=elapsed;else rMs+=elapsed}const totalMin=Math.max(1,Math.round((lMs+rMs)/60000));const lMin=Math.round(lMs/60000),rMin=Math.round(rMs/60000);const side=lMs>0&&rMs>0?"both":(lMs>0?"left":"right");const entry={type:"nursing",date:`${s.getFullYear()}-${String(s.getMonth()+1).padStart(2,"0")}-${String(s.getDate()).padStart(2,"0")}`,time:`${String(s.getHours()).padStart(2,"0")}:${String(s.getMinutes()).padStart(2,"0")}`,durationMin:totalMin,side,leftMin:lMin,rightMin:rMin,id:uid()};await FB.addEntry(entry);await FB.saveTimer(null);showToast(`${_lang==="en"?"Nursing":"Amam."} ${totalMin}min (L:${lMin} R:${rMin})`,null)}else{const mins=Math.max(1,Math.round((Date.now()-s.getTime())/6e4));const entry={type:activeTimer.type,date:`${s.getFullYear()}-${String(s.getMonth()+1).padStart(2,"0")}-${String(s.getDate()).padStart(2,"0")}`,time:`${String(s.getHours()).padStart(2,"0")}:${String(s.getMinutes()).padStart(2,"0")}`,durationMin:mins,id:uid()};const parts=splitMidnight(entry);for(const p of parts) await FB.addEntry(p);await FB.saveTimer(null);showToast(`${mins}min registrado`,null)}},[activeTimer]);
+  const toggleNightWake=useCallback(async()=>{
+    if(!activeTimer||activeTimer.type!=="sleep")return;
+    if(activeTimer.nightWake){
+      // Ending a night wake — close it, add to wakings array
+      const nw=activeTimer.nightWake;
+      const wakeStart=new Date(nw.startTime);
+      const durMin=Math.max(1,Math.round((Date.now()-wakeStart.getTime())/60000));
+      const wakings=[...(activeTimer.wakings||[]),{
+        time:`${String(wakeStart.getHours()).padStart(2,"0")}:${String(wakeStart.getMinutes()).padStart(2,"0")}`,
+        durationMin:durMin,
+        events:nw.events||[]
+      }];
+      await FB.saveTimer({...activeTimer,nightWake:null,wakings});
+      if(navigator.vibrate)navigator.vibrate(8);
+    }else{
+      // Starting a night wake
+      await FB.saveTimer({...activeTimer,nightWake:{startTime:new Date().toISOString(),events:[]}});
+      if(navigator.vibrate)navigator.vibrate([50,30,50]);
+    }
+  },[activeTimer]);
+  const stopTimer=useCallback(async()=>{if(!activeTimer)return;const s=new Date(activeTimer.startTime);if(activeTimer.type==="nursing"){const now=Date.now();const elapsed=activeTimer.paused?0:(now-new Date(activeTimer.sideStart).getTime());let lMs=(activeTimer.leftMs||0),rMs=(activeTimer.rightMs||0);if(!activeTimer.paused){if(activeTimer.side==="left")lMs+=elapsed;else rMs+=elapsed}const totalMin=Math.max(1,Math.round((lMs+rMs)/60000));const lMin=Math.round(lMs/60000),rMin=Math.round(rMs/60000);const side=lMs>0&&rMs>0?"both":(lMs>0?"left":"right");const entry={type:"nursing",date:`${s.getFullYear()}-${String(s.getMonth()+1).padStart(2,"0")}-${String(s.getDate()).padStart(2,"0")}`,time:`${String(s.getHours()).padStart(2,"0")}:${String(s.getMinutes()).padStart(2,"0")}`,durationMin:totalMin,side,leftMin:lMin,rightMin:rMin,id:uid()};await FB.addEntry(entry);await FB.saveTimer(null);showToast(`${_lang==="en"?"Nursing":"Amam."} ${totalMin}min (L:${lMin} R:${rMin})`,null)}else{
+    // Sleep/nap stop — if sleep has wakings, persist them on the entry
+    let wakings=activeTimer.wakings||[];
+    // If there's an unclosed nightWake, close it now
+    if(activeTimer.type==="sleep"&&activeTimer.nightWake){
+      const nw=activeTimer.nightWake;
+      const wakeStart=new Date(nw.startTime);
+      const durMin=Math.max(1,Math.round((Date.now()-wakeStart.getTime())/60000));
+      wakings=[...wakings,{
+        time:`${String(wakeStart.getHours()).padStart(2,"0")}:${String(wakeStart.getMinutes()).padStart(2,"0")}`,
+        durationMin:durMin,
+        events:nw.events||[]
+      }];
+    }
+    const mins=Math.max(1,Math.round((Date.now()-s.getTime())/6e4));
+    const entry={type:activeTimer.type,date:`${s.getFullYear()}-${String(s.getMonth()+1).padStart(2,"0")}-${String(s.getDate()).padStart(2,"0")}`,time:`${String(s.getHours()).padStart(2,"0")}:${String(s.getMinutes()).padStart(2,"0")}`,durationMin:mins,id:uid()};
+    if(activeTimer.type==="sleep"&&wakings.length>0)entry.wakings=wakings;
+    const parts=splitMidnight(entry);for(const p of parts) await FB.addEntry(p);await FB.saveTimer(null);
+    const wakingNote=wakings.length>0?` (${wakings.length} ${_lang==="en"?"wake"+(wakings.length>1?"s":""):"despertar"+(wakings.length>1?"es":"")})`:"";
+    showToast(`${mins}min ${_lang==="en"?"logged":"registrado"}${wakingNote}`,null)
+  }},[activeTimer]);
 
   const today=todayStr();
   const cycleStart=useMemo(()=>{
@@ -1505,14 +1655,15 @@ function App(){
         </div>
         <CuriosityCard age={age} lang={lang} tick={tick}/>
         <div style={{padding:"4px 0 0"}}><Ring activeTimer={activeTimer} napSug={napSug} tick={tick} recentEvents={cycleE} lang={lang} showOrbit={showOrbit}/></div>
-        <div style={{display:"flex",gap:6,padding:"0 20px",marginBottom:12}}>{!activeTimer&&<><button onClick={()=>{setFormType("bottle");setShowAdd(false)}} style={{flex:1,padding:"12px 0 8px",borderRadius:14,background:`${T.green}08`,border:`1px solid ${T.green}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="bottle" size={18} color={T.green}/><span style={{fontSize:9,fontWeight:700,color:T.green}}>{_lang==="en"?"Bottle":"Mamad."}</span></button><button onClick={()=>startTimer("nursing",nextNursingSide)} style={{flex:1,padding:"12px 0 8px",borderRadius:14,background:`${T.blue}08`,border:`1px solid ${T.blue}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:5,position:"relative"}}><Icon name="breast" size={18} color={T.blue}/><span style={{fontSize:9,fontWeight:700,color:T.blue}}>{_lang==="en"?"Nurse":"Amam."}</span>{lastNursingSide&&<span style={{position:"absolute",top:4,right:6,fontSize:7,fontWeight:800,color:T.blue,opacity:0.5}}>{nextNursingSide==="left"?"L→":"R→"}</span>}</button><button onClick={()=>startTimer("nap")} style={{flex:1,padding:"12px 0 8px",borderRadius:14,background:`${T.accent}08`,border:`1px solid ${T.accent}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="cloud" size={18} color={T.accent}/><span style={{fontSize:9,fontWeight:700,color:T.accent}}>{_lang==="en"?"Nap":"Soneca"}</span></button><button onClick={()=>startTimer("sleep")} style={{flex:1,padding:"12px 0 8px",borderRadius:14,background:`${T.purple}08`,border:`1px solid ${T.purple}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="moon" size={18} color={T.purple}/><span style={{fontSize:9,fontWeight:700,color:T.purple}}>{_lang==="en"?"Sleep":"Sono"}</span></button></>}</div>
+        {activeTimer&&activeTimer.type==="sleep"&&<div style={{padding:"0 20px",marginBottom:10}}><button onClick={toggleNightWake} style={{width:"100%",padding:"12px 16px",borderRadius:14,background:activeTimer.nightWake?"linear-gradient(135deg,rgba(96,165,250,0.2),rgba(167,139,250,0.15))":"linear-gradient(135deg,rgba(96,165,250,0.1),rgba(167,139,250,0.08))",border:`1px solid ${activeTimer.nightWake?"rgba(96,165,250,0.6)":"rgba(96,165,250,0.3)"}`,display:"flex",alignItems:"center",gap:12,boxShadow:activeTimer.nightWake?"0 0 20px rgba(96,165,250,0.2)":"none",transition:"all 0.3s"}}><div style={{width:36,height:36,borderRadius:12,background:activeTimer.nightWake?"rgba(96,165,250,0.3)":"rgba(96,165,250,0.15)",display:"flex",alignItems:"center",justifyContent:"center",animation:activeTimer.nightWake?"pulse 2s ease-in-out infinite":"none"}}><Icon name="sun" size={18} color="#60a5fa"/></div><div style={{flex:1,textAlign:"left"}}><div style={{fontSize:13,fontWeight:700,color:"#60a5fa"}}>{_lang==="en"?"Night Wake":"Despertar"}{activeTimer.nightWake&&` · ${fmtDur(Math.max(1,Math.floor((Date.now()-new Date(activeTimer.nightWake.startTime).getTime())/60000)))}`}</div><div style={{fontSize:9,color:T.sub,marginTop:1}}>{activeTimer.nightWake?(_lang==="en"?"Tap to go back to sleep":"Toque para voltar a dormir"):(_lang==="en"?"Tap if Louise woke up":"Toque se Louise acordou")}</div></div>{activeTimer.nightWake&&<div style={{width:10,height:10,borderRadius:"50%",background:"#60a5fa",boxShadow:"0 0 8px #60a5fa",animation:"pulse 1.5s ease-in-out infinite"}}/>}</button></div>}
+        <div style={{display:"flex",gap:6,padding:"0 20px",marginBottom:12}}>{(!activeTimer||(activeTimer.type==="sleep"&&activeTimer.nightWake))&&<><button onClick={()=>{setFormType("bottle");setShowAdd(false)}} style={{flex:1,padding:"12px 0 8px",borderRadius:14,background:activeTimer?.nightWake?`${T.green}16`:`${T.green}08`,border:`1px solid ${activeTimer?.nightWake?`${T.green}40`:`${T.green}14`}`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="bottle" size={18} color={T.green}/><span style={{fontSize:9,fontWeight:700,color:T.green}}>{_lang==="en"?"Bottle":"Mamad."}</span></button><button onClick={()=>{if(activeTimer?.nightWake){setFormType("nursing");setShowAdd(false)}else{startTimer("nursing",nextNursingSide)}}} style={{flex:1,padding:"12px 0 8px",borderRadius:14,background:activeTimer?.nightWake?`${T.blue}16`:`${T.blue}08`,border:`1px solid ${activeTimer?.nightWake?`${T.blue}40`:`${T.blue}14`}`,display:"flex",flexDirection:"column",alignItems:"center",gap:5,position:"relative"}}><Icon name="breast" size={18} color={T.blue}/><span style={{fontSize:9,fontWeight:700,color:T.blue}}>{_lang==="en"?"Nurse":"Amam."}</span>{lastNursingSide&&<span style={{position:"absolute",top:4,right:6,fontSize:7,fontWeight:800,color:T.blue,opacity:0.5}}>{nextNursingSide==="left"?"L→":"R→"}</span>}</button>{!activeTimer&&<button onClick={()=>startTimer("nap")} style={{flex:1,padding:"12px 0 8px",borderRadius:14,background:`${T.accent}08`,border:`1px solid ${T.accent}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="cloud" size={18} color={T.accent}/><span style={{fontSize:9,fontWeight:700,color:T.accent}}>{_lang==="en"?"Nap":"Soneca"}</span></button>}{activeTimer?.nightWake&&<button onClick={()=>{setFormType("diaper");setShowAdd(false)}} style={{flex:1,padding:"12px 0 8px",borderRadius:14,background:`${T.pink}16`,border:`1px solid ${T.pink}40`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="diaper" size={18} color={T.pink}/><span style={{fontSize:9,fontWeight:700,color:T.pink}}>{_lang==="en"?"Diaper":"Fralda"}</span></button>}{!activeTimer&&<button onClick={()=>startTimer("sleep")} style={{flex:1,padding:"12px 0 8px",borderRadius:14,background:`${T.purple}08`,border:`1px solid ${T.purple}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="moon" size={18} color={T.purple}/><span style={{fontSize:9,fontWeight:700,color:T.purple}}>{_lang==="en"?"Sleep":"Sono"}</span></button>}</>}</div>
         {napSug&&napSug.state==="opening"&&<div style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:T.amberS,border:`1px solid ${T.amber}22`,display:"flex",alignItems:"center",gap:10,animation:"pulse 2s infinite"}}><Icon name="bell" size={18} color={T.amber}/><div><div style={{fontSize:12,fontWeight:700,color:T.amber}}>{_lang==="en"?"Sleep window opening":"Janela abrindo"}</div><div style={{fontSize:10,color:T.sub}}>{_lang==="en"?"Watch for sleepy cues":"Observe sinais de sono"}{napSug.predictedTime?` · ~${napSug.predictedTime}`:""}</div></div></div>}
         {napSug&&napSug.state==="sweet"&&<div style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:T.greenS,border:`1px solid ${T.green}22`,display:"flex",alignItems:"center",gap:10,animation:"pulse 1.5s infinite",boxShadow:`0 0 12px ${T.green}15`}}><Icon name="check" size={18} color={T.green}/><div><div style={{fontSize:12,fontWeight:700,color:T.green}}>{_lang==="en"?"Ideal time":"Hora ideal"}</div><div style={{fontSize:10,color:T.sub}}>{_lang==="en"?"Best moment for nap":"Melhor momento pra soneca"}{napSug.dataPoints>=3?(_lang==="en"?` · ${napSug.dataPoints} days`:` · ${napSug.dataPoints} dias`):""}</div></div></div>}
         {napSug&&(napSug.state==="stretching"||napSug.state==="overdue")&&<div style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:T.orangeS,border:`1px solid ${T.orange}22`,display:"flex",alignItems:"center",gap:10,animation:"pulse 1.5s infinite"}}><Icon name="zap" size={18} color={napSug.state==="overdue"?"#f87171":T.orange}/><div><div style={{fontSize:12,fontWeight:700,color:napSug.state==="overdue"?"#f87171":T.orange}}>{napSug.state==="overdue"?(_lang==="en"?"Past max window":"Passou do maximo"):(_lang==="en"?"Stretching":"Esticando")}</div><div style={{fontSize:10,color:T.sub}}>{napSug.state==="overdue"?(_lang==="en"?`${fmtDur(napSug.el)} awake — risk of overtired`:`${fmtDur(napSug.el)} acordada — risco de overtired`):(_lang==="en"?"Past average, still within range":"Passou da media, ainda dentro do range")}</div></div></div>}
         {!activeTimer&&sleepRec?.phase===2&&daySchedule.length>0&&daySchedule.filter(s=>s.status==="next").map((s,i)=><div key={"ns"+i} style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:`${T.accent}10`,border:`1px solid ${T.accent}18`,display:"flex",alignItems:"center",gap:10}}><Icon name="star" size={18} color={T.accent} fill={T.accent}/><div><div style={{fontSize:12,fontWeight:700,color:T.accent}}>{s.bed?(_lang==="en"?"Bedtime ~":"Sono ~"):(_lang==="en"?"Next nap ~":"Prox. soneca ~")}{minToTime(s.startMin)}</div><div style={{fontSize:10,color:T.sub}}>{s.bed?"":`${s.pos}${_lang==="en"?["","st","nd","rd"][s.pos]||"th":"a"} · `}WW {fmtDur(s.ww)}{s.durRange?" · "+s.durRange:""}</div></div></div>)}
         <InsightCards insights={dayInsights} phase={sleepRec?.phase}/>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,padding:"0 20px",marginBottom:14}}>{[{i:"bottle",v:`${totalMl}`,u:"ml",c:T.green,t:["bottle"],tap:"bottle",l:_lang==="en"?"Bottle":"Mamad."},{i:"breast",v:totalNursingMin>0?fmtDur(totalNursingMin):`${totalNursing}x`,c:T.blue,t:["nursing"],tap:"nursing",l:_lang==="en"?"Nursing":"Amam."},{i:"moon",v:fmtDur(totalSleep),c:T.purple,t:["sleep","nap"],tap:"nap",l:_lang==="en"?"Sleep":"Sono"},{i:"diaper",v:`${totalDiapers}`,c:T.pink,t:["diaper"],tap:"diaper",l:_lang==="en"?"Diaper":"Fralda"}].map((p,idx)=>{const last=entries.find(e=>p.t.includes(e.type));let ago=null;if(last){if(p.t.includes("sleep")&&last.durationMin){const endMs=new Date(`${last.date}T${last.time}`).getTime()+last.durationMin*60000;const endD=new Date(endMs);const ed=`${endD.getFullYear()}-${String(endD.getMonth()+1).padStart(2,"0")}-${String(endD.getDate()).padStart(2,"0")}`;const et=`${String(endD.getHours()).padStart(2,"0")}:${String(endD.getMinutes()).padStart(2,"0")}`;ago=timeSince(ed,et)}else{ago=timeSince(last.date,last.time)}}return<button key={idx} onClick={()=>{if(p.tap==="nap"&&!activeTimer)startTimer("nap");else if(p.tap==="nursing"&&!activeTimer)startTimer("nursing",nextNursingSide);else if(!activeTimer)setFormType(p.tap)}} style={{padding:"10px",borderRadius:12,background:`${p.c}06`,border:`1px solid ${p.c}0a`,textAlign:"left"}}><div style={{display:"flex",alignItems:"center",gap:5,marginBottom:3}}><Icon name={p.i} size={12} color={p.c}/><span style={{fontSize:9,color:T.dim}}>{p.l}</span></div><div style={{fontSize:16,fontWeight:800,color:p.c}}>{p.v}{p.u?<span style={{fontSize:11,opacity:0.6}}>{p.u}</span>:null}</div>{ago&&<div style={{fontSize:12,color:`${p.c}88`,fontWeight:600,marginTop:3}}>{ago}</div>}</button>})}</div>
-        <div style={{padding:"0 20px"}}><div style={{fontSize:11,fontWeight:600,color:T.dim,marginBottom:8,textTransform:"uppercase",letterSpacing:0.8}}>{L("today")}</div>{todayE.length===0&&<div style={{textAlign:"center",padding:"32px 20px",color:T.dim}}><Icon name="star" size={32} color={T.dim} fill={T.dim}/><div style={{fontSize:13,marginTop:8}}>{_lang==="en"?"Tap + to add":"Toque + para registrar"}</div></div>}{todayE.map((e,i)=>{const prev=todayE[i-1];let gap=null;if(prev){const t1=new Date(`${e.date}T${e.time}`).getTime();let t2=new Date(`${prev.date}T${prev.time}`).getTime();if(prev.durationMin)t2+=prev.durationMin*60000;const diffMin=Math.abs(Math.round((t1-t2)/60000));if(diffMin>=30){const isSleep=(e.type==="nap"||e.type==="sleep")&&e.durationMin;gap=<div style={{display:"flex",alignItems:"center",gap:10,padding:"4px 16px",margin:"2px 0"}}><div style={{flex:1,height:1,background:`linear-gradient(90deg,transparent,${isSleep?T.accent:T.accent}0a,transparent)`}}/><span style={{fontSize:8,color:isSleep?T.accent:T.dim,letterSpacing:0.5}}>{isSleep?"WW ":""}{fmtDur(diffMin)}</span><div style={{flex:1,height:1,background:`linear-gradient(90deg,transparent,${isSleep?T.accent:T.accent}0a,transparent)`}}/></div>}}return<React.Fragment key={e.id}>{gap}<EntryRow entry={e} onDelete={deleteEntry} onEdit={startEdit} napNum={napNums[e.id]||null}/></React.Fragment>})}</div>
+        <div style={{padding:"0 20px"}}><div style={{fontSize:11,fontWeight:600,color:T.dim,marginBottom:8,textTransform:"uppercase",letterSpacing:0.8}}>{L("today")}</div>{todayE.length===0&&<div style={{textAlign:"center",padding:"32px 20px",color:T.dim}}><Icon name="star" size={32} color={T.dim} fill={T.dim}/><div style={{fontSize:13,marginTop:8}}>{_lang==="en"?"Tap + to add":"Toque + para registrar"}</div></div>}{todayE.filter(e=>!e.nightWake).map((e,i,arr)=>{const prev=arr[i-1];let gap=null;if(prev){const t1=new Date(`${e.date}T${e.time}`).getTime();let t2=new Date(`${prev.date}T${prev.time}`).getTime();if(prev.durationMin)t2+=prev.durationMin*60000;const diffMin=Math.abs(Math.round((t1-t2)/60000));if(diffMin>=30){const isSleep=(e.type==="nap"||e.type==="sleep")&&e.durationMin;gap=<div style={{display:"flex",alignItems:"center",gap:10,padding:"4px 16px",margin:"2px 0"}}><div style={{flex:1,height:1,background:`linear-gradient(90deg,transparent,${isSleep?T.accent:T.accent}0a,transparent)`}}/><span style={{fontSize:8,color:isSleep?T.accent:T.dim,letterSpacing:0.5}}>{isSleep?"WW ":""}{fmtDur(diffMin)}</span><div style={{flex:1,height:1,background:`linear-gradient(90deg,transparent,${isSleep?T.accent:T.accent}0a,transparent)`}}/></div>}}const useBlock=e.type==="sleep"&&e.wakings&&e.wakings.length>0;return<React.Fragment key={e.id}>{gap}{useBlock?<SleepBlock entry={e} onDelete={deleteEntry} onEdit={startEdit} entries={entries}/>:<EntryRow entry={e} onDelete={deleteEntry} onEdit={startEdit} napNum={napNums[e.id]||null}/>}</React.Fragment>})}</div>
       </div>}
       {page==="history"&&<HistoryPage entries={entries} onDelete={deleteEntry} onEdit={startEdit}/>}
       {page==="stats"&&<StatsPage entries={entries} onGrowth={()=>goTo("growth")}/>}

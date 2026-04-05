@@ -281,7 +281,11 @@
       // Bedtime
       var bed = de.find(function(e) { return e.type === "sleep"; });
       var bedMin = bed ? toMinutes(bed.time) : null;
-      var nightSleepMin = bed && bed.durationMin ? bed.durationMin : null;
+      var nightTimeInBed = bed && bed.durationMin ? bed.durationMin : null;
+      // Extract wakings and compute real sleep (time in bed minus awake time)
+      var nightWakings = (bed && bed.wakings) ? bed.wakings : [];
+      var awakeMin = nightWakings.reduce(function(s, w) { return s + (w.durationMin || 0); }, 0);
+      var nightSleepMin = nightTimeInBed != null ? Math.max(0, nightTimeInBed - awakeMin) : null;
 
       // Diapers
       var diapers = de.filter(function(e) { return e.type === "diaper"; });
@@ -298,6 +302,10 @@
         napCount: naps.length,
         napTotalMin: napTotalMin,
         nightSleepMin: nightSleepMin,
+        nightTimeInBed: nightTimeInBed,
+        nightWakings: nightWakings,
+        nightWakingsCount: nightWakings.length,
+        nightAwakeMin: awakeMin,
         totalSleepMin: napTotalMin + (nightSleepMin || 0),
         feeds: feeds,
         feedCount: feeds.length,
@@ -443,6 +451,111 @@
     };
 
     // ═══════════════════════════
+    // WAKINGS ANALYSIS
+    // ═══════════════════════════
+
+    var wakingCounts = [], wakingCountWeights = [];
+    var allWakingTimes = []; // minutes from 0-1440 (treating post-midnight as +1440)
+    var allWakingDurations = [];
+    var wakingTypeCounter = { feed: 0, diaper: 0, other: 0 };
+    var nightsWithData = 0; // nights where we have a sleep with wakings data
+
+    for (var wi2 = 0; wi2 < dayData.length; wi2++) {
+      var wdd = dayData[wi2];
+      // Only count if there's an actual sleep event (not just undefined)
+      if (wdd.nightTimeInBed != null && wdd.nightTimeInBed > 60) {
+        nightsWithData++;
+        wakingCounts.push(wdd.nightWakingsCount);
+        wakingCountWeights.push(wdd.weight);
+
+        var sleepStartMin = wdd.bedMin || 1320; // fallback 22:00
+        for (var wk = 0; wk < wdd.nightWakings.length; wk++) {
+          var wkg = wdd.nightWakings[wk];
+          if (!wkg.time) continue;
+          var wkgMin = toMinutes(wkg.time);
+          // Cross-midnight: if waking time is before sleep start, add 1440
+          if (wkgMin < sleepStartMin) wkgMin += 1440;
+          allWakingTimes.push(wkgMin % 1440); // store as 0-1440
+          allWakingDurations.push(wkg.durationMin || 0);
+
+          // Classify by linked events (or fallback to 'other')
+          var linkedIds = wkg.events || [];
+          var hasFeed = false, hasDiaper = false;
+          for (var li = 0; li < linkedIds.length; li++) {
+            var linked = allEntries.find(function(e) { return e.id === linkedIds[li]; });
+            if (!linked) continue;
+            if (linked.type === "bottle" || linked.type === "nursing") hasFeed = true;
+            if (linked.type === "diaper") hasDiaper = true;
+          }
+          if (hasFeed) wakingTypeCounter.feed++;
+          else if (hasDiaper) wakingTypeCounter.diaper++;
+          else wakingTypeCounter.other++;
+        }
+      }
+    }
+
+    // Find most common waking time (cluster within ±30min)
+    var mostCommonWakingTime = null;
+    if (allWakingTimes.length >= 3) {
+      var bestCluster = { center: null, count: 0 };
+      for (var ci = 0; ci < allWakingTimes.length; ci++) {
+        var center = allWakingTimes[ci];
+        var count = 0;
+        for (var cj = 0; cj < allWakingTimes.length; cj++) {
+          var diff = Math.abs(allWakingTimes[cj] - center);
+          // Handle wrap-around (e.g. 23:50 vs 00:10)
+          if (diff > 720) diff = 1440 - diff;
+          if (diff <= 30) count++;
+        }
+        if (count > bestCluster.count) bestCluster = { center: center, count: count };
+      }
+      if (bestCluster.count >= Math.max(2, Math.floor(allWakingTimes.length * 0.5))) {
+        mostCommonWakingTime = bestCluster.center;
+      }
+    }
+
+    // Determine most common waking type
+    var totalTyped = wakingTypeCounter.feed + wakingTypeCounter.diaper + wakingTypeCounter.other;
+    var mostCommonType = null, mostCommonPct = 0;
+    if (totalTyped >= 2) {
+      var types = ["feed", "diaper", "other"];
+      for (var ti2 = 0; ti2 < types.length; ti2++) {
+        var pct = wakingTypeCounter[types[ti2]] / totalTyped;
+        if (pct > mostCommonPct) {
+          mostCommonPct = pct;
+          mostCommonType = types[ti2];
+        }
+      }
+    }
+
+    // Trend: compare wakings in recent half vs older half
+    var wakingTrend = null;
+    if (wakingCounts.length >= 4) {
+      var half = Math.floor(wakingCounts.length / 2);
+      var recentAvg = wakingCounts.slice(0, half).reduce(function(s, v) { return s + v; }, 0) / half;
+      var olderAvg = wakingCounts.slice(half).reduce(function(s, v) { return s + v; }, 0) / (wakingCounts.length - half);
+      if (olderAvg > 0 && Math.abs(recentAvg - olderAvg) >= 0.5) {
+        wakingTrend = recentAvg < olderAvg ? "improving" : "worsening";
+      }
+    }
+
+    var wakingsAnalysis = {
+      avgPerNight: wakingCounts.length >= 2
+        ? Math.round(weightedAvg(wakingCounts, wakingCountWeights) * 10) / 10
+        : null,
+      totalWakings: allWakingTimes.length,
+      nightsAnalyzed: nightsWithData,
+      avgDuration: allWakingDurations.length >= 2
+        ? Math.round(allWakingDurations.reduce(function(s, v) { return s + v; }, 0) / allWakingDurations.length)
+        : null,
+      mostCommonTime: mostCommonWakingTime,
+      mostCommonType: mostCommonType,
+      mostCommonTypePct: Math.round(mostCommonPct * 100),
+      trend: wakingTrend,
+      pts: wakingCounts.length
+    };
+
+    // ═══════════════════════════
     // FEED ANALYSIS
     // ═══════════════════════════
 
@@ -513,23 +626,28 @@
     // BATH ANALYSIS
     // ═══════════════════════════
 
-    var bathBeforeBed = [], bathToBedGaps = [];
+    var bathBeforeBed = [], bathToBedGaps = [], bathTimes = [], bathWeights = [];
     for (var bai = 0; bai < dayData.length; bai++) {
       var badd = dayData[bai];
-      if (badd.baths.length > 0 && badd.bedMin) {
+      if (badd.baths.length > 0) {
         var lastBath = badd.baths.slice().sort(function(a, b) {
           return b.time.localeCompare(a.time);
         })[0];
         var bathMin = toMinutes(lastBath.time);
-        var bathToBed = badd.bedMin - bathMin;
-        if (bathToBed > 0 && bathToBed < 300) {
-          bathBeforeBed.push(badd.date);
-          bathToBedGaps.push(bathToBed);
+        bathTimes.push(bathMin);
+        bathWeights.push(badd.weight);
+        if (badd.bedMin) {
+          var bathToBed = badd.bedMin - bathMin;
+          if (bathToBed > 0 && bathToBed < 300) {
+            bathBeforeBed.push(badd.date);
+            bathToBedGaps.push(bathToBed);
+          }
         }
       }
     }
 
     var bathAnalysis = {
+      avgTime: bathTimes.length >= 2 ? weightedAvg(bathTimes, bathWeights) : null,
       avgBeforeBed: bathToBedGaps.length >= 2
         ? Math.round(bathToBedGaps.reduce(function(s, v) { return s + v; }, 0) / bathToBedGaps.length)
         : null,
@@ -601,7 +719,8 @@
         avgTotalSleep: avgTotalSleep,
         overallAvgWW: overallAvgWW,
         nightSleep: nightSleepAnalysis,
-        totalDaily: totalDailySleep
+        totalDaily: totalDailySleep,
+        wakings: wakingsAnalysis
       },
 
       feeds: feedAnalysis,
@@ -1322,6 +1441,328 @@
             ? "Avg " + fmtDur(ns.avgDuration) + "/night (" + ns.pts + " nights, <1h variation)"
             : "Media " + fmtDur(ns.avgDuration) + "/noite (" + ns.pts + " noites, <1h variacao)"
         });
+      }
+    }
+
+    // 4-7. WAKINGS INSIGHTS
+    if (pattern.fullPattern && pattern.fullPattern.sleep && pattern.fullPattern.sleep.wakings) {
+      var wa = pattern.fullPattern.sleep.wakings;
+
+      // 4. Waking frequency
+      if (wa.avgPerNight != null && wa.nightsAnalyzed >= 3) {
+        if (wa.avgPerNight === 0) {
+          hints.push({
+            type: "good",
+            title: l === "en" ? "Sleeping through the night" : "Dormindo a noite toda",
+            sub: l === "en"
+              ? "No wakings in " + wa.nightsAnalyzed + " nights — amazing!"
+              : "Sem despertares em " + wa.nightsAnalyzed + " noites — incrivel!"
+          });
+        } else if (wa.avgPerNight >= 3) {
+          hints.push({
+            type: "info",
+            title: l === "en" ? "Frequent night wakings" : "Despertares frequentes",
+            sub: l === "en"
+              ? "Avg " + wa.avgPerNight + " wakings/night. Normal at this age."
+              : "Media " + wa.avgPerNight + " despertares/noite. Normal nessa idade."
+          });
+        } else if (wa.avgPerNight >= 1) {
+          hints.push({
+            type: "info",
+            title: l === "en" ? "Night wake pattern" : "Padrao de despertares",
+            sub: l === "en"
+              ? "Avg " + wa.avgPerNight + " waking" + (wa.avgPerNight > 1 ? "s" : "") + "/night (" + wa.nightsAnalyzed + " nights)"
+              : "Media " + wa.avgPerNight + " despertar" + (wa.avgPerNight > 1 ? "es" : "") + "/noite (" + wa.nightsAnalyzed + " noites)"
+          });
+        }
+      }
+
+      // 5. Most common waking time
+      if (wa.mostCommonTime != null && wa.totalWakings >= 3) {
+        hints.push({
+          type: "info",
+          title: l === "en" ? "Waking pattern detected" : "Padrao de horario detectado",
+          sub: l === "en"
+            ? "Most wakings cluster around " + minToTime(wa.mostCommonTime) + ". Prep ahead!"
+            : "Despertares costumam ser por volta das " + minToTime(wa.mostCommonTime) + ". Se prepare!"
+        });
+      }
+
+      // 6. Most common waking type
+      if (wa.mostCommonType && wa.mostCommonTypePct >= 60 && wa.totalWakings >= 3) {
+        var typeLabel = wa.mostCommonType === "feed"
+          ? (l === "en" ? "feeds" : "mamadas")
+          : wa.mostCommonType === "diaper"
+            ? (l === "en" ? "diapers" : "fraldas")
+            : (l === "en" ? "comfort" : "conforto");
+        hints.push({
+          type: "info",
+          title: l === "en" ? "Waking cause pattern" : "Motivo dos despertares",
+          sub: l === "en"
+            ? wa.mostCommonTypePct + "% of wakings are " + typeLabel
+            : wa.mostCommonTypePct + "% dos despertares sao " + typeLabel
+        });
+      }
+
+      // 7. Waking trend (improving/worsening)
+      if (wa.trend === "improving") {
+        hints.push({
+          type: "good",
+          title: l === "en" ? "Wakings decreasing!" : "Despertares diminuindo!",
+          sub: l === "en"
+            ? "Recent nights have fewer wakings than before. Louise is maturing."
+            : "Noites recentes tem menos despertares que antes. Louise esta amadurecendo."
+        });
+      } else if (wa.trend === "worsening") {
+        hints.push({
+          type: "info",
+          title: l === "en" ? "More wakings lately" : "Mais despertares ultimamente",
+          sub: l === "en"
+            ? "Could be a sleep regression or growth spurt. Usually temporary."
+            : "Pode ser regressao de sono ou salto de crescimento. Geralmente temporario."
+        });
+      }
+    }
+
+    // 8. PRE-FEED HINT — when a nap is approaching and history shows feed-before-nap pattern
+    if (pattern.fullPattern && pattern.fullPattern.feeds &&
+        pattern.fullPattern.feeds.preNapPct != null &&
+        pattern.fullPattern.feeds.preNapPct >= 60) {
+      // Check if there's a recent feed (in last 30min) — if yes, skip hint
+      var nowMin = (function() { var d = new Date(); return d.getHours() * 60 + d.getMinutes(); })();
+      var recentFeed = todayE.filter(function(e) {
+        if (e.type !== "bottle" && e.type !== "nursing") return false;
+        var feedMin = toMinutes(e.time) + (e.durationMin || 0);
+        return (nowMin - feedMin) >= 0 && (nowMin - feedMin) <= 30;
+      });
+
+      // Check if a nap is coming (not currently napping, no recent nap end)
+      var lastNapEnd = 0;
+      var inNap = false;
+      todayE.forEach(function(e) {
+        if (e.type === "nap") {
+          var ns = toMinutes(e.time);
+          var ne = ns + (e.durationMin || 0);
+          if (ns <= nowMin && ne >= nowMin) inNap = true;
+          if (ne > lastNapEnd && ne <= nowMin) lastNapEnd = ne;
+        }
+      });
+
+      // Only show hint if: not currently napping, no feed in last 30min, and last nap ended > 45min ago (so a new WW is building)
+      var awakeFor = lastNapEnd > 0 ? (nowMin - lastNapEnd) : null;
+      if (!inNap && recentFeed.length === 0 && (awakeFor == null || awakeFor >= 30)) {
+        hints.push({
+          type: "info",
+          title: l === "en" ? "Feed before nap" : "Mamada antes da soneca",
+          sub: l === "en"
+            ? "Louise usually feeds before her nap (" + pattern.fullPattern.feeds.preNapPct + "% of the time). Prep ahead!"
+            : "Louise costuma mamar antes da soneca (" + pattern.fullPattern.feeds.preNapPct + "% das vezes). Se prepare!"
+        });
+      }
+    }
+
+    // ─────────────────────────────────────────────────────
+    // Shared "now" context for remaining hints
+    // ─────────────────────────────────────────────────────
+    var nowM = (function() { var d = new Date(); return d.getHours() * 60 + d.getMinutes(); })();
+    var fp = pattern.fullPattern || null;
+    var bedDoneToday = todayE.find(function(e) { return e.type === "sleep"; });
+    var nightNapping = false; // are we past bedtime / sleeping?
+    if (bedDoneToday) nightNapping = true;
+
+    // 9. BEDTIME APPROACHING — 30-45min before habitual bedtime
+    if (!nightNapping && fp && fp.bedtime && fp.bedtime.avgTime && fp.bedtime.pts >= 3) {
+      var bedAvg = fp.bedtime.avgTime;
+      var minsUntilBed = bedAvg - nowM;
+      if (minsUntilBed >= 30 && minsUntilBed <= 45) {
+        hints.push({
+          type: "info",
+          title: l === "en" ? "Bedtime approaching" : "Sono noturno se aproximando",
+          sub: l === "en"
+            ? "Louise usually sleeps around " + minToTime(bedAvg) + ". Start winding down."
+            : "Louise costuma dormir por volta das " + minToTime(bedAvg) + ". Hora de desacelerar."
+        });
+      }
+    }
+
+    // 10. BATH REMINDER — ~30min before habitual bath time, if bath is part of routine
+    if (!nightNapping && fp && fp.bath && fp.bath.avgTime != null && fp.bath.daysWithBath >= 3) {
+      var bathDoneToday = todayE.find(function(e) { return e.type === "bath"; });
+      if (!bathDoneToday) {
+        var bathAvg = fp.bath.avgTime;
+        var minsUntilBath = bathAvg - nowM;
+        if (minsUntilBath >= 20 && minsUntilBath <= 40) {
+          hints.push({
+            type: "info",
+            title: l === "en" ? "Bath time soon" : "Hora do banho chegando",
+            sub: l === "en"
+              ? "Bath usually around " + minToTime(bathAvg) + " (" + fp.bath.daysWithBath + " days routine)"
+              : "Banho geralmente por volta das " + minToTime(bathAvg) + " (rotina de " + fp.bath.daysWithBath + " dias)"
+          });
+        }
+      }
+    }
+
+    // 11. LAST FEED BEFORE BED — if Louise usually feeds close to bedtime
+    if (!nightNapping && fp && fp.bedtime && fp.bedtime.avgTime && fp.bedtime.pts >= 3 && fp.feeds) {
+      var bedAvg2 = fp.bedtime.avgTime;
+      var minsUntilBed2 = bedAvg2 - nowM;
+      if (minsUntilBed2 >= 15 && minsUntilBed2 <= 45) {
+        // Check if already fed in last 30min
+        var recentFeedBed = todayE.filter(function(e) {
+          if (e.type !== "bottle" && e.type !== "nursing") return false;
+          var fm = toMinutes(e.time) + (e.durationMin || 0);
+          return (nowM - fm) >= 0 && (nowM - fm) <= 30;
+        });
+        if (recentFeedBed.length === 0) {
+          hints.push({
+            type: "info",
+            title: l === "en" ? "Last feed of the day" : "Ultima mamada do dia",
+            sub: l === "en"
+              ? "Bedtime around " + minToTime(bedAvg2) + ". Usually a feed happens before."
+              : "Sono por volta das " + minToTime(bedAvg2) + ". Geralmente tem mamada antes."
+          });
+        }
+      }
+    }
+
+    // 12. LONG NAP CELEBRATION — if most recent nap was excellent (>= 130% of avg)
+    if (pattern.avgNaps > 0 && pattern.avgTotalSleep > 0) {
+      var sortedNaps = todayE
+        .filter(function(e) { return e.type === "nap" && e.durationMin > 0; })
+        .sort(function(a, b) { return b.time.localeCompare(a.time); });
+      if (sortedNaps.length > 0) {
+        var lastNap = sortedNaps[0];
+        var lastNapEnd2 = toMinutes(lastNap.time) + lastNap.durationMin;
+        var minsSinceNapEnd = nowM - lastNapEnd2;
+        // Only celebrate if nap just ended (within last 20min) to stay relevant
+        if (minsSinceNapEnd >= 0 && minsSinceNapEnd <= 20) {
+          var usualNapDur = Math.round(pattern.avgTotalSleep / pattern.avgNaps);
+          if (lastNap.durationMin >= usualNapDur * 1.3 && lastNap.durationMin >= 45) {
+            hints.push({
+              type: "good",
+              title: l === "en" ? "Excellent nap!" : "Soneca excelente!",
+              sub: l === "en"
+                ? fmtDur(lastNap.durationMin) + " — " + Math.round(lastNap.durationMin / usualNapDur * 100) + "% of usual (" + fmtDur(usualNapDur) + ")"
+                : fmtDur(lastNap.durationMin) + " — " + Math.round(lastNap.durationMin / usualNapDur * 100) + "% do usual (" + fmtDur(usualNapDur) + ")"
+            });
+          }
+        }
+      }
+    }
+
+    // 13. MISSED FEED — too long since last feed vs avg interval
+    if (fp && fp.feeds && fp.feeds.avgInterval && fp.feeds.pts >= 5 && !nightNapping) {
+      var feedsToday = todayE
+        .filter(function(e) { return e.type === "bottle" || e.type === "nursing"; })
+        .sort(function(a, b) { return b.time.localeCompare(a.time); });
+      if (feedsToday.length > 0) {
+        var lastFeedT = feedsToday[0];
+        var lastFeedEnd = toMinutes(lastFeedT.time) + (lastFeedT.durationMin || 0);
+        var minsSinceFeed = nowM - lastFeedEnd;
+        var avgInt = fp.feeds.avgInterval;
+        // Trigger when 40% past the average interval
+        if (minsSinceFeed >= avgInt * 1.4 && minsSinceFeed <= avgInt * 2) {
+          hints.push({
+            type: "warn",
+            title: l === "en" ? "Feed overdue" : "Mamada atrasada",
+            sub: l === "en"
+              ? fmtDur(minsSinceFeed) + " since last feed. Usual interval: " + fmtDur(avgInt) + "."
+              : fmtDur(minsSinceFeed) + " desde a ultima mamada. Intervalo usual: " + fmtDur(avgInt) + "."
+          });
+        }
+      }
+    }
+
+    // 14. CLUSTER FEEDING — 3+ feeds in a short window (under 90min total)
+    if (fp && fp.feeds && fp.feeds.avgInterval) {
+      var recentFeedsToday = todayE
+        .filter(function(e) { return e.type === "bottle" || e.type === "nursing"; })
+        .sort(function(a, b) { return a.time.localeCompare(b.time); });
+      if (recentFeedsToday.length >= 3) {
+        // Look at last 3 feeds
+        var last3 = recentFeedsToday.slice(-3);
+        var firstT = toMinutes(last3[0].time);
+        var lastT = toMinutes(last3[2].time);
+        var spanMin = lastT - firstT;
+        // Cluster: 3 feeds within 90min AND spanMin < avgInterval * 1.2 (much tighter than usual)
+        if (spanMin > 0 && spanMin <= 90 && spanMin < fp.feeds.avgInterval * 1.2) {
+          // Only show if the cluster just ended (last feed within 30min)
+          var minsSinceCluster = nowM - (lastT + (last3[2].durationMin || 0));
+          if (minsSinceCluster >= 0 && minsSinceCluster <= 60) {
+            hints.push({
+              type: "info",
+              title: l === "en" ? "Cluster feeding detected" : "Mamadas agrupadas detectadas",
+              sub: l === "en"
+                ? "3 feeds in " + fmtDur(spanMin) + ". Often a growth spurt sign."
+                : "3 mamadas em " + fmtDur(spanMin) + ". Geralmente sinal de salto de crescimento."
+            });
+          }
+        }
+      }
+    }
+
+    // 15. DIAPER CONCERN — too long since last diaper change, or too few today
+    var diapersToday = todayE.filter(function(e) { return e.type === "diaper"; });
+    if (diapersToday.length > 0 && !nightNapping) {
+      var sortedDiapers = diapersToday.slice().sort(function(a, b) { return b.time.localeCompare(a.time); });
+      var lastDiaperMin = toMinutes(sortedDiapers[0].time);
+      var minsSinceDiaper = nowM - lastDiaperMin;
+      // Only alert if we're past morning (avoids false alarm early in the day)
+      if (minsSinceDiaper >= 240 && nowM >= 600) {
+        hints.push({
+          type: "warn",
+          title: l === "en" ? "Diaper check" : "Checar fralda",
+          sub: l === "en"
+            ? fmtDur(minsSinceDiaper) + " since last change. Time to check?"
+            : fmtDur(minsSinceDiaper) + " desde a ultima troca. Hora de checar?"
+        });
+      }
+    }
+    // Low diaper count for the day (guideline: 6+ diapers for newborn)
+    if (nowM >= 1080 && diapersToday.length > 0 && diapersToday.length < 4) {
+      hints.push({
+        type: "warn",
+        title: l === "en" ? "Few diapers today" : "Poucas fraldas hoje",
+        sub: l === "en"
+          ? "Only " + diapersToday.length + " changes today. Newborns usually need 6+."
+          : "Apenas " + diapersToday.length + " trocas hoje. Recem-nascidos geralmente precisam de 6+."
+      });
+    }
+
+    // 16. FEED VOLUME vs WHO GUIDELINE
+    if (fp && fp.feeds && nowM >= 1080) {
+      var bottlesToday = todayE.filter(function(e) { return e.type === "bottle"; });
+      var totalMlToday = bottlesToday.reduce(function(s, e) { return s + (e.ml || 0); }, 0);
+      if (totalMlToday > 0) {
+        var whoVol = null;
+        if (guideline) {
+          for (var gii = 0; gii < GUIDELINES.length; gii++) {
+            if (GUIDELINES[gii].ww.min === guideline.min && GUIDELINES[gii].ww.max === guideline.max) {
+              whoVol = GUIDELINES[gii].feeds;
+              break;
+            }
+          }
+        }
+        if (whoVol && whoVol.mlPerDay) {
+          if (totalMlToday < whoVol.mlPerDay.min * 0.85) {
+            hints.push({
+              type: "warn",
+              title: l === "en" ? "Below recommended volume" : "Abaixo do volume recomendado",
+              sub: l === "en"
+                ? totalMlToday + "ml today (WHO: " + whoVol.mlPerDay.min + "-" + whoVol.mlPerDay.max + "ml)"
+                : totalMlToday + "ml hoje (OMS: " + whoVol.mlPerDay.min + "-" + whoVol.mlPerDay.max + "ml)"
+            });
+          } else if (totalMlToday > whoVol.mlPerDay.max * 1.15) {
+            hints.push({
+              type: "info",
+              title: l === "en" ? "Above recommended volume" : "Acima do volume recomendado",
+              sub: l === "en"
+                ? totalMlToday + "ml today (WHO: " + whoVol.mlPerDay.min + "-" + whoVol.mlPerDay.max + "ml). Growth spurt?"
+                : totalMlToday + "ml hoje (OMS: " + whoVol.mlPerDay.min + "-" + whoVol.mlPerDay.max + "ml). Salto de crescimento?"
+            });
+          }
+        }
       }
     }
 
