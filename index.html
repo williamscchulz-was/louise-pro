@@ -3,6 +3,54 @@
   LOUISE PRO — BABY TRACKER — CHANGELOG
 ═══════════════════════════════════════════════════════════════
 
+  v8.1.0  05/04/2026  Notifications Inbox
+
+    BELL BUTTON + BADGE
+    • Sininho discreto 34px no canto direito do header
+    • Cinza em repouso, roxo quando tem nao-lidas
+    • Badge vermelho com contagem (gradient + glow)
+    • Animacao bellWiggle 2.5s quando tem nao-lidas
+
+    INBOX PANEL
+    • Full-screen slide-in overlay (estilo ProfilePage)
+    • Header com icone, titulo, subtitulo TODAY + botao close
+    • Toolbar: badge "3 new" / "All read" + botao "Mark all read"
+    • Lista ordenada por timestamp desc
+    • Estado vazio "All caught up" com aviso de reset a meia-noite
+    • Cores por tipo: good (verde/check), info (azul/star), warn (laranja/zap)
+
+    INTERACTION RULES
+    • Tocar num item nao-lido marca como lido (badge decrementa ao vivo)
+    • "Mark all read" zera o badge mas mantem itens visiveis
+    • Abrir o painel NAO marca como lido
+    • Nao-lidas: fundo roxo sutil + ponto azul pulsante a esquerda
+    • Lidas: titulo cinza + icone opacity 0.5 (ainda visiveis ate meia-noite)
+
+    CAPTURE + DEDUP (engine intocado)
+    • Hook observa getDayInsights() do RoutineEngine
+    • Gera hintKey estavel: slug(title) + data de hoje
+    • Dedup via lastHashRef (proteção contra render loop)
+    • Se mesma hint repete com sub diferente: atualiza sub+timestamp, preserva read
+    • Se hint e nova: insere com read:false
+
+    PERSISTENCE + SYNC
+    • Novo doc Firestore: config/inbox {items, lastReset}
+    • FB.subInbox + FB.saveInbox helpers
+    • Sync em tempo real via onSnapshot (propagacao entre dispositivos)
+    • InboxItem shape: {key, title, sub, type, timestamp, read, date}
+
+    MIDNIGHT RESET
+    • Check no mount + a cada tick (30s / 1s com timer)
+    • Se inbox.lastReset !== todayStr() → limpa items, atualiza lastReset
+    • Reset estrito: hint gerada 23:55 e nao aberta ate 00:00 e perdida
+    • Reseta lastHashRef tambem pra permitir recaptura das hints do novo dia
+
+    PRESERVED
+    • InsightCards inline do home continua como estava (auto-dismiss 15s)
+    • Engine routine-engine.js NAO foi tocado
+    • Ring, quick buttons, historico, stats, growth: zero alteracao
+    • Settings continua acessivel pelo avatar (profile) e pela aba CONFIG
+
   v8.0.0  05/04/2026  MAJOR: Night Wake + Smart Hints + Waking Intelligence
 
     NIGHT WAKE (feature completa)
@@ -325,6 +373,7 @@
     @keyframes splashLogo{0%{transform:scale(0.8);opacity:0}40%{transform:scale(1.05);opacity:1}100%{transform:scale(1);opacity:1}}
     @keyframes splashText{0%{opacity:0;transform:translateY(8px)}50%{opacity:0}100%{opacity:1;transform:translateY(0)}}
     @keyframes splashFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+    @keyframes bellWiggle{0%,88%,100%{transform:rotate(0deg)}91%{transform:rotate(-10deg)}94%{transform:rotate(10deg)}97%{transform:rotate(-5deg)}}
   </style>
 
 </head>
@@ -412,6 +461,8 @@ window.FB = {
   async saveMeds(m) { await db.collection('config').doc('meds').set({list:m}); },
   subTimer(cb) { return db.collection('config').doc('active').onSnapshot(s => cb(s.exists ? s.data() : null)); },
   async saveTimer(t) { await db.collection('config').doc('active').set(t||{cleared:true}); },
+  subInbox(cb) { return db.collection('config').doc('inbox').onSnapshot(s => cb(s.exists ? s.data() : null)); },
+  async saveInbox(data) { await db.collection('config').doc('inbox').set(data); },
 };
 dbg('Firebase ready');
 } catch(e) { dbg('Firebase Error: '+e.message); throw e; }
@@ -426,8 +477,9 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "8.0.0";
+const APP_VERSION = "8.1.0";
 const CHANGELOG = [
+  { v: "8.1.0", date: "2026-04-05", changes: "Notifications Inbox: sininho discreto no header com badge vermelho e animacao bellWiggle 2.5s. Painel slide-in cobre a tela mostrando todas as hints do engine (good/info/warn) com fundo roxo sutil + ponto azul pulsante nas nao-lidas. Dedup via hintKey estavel (slug do title + data). Tocar num item marca como lido; Mark all read zera o badge; abrir painel NAO marca como lido. Reset estrito a meia-noite (check no mount + tick). Persistencia em config/inbox com sync via onSnapshot entre dispositivos. Auto-dismiss inline do home preservado (InsightCards intocado). Sem som, sem push — puramente visual." },
   { v: "8.0.0", date: "2026-04-05", changes: "MAJOR: Night Wake feature completa (botao toggle, wakings salvos no sleep, SleepBlock visual com marcadores, engine calcula sono real) + 9 Smart Hints (pre-feed, bedtime approaching, bath reminder, last feed, excellent nap, feed overdue, cluster feeding, diaper check, feed volume WHO) + Waking intelligence (frequencia, cluster de horario, tipo, trend improving/worsening). Engine agora tem memoria completa da rotina." },
   { v: "7.0.0", date: "2026-04-04", changes: "Routine Engine v2: analisa sono+mamada+banho, 5 estados no ring (calm/opening/sweet/stretching/overdue), horario previsto no centro, desbloqueio com 3+ dias de dados, WW por posicao, recency decay, blend com WHO/AAP, modal rotina com feeds+banho" },
   { v: "6.1.0", date: "2026-04-04", changes: "Nav bar wider pill: gap 6, padding 8/16, icons 20px, botao + 50px, buttons 8/14px" },
@@ -1136,6 +1188,79 @@ function AddForm({type,onSave,savedMeds,onSaveMeds,editEntry,lastBottleMl,topMl}
   </div>);
 }
 
+function InboxPanel({inbox,onClose,onMarkRead,onMarkAllRead,lang}){
+  const items=(inbox.items||[]).slice().sort((a,b)=>(b.timestamp||0)-(a.timestamp||0));
+  const unreadCount=items.filter(it=>!it.read).length;
+  const todayLabel=new Date().toLocaleDateString(lang==="pt"?"pt-BR":"en-US",{weekday:"short",day:"numeric",month:"short"}).toUpperCase().replace(".","");
+  const iconByType={good:"check",warn:"zap",info:"star"};
+  const colorByType={good:T.green,warn:T.orange,info:T.blue};
+  const bgByType={good:T.greenS,warn:T.orangeS,info:`${T.blue}1a`};
+  const fmtAgo=ts=>{
+    if(!ts)return"";
+    const diff=Math.floor((Date.now()-ts)/60000);
+    if(diff<1)return lang==="en"?"now":"agora";
+    if(diff<60)return `${diff}min`;
+    const h=Math.floor(diff/60),m=diff%60;
+    return m>0?`${h}h${m}m`:`${h}h`;
+  };
+  return(<div style={{position:"fixed",inset:0,zIndex:210,maxWidth:480,margin:"0 auto",background:"rgba(5,8,24,0.96)",backdropFilter:"blur(24px)",WebkitBackdropFilter:"blur(24px)",display:"flex",flexDirection:"column",paddingTop:"env(safe-area-inset-top)",paddingBottom:"env(safe-area-inset-bottom)",animation:"fadeIn .25s ease"}}>
+    {/* Header */}
+    <div style={{display:"flex",alignItems:"center",gap:12,padding:"18px 20px 14px",borderBottom:"1px solid rgba(139,124,246,0.08)"}}>
+      <div style={{width:36,height:36,borderRadius:11,background:"rgba(139,124,246,0.12)",border:"1px solid rgba(139,124,246,0.2)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+        <Icon name="bell" size={17} color={T.accent}/>
+      </div>
+      <div style={{flex:1}}>
+        <div style={{fontSize:17,fontWeight:800,letterSpacing:-0.2,color:T.text}}>{lang==="en"?"Notifications":"Notificações"}</div>
+        <div style={{fontSize:10,color:T.dim,marginTop:2,letterSpacing:0.5}}>{lang==="en"?"TODAY · ":"HOJE · "}{todayLabel}</div>
+      </div>
+      <button onClick={onClose} style={{width:34,height:34,borderRadius:11,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center"}}>
+        <Icon name="x" size={16} color={T.sub}/>
+      </button>
+    </div>
+
+    {/* Toolbar */}
+    {items.length>0&&<div style={{padding:"12px 20px 10px",display:"flex",alignItems:"center",gap:10}}>
+      <span style={{fontSize:10,color:unreadCount>0?T.accent:T.dim,padding:"3px 10px",borderRadius:10,background:unreadCount>0?"rgba(139,124,246,0.12)":"rgba(85,90,128,0.08)",fontWeight:700,letterSpacing:0.5,border:`1px solid ${unreadCount>0?"rgba(139,124,246,0.2)":"rgba(85,90,128,0.15)"}`}}>
+        {unreadCount>0?`${unreadCount} ${lang==="en"?"new":"novas"}`:(lang==="en"?"All read":"Todas lidas")}
+      </span>
+      {unreadCount>0&&<button onClick={onMarkAllRead} style={{marginLeft:"auto",fontSize:10,color:T.sub,padding:"5px 12px",borderRadius:8,background:"transparent",border:"1px solid rgba(139,124,246,0.15)",fontWeight:600}}>{lang==="en"?"Mark all read":"Marcar todas"}</button>}
+    </div>}
+
+    {/* List or empty state */}
+    <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch"}}>
+      {items.length===0?(
+        <div style={{textAlign:"center",padding:"80px 24px 40px",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
+          <div style={{width:72,height:72,margin:"0 auto 18px",borderRadius:22,background:"rgba(139,124,246,0.06)",border:"1px solid rgba(139,124,246,0.12)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+            <Icon name="bell" size={32} color={T.dim}/>
+          </div>
+          <div style={{fontSize:15,fontWeight:800,marginBottom:6,color:T.text}}>{lang==="en"?"All caught up":"Tudo em dia"}</div>
+          <div style={{fontSize:11,color:T.sub,lineHeight:1.6,maxWidth:260}}>{lang==="en"?"New hints from the routine engine will appear here during the day.":"Novas dicas do engine aparecerão aqui durante o dia."}</div>
+          <div style={{display:"inline-flex",alignItems:"center",gap:5,marginTop:14,padding:"5px 10px",borderRadius:8,background:"rgba(139,124,246,0.06)",fontSize:9,color:T.accent,fontWeight:700,letterSpacing:0.5}}>
+            <Icon name="clock" size={10} color={T.accent}/>
+            {lang==="en"?"RESETS AT MIDNIGHT":"RESET À MEIA-NOITE"}
+          </div>
+        </div>
+      ):items.map(it=>{
+        const col=colorByType[it.type]||T.blue;
+        const bg=bgByType[it.type]||T.blueS;
+        const ic=iconByType[it.type]||"star";
+        const unread=!it.read;
+        return(<button key={it.key} onClick={()=>unread&&onMarkRead(it.key)} style={{display:"flex",alignItems:"flex-start",gap:12,padding:"14px 20px 14px 24px",borderBottom:"1px solid rgba(139,124,246,0.04)",position:"relative",width:"100%",textAlign:"left",background:unread?"rgba(139,124,246,0.04)":"transparent",cursor:unread?"pointer":"default"}}>
+          {unread&&<div style={{position:"absolute",left:9,top:"50%",transform:"translateY(-50%)",width:5,height:5,borderRadius:"50%",background:"#60a5fa",boxShadow:"0 0 8px #60a5fa, 0 0 2px #60a5fa",animation:"pulse 2s ease-in-out infinite"}}/>}
+          <div style={{width:34,height:34,borderRadius:11,background:bg,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,opacity:unread?1:0.5}}>
+            <Icon name={ic} size={15} color={col}/>
+          </div>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontSize:13,fontWeight:700,marginBottom:3,color:unread?T.text:T.sub,lineHeight:1.3}}>{it.title}</div>
+            <div style={{fontSize:11,color:unread?T.sub:T.dim,lineHeight:1.45}}>{it.sub}</div>
+            <div style={{fontSize:9,color:T.dim,marginTop:5,fontWeight:600,letterSpacing:0.5}}>{fmtAgo(it.timestamp)}</div>
+          </div>
+        </button>);
+      })}
+    </div>
+  </div>);
+}
+
 function ProfilePage({profile,onSave,onBack,onGrowth}){
   const[name,setName]=useState(profile.name||"");
   const[birth,setBirth]=useState(profile.birthDate||"");
@@ -1458,6 +1583,7 @@ function App(){
   const[activeTimer,setActiveTimer]=useState(null);const[loading,setLoading]=useState(true);
   const[page,setPage]=useState("home");const[showAdd,setShowAdd]=useState(false);const[formType,setFormType]=useState(null);const[editEntry,setEditEntry]=useState(null);const[showOrbit,setShowOrbit]=useState(false);
   const[showProfile,setShowProfile]=useState(false);const[showSleepInfo,setShowSleepInfo]=useState(false);
+  const[inbox,setInbox]=useState({items:[],lastReset:""});const[showInbox,setShowInbox]=useState(false);
   const lang=profile.lang||"en";_lang=lang;
   const[toast,setToast]=useState(null);const[tick,setTick]=useState(0);const undoRef=useRef(null);
   const[splash,setSplash]=useState(true);
@@ -1473,7 +1599,8 @@ function App(){
     const u2=FB.subProfile(d=>{if(d)setProfile(d);ready.p=true;check()});
     const u3=FB.subMeds(d=>{setSavedMeds(d||[{name:"Simeticona",dose:"3 gotas"},{name:"Floripa",dose:"6 gotas"},{name:"Vit. D",dose:"2 gotas"},{name:"Paracetamol",dose:"3 gotas"}]);ready.m=true;check()});
     const u4=FB.subTimer(d=>{setActiveTimer(d?.cleared?null:d);ready.a=true;check()});
-    return()=>{u1();u2();u3();u4()};
+    const u5=FB.subInbox(d=>{if(d)setInbox({items:d.items||[],lastReset:d.lastReset||""})});
+    return()=>{u1();u2();u3();u4();u5()};
   },[]);
 
   const showToast=(msg,fn)=>{undoRef.current=fn;setToast(msg)};
@@ -1597,6 +1724,79 @@ function App(){
   const napSug=useMemo(()=>!activeTimer?getNapSug(cycleE,sleepRec):null,[cycleE,sleepRec,activeTimer,tick]);
   const daysLeft=sleepRec?.phase===1?sleepRec.dl:null;
 
+  // ── INBOX CAPTURE: sync dayInsights into persistent inbox ──
+  // Dedup via stable hintKey (slug of title + today's date).
+  // Updates existing items (sub + timestamp) while preserving read state.
+  // Guards against render loop via lastHashRef.
+  const lastHashRef=useRef("");
+  useEffect(()=>{
+    if(!dayInsights||!Array.isArray(dayInsights))return;
+    const slugify=s=>(s||"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+    const td=todayStr();
+    // Build fresh hint list from engine output
+    const fresh=dayInsights.map(h=>({
+      key:`${slugify(h.title)}-${td}`,
+      title:h.title||"",
+      sub:h.sub||"",
+      type:h.type||"info",
+    }));
+    // Hash to detect actual changes (title+sub only — ignores order)
+    const hash=fresh.map(h=>`${h.key}|${h.sub}`).sort().join("~");
+    if(hash===lastHashRef.current)return;
+    lastHashRef.current=hash;
+    if(fresh.length===0)return;
+    // Merge with existing inbox: update existing, insert new, preserve read state
+    const existing=(inbox.items||[]).filter(it=>it.date===td);
+    const existingKeys=new Set(existing.map(it=>it.key));
+    const now=Date.now();
+    const merged=[...existing];
+    let changed=false;
+    fresh.forEach(h=>{
+      const idx=merged.findIndex(it=>it.key===h.key);
+      if(idx>=0){
+        // Update if sub changed
+        if(merged[idx].sub!==h.sub||merged[idx].title!==h.title){
+          merged[idx]={...merged[idx],title:h.title,sub:h.sub,type:h.type,timestamp:now};
+          changed=true;
+        }
+      }else{
+        // New hint
+        merged.push({key:h.key,title:h.title,sub:h.sub,type:h.type,timestamp:now,read:false,date:td});
+        changed=true;
+      }
+    });
+    if(!changed)return;
+    // Sort by timestamp desc and persist
+    merged.sort((a,b)=>(b.timestamp||0)-(a.timestamp||0));
+    FB.saveInbox({items:merged,lastReset:inbox.lastReset||td});
+  },[dayInsights,inbox.items,inbox.lastReset]);
+
+  // ── INBOX MIDNIGHT RESET ──
+  // Strict reset at midnight: clears items and updates lastReset.
+  // Runs on mount and on every tick (30s interval, or 1s when timer active).
+  useEffect(()=>{
+    const td=todayStr();
+    if(inbox.lastReset&&inbox.lastReset!==td){
+      // New day detected — clear inbox
+      FB.saveInbox({items:[],lastReset:td});
+      lastHashRef.current=""; // allow recapture today's hints fresh
+    }else if(!inbox.lastReset){
+      // First-ever load: just set lastReset without clearing
+      FB.saveInbox({items:inbox.items||[],lastReset:td});
+    }
+  },[tick,inbox.lastReset]);
+
+  // ── INBOX HANDLERS ──
+  const markInboxRead=useCallback(async key=>{
+    const items=(inbox.items||[]).map(it=>it.key===key?{...it,read:true}:it);
+    await FB.saveInbox({items,lastReset:inbox.lastReset||todayStr()});
+  },[inbox.items,inbox.lastReset]);
+  const markAllInboxRead=useCallback(async()=>{
+    const items=(inbox.items||[]).map(it=>({...it,read:true}));
+    await FB.saveInbox({items,lastReset:inbox.lastReset||todayStr()});
+  },[inbox.items,inbox.lastReset]);
+  const inboxUnreadCount=(inbox.items||[]).filter(it=>!it.read).length;
+
   // Vibrate when sleep window warning triggers
   const prevWind=useRef(false);const prevOver=useRef(false);
   useEffect(()=>{
@@ -1652,6 +1852,7 @@ function App(){
         <div style={{padding:"calc(12px + env(safe-area-inset-top)) 20px 0",display:"flex",alignItems:"center",gap:12}}>
           <div style={{position:"relative"}}><button onClick={()=>setShowProfile(true)} style={{width:52,height:52,borderRadius:16,overflow:"hidden",border:`1.5px solid ${T.accent}20`,background:T.glass,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 2px 12px rgba(0,0,0,0.3)"}}>{profile.photo?<img src={profile.photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<Icon name="sun" size={22} color={T.sub}/>}</button>{daysLeft!==null&&daysLeft>0&&<button onClick={()=>setShowSleepInfo(true)} style={{position:"absolute",top:-5,right:-8,minWidth:24,height:24,borderRadius:12,background:`linear-gradient(135deg,${T.accent},#a78bfa)`,color:"#fff",fontSize:10,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 5px",boxShadow:`0 2px 8px ${T.accent}55`,border:`2px solid ${T.bg1}`}}>{daysLeft}</button>}{sleepRec?.phase===2&&<button onClick={()=>setShowSleepInfo(true)} style={{position:"absolute",top:-2,right:-6,width:20,height:20,borderRadius:10,background:T.green,display:"flex",alignItems:"center",justifyContent:"center",border:`2px solid ${T.bg1}`}}><Icon name="check" size={10} color={T.bg1}/></button>}</div>
           <div style={{flex:1}}><h1 style={{fontSize:17,fontWeight:800,margin:0,letterSpacing:-0.3}}>{babyName}</h1><div style={{display:"flex",alignItems:"center",gap:6,marginTop:3}}><span style={{fontSize:10,color:T.accent,fontWeight:600}}>{age&&<>{age.months>0?`${age.months} ${_lang==="en"?(age.months===1?"month":"months"):(age.months===1?"mês":"meses")}${_lang==="en"?" and ":" e "}`:""}{age.days} {_lang==="en"?"days":"dias"}</>}</span><span style={{width:3,height:3,borderRadius:"50%",background:T.dim}}/><span style={{fontSize:10,color:T.dim}}>{new Date().toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{day:"numeric",month:"short"})}</span></div></div>
+          <button onClick={()=>setShowInbox(true)} style={{position:"relative",width:34,height:34,borderRadius:11,background:inboxUnreadCount>0?"rgba(139,124,246,0.12)":"rgba(22,28,60,0.6)",border:`1px solid ${inboxUnreadCount>0?"rgba(139,124,246,0.3)":"rgba(139,124,246,0.08)"}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><div style={{animation:inboxUnreadCount>0?"bellWiggle 2.5s ease-in-out infinite":"none",transformOrigin:"top center",display:"flex"}}><Icon name="bell" size={17} color={inboxUnreadCount>0?T.accent:T.dim}/></div>{inboxUnreadCount>0&&<div style={{position:"absolute",top:-5,right:-5,minWidth:18,height:18,borderRadius:9,background:"linear-gradient(135deg,#f87171,#dc2626)",color:"#fff",fontSize:10,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 5px",border:`2px solid ${T.bg1}`,boxShadow:"0 0 10px rgba(239,68,68,0.6)"}}>{inboxUnreadCount}</div>}</button>
         </div>
         <CuriosityCard age={age} lang={lang} tick={tick}/>
         <div style={{padding:"4px 0 0"}}><Ring activeTimer={activeTimer} napSug={napSug} tick={tick} recentEvents={cycleE} lang={lang} showOrbit={showOrbit}/></div>
@@ -1721,6 +1922,7 @@ function App(){
     </Sheet>
 
     {showProfile&&<ProfilePage profile={profile} onSave={async p=>await FB.saveProfile(p)} onBack={()=>setShowProfile(false)} onGrowth={()=>{setShowProfile(false);goTo("growth")}}/>}
+    {showInbox&&<InboxPanel inbox={inbox} onClose={()=>setShowInbox(false)} onMarkRead={markInboxRead} onMarkAllRead={markAllInboxRead} lang={lang}/>}
     <TimerBar activeTimer={activeTimer} onStop={stopTimer} onSwitch={switchSide} onPause={pauseNursing}/>
 
     <nav style={{position:"fixed",bottom:"4px",left:"50%",transform:"translateX(-50%)",display:"flex",alignItems:"center",gap:6,padding:"8px 16px",background:"rgba(8,10,28,0.95)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",borderRadius:40,border:"1px solid rgba(80,90,160,0.06)",boxShadow:"0 4px 24px rgba(0,0,0,0.6)",zIndex:50}}>
