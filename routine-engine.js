@@ -1171,8 +1171,9 @@
 
   // getDayInsights(todayE, pattern, guideline)
   // Returns: [{ type, title, sub }] — backward compat shape
-  function getDayInsights(todayE, pattern, guideline) {
+  function getDayInsights(todayE, pattern, guideline, lang) {
     if (!pattern) return [];
+    var l = lang || "en";
     var hints = [];
     var naps = todayE.filter(function(e) { return e.type === "nap" && e.durationMin > 0; });
     var totalSleep = naps.reduce(function(s, e) { return s + e.durationMin; }, 0);
@@ -1185,8 +1186,8 @@
       if (usualAvg > 0 && avgDur < usualAvg * 0.7) {
         hints.push({
           type: "warn",
-          title: "Sonecas mais curtas hoje",
-          sub: "Media " + avgDur + "min vs usual " + usualAvg + "min"
+          title: l === "en" ? "Shorter naps today" : "Sonecas mais curtas hoje",
+          sub: (l === "en" ? "Avg " : "Media ") + avgDur + "min vs usual " + usualAvg + "min"
         });
       }
     }
@@ -1194,8 +1195,8 @@
     if (naps.length >= (pattern.avgNaps || 0) && totalSleep >= (pattern.avgTotalSleep || 0) * 0.85) {
       hints.push({
         type: "good",
-        title: "Otimo dia de sono!",
-        sub: naps.length + " sonecas, " + fmtDur(totalSleep) + " total"
+        title: l === "en" ? "Great sleep day!" : "Otimo dia de sono!",
+        sub: naps.length + (l === "en" ? " naps, " : " sonecas, ") + fmtDur(totalSleep) + " total"
       });
     }
 
