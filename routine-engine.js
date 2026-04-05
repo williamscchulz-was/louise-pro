@@ -1,10 +1,19 @@
 // ╔═══════════════════════════════════════════════════════════════╗
-// ║  ROUTINE ENGINE v2.0.0                                       ║
+// ║  ROUTINE ENGINE v2.1.0                                       ║
 // ║  Full-day routine intelligence for Louise Pro                ║
 // ║  Replaces Sleep Engine v1 — backward compatible              ║
 // ║                                                              ║
 // ║  Analyzes: sleep, feeds, bath, diapers                       ║
 // ║  Uses: WHO/AAP research + learned patterns + recency decay   ║
+// ║                                                              ║
+// ║  v2.1.0: Time-window gates for retrospective hints           ║
+// ║   • Morning review (06h-10h): night sleep consistency,       ║
+// ║     wakings insights (sleeping through, frequent wakings,    ║
+// ║     pattern detected, cause pattern, trend)                  ║
+// ║   • End-of-day (22h+): shorter naps, WHO total sleep,        ║
+// ║     great sleep day, below/above recommended                 ║
+// ║   • Contextual hints (feed overdue, bedtime approaching,     ║
+// ║     bath reminder, excellent nap, diaper check) unchanged    ║
 // ╚═══════════════════════════════════════════════════════════════╝
 //
 // PUBLIC API:
@@ -39,7 +48,7 @@
 (function(root) {
   "use strict";
 
-  var VERSION = "2.0.0";
+  var VERSION = "2.1.0";
 
   // ════════════════════════════════════════════════════════
   // HELPERS
@@ -1336,6 +1345,15 @@
     if (!pattern) return [];
     var l = lang || "en";
     var hints = [];
+
+    // ── TIME WINDOWS for retrospective hints ──
+    // Night-sleep analysis hints → only show in morning review window (6h-10h)
+    // Day-balance hints → only show in end-of-day window (after 22h)
+    var _nowD = new Date();
+    var _nowMin = _nowD.getHours() * 60 + _nowD.getMinutes();
+    var isMorning = _nowMin >= 6 * 60 && _nowMin < 10 * 60;   // 06:00-09:59
+    var isEndOfDay = _nowMin >= 22 * 60;                       // 22:00+
+
     var naps = todayE.filter(function(e) { return e.type === "nap" && e.durationMin > 0; });
     var napTotal = naps.reduce(function(s, e) { return s + e.durationMin; }, 0);
 
@@ -1361,8 +1379,8 @@
     var whoMinMin = whoTotal.min * 60;
     var whoMaxMin = whoTotal.max * 60;
 
-    // 1. Shorter naps today
-    if (naps.length >= 2) {
+    // 1. Shorter naps today (end-of-day review, after 22h)
+    if (isEndOfDay && naps.length >= 2) {
       var avgDur = Math.round(napTotal / naps.length);
       var usualAvgDur = pattern.avgNaps > 0
         ? Math.round(pattern.avgTotalSleep / pattern.avgNaps) : 0;
@@ -1389,8 +1407,8 @@
       }
     }
 
-    // 2. Total sleep vs WHO
-    if (estTotalMin && naps.length >= Math.floor(pattern.avgNaps || 0)) {
+    // 2. Total sleep vs WHO (end-of-day review, after 22h)
+    if (isEndOfDay && estTotalMin && naps.length >= Math.floor(pattern.avgNaps || 0)) {
       var estTotalHrs = Math.round(estTotalMin / 6) / 10;
 
       if (estTotalMin >= whoMinMin && estTotalMin <= whoMaxMin) {
@@ -1419,7 +1437,7 @@
             : "~" + estTotalHrs + "h (acima de " + whoTotal.max + "h). Pode ser salto de crescimento!"
         });
       }
-    } else if (!estTotalMin && naps.length >= Math.floor(pattern.avgNaps || 0) &&
+    } else if (isEndOfDay && !estTotalMin && naps.length >= Math.floor(pattern.avgNaps || 0) &&
                napTotal >= (pattern.avgTotalSleep || 0) * 0.85) {
       hints.push({
         type: "good",
@@ -1428,8 +1446,8 @@
       });
     }
 
-    // 3. Night sleep consistency insight
-    if (pattern.fullPattern && pattern.fullPattern.sleep &&
+    // 3. Night sleep consistency insight (morning review, 6h-10h)
+    if (isMorning && pattern.fullPattern && pattern.fullPattern.sleep &&
         pattern.fullPattern.sleep.nightSleep && pattern.fullPattern.sleep.nightSleep.pts >= 3) {
       var ns = pattern.fullPattern.sleep.nightSleep;
       var nightSpread = (ns.maxDuration || 0) - (ns.minDuration || 0);
@@ -1444,8 +1462,8 @@
       }
     }
 
-    // 4-7. WAKINGS INSIGHTS
-    if (pattern.fullPattern && pattern.fullPattern.sleep && pattern.fullPattern.sleep.wakings) {
+    // 4-7. WAKINGS INSIGHTS (morning review, 6h-10h)
+    if (isMorning && pattern.fullPattern && pattern.fullPattern.sleep && pattern.fullPattern.sleep.wakings) {
       var wa = pattern.fullPattern.sleep.wakings;
 
       // 4. Waking frequency
