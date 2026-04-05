@@ -3,6 +3,23 @@
   LOUISE PRO — BABY TRACKER — CHANGELOG
 ═══════════════════════════════════════════════════════════════
 
+  v7.0.0  04/04/2026  Routine Engine v2
+    • Routine Engine v2: substitui Sleep Engine, analisa sono+mamada+banho+fralda
+    • Desbloqueio inteligente: phase 2 ativa com 3+ dias de dados (nao espera 2 meses)
+    • 5 estados no ring: calm/opening/sweet/stretching/overdue (era 3)
+    • Ring cores baseadas em dados reais da Louise (nao so guidelines)
+    • WW por posicao: WW1 manha =/= WW3 tarde
+    • Horario previsto no centro do ring: "Nap 2 ~10:20"
+    • Alerta "Hora ideal" (sweet spot baseado em dados)
+    • Alerta "Esticando" (entre media e max, nao mais "passou")
+    • Recency decay: dias recentes pesam mais (halfLife=4 dias)
+    • Blend inteligente: poucos dados = guideline WHO/AAP, muitos = dados reais
+    • Modal rotina: inclui mamadas e banho previstos
+    • Feed analysis: intervalo medio, correlacao mamada-antes-de-nap
+    • Bath analysis: correlacao banho-antes-de-dormir
+    • Dados mundiais expandidos: WHO/AAP por faixa etaria (sono+feed+volume)
+    • Backward compatible: mesmas funcoes, retornos expandidos
+
   v6.0.0  04/04/2026  Ring Napper-style + Nav flush
     • Timer ativo (nap/sleep): dashed orbit girando 8s + glow 3 camadas + icon breathing
     • Ultimo evento dot: dashed ring 88% opacity + glow forte + ring expand
@@ -364,7 +381,7 @@ dbg('Firebase ready');
 } catch(e) { dbg('Firebase Error: '+e.message); throw e; }
 </script>
 
-<script src="sleep-engine.js"></script>
+<script src="routine-engine.js"></script>
 
 <script type="text/babel">
 const {useState, useEffect, useCallback, useRef, useMemo} = React;
@@ -373,8 +390,9 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "6.1.0";
+const APP_VERSION = "7.0.0";
 const CHANGELOG = [
+  { v: "7.0.0", date: "2026-04-04", changes: "Routine Engine v2: analisa sono+mamada+banho, 5 estados no ring (calm/opening/sweet/stretching/overdue), horario previsto no centro, desbloqueio com 3+ dias de dados, WW por posicao, recency decay, blend com WHO/AAP, modal rotina com feeds+banho" },
   { v: "6.1.0", date: "2026-04-04", changes: "Nav bar wider pill: gap 6, padding 8/16, icons 20px, botao + 50px, buttons 8/14px" },
   { v: "6.0.9", date: "2026-04-04", changes: "Nav bar test: bottom fixo 4px sem calc/env para diagnosticar posicionamento" },
   { v: "6.0.8", date: "2026-04-04", changes: "Nav bar mais rente: safe-area - 22px, ~12px da borda inferior" },
@@ -554,8 +572,8 @@ function splitMidnight(entry){
   ];
 }
 
-// ── SLEEP ENGINE (loaded from sleep-engine.js) ──
-const {getSleepRec, getNapSug, analyzeSleepPatterns, projectSchedule, getDayInsights: _getDayInsights, getGuideline, toMinutes, minToTime, WW} = SleepEngine;
+// ── ROUTINE ENGINE v2 (loaded from routine-engine.js) ──
+const {getSleepRec, getNapSug, analyzeSleepPatterns, projectSchedule, getDayInsights: _getDayInsights, getGuideline, toMinutes, minToTime, WW, predict: predictRoutine, getInsights: getRoutineInsights, analyze: analyzeRoutine, getStatus: getRoutineStatus, GUIDELINES} = RoutineEngine;
 // Wrap getDayInsights to auto-inject current language
 function getDayInsights(todayE, pattern, guideline) { return _getDayInsights(todayE, pattern, guideline, _lang); }
 
@@ -685,7 +703,11 @@ function Ring({activeTimer,napSug,tick,recentEvents,lang,showOrbit}){
     else{sub=lang==="en"?"Bedtime":"Boa noite";col1="#7c3aed";col2="#c084fc";isBedtime=true}
   } else if(napSug){
     lbl=fmtDur(napSug.el);sub=lang==="en"?"Awake for":"Acordado(a)";
-    if(napSug.over){col1="#ea580c";col2="#fb923c"}else if(napSug.wind){col1="#d97706";col2="#fbbf24"}else{col1="#059669";col2="#34d399"}
+    if(napSug.state==="overdue"){col1="#dc2626";col2="#f87171"}
+    else if(napSug.state==="stretching"){col1="#ea580c";col2="#fb923c"}
+    else if(napSug.state==="sweet"){col1="#059669";col2="#34d399"}
+    else if(napSug.state==="opening"){col1="#d97706";col2="#fbbf24"}
+    else{col1="#059669";col2="#34d399"}
   } else{sub="";lbl="\u2014"}
   const hasProgress=col1!==T.dim;
   const toMin=t=>{const[h,m]=(t||"12:00").split(":").map(Number);return h*60+m};
@@ -787,7 +809,7 @@ function Ring({activeTimer,napSug,tick,recentEvents,lang,showOrbit}){
       </div>)})}
       {anchorSun&&<div style={{position:"absolute",left:anchorSun.x-20,top:anchorSun.y-20,display:"flex",flexDirection:"column",alignItems:"center",zIndex:1,pointerEvents:"none"}}><div style={{width:40,height:40,borderRadius:"50%",background:"radial-gradient(circle at 40% 30%,rgba(251,191,36,0.18),rgba(251,146,60,0.06))",border:"2px solid rgba(251,191,36,0.35)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 16px rgba(251,191,36,0.15)"}}><Icon name="sun" size={18} color="#fbbf24"/></div><span style={{fontSize:9,fontWeight:700,color:"#fbbf24",marginTop:2,textShadow:"0 1px 4px rgba(0,0,0,0.8)"}}>{anchorSun.time}</span></div>}
       {anchorMoon&&<div style={{position:"absolute",left:anchorMoon.x-20,top:anchorMoon.y-20,display:"flex",flexDirection:"column",alignItems:"center",zIndex:1,pointerEvents:"none"}}><div style={{width:40,height:40,borderRadius:"50%",background:"radial-gradient(circle at 40% 30%,rgba(167,139,250,0.18),rgba(139,124,246,0.06))",border:"2px solid rgba(167,139,250,0.35)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 16px rgba(167,139,250,0.15)"}}><Icon name="moon" size={18} color="#a78bfa"/></div><span style={{fontSize:9,fontWeight:700,color:"#a78bfa",marginTop:2,textShadow:"0 1px 4px rgba(0,0,0,0.8)"}}>{anchorMoon.time}</span></div>}
-      <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}><span style={{fontSize:14,color:isBedtime?"#c084fc":T.sub,fontWeight:500,letterSpacing:1.5,display:"flex",alignItems:"center",gap:5}}>{isBedtime&&<Icon name="moon" size={14} color="#c084fc"/>}{sub}</span><span style={{fontSize:52,fontWeight:800,letterSpacing:-2,marginTop:4,background:hasProgress?`linear-gradient(135deg,${col2},${col1})`:`linear-gradient(135deg,${T.text},${T.sub})`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>{lbl}</span></div>
+      <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}><span style={{fontSize:14,color:isBedtime?"#c084fc":T.sub,fontWeight:500,letterSpacing:1.5,display:"flex",alignItems:"center",gap:5}}>{isBedtime&&<Icon name="moon" size={14} color="#c084fc"/>}{sub}</span><span style={{fontSize:52,fontWeight:800,letterSpacing:-2,marginTop:4,background:hasProgress?`linear-gradient(135deg,${col2},${col1})`:`linear-gradient(135deg,${T.text},${T.sub})`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>{lbl}</span>{napSug&&napSug.predictedTime&&!activeTimer&&<span style={{fontSize:10,fontWeight:600,color:col1,opacity:0.7,marginTop:2}}>{lang==="en"?"Nap":"Nap"} {napSug.napPos||""} ~{napSug.predictedTime}</span>}</div>
       {tip!==null&&<div onClick={()=>setTip(null)} style={{position:"absolute",inset:0,zIndex:1}}/>}
       {showOrbit&&<div key={Date.now()} style={{position:"absolute",left:167,top:167,width:6,height:6,zIndex:10,pointerEvents:"none",animation:"orbitComet 1.2s cubic-bezier(0.25,0.1,0.25,1) forwards"}}><div style={{width:6,height:6,borderRadius:"50%",background:"#fff",boxShadow:"0 0 8px #fff, 0 0 20px rgba(139,124,246,0.6), -8px 0 12px rgba(139,124,246,0.3), -16px 0 8px rgba(139,124,246,0.15)",transform:"translateY(-148px)"}}/></div>}
     </div>
@@ -1397,6 +1419,12 @@ function App(){
     if(wk){wm=toMinutes(wk.time)}else{const ls=todayE.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin>0).sort((a,b)=>b.time.localeCompare(a.time))[0];if(ls){const em=toMinutes(ls.time)+ls.durationMin;if(em>=300&&em<=720)wm=em}}
     return projectSchedule(wm,sleepPattern,todayE);
   },[sleepPattern,todayE]);
+  const fullSchedule=useMemo(()=>{
+    if(!sleepPattern||!sleepPattern.fullPattern)return[];
+    let wm=6*60;const wk=todayE.find(e=>e.type==="wakeup");
+    if(wk){wm=toMinutes(wk.time)}else{const ls=todayE.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin>0).sort((a,b)=>b.time.localeCompare(a.time))[0];if(ls){const em=toMinutes(ls.time)+ls.durationMin;if(em>=300&&em<=720)wm=em}}
+    return predictRoutine(todayE,sleepPattern.fullPattern,wm,age?age.totalWeeks:4);
+  },[sleepPattern,todayE,age]);
   const dayInsights=useMemo(()=>getDayInsights(todayE,sleepPattern,sleepRec?.g),[todayE,sleepPattern,sleepRec]);
   const napSug=useMemo(()=>!activeTimer?getNapSug(cycleE,sleepRec):null,[cycleE,sleepRec,activeTimer,tick]);
   const daysLeft=sleepRec?.phase===1?sleepRec.dl:null;
@@ -1460,8 +1488,9 @@ function App(){
         <CuriosityCard age={age} lang={lang} tick={tick}/>
         <div style={{padding:"4px 0 0"}}><Ring activeTimer={activeTimer} napSug={napSug} tick={tick} recentEvents={cycleE} lang={lang} showOrbit={showOrbit}/></div>
         <div style={{display:"flex",gap:6,padding:"0 20px",marginBottom:12}}>{!activeTimer&&<><button onClick={()=>{setFormType("bottle");setShowAdd(false)}} style={{flex:1,padding:"12px 0 8px",borderRadius:14,background:`${T.green}08`,border:`1px solid ${T.green}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="bottle" size={18} color={T.green}/><span style={{fontSize:9,fontWeight:700,color:T.green}}>{_lang==="en"?"Bottle":"Mamad."}</span></button><button onClick={()=>startTimer("nursing",nextNursingSide)} style={{flex:1,padding:"12px 0 8px",borderRadius:14,background:`${T.blue}08`,border:`1px solid ${T.blue}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:5,position:"relative"}}><Icon name="breast" size={18} color={T.blue}/><span style={{fontSize:9,fontWeight:700,color:T.blue}}>{_lang==="en"?"Nurse":"Amam."}</span>{lastNursingSide&&<span style={{position:"absolute",top:4,right:6,fontSize:7,fontWeight:800,color:T.blue,opacity:0.5}}>{nextNursingSide==="left"?"L→":"R→"}</span>}</button><button onClick={()=>startTimer("nap")} style={{flex:1,padding:"12px 0 8px",borderRadius:14,background:`${T.accent}08`,border:`1px solid ${T.accent}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="cloud" size={18} color={T.accent}/><span style={{fontSize:9,fontWeight:700,color:T.accent}}>{_lang==="en"?"Nap":"Soneca"}</span></button><button onClick={()=>startTimer("sleep")} style={{flex:1,padding:"12px 0 8px",borderRadius:14,background:`${T.purple}08`,border:`1px solid ${T.purple}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="moon" size={18} color={T.purple}/><span style={{fontSize:9,fontWeight:700,color:T.purple}}>{_lang==="en"?"Sleep":"Sono"}</span></button></>}</div>
-        {napSug?.wind&&<div style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:T.amberS,border:`1px solid ${T.amber}22`,display:"flex",alignItems:"center",gap:10,animation:"pulse 2s infinite"}}><Icon name="bell" size={18} color={T.amber}/><div><div style={{fontSize:12,fontWeight:700,color:T.amber}}>{_lang==="en"?"Get ready for sleep":"Preparar para dormir"}</div><div style={{fontSize:10,color:T.sub}}>{_lang==="en"?`~${napSug.rem}min left`:`~${napSug.rem}min restantes`}</div></div></div>}
-        {napSug?.over&&<div style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:T.orangeS,border:`1px solid ${T.orange}22`,display:"flex",alignItems:"center",gap:10,animation:"pulse 1.5s infinite"}}><Icon name="zap" size={18} color={T.orange}/><div><div style={{fontSize:12,fontWeight:700,color:T.orange}}>{_lang==="en"?"Sleep window passed":"Janela de sono passou"}</div><div style={{fontSize:10,color:T.sub}}>{_lang==="en"?`${fmtDur(napSug.el)} awake`:`${fmtDur(napSug.el)} acordado(a)`}</div></div></div>}
+        {napSug&&napSug.state==="opening"&&<div style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:T.amberS,border:`1px solid ${T.amber}22`,display:"flex",alignItems:"center",gap:10,animation:"pulse 2s infinite"}}><Icon name="bell" size={18} color={T.amber}/><div><div style={{fontSize:12,fontWeight:700,color:T.amber}}>{_lang==="en"?"Sleep window opening":"Janela abrindo"}</div><div style={{fontSize:10,color:T.sub}}>{_lang==="en"?"Watch for sleepy cues":"Observe sinais de sono"}{napSug.predictedTime?` · ~${napSug.predictedTime}`:""}</div></div></div>}
+        {napSug&&napSug.state==="sweet"&&<div style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:T.greenS,border:`1px solid ${T.green}22`,display:"flex",alignItems:"center",gap:10,animation:"pulse 1.5s infinite",boxShadow:`0 0 12px ${T.green}15`}}><Icon name="check" size={18} color={T.green}/><div><div style={{fontSize:12,fontWeight:700,color:T.green}}>{_lang==="en"?"Ideal time":"Hora ideal"}</div><div style={{fontSize:10,color:T.sub}}>{_lang==="en"?"Best moment for nap":"Melhor momento pra soneca"}{napSug.dataPoints>=3?(_lang==="en"?` · ${napSug.dataPoints} days`:` · ${napSug.dataPoints} dias`):""}</div></div></div>}
+        {napSug&&(napSug.state==="stretching"||napSug.state==="overdue")&&<div style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:T.orangeS,border:`1px solid ${T.orange}22`,display:"flex",alignItems:"center",gap:10,animation:"pulse 1.5s infinite"}}><Icon name="zap" size={18} color={napSug.state==="overdue"?"#f87171":T.orange}/><div><div style={{fontSize:12,fontWeight:700,color:napSug.state==="overdue"?"#f87171":T.orange}}>{napSug.state==="overdue"?(_lang==="en"?"Past max window":"Passou do maximo"):(_lang==="en"?"Stretching":"Esticando")}</div><div style={{fontSize:10,color:T.sub}}>{napSug.state==="overdue"?(_lang==="en"?`${fmtDur(napSug.el)} awake — risk of overtired`:`${fmtDur(napSug.el)} acordada — risco de overtired`):(_lang==="en"?"Past average, still within range":"Passou da media, ainda dentro do range")}</div></div></div>}
         {!activeTimer&&sleepRec?.phase===2&&daySchedule.length>0&&daySchedule.filter(s=>s.status==="next").map((s,i)=><div key={"ns"+i} style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:`${T.accent}10`,border:`1px solid ${T.accent}18`,display:"flex",alignItems:"center",gap:10}}><Icon name="star" size={18} color={T.accent} fill={T.accent}/><div><div style={{fontSize:12,fontWeight:700,color:T.accent}}>{s.bed?(_lang==="en"?"Bedtime ~":"Sono ~"):(_lang==="en"?"Next nap ~":"Prox. soneca ~")}{minToTime(s.startMin)}</div><div style={{fontSize:10,color:T.sub}}>{s.bed?"":`${s.pos}${_lang==="en"?["","st","nd","rd"][s.pos]||"th":"a"} · `}WW {fmtDur(s.ww)}{s.durRange?" · "+s.durRange:""}</div></div></div>)}
         {sleepRec?.phase===2&&dayInsights.map((h,i)=><div key={"hi"+i} style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:h.type==="good"?T.greenS:T.orangeS,border:`1px solid ${h.type==="good"?T.green:T.orange}22`,display:"flex",alignItems:"center",gap:10}}><Icon name={h.type==="good"?"check":"zap"} size={18} color={h.type==="good"?T.green:T.orange}/><div><div style={{fontSize:12,fontWeight:700,color:h.type==="good"?T.green:T.orange}}>{h.title}</div><div style={{fontSize:10,color:T.sub}}>{h.sub}</div></div></div>)}
         <div style={{padding:"0 20px",marginBottom:12}}><div style={{padding:"12px 14px",borderRadius:14,background:"rgba(22,28,60,0.4)",border:`1px solid ${T.gB}`}}>
@@ -1487,16 +1516,27 @@ function App(){
         {age&&age.totalDays>=1&&age.totalDays<=30&&CURIOSITIES[age.totalDays-1]&&<><div style={{height:1,background:`${T.accent}18`,margin:"16px 0"}}/><div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}><Icon name="sun" size={16} color={T.amber}/><span style={{fontSize:9,fontWeight:700,letterSpacing:1,textTransform:"uppercase",color:T.amber}}>{_lang==="en"?`Day ${age.totalDays}`:`Dia ${age.totalDays}`}</span></div><div style={{fontSize:13,fontWeight:700,marginBottom:4}}>{(_lang==="en"?CURIOSITIES[age.totalDays-1].en:CURIOSITIES[age.totalDays-1].pt).t}</div><div style={{fontSize:11,color:T.sub,lineHeight:1.5}}>{(_lang==="en"?CURIOSITIES[age.totalDays-1].en:CURIOSITIES[age.totalDays-1].pt).b}</div></>}
       </>}
       {sleepRec?.phase===2&&<><div style={{textAlign:"center",marginBottom:12}}><Icon name="check" size={36} color={T.green}/></div><div style={{textAlign:"center",fontSize:16,fontWeight:700,marginBottom:14}}>{_lang==="en"?"Sleep plan active":"Plano de sono ativo"}</div>{sleepRec.a?<><div style={{padding:10,borderRadius:10,background:T.greenS,textAlign:"center",marginBottom:14}}><div style={{fontSize:9,color:T.sub,textTransform:"uppercase",marginBottom:4}}>{_lang==="en"?"Recommended WW":"Janela recomendada"}</div><div style={{fontSize:18,fontWeight:800,color:T.green}}>{fmtDur(sleepRec.a.rec)}</div></div><div style={{fontSize:11,color:T.dim,marginBottom:14}}>{_lang==="en"?`Based on ${sleepRec.a.pts} observations`:`Baseado em ${sleepRec.a.pts} observações`}</div></>:<div style={{fontSize:12,color:T.sub,marginBottom:14}}>{_lang==="en"?"Track more data to personalize.":"Registre mais dados para personalizar."}</div>}
-        {sleepPattern&&sleepRec?.phase===2&&daySchedule.length>0&&<>
+        {sleepPattern&&sleepRec?.phase===2&&(fullSchedule.length>0||daySchedule.length>0)&&<>
           <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}><Icon name="clock" size={16} color={T.accent}/><span style={{fontSize:13,fontWeight:700,color:T.accent}}>{_lang==="en"?"Today's routine":"Rotina do dia"}</span><span style={{fontSize:9,color:T.dim,marginLeft:"auto"}}>{_lang==="en"?`${sleepPattern.days} days`:`${sleepPattern.days} dias`}</span></div>
-          {daySchedule.map((s,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"7px 0",borderTop:i>0?`1px solid ${T.gB}`:"none"}}>
-            <span style={{fontSize:16,fontWeight:800,minWidth:48,color:s.status==="done"?T.text:s.status==="next"?T.accent:T.dim}}>{minToTime(s.startMin)}</span>
-            <div style={{flex:1}}>
-              <div style={{fontSize:12,fontWeight:600,color:s.status==="done"?T.text:s.status==="next"?T.text:T.dim}}>{s.bed?(_lang==="en"?"Bedtime":"Sono"):(_lang==="en"?`${["","1st","2nd","3rd","4th","5th","6th"][s.pos]||s.pos+"th"} nap`:`${s.pos}a soneca`)}</div>
-              {!s.bed&&<div style={{fontSize:10,color:T.dim}}>WW {fmtDur(s.ww)}{s.durRange?" · "+s.durRange:s.durMin>0?" · "+fmtDur(s.durMin):""}</div>}
+          {(fullSchedule.length>0?fullSchedule:daySchedule.map(s=>({...s,type:s.bed?"sleep":"nap",timeMin:s.startMin}))).map((s,i)=>{
+            const isNap=s.type==="nap";const isBed=s.type==="sleep"||s.bed;const isFeed=s.type==="feed";const isBath=s.type==="bath";
+            const icon=isFeed?"bottle":isBath?"bath":isBed?"moon":"cloud";
+            const color=isFeed?T.blue:isBath?"#38bdf8":T.accent;
+            const label=isBed?(_lang==="en"?"Bedtime":"Sono"):isFeed?(_lang==="en"?"Feed":"Mamada"):isBath?(_lang==="en"?"Bath":"Banho"):(_lang==="en"?`${["","1st","2nd","3rd","4th","5th","6th"][s.pos]||s.pos+"th"} nap`:`${s.pos}a soneca`);
+            const timeStr=s.timeMin?minToTime(s.timeMin):(s.startMin?minToTime(s.startMin):"--:--");
+            const statusColor=s.status==="done"?T.green:s.status==="next"?T.accent:T.dim;
+            return <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"7px 0",borderTop:i>0?`1px solid ${T.gB}`:"none",opacity:s.status==="later"?0.45:1}}>
+              <div style={{display:"flex",alignItems:"center",gap:6,minWidth:52}}>
+                <Icon name={icon} size={12} color={s.status==="done"?T.dim:color}/>
+                <span style={{fontSize:14,fontWeight:800,color:s.status==="done"?T.text:s.status==="next"?color:T.dim}}>{s.status!=="done"?"~":""}{timeStr}</span>
+              </div>
+              <div style={{flex:1}}>
+                <div style={{fontSize:11,fontWeight:600,color:s.status==="done"?T.text:s.status==="next"?T.text:T.dim}}>{label}</div>
+                {isNap&&!isBed&&<div style={{fontSize:9,color:T.dim}}>WW {fmtDur(s.ww)}{s.durRange?" · "+s.durRange:s.duration>0?" · "+fmtDur(s.duration||s.durMin):""}</div>}
+              </div>
+              <span style={{fontSize:9,fontWeight:600,padding:"2px 7px",borderRadius:5,background:s.status==="done"?T.greenS:s.status==="next"?`${color}20`:`${T.dim}12`,color:statusColor}}>{s.status==="done"?(_lang==="en"?"Done":"Feito"):s.status==="next"?(_lang==="en"?"Next":"Prox."):(_lang==="en"?"Later":"Depois")}</span>
             </div>
-            <span style={{fontSize:10,fontWeight:600,padding:"3px 8px",borderRadius:6,background:s.status==="done"?T.greenS:s.status==="next"?`${T.accent}20`:`${T.dim}15`,color:s.status==="done"?T.green:s.status==="next"?T.accent:T.dim}}>{s.status==="done"?"Done":s.status==="next"?"Next":"Later"}</span>
-          </div>)}
+          })}
         </>}
       </>}
     </Modal>
