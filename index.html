@@ -376,6 +376,9 @@
     @keyframes splashFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
     @keyframes bellWiggle{0%,88%,100%{transform:rotate(0deg)}91%{transform:rotate(-10deg)}94%{transform:rotate(10deg)}97%{transform:rotate(-5deg)}}
     @keyframes nwPulseAmber{0%,100%{box-shadow:0 0 20px rgba(251,146,60,0.15), 0 4px 16px rgba(0,0,0,0.3)}50%{box-shadow:0 0 32px rgba(251,146,60,0.32), 0 4px 16px rgba(0,0,0,0.3)}}
+    @keyframes livePulse{0%,100%{opacity:0.35;box-shadow:0 0 12px rgba(96,165,250,0.18)}50%{opacity:0.8;box-shadow:0 0 24px rgba(96,165,250,0.4)}}
+    @keyframes liveDotPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.85)}}
+    @keyframes progressShimmer{0%,100%{opacity:0.7}50%{opacity:1}}
     @keyframes nwIconPulseAmber{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
   </style>
 
@@ -479,10 +482,15 @@ dbg('Firebase ready');
 </script>
 
 <script src="splash-icon.js"></script>
+
 <script src="who-growth.js"></script>
+
 <script src="curiosities.js"></script>
+
 <script src="wake-lock.js"></script>
+
 <script src="device-features.js"></script>
+
 <script src="routine-engine.js"></script>
 
 <script type="text/babel">
@@ -492,8 +500,31 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "8.4.4";
+const APP_VERSION = "8.4.5";
 const CHANGELOG = [
+  {
+    v: "8.4.5", date: "2026-04-06",
+    pt: {
+      title: "Bedtime ao vivo no History",
+      bullets: [
+        '★ **Bedtime ao vivo.** Durante a noite, o History agora mostra um card "EM ANDAMENTO" no topo com o sono em curso, atualizando a cada 30 segundos.',
+        'Mamadas, fraldas e outros eventos registrados durante Night Wake **aparecem na hora** dentro do bloco — antes ficavam invisíveis até de manhã.',
+        'Despertar em curso aparece com **pill amber "ao vivo"**, despertares fechados ficam azuis.',
+        'Borda azul pulsante e ribbon "EM ANDAMENTO" indicam claramente que é provisório.',
+        'Quando o bedtime termina de manhã, o card vira o registro oficial — transição fluida sem mudança visual brusca.'
+      ]
+    },
+    en: {
+      title: "Live bedtime in History",
+      bullets: [
+        '★ **Live bedtime.** During the night, History now shows an "IN PROGRESS" card at the top with the ongoing sleep, refreshing every 30 seconds.',
+        'Bottles, diapers and other events logged during Night Wake **appear instantly** inside the block — they used to be invisible until morning.',
+        'Active waking shows with an **amber "live" pill**, closed wakings stay blue.',
+        'Pulsing blue border and "IN PROGRESS" ribbon clearly mark it as provisional.',
+        'When the bedtime ends in the morning, the card becomes the official record — smooth transition with no jarring visual change.'
+      ]
+    }
+  },
   {
     v: "8.4.4", date: "2026-04-06",
     pt: {
@@ -1209,7 +1240,7 @@ function Modal({open,onClose,children}){const[vis,setVis]=useState(false),[show,
 function Fld({label,children}){return<div style={{marginBottom:18}}><label style={{fontSize:10,color:T.dim,fontWeight:600,marginBottom:6,display:"block",textTransform:"uppercase",letterSpacing:1.2}}>{label}</label>{children}</div>}
 function Seg({opts,val,set,color}){return<div style={{display:"flex",gap:6}}>{opts.map(o=><button key={o.v} onClick={()=>set(o.v)} style={{flex:1,padding:"12px 4px",borderRadius:10,fontSize:13,fontWeight:600,background:val===o.v?color:T.glass,color:val===o.v?T.bg1:T.text,border:`1px solid ${val===o.v?color:T.gB}`}}>{o.l}</button>)}</div>}
 
-function SleepBlock({entry,onDelete,onEdit,entries}){
+function SleepBlock({entry,onDelete,onEdit,entries,isLive}){
   const[expanded,setExpanded]=useState(true); // default OPEN
   const wakings=entry.wakings||[];
   const totalMin=entry.durationMin||0;
@@ -1239,15 +1270,23 @@ function SleepBlock({entry,onDelete,onEdit,entries}){
       <div style={{fontSize:10,color:T.sub,fontWeight:600,fontVariantNumeric:"tabular-nums"}}>{le.time}</div>
     </div>);
   };
-  return(<div style={{marginBottom:6,borderRadius:14,background:"rgba(167,139,250,0.05)",border:"1px solid rgba(167,139,250,0.18)",overflow:"hidden"}}>
+  // Live mode: end label is "agora / now" instead of computed end time
+  const endLabel=isLive?(_lang==="en"?"now":"agora"):endT;
+  return(<div style={{marginBottom:6,borderRadius:14,background:"rgba(167,139,250,0.05)",border:`1px solid ${isLive?"rgba(96,165,250,0.4)":"rgba(167,139,250,0.18)"}`,overflow:"hidden",position:"relative",animation:isLive?"livePulse 2.5s ease-in-out infinite":"none",boxShadow:isLive?"0 0 16px rgba(96,165,250,0.18)":"none"}}>
+    {/* Live ribbon (only when isLive) */}
+    {isLive&&<div style={{display:"flex",alignItems:"center",gap:8,padding:"8px 16px",background:"linear-gradient(90deg,rgba(96,165,250,0.18),rgba(167,139,250,0.10))",borderBottom:"1px solid rgba(96,165,250,0.25)"}}>
+      <span style={{width:8,height:8,borderRadius:"50%",background:"#60a5fa",boxShadow:"0 0 8px #60a5fa",animation:"liveDotPulse 1.5s ease-in-out infinite"}}/>
+      <span style={{fontSize:9,fontWeight:800,color:"#60a5fa",textTransform:"uppercase",letterSpacing:1.5,flex:1}}>{_lang==="en"?"In progress":"Em andamento"}</span>
+      <span style={{fontSize:10,color:T.sub,fontWeight:600,fontVariantNumeric:"tabular-nums"}}>{_lang==="en"?"for ":"há "}{fmtDur(totalMin)}</span>
+    </div>}
     {/* Header */}
     <button onClick={()=>setExpanded(!expanded)} style={{width:"100%",padding:"14px 16px",display:"flex",alignItems:"center",gap:12,textAlign:"left",background:"linear-gradient(180deg,rgba(167,139,250,0.07),rgba(167,139,250,0.02))"}}>
       <div style={{width:40,height:40,borderRadius:12,background:"linear-gradient(135deg,rgba(167,139,250,0.25),rgba(124,58,237,0.18))",border:"1px solid rgba(167,139,250,0.25)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
         <Icon name="moon" size={20} color="#c084fc"/>
       </div>
       <div style={{flex:1,minWidth:0}}>
-        <div style={{fontSize:9,fontWeight:700,color:"rgba(167,139,250,0.7)",textTransform:"uppercase",letterSpacing:1,marginBottom:2}}>{_lang==="en"?"Bedtime":"Sono noturno"}</div>
-        <div style={{fontSize:14,fontWeight:700,color:"#c084fc"}}>{entry.time} — {endT}</div>
+        <div style={{fontSize:9,fontWeight:700,color:"rgba(167,139,250,0.7)",textTransform:"uppercase",letterSpacing:1,marginBottom:2}}>{_lang==="en"?"Bedtime":"Sono noturno"}{isLive&&<span style={{marginLeft:6,opacity:0.7}}>{_lang==="en"?"· live":"· ao vivo"}</span>}</div>
+        <div style={{fontSize:14,fontWeight:700,color:"#c084fc"}}>{entry.time} — {endLabel}</div>
         <div style={{display:"flex",gap:8,marginTop:4,fontSize:10,color:T.sub,alignItems:"center",flexWrap:"wrap"}}>
           <span style={{color:T.purple,fontWeight:700,fontVariantNumeric:"tabular-nums"}}>{fmtDur(realMin)} {_lang==="en"?"sleep":"sono"}</span>
           {awakeMin>0&&<>
@@ -1269,21 +1308,22 @@ function SleepBlock({entry,onDelete,onEdit,entries}){
       <div style={{margin:"0 16px 4px",position:"relative",height:14,background:"linear-gradient(180deg,rgba(167,139,250,0.18),rgba(124,58,237,0.10))",borderRadius:7,overflow:"hidden",border:"1px solid rgba(167,139,250,0.15)"}}>
         {/* Hour marks every hour */}
         {(()=>{const marks=[];const totalH=totalMin/60;for(let h=1;h<totalH;h++){const pct=(h*60/totalMin)*100;marks.push(<div key={h} style={{position:"absolute",top:0,bottom:0,left:`${pct}%`,width:1,background:"rgba(255,255,255,0.06)"}}/>)}return marks})()}
-        {/* Waking bands */}
+        {/* Waking bands — active waking is amber, closed wakings are blue */}
         {wakings.map((w,i)=>{
           const[wh,wm]=w.time.split(":").map(Number);
           let wMin=wh*60+wm;
           if(wMin<startMin)wMin+=1440;
           const leftPct=Math.max(0,Math.min(100,((wMin-startMin)/totalMin)*100));
           const widthPct=Math.max(2,(w.durationMin/totalMin)*100);
-          return<div key={i} style={{position:"absolute",top:0,bottom:0,left:`${leftPct}%`,width:`${widthPct}%`,background:"rgba(96,165,250,0.7)",borderLeft:"2px solid #60a5fa",borderRight:"2px solid #60a5fa"}}/>
+          const isActive=w.isActive;
+          return<div key={i} style={{position:"absolute",top:0,bottom:0,left:`${leftPct}%`,width:`${widthPct}%`,background:isActive?"rgba(251,191,36,0.7)":"rgba(96,165,250,0.7)",borderLeft:`2px solid ${isActive?"#fbbf24":"#60a5fa"}`,borderRight:`2px solid ${isActive?"#fbbf24":"#60a5fa"}`}}/>
         })}
       </div>
       {/* Hour labels (start, mid, end) */}
       <div style={{display:"flex",justifyContent:"space-between",padding:"0 16px 10px",fontSize:8,color:T.dim,fontWeight:600}}>
         <span>{entry.time}</span>
         <span>{(()=>{const midMs=new Date(`${entry.date}T${entry.time}`).getTime()+(totalMin/2)*60000;const md=new Date(midMs);return`${String(md.getHours()).padStart(2,"0")}:${String(md.getMinutes()).padStart(2,"0")}`})()}</span>
-        <span>{endT}</span>
+        <span>{endLabel}</span>
       </div>
     </>}
     {/* Expanded: nested events list (flat with separators) */}
@@ -1296,14 +1336,15 @@ function SleepBlock({entry,onDelete,onEdit,entries}){
       <div style={{padding:"0 16px"}}>
         {wakings.map((w,i)=>{
           const linkedEvents=(w.events||[]).map(findEvent).filter(Boolean);
+          const isActive=w.isActive;
           return<div key={i}>
-            {/* Waking separator with pill */}
-            <div style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0 4px",marginTop:i>0?6:0,borderTop:i>0?"1px dashed rgba(96,165,250,0.18)":"none"}}>
-              <span style={{display:"inline-flex",alignItems:"center",gap:4,fontSize:10,fontWeight:700,color:"#60a5fa",padding:"3px 9px",borderRadius:8,background:"rgba(96,165,250,0.15)",border:"1px solid rgba(96,165,250,0.3)",fontVariantNumeric:"tabular-nums"}}>
-                <Icon name="sun" size={9} color="#60a5fa"/>
-                {w.time} · {fmtDur(w.durationMin)}
+            {/* Waking separator with pill — amber if active, blue if closed */}
+            <div style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0 4px",marginTop:i>0?6:0,borderTop:i>0?`1px dashed ${isActive?"rgba(251,191,36,0.25)":"rgba(96,165,250,0.18)"}`:"none"}}>
+              <span style={{display:"inline-flex",alignItems:"center",gap:4,fontSize:10,fontWeight:700,color:isActive?"#fbbf24":"#60a5fa",padding:"3px 9px",borderRadius:8,background:isActive?"rgba(251,191,36,0.18)":"rgba(96,165,250,0.15)",border:`1px solid ${isActive?"rgba(251,191,36,0.4)":"rgba(96,165,250,0.3)"}`,fontVariantNumeric:"tabular-nums"}}>
+                <Icon name="sun" size={9} color={isActive?"#fbbf24":"#60a5fa"}/>
+                {w.time} · {fmtDur(w.durationMin)}{isActive?` · ${_lang==="en"?"live":"ao vivo"}`:""}
               </span>
-              <span style={{flex:1,height:1,background:"rgba(96,165,250,0.12)"}}/>
+              <span style={{flex:1,height:1,background:isActive?"rgba(251,191,36,0.15)":"rgba(96,165,250,0.12)"}}/>
             </div>
             {/* Linked events for this waking */}
             {linkedEvents.length>0?linkedEvents.map((le,j)=><EventMini key={j} le={le}/>):<div style={{fontSize:10,color:T.dim,fontStyle:"italic",padding:"6px 0"}}>{_lang==="en"?"No events recorded":"Nenhum evento registrado"}</div>}
@@ -1311,8 +1352,12 @@ function SleepBlock({entry,onDelete,onEdit,entries}){
         })}
       </div>
     </div>}
-    {/* Actions (always shown when expanded) */}
-    {expanded&&<div style={{padding:"10px 14px 12px",display:"flex",gap:8,borderTop:"1px solid rgba(167,139,250,0.1)"}}>
+    {/* Footer hint (only when isLive) */}
+    {isLive&&<div style={{padding:"10px 16px",background:"rgba(14,18,48,0.4)",borderTop:"1px solid rgba(167,139,250,0.1)",fontSize:10,color:T.dim,textAlign:"center",fontStyle:"italic"}}>
+      {_lang==="en"?"✨ Will be saved when the bedtime ends":"✨ Será consolidado quando o bedtime terminar"}
+    </div>}
+    {/* Actions (only when expanded AND not live) */}
+    {expanded&&!isLive&&<div style={{padding:"10px 14px 12px",display:"flex",gap:8,borderTop:"1px solid rgba(167,139,250,0.1)"}}>
       <button onClick={e=>{e.stopPropagation();onEdit&&onEdit(entry)}} style={{flex:1,padding:"7px 10px",borderRadius:8,background:"rgba(167,139,250,0.08)",fontSize:10,fontWeight:600,color:"#a78bfa"}}>{_lang==="en"?"Edit":"Editar"}</button>
       <button onClick={e=>{e.stopPropagation();onDelete&&onDelete(entry.id)}} style={{padding:"7px 12px",borderRadius:8,background:"rgba(248,113,113,0.08)",fontSize:10,fontWeight:600,color:T.red}}><Icon name="trash" size={12} color={T.red}/></button>
     </div>}
@@ -1815,9 +1860,16 @@ function StatsPage({entries,onGrowth}){
   </div>);
 }
 
-function HistoryPage({entries,onDelete,onEdit}){
+function HistoryPage({entries,onDelete,onEdit,activeTimer}){
   const[dateIdx,setDateIdx]=useState(0);
   const[filter,setFilter]=useState("all");
+  // Tick every 30s to keep live bedtime preview fresh
+  const[,setLiveTick]=useState(0);
+  useEffect(()=>{
+    if(!activeTimer||activeTimer.type!=="sleep")return;
+    const iv=setInterval(()=>setLiveTick(k=>k+1),30000);
+    return()=>clearInterval(iv);
+  },[activeTimer]);
   const viewDate=dateOffset(todayStr(),-dateIdx);
   const dayE=entries.filter(e=>e.date===viewDate);
   const filtered=filter==="all"?dayE:dayE.filter(e=>{
@@ -1829,6 +1881,40 @@ function HistoryPage({entries,onDelete,onEdit}){
   const dSl=sumRealSleep(dayE);
   const dLbl=new Date(viewDate+"T12:00").toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{weekday:"long",day:"numeric",month:"long"});
   const isToday=dateIdx===0;
+  // Build live virtual sleep entry if a Bedtime timer is active and we're viewing today
+  // (or yesterday if the bedtime started yesterday and crossed midnight)
+  const virtualSleep=(()=>{
+    if(!activeTimer||activeTimer.type!=="sleep")return null;
+    const startMs=new Date(activeTimer.startTime).getTime();
+    const startD=new Date(startMs);
+    const startDate=`${startD.getFullYear()}-${String(startD.getMonth()+1).padStart(2,"0")}-${String(startD.getDate()).padStart(2,"0")}`;
+    // Show on the date the bedtime started, OR today (in case it crossed midnight)
+    if(viewDate!==startDate&&viewDate!==todayStr())return null;
+    // Only show on the start date — avoids duplication if we view today and bedtime started yesterday
+    if(viewDate!==startDate)return null;
+    const startTime=`${String(startD.getHours()).padStart(2,"0")}:${String(startD.getMinutes()).padStart(2,"0")}`;
+    const totalMin=Math.max(1,Math.floor((Date.now()-startMs)/60000));
+    // Build wakings array: closed wakings + active waking (if any)
+    const wakings=[...(activeTimer.wakings||[])];
+    if(activeTimer.nightWake){
+      const nwStart=new Date(activeTimer.nightWake.startTime);
+      const nwDur=Math.max(1,Math.floor((Date.now()-nwStart.getTime())/60000));
+      wakings.push({
+        time:`${String(nwStart.getHours()).padStart(2,"0")}:${String(nwStart.getMinutes()).padStart(2,"0")}`,
+        durationMin:nwDur,
+        events:activeTimer.nightWake.events||[],
+        isActive:true
+      });
+    }
+    return{
+      id:"__live__",
+      type:"sleep",
+      date:startDate,
+      time:startTime,
+      durationMin:totalMin,
+      wakings
+    };
+  })();
   const filters=[{v:"all",l:L("all"),c:T.accent},{v:"feed",l:L("milk"),c:T.green},{v:"sleep",l:L("sleepLabel"),c:T.purple},{v:"diaper",l:typeLabel("diaper",_lang),c:T.pink},{v:"medicine",l:_lang==="en"?"Meds":"Med.",c:T.amber}];
   return(<div style={{padding:"calc(16px + env(safe-area-inset-top)) 20px 0"}}>
     <h2 style={{fontSize:17,fontWeight:700,marginBottom:12}}>{L("history")}</h2>
@@ -1867,7 +1953,9 @@ function HistoryPage({entries,onDelete,onEdit}){
         </div>
       </div>
     })()}
-    {filtered.length===0&&<p style={{color:T.dim,textAlign:"center",padding:40,fontSize:13}}>{L("noEntries")}{filter!=="all"?(_lang==="en"?" of this type":" desse tipo"):""}</p>}
+    {filtered.length===0&&!virtualSleep&&<p style={{color:T.dim,textAlign:"center",padding:40,fontSize:13}}>{L("noEntries")}{filter!=="all"?(_lang==="en"?" of this type":" desse tipo"):""}</p>}
+    {/* Live bedtime preview at top */}
+    {virtualSleep&&(filter==="all"||filter==="sleep")&&<SleepBlock entry={virtualSleep} entries={entries} isLive={true}/>}
     {filtered.filter(e=>!e.nightWake).map(e=>(e.type==="sleep"&&e.wakings&&e.wakings.length>0)?<SleepBlock key={e.id} entry={e} onDelete={onDelete} onEdit={onEdit} entries={entries}/>:<EntryRow key={e.id} entry={e} onDelete={onDelete} onEdit={onEdit}/>)}
   </div>);
 }
@@ -2370,7 +2458,7 @@ function App(){
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,padding:"0 20px",marginBottom:14}}>{[{i:"bottle",v:`${totalMl}`,u:"ml",c:T.green,t:["bottle"],tap:"bottle",l:_lang==="en"?"Bottle":"Mamad."},{i:"breast",v:totalNursingMin>0?fmtDur(totalNursingMin):`${totalNursing}x`,c:T.blue,t:["nursing"],tap:"nursing",l:_lang==="en"?"Nursing":"Amam."},{i:"moon",v:fmtDur(totalSleep),c:T.purple,t:["sleep","nap"],tap:"nap",l:_lang==="en"?"Sleep":"Sono"},{i:"diaper",v:`${totalDiapers}`,c:T.pink,t:["diaper"],tap:"diaper",l:_lang==="en"?"Diaper":"Fralda"}].map((p,idx)=>{const last=entries.find(e=>p.t.includes(e.type));let ago=null;if(last){if(p.t.includes("sleep")&&last.durationMin){const endMs=new Date(`${last.date}T${last.time}`).getTime()+last.durationMin*60000;const endD=new Date(endMs);const ed=`${endD.getFullYear()}-${String(endD.getMonth()+1).padStart(2,"0")}-${String(endD.getDate()).padStart(2,"0")}`;const et=`${String(endD.getHours()).padStart(2,"0")}:${String(endD.getMinutes()).padStart(2,"0")}`;ago=timeSince(ed,et)}else{ago=timeSince(last.date,last.time)}}return<button key={idx} onClick={()=>{if(p.tap==="nap"&&!activeTimer)startTimer("nap");else if(p.tap==="nursing"&&!activeTimer)startTimer("nursing",nextNursingSide);else if(!activeTimer)setFormType(p.tap)}} style={{padding:"10px",borderRadius:12,background:`${p.c}06`,border:`1px solid ${p.c}0a`,textAlign:"left"}}><div style={{display:"flex",alignItems:"center",gap:5,marginBottom:3}}><Icon name={p.i} size={12} color={p.c}/><span style={{fontSize:9,color:T.dim}}>{p.l}</span></div><div style={{fontSize:16,fontWeight:800,color:p.c}}>{p.v}{p.u?<span style={{fontSize:11,opacity:0.6}}>{p.u}</span>:null}</div>{ago&&<div style={{fontSize:12,color:`${p.c}88`,fontWeight:600,marginTop:3}}>{ago}</div>}</button>})}</div>
         <div style={{padding:"0 20px"}}><div style={{fontSize:11,fontWeight:600,color:T.dim,marginBottom:8,textTransform:"uppercase",letterSpacing:0.8}}>{L("today")}</div>{todayE.length===0&&<div style={{textAlign:"center",padding:"32px 20px",color:T.dim}}><Icon name="star" size={32} color={T.dim} fill={T.dim}/><div style={{fontSize:13,marginTop:8}}>{_lang==="en"?"Tap + to add":"Toque + para registrar"}</div></div>}{todayE.filter(e=>!e.nightWake).map((e,i,arr)=>{const prev=arr[i-1];let gap=null;if(prev){const t1=new Date(`${e.date}T${e.time}`).getTime();let t2=new Date(`${prev.date}T${prev.time}`).getTime();if(prev.durationMin)t2+=prev.durationMin*60000;const diffMin=Math.abs(Math.round((t1-t2)/60000));if(diffMin>=30){const isSleep=(e.type==="nap"||e.type==="sleep")&&e.durationMin;gap=<div style={{display:"flex",alignItems:"center",gap:10,padding:"4px 16px",margin:"2px 0"}}><div style={{flex:1,height:1,background:`linear-gradient(90deg,transparent,${isSleep?T.accent:T.accent}0a,transparent)`}}/><span style={{fontSize:8,color:isSleep?T.accent:T.dim,letterSpacing:0.5}}>{isSleep?"WW ":""}{fmtDur(diffMin)}</span><div style={{flex:1,height:1,background:`linear-gradient(90deg,transparent,${isSleep?T.accent:T.accent}0a,transparent)`}}/></div>}}const useBlock=e.type==="sleep"&&e.wakings&&e.wakings.length>0;return<React.Fragment key={e.id}>{gap}{useBlock?<SleepBlock entry={e} onDelete={deleteEntry} onEdit={startEdit} entries={entries}/>:<EntryRow entry={e} onDelete={deleteEntry} onEdit={startEdit} napNum={napNums[e.id]||null}/>}</React.Fragment>})}</div>
       </div>}
-      {page==="history"&&<HistoryPage entries={entries} onDelete={deleteEntry} onEdit={startEdit}/>}
+      {page==="history"&&<HistoryPage entries={entries} onDelete={deleteEntry} onEdit={startEdit} activeTimer={activeTimer}/>}
       {page==="stats"&&<StatsPage entries={entries} onGrowth={()=>goTo("growth")}/>}
       {page==="growth"&&<GrowthPage entries={entries} birthDate={profile.birthDate} profile={profile} onBack={()=>goTo("stats")} onAddEntry={addEntry}/>}
       {/* Bottom spacer so content clears nav bar */}
