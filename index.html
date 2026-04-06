@@ -483,8 +483,9 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "8.4.1";
+const APP_VERSION = "8.4.2";
 const CHANGELOG = [
+  { v: "8.4.2", date: "2026-04-06", changes: "SleepBlock redesenhado: Bedtime vira evento pai expandido por padrao com header roxo (label BEDTIME, gradiente, icone grande), timeline visual com marcas de hora e bandas azuis dos wakings, e secao 'Atividade da noite' com despertares como separadores horizontais (pill azul com horario+duracao) e eventos linkados aninhados (mamada/fralda/medicina) com icones cheios. Os eventos da madrugada que antes ficavam escondidos agora aparecem claramente agrupados sob cada despertar. Lista flat enxuta, sem sub-cards aninhados. Backward compatible com sleeps sem wakings (renderiza header simples sem secao de atividade)." },
   { v: "8.4.1", date: "2026-04-06", changes: "Stats agora descontam wakings do tempo de sono total. Card Sono mostra 3 conceitos: sono real (destaque, descontando wakings), tempo na cama, tempo acordada (com numero de wakings/noite). Grafico de barras de sono fica empilhado: roxo = sono real, faixa azul fina no topo = tempo acordada. Resumo do dia no Historico tambem usa sono real. WeeklyCard (comparacao vs semana passada) usa sono real. Engine de insights ja fazia esse desconto desde v8.0.0 — agora as visualizacoes estao alinhadas. Novos helpers: realSleepMin, awakeMinIn, sumRealSleep, sumAwakeInSleep, countWakings." },
   { v: "8.4.0", date: "2026-04-06", changes: "Wake Lock: tela do iPhone fica acesa durante night wake e nursing timer (uso da Wake Lock API). Toggle nas configuracoes (Profile > Manter tela ligada), default ON. Auto-libera quando timer termina ou quando sai do app, re-adquire ao voltar. Falha silenciosa em iOS <16.4 ou modo economia. Resolve frustracao de tela bloqueando de madrugada com maos ocupadas." },
   { v: "8.3.0", date: "2026-04-05", changes: "Curiosities massivamente expandido: 30 curiosidades diarias (dias 1-30, reescritas com mais profundidade cientifica) + 48 NOVAS curiosidades semanais (semanas 5-52, cobrindo do mes 2 ao mes 12) + 11 milestones mensais revisados. Total: 89 entradas bilingues baseadas em AAP, OMS, NHS, Mayo Clinic, Harvard, CDC, Zero to Three, Stanford. Corrige bug onde milestones mensais nao apareciam (age.totalMonths era undefined, deveria ser age.months). Novo export: window.WEEKLY_CURIOSITIES. curiosities.js 12KB -> 54KB." },
@@ -975,11 +976,11 @@ function Fld({label,children}){return<div style={{marginBottom:18}}><label style
 function Seg({opts,val,set,color}){return<div style={{display:"flex",gap:6}}>{opts.map(o=><button key={o.v} onClick={()=>set(o.v)} style={{flex:1,padding:"12px 4px",borderRadius:10,fontSize:13,fontWeight:600,background:val===o.v?color:T.glass,color:val===o.v?T.bg1:T.text,border:`1px solid ${val===o.v?color:T.gB}`}}>{o.l}</button>)}</div>}
 
 function SleepBlock({entry,onDelete,onEdit,entries}){
-  const[expanded,setExpanded]=useState(false);
+  const[expanded,setExpanded]=useState(true); // default OPEN
   const wakings=entry.wakings||[];
   const totalMin=entry.durationMin||0;
-  const awakeMin=wakings.reduce((s,w)=>s+(w.durationMin||0),0);
-  const realSleepMin=Math.max(0,totalMin-awakeMin);
+  const awakeMin=awakeMinIn(entry);
+  const realMin=realSleepMin(entry);
   const endMs=new Date(`${entry.date}T${entry.time}`).getTime()+totalMin*60000;
   const endD=new Date(endMs);
   const endT=`${String(endD.getHours()).padStart(2,"0")}:${String(endD.getMinutes()).padStart(2,"0")}`;
@@ -987,56 +988,99 @@ function SleepBlock({entry,onDelete,onEdit,entries}){
   const startMin=(()=>{const[h,m]=entry.time.split(":").map(Number);return h*60+m})();
   // Resolve linked events from entries array
   const findEvent=id=>entries.find(e=>e.id===id);
-  return(<div style={{marginBottom:4,borderRadius:12,background:"rgba(167,139,250,0.05)",border:"1px solid rgba(167,139,250,0.15)",overflow:"hidden"}}>
-    <button onClick={()=>setExpanded(!expanded)} style={{width:"100%",padding:"12px 14px",display:"flex",alignItems:"center",gap:10,textAlign:"left"}}>
-      <div style={{width:34,height:34,borderRadius:10,background:"rgba(167,139,250,0.15)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-        <Icon name="moon" size={16} color="#a78bfa"/>
+  // Render a small linked event row (bottle / diaper / nursing / etc)
+  const EventMini=({le})=>{
+    const cfg=TYPES[le.type]||{icon:"star",color:T.text,bg:T.glass};
+    let txt="";
+    if(le.type==="bottle")txt=`${_lang==="en"?"Bottle":"Mamadeira"} · ${le.ml||"?"} ml`;
+    else if(le.type==="nursing")txt=`${_lang==="en"?"Nursing":"Amamentação"} · ${le.durationMin||"?"} min`;
+    else if(le.type==="diaper")txt=`${_lang==="en"?"Diaper":"Fralda"}${le.subtype?` · ${L(le.subtype)||le.subtype}`:""}`;
+    else if(le.type==="medicine")txt=`${le.name||""}${le.dose?` · ${le.dose}`:""}`;
+    else txt=TL(le.type);
+    return(<div style={{display:"flex",alignItems:"center",gap:9,padding:"6px 0"}}>
+      <div style={{width:24,height:24,borderRadius:7,background:cfg.bg,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+        <Icon name={cfg.icon} size={13} color={cfg.color}/>
       </div>
-      <div style={{flex:1}}>
-        <div style={{fontSize:13,fontWeight:700,color:"#c084fc"}}>{entry.time}–{endT}</div>
-        <div style={{fontSize:10,color:T.sub,marginTop:1}}>{fmtDur(realSleepMin)} {_lang==="en"?"sleep":"sono"}{awakeMin>0?` · ${fmtDur(awakeMin)} ${_lang==="en"?"awake":"acordada"}`:""}</div>
+      <div style={{flex:1,fontSize:11,color:T.text,fontWeight:500}}>{txt}</div>
+      <div style={{fontSize:10,color:T.sub,fontWeight:600,fontVariantNumeric:"tabular-nums"}}>{le.time}</div>
+    </div>);
+  };
+  return(<div style={{marginBottom:6,borderRadius:14,background:"rgba(167,139,250,0.05)",border:"1px solid rgba(167,139,250,0.18)",overflow:"hidden"}}>
+    {/* Header */}
+    <button onClick={()=>setExpanded(!expanded)} style={{width:"100%",padding:"14px 16px",display:"flex",alignItems:"center",gap:12,textAlign:"left",background:"linear-gradient(180deg,rgba(167,139,250,0.07),rgba(167,139,250,0.02))"}}>
+      <div style={{width:40,height:40,borderRadius:12,background:"linear-gradient(135deg,rgba(167,139,250,0.25),rgba(124,58,237,0.18))",border:"1px solid rgba(167,139,250,0.25)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+        <Icon name="moon" size={20} color="#c084fc"/>
       </div>
-      {wakings.length>0&&<span style={{fontSize:9,fontWeight:700,padding:"3px 8px",borderRadius:10,background:"rgba(96,165,250,0.12)",color:"#60a5fa",marginRight:6}}>{wakings.length}x</span>}
-      <div style={{textAlign:"right",flexShrink:0}}>
-        <div style={{fontSize:11,color:T.sub,fontWeight:500}}>{timeSince(endDt,endT)}</div>
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{fontSize:9,fontWeight:700,color:"rgba(167,139,250,0.7)",textTransform:"uppercase",letterSpacing:1,marginBottom:2}}>{_lang==="en"?"Bedtime":"Sono noturno"}</div>
+        <div style={{fontSize:14,fontWeight:700,color:"#c084fc"}}>{entry.time} — {endT}</div>
+        <div style={{display:"flex",gap:8,marginTop:4,fontSize:10,color:T.sub,alignItems:"center",flexWrap:"wrap"}}>
+          <span style={{color:T.purple,fontWeight:700,fontVariantNumeric:"tabular-nums"}}>{fmtDur(realMin)} {_lang==="en"?"sleep":"sono"}</span>
+          {awakeMin>0&&<>
+            <span style={{width:3,height:3,borderRadius:"50%",background:T.dim}}/>
+            <span style={{color:"#60a5fa",fontWeight:700,fontVariantNumeric:"tabular-nums"}}>{fmtDur(awakeMin)} {_lang==="en"?"awake":"acordada"}</span>
+          </>}
+          {wakings.length>0&&<>
+            <span style={{width:3,height:3,borderRadius:"50%",background:T.dim}}/>
+            <span>{wakings.length} {wakings.length===1?(_lang==="en"?"waking":"despertar"):(_lang==="en"?"wakings":"despertares")}</span>
+          </>}
+        </div>
+      </div>
+      <div style={{width:24,height:24,display:"flex",alignItems:"center",justifyContent:"center",color:T.sub,flexShrink:0,transform:expanded?"rotate(180deg)":"rotate(0deg)",transition:"transform .2s"}}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6"/></svg>
       </div>
     </button>
-    {/* Mini timeline with waking marks */}
-    {wakings.length>0&&<div style={{margin:"0 14px 10px",position:"relative",height:8,background:"rgba(167,139,250,0.12)",borderRadius:4,overflow:"hidden"}}>
-      <div style={{position:"absolute",inset:0,background:"linear-gradient(90deg,rgba(167,139,250,0.3),rgba(167,139,250,0.2))"}}/>
-      {wakings.map((w,i)=>{
-        const[wh,wm]=w.time.split(":").map(Number);
-        let wMin=wh*60+wm;
-        // Handle cross-midnight: if waking time is before sleep start, add 24h
-        if(wMin<startMin)wMin+=1440;
-        const leftPct=Math.max(0,Math.min(100,((wMin-startMin)/totalMin)*100));
-        const widthPct=Math.max(1.5,(w.durationMin/totalMin)*100);
-        return<div key={i} style={{position:"absolute",top:0,bottom:0,left:`${leftPct}%`,width:`${widthPct}%`,background:"rgba(96,165,250,0.6)",borderLeft:"1.5px solid #60a5fa",borderRight:"1.5px solid #60a5fa"}}/>
-      })}
-    </div>}
-    {/* Expanded wakings list */}
-    {expanded&&wakings.length>0&&<div style={{padding:"0 14px 12px",borderTop:"1px dashed rgba(167,139,250,0.2)",marginTop:4}}>
-      <div style={{fontSize:9,fontWeight:700,color:T.dim,textTransform:"uppercase",letterSpacing:0.8,padding:"10px 0 6px"}}>{_lang==="en"?"Night wakes":"Despertares"}</div>
-      {wakings.map((w,i)=>{
-        const linkedEvents=(w.events||[]).map(findEvent).filter(Boolean);
-        const labels=linkedEvents.map(le=>{
-          if(le.type==="bottle")return`${_lang==="en"?"Bottle":"Mamadeira"} ${le.ml||"?"}ml`;
-          if(le.type==="nursing")return`${_lang==="en"?"Nurse":"Amam."} ${le.durationMin||"?"}min`;
-          if(le.type==="diaper")return _lang==="en"?"Diaper":"Fralda";
-          return TL(le.type);
-        });
-        return<div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"6px 0",borderTop:i>0?"1px solid rgba(167,139,250,0.08)":"none"}}>
-          <span style={{fontSize:11,fontWeight:700,color:"#60a5fa",minWidth:42}}>{w.time}</span>
-          <div style={{flex:1}}>
-            <div style={{fontSize:11,color:T.text,fontWeight:500}}>{labels.length>0?labels.join(" · "):(_lang==="en"?"Woke up":"Acordou")}</div>
+    {/* Visual timeline (hour marks + waking bands) */}
+    {wakings.length>0&&<>
+      <div style={{margin:"0 16px 4px",position:"relative",height:14,background:"linear-gradient(180deg,rgba(167,139,250,0.18),rgba(124,58,237,0.10))",borderRadius:7,overflow:"hidden",border:"1px solid rgba(167,139,250,0.15)"}}>
+        {/* Hour marks every hour */}
+        {(()=>{const marks=[];const totalH=totalMin/60;for(let h=1;h<totalH;h++){const pct=(h*60/totalMin)*100;marks.push(<div key={h} style={{position:"absolute",top:0,bottom:0,left:`${pct}%`,width:1,background:"rgba(255,255,255,0.06)"}}/>)}return marks})()}
+        {/* Waking bands */}
+        {wakings.map((w,i)=>{
+          const[wh,wm]=w.time.split(":").map(Number);
+          let wMin=wh*60+wm;
+          if(wMin<startMin)wMin+=1440;
+          const leftPct=Math.max(0,Math.min(100,((wMin-startMin)/totalMin)*100));
+          const widthPct=Math.max(2,(w.durationMin/totalMin)*100);
+          return<div key={i} style={{position:"absolute",top:0,bottom:0,left:`${leftPct}%`,width:`${widthPct}%`,background:"rgba(96,165,250,0.7)",borderLeft:"2px solid #60a5fa",borderRight:"2px solid #60a5fa"}}/>
+        })}
+      </div>
+      {/* Hour labels (start, mid, end) */}
+      <div style={{display:"flex",justifyContent:"space-between",padding:"0 16px 10px",fontSize:8,color:T.dim,fontWeight:600}}>
+        <span>{entry.time}</span>
+        <span>{(()=>{const midMs=new Date(`${entry.date}T${entry.time}`).getTime()+(totalMin/2)*60000;const md=new Date(midMs);return`${String(md.getHours()).padStart(2,"0")}:${String(md.getMinutes()).padStart(2,"0")}`})()}</span>
+        <span>{endT}</span>
+      </div>
+    </>}
+    {/* Expanded: nested events list (flat with separators) */}
+    {expanded&&wakings.length>0&&<div style={{borderTop:"1px solid rgba(167,139,250,0.12)",padding:"10px 0",background:"rgba(14,18,48,0.3)"}}>
+      <div style={{fontSize:9,fontWeight:800,color:"rgba(96,165,250,0.85)",textTransform:"uppercase",letterSpacing:1,padding:"4px 16px 6px",display:"flex",alignItems:"center",gap:8}}>
+        <span style={{flex:"0 0 14px",height:1,background:"rgba(96,165,250,0.3)"}}/>
+        <span>{_lang==="en"?"Night activity":"Atividade da noite"}</span>
+        <span style={{flex:1,height:1,background:"rgba(96,165,250,0.15)"}}/>
+      </div>
+      <div style={{padding:"0 16px"}}>
+        {wakings.map((w,i)=>{
+          const linkedEvents=(w.events||[]).map(findEvent).filter(Boolean);
+          return<div key={i}>
+            {/* Waking separator with pill */}
+            <div style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0 4px",marginTop:i>0?6:0,borderTop:i>0?"1px dashed rgba(96,165,250,0.18)":"none"}}>
+              <span style={{display:"inline-flex",alignItems:"center",gap:4,fontSize:10,fontWeight:700,color:"#60a5fa",padding:"3px 9px",borderRadius:8,background:"rgba(96,165,250,0.15)",border:"1px solid rgba(96,165,250,0.3)",fontVariantNumeric:"tabular-nums"}}>
+                <Icon name="sun" size={9} color="#60a5fa"/>
+                {w.time} · {fmtDur(w.durationMin)}
+              </span>
+              <span style={{flex:1,height:1,background:"rgba(96,165,250,0.12)"}}/>
+            </div>
+            {/* Linked events for this waking */}
+            {linkedEvents.length>0?linkedEvents.map((le,j)=><EventMini key={j} le={le}/>):<div style={{fontSize:10,color:T.dim,fontStyle:"italic",padding:"6px 0"}}>{_lang==="en"?"No events recorded":"Nenhum evento registrado"}</div>}
           </div>
-          <span style={{fontSize:9,color:T.dim,fontWeight:600}}>{fmtDur(w.durationMin)}</span>
-        </div>
-      })}
+        })}
+      </div>
     </div>}
-    {expanded&&<div style={{padding:"8px 14px 10px",display:"flex",gap:8,borderTop:"1px solid rgba(167,139,250,0.1)"}}>
-      <button onClick={()=>onEdit&&onEdit(entry)} style={{flex:1,padding:"6px 10px",borderRadius:8,background:"rgba(167,139,250,0.08)",fontSize:10,fontWeight:600,color:"#a78bfa"}}>{_lang==="en"?"Edit":"Editar"}</button>
-      <button onClick={()=>onDelete&&onDelete(entry.id)} style={{padding:"6px 12px",borderRadius:8,background:"rgba(248,113,113,0.08)",fontSize:10,fontWeight:600,color:T.red}}><Icon name="trash" size={12} color={T.red}/></button>
+    {/* Actions (always shown when expanded) */}
+    {expanded&&<div style={{padding:"10px 14px 12px",display:"flex",gap:8,borderTop:"1px solid rgba(167,139,250,0.1)"}}>
+      <button onClick={e=>{e.stopPropagation();onEdit&&onEdit(entry)}} style={{flex:1,padding:"7px 10px",borderRadius:8,background:"rgba(167,139,250,0.08)",fontSize:10,fontWeight:600,color:"#a78bfa"}}>{_lang==="en"?"Edit":"Editar"}</button>
+      <button onClick={e=>{e.stopPropagation();onDelete&&onDelete(entry.id)}} style={{padding:"7px 12px",borderRadius:8,background:"rgba(248,113,113,0.08)",fontSize:10,fontWeight:600,color:T.red}}><Icon name="trash" size={12} color={T.red}/></button>
     </div>}
   </div>);
 }
