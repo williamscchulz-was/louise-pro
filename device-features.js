@@ -157,30 +157,58 @@
     });
   }
 
-  // Get FCM token (requires Firebase Messaging SDK to be loaded separately)
-  // Returns null if FCM is not initialized — that's OK for now since we're
-  // just preparing the infrastructure.
+  // Get FCM token using Firebase Messaging SDK v9 modular API.
+  // The app must call PushNotifs.setVapidKey(key) before calling getToken().
+  // Also requires firebase-app-compat + firebase-messaging-compat scripts loaded.
+  var vapidKey = null;
+  function pushSetVapidKey(key) {
+    vapidKey = key;
+  }
   function pushGetToken() {
     return new Promise(function (resolve) {
-      // Firebase Messaging is optional — if not loaded, return null gracefully
+      // Check if Firebase compat SDK is loaded
       if (typeof firebase === "undefined" || !firebase.messaging) {
-        console.info("[PushNotifs] Firebase Messaging not loaded — token unavailable");
+        console.warn("[PushNotifs] Firebase Messaging SDK not loaded");
         resolve(null);
         return;
       }
-      try {
-        var messaging = firebase.messaging();
-        // VAPID key would be needed here for production push
-        // For now we just return null — token retrieval requires VAPID config
-        messaging.getToken().then(function (token) {
-          resolve(token || null);
-        }).catch(function (err) {
-          console.warn("[PushNotifs] getToken failed:", err);
-          resolve(null);
-        });
-      } catch (e) {
+      if (!vapidKey) {
+        console.warn("[PushNotifs] VAPID key not set — call setVapidKey() first");
         resolve(null);
+        return;
       }
+      // Need a registered service worker for FCM
+      if (!("serviceWorker" in navigator)) {
+        resolve(null);
+        return;
+      }
+      // Register the FCM-specific service worker (separate from app's main sw.js)
+      navigator.serviceWorker.register("./firebase-messaging-sw.js").then(function (swReg) {
+        try {
+          var messaging = firebase.messaging();
+          messaging.getToken({
+            vapidKey: vapidKey,
+            serviceWorkerRegistration: swReg
+          }).then(function (token) {
+            if (token) {
+              console.info("[PushNotifs] Got FCM token:", token.slice(0, 20) + "...");
+              resolve(token);
+            } else {
+              console.warn("[PushNotifs] No token returned (permission may be denied)");
+              resolve(null);
+            }
+          }).catch(function (err) {
+            console.warn("[PushNotifs] getToken failed:", err && err.message ? err.message : err);
+            resolve(null);
+          });
+        } catch (e) {
+          console.warn("[PushNotifs] messaging() threw:", e && e.message ? e.message : e);
+          resolve(null);
+        }
+      }).catch(function (err) {
+        console.warn("[PushNotifs] FCM SW registration failed:", err && err.message ? err.message : err);
+        resolve(null);
+      });
     });
   }
 
@@ -205,6 +233,7 @@
     getToken: pushGetToken,
     saveToken: pushSaveToken,
     isReady: pushIsReady,
+    setVapidKey: pushSetVapidKey,
     // App injects this so device-features.js doesn't need to know about Firestore
     setTokenSaver: function (fn) {
       tokenSaver = fn;

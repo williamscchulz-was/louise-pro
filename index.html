@@ -406,6 +406,8 @@ setTimeout(function(){
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js" onload="dbg('Firestore OK')" onerror="dbg('ERROR: Firestore CDN blocked')"></script>
 
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js" onload="dbg('FCM OK')" onerror="dbg('ERROR: FCM CDN blocked')"></script>
+
 <!-- React -->
 
 <script src="https://unpkg.com/react@18/umd/react.production.min.js" onload="dbg('React OK')" onerror="dbg('ERROR: React CDN blocked')"></script>
@@ -470,12 +472,37 @@ window.FB = {
   async saveTimer(t) { await db.collection('config').doc('active').set(t||{cleared:true}); },
   subInbox(cb) { return db.collection('config').doc('inbox').onSnapshot(s => cb(s.exists ? s.data() : null)); },
   async saveInbox(data) { await db.collection('config').doc('inbox').set(data); },
-  // Push notification token storage — keyed by token to dedupe across devices
+  // Push notification token storage — each token is a separate doc in subcollection
+  // Path: config/pushTokens/tokens/{tokenId}
+  // Worker reads from this path to fan out push notifications.
   async savePushToken(token, lang) {
     if (!token) return;
-    await db.collection('config').doc('pushTokens').set({
-      [token]: { lang: lang || 'en', updatedAt: new Date().toISOString() }
-    }, { merge: true });
+    // Use a hash of the token as document ID to keep paths short and dedupe across devices
+    const docId = btoa(token).replace(/[+/=]/g, '').slice(0, 40);
+    await db.collection('config').doc('pushTokens').collection('tokens').doc(docId).set({
+      token: token,
+      lang: lang || 'en',
+      updatedAt: new Date().toISOString()
+    });
+  },
+  // Reminders: medication reminders that fire push notifications at scheduled times.
+  // Path: config/reminders/items/{reminderId}
+  // Worker checks this collection every minute and fires FCM if horario matches.
+  subReminders(cb) {
+    return db.collection('config').doc('reminders').collection('items').onSnapshot(snap => {
+      const list = snap.docs.map(d => ({...d.data(), _id: d.id}));
+      cb(list);
+    });
+  },
+  async addReminder(reminder) {
+    const id = reminder._id || ('rem_' + Date.now() + '_' + Math.random().toString(36).slice(2,7));
+    const clean = {...reminder};
+    delete clean._id;
+    await db.collection('config').doc('reminders').collection('items').doc(id).set(clean);
+    return id;
+  },
+  async delReminder(id) {
+    await db.collection('config').doc('reminders').collection('items').doc(id).delete();
   },
 };
 dbg('Firebase ready');
@@ -496,8 +523,33 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "8.4.11";
+const APP_VERSION = "8.5.0";
 const CHANGELOG = [
+  {
+    v: "8.5.0", date: "2026-04-06",
+    pt: {
+      title: "Lembretes de medicamento com push notification",
+      bullets: [
+        '★ **Cadastro de lembretes no Profile.** Nova seção "Lembretes de medicamento" — cadastra nome, dose e horário, salva no Firestore e sincroniza entre os dois iPhones.',
+        '★ **Push notification de verdade no horário marcado.** Um Cloudflare Worker chamado louise-pro-fcm acorda a cada minuto, checa os lembretes e dispara FCM pros tokens cadastrados. Funciona mesmo com o app fechado (iOS 16.4+ instalado como PWA).',
+        'Título da notificação = nome do remédio. Corpo = "Hora de dar: [dose]".',
+        '**Ambos os dispositivos recebem** simultaneamente — você e a esposa não dependem um do outro pra lembrar.',
+        'Tudo de graça: plano Spark do Firebase + Cloudflare Workers Free. Sem cartão, sem Cloud Functions.',
+        'Pra excluir um lembrete, toca no X ao lado dele. Pra pausar, exclui e cadastra de novo depois.'
+      ]
+    },
+    en: {
+      title: "Medication reminders with push notifications",
+      bullets: [
+        '★ **Reminder management in Profile.** New "Medication reminders" section — add name, dose, time. Saved to Firestore, syncs across both iPhones.',
+        '★ **Real push notifications at the scheduled time.** A Cloudflare Worker named louise-pro-fcm wakes up every minute, checks reminders, fires FCM to registered tokens. Works even with the app closed (iOS 16.4+ installed as PWA).',
+        'Notification title = medicine name. Body = "Hora de dar: [dose]".',
+        '**Both devices receive** simultaneously — you and your partner do not depend on each other to remember.',
+        'Fully free: Firebase Spark plan + Cloudflare Workers Free. No credit card, no Cloud Functions.',
+        'Tap the X next to a reminder to delete it. To pause, delete and re-add later.'
+      ]
+    }
+  },
   {
     v: "8.4.11", date: "2026-04-06",
     pt: {
@@ -1742,7 +1794,7 @@ function InboxPanel({inbox,onClose,onMarkRead,onMarkAllRead,lang}){
   </div>);
 }
 
-function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadChangelog}){
+function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadChangelog,reminders,onAddReminder,onDelReminder}){
   const[name,setName]=useState(profile.name||"");
   const[birth,setBirth]=useState(profile.birthDate||"");
   const[photo,setPhoto]=useState(profile.photo||"");
@@ -1756,6 +1808,11 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
   const[pushEnabled,setPushEnabled]=useState(profile.pushEnabled===true);
   const[pushPermission,setPushPermission]=useState(()=>typeof Notification!=="undefined"?Notification.permission:"unsupported");
   const[pushBusy,setPushBusy]=useState(false);
+  // Local state for the new-reminder form
+  const[remNome,setRemNome]=useState("");
+  const[remDose,setRemDose]=useState("");
+  const[remHorario,setRemHorario]=useState("09:00");
+  const[remBusy,setRemBusy]=useState(false);
   const pushSupported=PushNotifs.isSupported();
   const handlePushToggle=async()=>{
     if(pushBusy)return;
@@ -1848,6 +1905,64 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
             <div style={{position:"absolute",top:2,left:pushEnabled&&pushSupported?22:2,width:22,height:22,borderRadius:"50%",background:"#fff",transition:"left .2s",boxShadow:"0 1px 3px rgba(0,0,0,0.4)"}}/>
           </button>
         </div>
+      </div>
+
+      {/* ── REMINDERS CARD ── medication push reminders */}
+      <div style={{background:"rgba(22,28,60,0.4)",borderRadius:16,border:`1px solid ${T.gB}`,padding:16,marginBottom:12}}>
+        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
+          <Icon name="bell" size={14} color={T.accent}/>
+          <div style={{fontSize:10,fontWeight:700,color:T.dim,textTransform:"uppercase",letterSpacing:1.2}}>{langSel==="en"?"Medication reminders":"Lembretes de medicamento"}</div>
+        </div>
+        <div style={{fontSize:11,color:T.dim,lineHeight:1.45,marginBottom:14}}>
+          {langSel==="en"?"Push notification at the scheduled time. Both devices receive.":"Notificação push no horário marcado. Ambos os dispositivos recebem."}
+        </div>
+
+        {/* Existing reminders list */}
+        {reminders&&reminders.length>0&&<div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:14}}>
+          {reminders.slice().sort((a,b)=>(a.horarios?.[0]||"").localeCompare(b.horarios?.[0]||"")).map(r=>(
+            <div key={r._id} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",borderRadius:11,background:"rgba(14,18,48,0.6)",border:`1px solid ${T.gB}`}}>
+              <div style={{minWidth:48,padding:"4px 8px",borderRadius:8,background:`${T.accent}1a`,border:`1px solid ${T.accent}33`,textAlign:"center"}}>
+                <div style={{fontSize:13,fontWeight:800,color:T.accent,fontVariantNumeric:"tabular-nums"}}>{r.horarios?.[0]||"--:--"}</div>
+              </div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:13,fontWeight:700,color:T.text,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{r.nome||"—"}</div>
+                {r.dose&&<div style={{fontSize:11,color:T.dim,marginTop:1,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{r.dose}</div>}
+              </div>
+              <button onClick={async()=>{if(!confirm(langSel==="en"?`Delete reminder "${r.nome}"?`:`Excluir lembrete "${r.nome}"?`))return;Haptic.medium();try{await onDelReminder(r._id)}catch(e){}}} style={{width:30,height:30,borderRadius:9,background:"transparent",border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                <Icon name="x" size={14} color={T.dim}/>
+              </button>
+            </div>
+          ))}
+        </div>}
+
+        {/* New reminder form */}
+        <div style={{padding:12,borderRadius:12,background:"rgba(14,18,48,0.6)",border:`1px dashed ${T.gB}`}}>
+          <div style={{fontSize:9,fontWeight:700,color:T.dim,marginBottom:8,textTransform:"uppercase",letterSpacing:1}}>{langSel==="en"?"Add new":"Adicionar novo"}</div>
+          <div style={{display:"flex",flexDirection:"column",gap:8}}>
+            <input type="text" placeholder={langSel==="en"?"Name (e.g. Vitamin D)":"Nome (ex: Vitamina D)"} value={remNome} onChange={e=>setRemNome(e.target.value)} style={{...inp,padding:"11px 13px",fontSize:13}}/>
+            <input type="text" placeholder={langSel==="en"?"Dose (e.g. 2 drops)":"Dose (ex: 2 gotas)"} value={remDose} onChange={e=>setRemDose(e.target.value)} style={{...inp,padding:"11px 13px",fontSize:13}}/>
+            <div style={{display:"flex",gap:8,alignItems:"center"}}>
+              <input type="time" value={remHorario} onChange={e=>setRemHorario(e.target.value)} style={{...inp,padding:"11px 13px",fontSize:15,fontWeight:700,colorScheme:"dark",textAlign:"center",flex:1}}/>
+              <button disabled={remBusy||!remNome.trim()||!remHorario} onClick={async()=>{
+                if(!remNome.trim()||!remHorario)return;
+                setRemBusy(true);
+                Haptic.medium();
+                try{
+                  await onAddReminder({nome:remNome.trim(),dose:remDose.trim(),horarios:[remHorario],ativo:true,createdAt:new Date().toISOString()});
+                  setRemNome("");setRemDose("");setRemHorario("09:00");
+                  Haptic.success();
+                }catch(e){Haptic.warning()}
+                setRemBusy(false);
+              }} style={{padding:"11px 18px",borderRadius:11,background:remNome.trim()&&remHorario?T.accent:"rgba(14,18,48,0.8)",color:remNome.trim()&&remHorario?"#fff":T.dim,fontSize:13,fontWeight:800,border:`1px solid ${remNome.trim()&&remHorario?T.accent:T.gB}`,cursor:remNome.trim()&&remHorario&&!remBusy?"pointer":"not-allowed",opacity:remBusy?0.6:1,whiteSpace:"nowrap"}}>
+                {langSel==="en"?"Add":"Adicionar"}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {(!pushEnabled||!pushSupported||pushPermission==="denied")&&<div style={{marginTop:12,padding:"8px 12px",borderRadius:9,background:"rgba(251,191,36,0.08)",border:"1px solid rgba(251,191,36,0.2)",fontSize:10,color:"#fbbf24",lineHeight:1.45}}>
+          {langSel==="en"?"Enable Notifications above to receive reminders.":"Ative Notificações acima para receber os lembretes."}
+        </div>}
       </div>
       <div style={{background:"rgba(22,28,60,0.4)",borderRadius:16,border:`1px solid ${T.gB}`,padding:16,marginBottom:16}}>
         <div style={{fontSize:10,fontWeight:700,color:T.dim,marginBottom:10,textTransform:"uppercase",letterSpacing:1.2}}>{L("birthData")}</div>
@@ -2376,6 +2491,7 @@ function App(){
   const[page,setPage]=useState("home");const[showAdd,setShowAdd]=useState(false);const[formType,setFormType]=useState(null);const[editEntry,setEditEntry]=useState(null);const[showOrbit,setShowOrbit]=useState(false);
   const[showProfile,setShowProfile]=useState(false);const[showSleepInfo,setShowSleepInfo]=useState(false);
   const[inbox,setInbox]=useState({items:[],lastReset:""});const[showInbox,setShowInbox]=useState(false);
+  const[reminders,setReminders]=useState([]);
   const[showChangelog,setShowChangelog]=useState(false);const[showUpdateToast,setShowUpdateToast]=useState(false);
   const lang=profile.lang||"en";_lang=lang;
   const[toast,setToast]=useState(null);const[tick,setTick]=useState(0);const undoRef=useRef(null);
@@ -2431,6 +2547,8 @@ function App(){
     if(PushNotifs.isSupported()){
       PushNotifs.registerServiceWorker().catch(()=>{/* fail silent */});
     }
+    // Configure VAPID key for FCM token retrieval (Firebase Cloud Messaging)
+    PushNotifs.setVapidKey("BE7jb8k2HRvR-q-xUj_1boSI8vG8-ZwFwIyaDh4Pq7ClegyqG_JjuYJ3JHd2lGAzUXr3kZtz1DRIUVO215uoRhs");
     // Inject Firestore token saver so device-features.js stays decoupled
     PushNotifs.setTokenSaver(async(token)=>{
       try{await FB.savePushToken(token,profile.lang||"en")}catch(e){}
@@ -2446,7 +2564,8 @@ function App(){
     const u3=FB.subMeds(d=>{setSavedMeds(d||[{name:"Simeticona",dose:"3 gotas"},{name:"Floripa",dose:"6 gotas"},{name:"Vit. D",dose:"2 gotas"},{name:"Paracetamol",dose:"3 gotas"}]);ready.m=true;check()});
     const u4=FB.subTimer(d=>{setActiveTimer(d?.cleared?null:d);ready.a=true;check()});
     const u5=FB.subInbox(d=>{if(d)setInbox({items:d.items||[],lastReset:d.lastReset||""})});
-    return()=>{u1();u2();u3();u4();u5()};
+    const u6=FB.subReminders(d=>setReminders(d||[]));
+    return()=>{u1();u2();u3();u4();u5();u6()};
   },[]);
 
   const showToast=(msg,fn)=>{undoRef.current=fn;setToast(msg)};
@@ -2844,7 +2963,7 @@ function App(){
       {formType&&<AddForm type={formType} onSave={addEntry} savedMeds={savedMeds} onSaveMeds={async m=>await FB.saveMeds(m)} editEntry={editEntry} lastBottleMl={lastBottleMl} topMl={topMl}/>}
     </Sheet>
 
-    {showProfile&&<ProfilePage profile={profile} onSave={async p=>await FB.saveProfile(p)} onBack={()=>setShowProfile(false)} onGrowth={()=>{setShowProfile(false);goTo("growth")}} onShowChangelog={()=>setShowChangelog(true)} hasUnreadChangelog={hasUnreadChangelog}/>}
+    {showProfile&&<ProfilePage profile={profile} onSave={async p=>await FB.saveProfile(p)} onBack={()=>setShowProfile(false)} onGrowth={()=>{setShowProfile(false);goTo("growth")}} onShowChangelog={()=>setShowChangelog(true)} hasUnreadChangelog={hasUnreadChangelog} reminders={reminders} onAddReminder={async r=>await FB.addReminder(r)} onDelReminder={async id=>await FB.delReminder(id)}/>}
     {showInbox&&<InboxPanel inbox={inbox} onClose={()=>setShowInbox(false)} onMarkRead={markInboxRead} onMarkAllRead={markAllInboxRead} lang={lang}/>}
     {showChangelog&&<ChangelogModal onClose={closeChangelog} lang={lang}/>}
     {showUpdateToast&&!showChangelog&&<UpdateToast fromVersion={profile.lastSeenVersion} toVersion={APP_VERSION} onView={openChangelog} onDismiss={dismissUpdateToast} lang={lang}/>}
