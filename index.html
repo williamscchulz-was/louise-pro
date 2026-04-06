@@ -523,8 +523,25 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "8.5.0";
+const APP_VERSION = "8.5.1";
 const CHANGELOG = [
+  {
+    v: "8.5.1", date: "2026-04-06",
+    pt: {
+      title: "Correção: sono no Home descontava errado",
+      bullets: [
+        '★ **Bug corrigido.** O card "Sono" no Home estava somando o tempo total na cama, incluindo os despertares noturnos. Agora mostra **só o sono real** (tempo na cama menos despertares), igual ao card de Stats.',
+        'Os Stats e o histórico de SleepBlock já estavam corretos — só o totalizador do Home tinha esse bug.'
+      ]
+    },
+    en: {
+      title: "Fix: Home sleep total counted wake time",
+      bullets: [
+        '★ **Bug fixed.** The "Sleep" card on Home was summing total time in bed, including night wakings. Now shows **real sleep only** (time in bed minus wakings), matching the Stats card.',
+        'Stats and SleepBlock history were already correct — only the Home totalizer had this bug.'
+      ]
+    }
+  },
   {
     v: "8.5.0", date: "2026-04-06",
     pt: {
@@ -2715,7 +2732,7 @@ function App(){
   const topMl=useMemo(()=>{const counts={};entries.filter(e=>e.type==="bottle"&&e.ml).forEach(e=>{counts[e.ml]=(counts[e.ml]||0)+1});return Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([v])=>Number(v))},[entries]);
   const totalNursingMin=todayE.filter(e=>e.type==="nursing"&&e.durationMin).reduce((s,e)=>s+e.durationMin,0);
   const totalNursing=todayE.filter(e=>e.type==="nursing").length;
-  const totalSleep=todayE.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin).reduce((s,e)=>s+e.durationMin,0);
+  const totalSleep=sumRealSleep(todayE);
   const totalDiapers=todayE.filter(e=>e.type==="diaper").length;
   const napNums=useMemo(()=>{const naps=[...todayE].reverse().filter(e=>e.type==="nap");const m={};naps.forEach((n,i)=>{m[n.id]=i+1});return m},[todayE]);
   const age=calcAge(profile.birthDate);const babyName=profile.name||"Bebê";
