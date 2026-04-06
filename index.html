@@ -523,8 +523,25 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "8.5.1";
+const APP_VERSION = "8.5.2";
 const CHANGELOG = [
+  {
+    v: "8.5.2", date: "2026-04-06",
+    pt: {
+      title: "Toggles do Profile agora salvam na hora",
+      bullets: [
+        '★ **Bug corrigido nos toggles.** Notificações, Manter tela ligada e Vibração tátil só salvavam quando você apertava o botão "Salvar" lá embaixo. Se saísse antes, o estado voltava ao reload. Agora **cada toggle persiste no Firestore na hora** — sem precisar tocar em Salvar.',
+        'Texto do toggle de Notificações reescrito: era "Toque para ativar quando disponível" (confuso) e "Sistema pronto — nenhuma notificação enviada ainda" (desatualizado, da época antes dos lembretes funcionarem). Agora é direto: **"Toque para ativar"** quando off, e **"Notificações ativas — cadastre lembretes abaixo"** quando on.'
+      ]
+    },
+    en: {
+      title: "Profile toggles now save instantly",
+      bullets: [
+        '★ **Toggle bug fixed.** Notifications, Keep screen on, and Haptic feedback were only saved when you tapped the Save button at the bottom. If you left before, state reverted on reload. Now **each toggle persists to Firestore immediately** — no need to tap Save.',
+        'Notifications toggle text rewritten: was "Tap to enable when available" (confusing) and "System ready — no notifications sent yet" (outdated, from before reminders worked). Now direct: **"Tap to enable"** when off, and **"Notifications on — add reminders below"** when on.'
+      ]
+    }
+  },
   {
     v: "8.5.1", date: "2026-04-06",
     pt: {
@@ -1831,16 +1848,33 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
   const[remHorario,setRemHorario]=useState("09:00");
   const[remBusy,setRemBusy]=useState(false);
   const pushSupported=PushNotifs.isSupported();
+  // Persists a single toggle change immediately to Firestore (no need to tap Save).
+  // Builds the patch from current state values plus the override.
+  const persistToggle=async(overrides)=>{
+    const patch={
+      name:name.trim(),
+      birthDate:birth,
+      photo,
+      mlGoal:parseInt(mlGoal)||0,
+      birthWeight:parseFloat(birthWeight)||0,
+      birthLength:parseFloat(birthLength)||0,
+      birthHead:parseFloat(birthHead)||0,
+      lang:langSel,
+      keepScreenOn,
+      hapticEnabled,
+      pushEnabled,
+      ...overrides
+    };
+    try{await onSave(patch)}catch(e){/* fail silent */}
+  };
   const handlePushToggle=async()=>{
     if(pushBusy)return;
-    if(!pushSupported){
-      // Show inline message — can't toggle
-      return;
-    }
+    if(!pushSupported)return;
     if(pushEnabled){
-      // Disable: just flip the flag (token stays in Firestore for now, won't auto-clean)
+      // Disable: flip the flag and persist immediately
       setPushEnabled(false);
       Haptic.light();
+      await persistToggle({pushEnabled:false});
       return;
     }
     // Enable: must request permission via user gesture
@@ -1851,6 +1885,7 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
       setPushPermission(typeof Notification!=="undefined"?Notification.permission:"unsupported");
       if(granted){
         setPushEnabled(true);
+        await persistToggle({pushEnabled:true});
         // Try to fetch token (may return null if FCM SDK not loaded — that's OK)
         const token=await PushNotifs.getToken();
         if(token)await PushNotifs.saveToken(token);
@@ -1889,7 +1924,7 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
             <div style={{fontSize:13,fontWeight:700,marginBottom:4}}>{langSel==="en"?"Keep screen on":"Manter tela ligada"}</div>
             <div style={{fontSize:11,color:T.dim,lineHeight:1.4}}>{langSel==="en"?"During night wake & nursing timers":"Durante night wake e amamentação"}</div>
           </div>
-          <button onClick={()=>setKeepScreenOn(!keepScreenOn)} style={{position:"relative",width:48,height:28,borderRadius:14,background:keepScreenOn?T.accent:"rgba(14,18,48,0.8)",border:`1px solid ${keepScreenOn?T.accent:T.gB}`,transition:"all .2s",flexShrink:0,cursor:"pointer",padding:0}}>
+          <button onClick={()=>{const v=!keepScreenOn;setKeepScreenOn(v);persistToggle({keepScreenOn:v})}} style={{position:"relative",width:48,height:28,borderRadius:14,background:keepScreenOn?T.accent:"rgba(14,18,48,0.8)",border:`1px solid ${keepScreenOn?T.accent:T.gB}`,transition:"all .2s",flexShrink:0,cursor:"pointer",padding:0}}>
             <div style={{position:"absolute",top:2,left:keepScreenOn?22:2,width:22,height:22,borderRadius:"50%",background:"#fff",transition:"left .2s",boxShadow:"0 1px 3px rgba(0,0,0,0.4)"}}/>
           </button>
         </div>
@@ -1901,7 +1936,7 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
             <div style={{fontSize:13,fontWeight:700,marginBottom:4}}>{langSel==="en"?"Haptic feedback":"Vibração"}</div>
             <div style={{fontSize:11,color:T.dim,lineHeight:1.4}}>{langSel==="en"?"Subtle vibration when logging events":"Vibração sutil ao registrar eventos"}</div>
           </div>
-          <button onClick={()=>{setHapticEnabled(!hapticEnabled);if(!hapticEnabled){Haptic.setEnabled(true);Haptic.medium()}else{Haptic.setEnabled(false)}}} style={{position:"relative",width:48,height:28,borderRadius:14,background:hapticEnabled?T.accent:"rgba(14,18,48,0.8)",border:`1px solid ${hapticEnabled?T.accent:T.gB}`,transition:"all .2s",flexShrink:0,cursor:"pointer",padding:0}}>
+          <button onClick={()=>{const v=!hapticEnabled;setHapticEnabled(v);if(v){Haptic.setEnabled(true);Haptic.medium()}else{Haptic.setEnabled(false)}persistToggle({hapticEnabled:v})}} style={{position:"relative",width:48,height:28,borderRadius:14,background:hapticEnabled?T.accent:"rgba(14,18,48,0.8)",border:`1px solid ${hapticEnabled?T.accent:T.gB}`,transition:"all .2s",flexShrink:0,cursor:"pointer",padding:0}}>
             <div style={{position:"absolute",top:2,left:hapticEnabled?22:2,width:22,height:22,borderRadius:"50%",background:"#fff",transition:"left .2s",boxShadow:"0 1px 3px rgba(0,0,0,0.4)"}}/>
           </button>
         </div>
@@ -1914,8 +1949,8 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
             <div style={{fontSize:11,color:T.dim,lineHeight:1.4}}>
               {!pushSupported?(langSel==="en"?"Install to home screen first (iOS 16.4+)":"Instale na tela inicial primeiro (iOS 16.4+)"):
                pushPermission==="denied"?(langSel==="en"?"Permission denied — enable in iOS Settings":"Permissão negada — ative nos Ajustes do iOS"):
-               pushEnabled?(langSel==="en"?"System ready — no notifications sent yet":"Sistema pronto — nenhuma notificação enviada ainda"):
-               (langSel==="en"?"Tap to enable when available":"Toque para ativar quando disponível")}
+               pushEnabled?(langSel==="en"?"Notifications on — add reminders below":"Notificações ativas — cadastre lembretes abaixo"):
+               (langSel==="en"?"Tap to enable":"Toque para ativar")}
             </div>
           </div>
           <button onClick={handlePushToggle} disabled={!pushSupported||pushBusy||pushPermission==="denied"} style={{position:"relative",width:48,height:28,borderRadius:14,background:pushEnabled&&pushSupported?T.accent:"rgba(14,18,48,0.8)",border:`1px solid ${pushEnabled&&pushSupported?T.accent:T.gB}`,transition:"all .2s",flexShrink:0,cursor:pushSupported&&!pushBusy&&pushPermission!=="denied"?"pointer":"not-allowed",padding:0,opacity:!pushSupported||pushPermission==="denied"?0.4:1}}>
