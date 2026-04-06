@@ -483,8 +483,9 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "8.4.0";
+const APP_VERSION = "8.4.1";
 const CHANGELOG = [
+  { v: "8.4.1", date: "2026-04-06", changes: "Stats agora descontam wakings do tempo de sono total. Card Sono mostra 3 conceitos: sono real (destaque, descontando wakings), tempo na cama, tempo acordada (com numero de wakings/noite). Grafico de barras de sono fica empilhado: roxo = sono real, faixa azul fina no topo = tempo acordada. Resumo do dia no Historico tambem usa sono real. WeeklyCard (comparacao vs semana passada) usa sono real. Engine de insights ja fazia esse desconto desde v8.0.0 — agora as visualizacoes estao alinhadas. Novos helpers: realSleepMin, awakeMinIn, sumRealSleep, sumAwakeInSleep, countWakings." },
   { v: "8.4.0", date: "2026-04-06", changes: "Wake Lock: tela do iPhone fica acesa durante night wake e nursing timer (uso da Wake Lock API). Toggle nas configuracoes (Profile > Manter tela ligada), default ON. Auto-libera quando timer termina ou quando sai do app, re-adquire ao voltar. Falha silenciosa em iOS <16.4 ou modo economia. Resolve frustracao de tela bloqueando de madrugada com maos ocupadas." },
   { v: "8.3.0", date: "2026-04-05", changes: "Curiosities massivamente expandido: 30 curiosidades diarias (dias 1-30, reescritas com mais profundidade cientifica) + 48 NOVAS curiosidades semanais (semanas 5-52, cobrindo do mes 2 ao mes 12) + 11 milestones mensais revisados. Total: 89 entradas bilingues baseadas em AAP, OMS, NHS, Mayo Clinic, Harvard, CDC, Zero to Three, Stanford. Corrige bug onde milestones mensais nao apareciam (age.totalMonths era undefined, deveria ser age.months). Novo export: window.WEEKLY_CURIOSITIES. curiosities.js 12KB -> 54KB." },
   { v: "8.2.0", date: "2026-04-05", changes: "Refactor: extraidos 3 arquivos estaticos do index.html para reduzir tamanho e facilitar manutencao. splash-icon.js (27KB base64 do icone da splash), who-growth.js (tabelas LMS OMS + funcoes de percentil), curiosities.js (30 curiosidades diarias + 11 milestones mensais). index.html reduzido de 220KB para 180KB (-18%). Zero mudanca visual ou funcional. Engine intocado. Todos os novos arquivos precisam ser subidos junto no deploy." },
@@ -551,6 +552,17 @@ function fmtDur(m){if(!m)return"0min";const h=Math.floor(m/60),r=m%60;return h>0
 function fmtTimer(s){return`${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`}
 function timeSince(d,t){if(!d||!t)return"";const diff=Math.floor((new Date()-new Date(`${d}T${t}`))/6e4);if(diff<1)return"now";if(diff<60)return`${diff}min ago`;const h=Math.floor(diff/60),m=diff%60;if(h<24)return m>0?`${h}h${m}m ago`:`${h}h ago`;return`${Math.floor(h/24)}d ago`}
 function minSince(d,t){if(!d||!t)return null;return Math.max(0,Math.floor((new Date()-new Date(`${d}T${t}`))/6e4))}
+// Real sleep helpers: subtract waking time from sleep entries with wakings
+// realSleepMin(entry) returns durationMin minus awake time inside (for sleep entries with wakings)
+function realSleepMin(e){if(!e||!e.durationMin)return 0;const wakings=e.wakings||[];if(wakings.length===0)return e.durationMin;const awake=wakings.reduce((s,w)=>s+(w.durationMin||0),0);return Math.max(0,e.durationMin-awake)}
+// awakeMinIn(entry) returns total awake time inside a sleep entry's wakings (0 for naps or sleeps without wakings)
+function awakeMinIn(e){if(!e||!e.wakings)return 0;return e.wakings.reduce((s,w)=>s+(w.durationMin||0),0)}
+// Sum real sleep across an array of entries (handles both naps and sleep with wakings)
+function sumRealSleep(arr){return arr.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin).reduce((s,e)=>s+realSleepMin(e),0)}
+// Sum awake time across sleep entries (only the night-wake portion inside bedtimes)
+function sumAwakeInSleep(arr){return arr.filter(e=>e.type==="sleep").reduce((s,e)=>s+awakeMinIn(e),0)}
+// Count total wakings across an array of sleep entries
+function countWakings(arr){return arr.filter(e=>e.type==="sleep"&&e.wakings).reduce((s,e)=>s+e.wakings.length,0)}
 function dateOffset(b,o){const d=new Date(b+"T12:00:00");d.setDate(d.getDate()+o);return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
 
 // ── CURIOSITIES + MILESTONES (loaded from curiosities.js) ──
@@ -847,7 +859,7 @@ function LastFeedCard({entries}){
   </div>);
 }
 
-function WeeklyCard({entries}){const tw=[],lw=[];for(let i=0;i<7;i++){const d1=dateOffset(todayStr(),-i),d2=dateOffset(todayStr(),-7-i);tw.push(...entries.filter(e=>e.date===d1));lw.push(...entries.filter(e=>e.date===d2))}const tMl=tw.filter(e=>e.type==="bottle").reduce((s,e)=>s+(e.ml||0),0);const lMl=lw.filter(e=>e.type==="bottle").reduce((s,e)=>s+(e.ml||0),0);const tSl=tw.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin).reduce((s,e)=>s+e.durationMin,0);const lSl=lw.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin).reduce((s,e)=>s+e.durationMin,0);if(!lMl&&!lSl)return null;const md=lMl>0?Math.round(((tMl-lMl)/lMl)*100):0;const sd=lSl>0?Math.round(((tSl-lSl)/lSl)*100):0;if(!md&&!sd)return null;return(<div style={{padding:"0 20px",marginBottom:16}}><div style={{padding:"12px 16px",borderRadius:14,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",gap:16}}>{md!==0&&<div style={{display:"flex",alignItems:"center",gap:6,flex:1}}><Icon name={md>0?"arrowUp":"arrowDown"} size={14} color={md>0?T.green:T.orange}/><span style={{fontSize:11,color:T.sub}}><span style={{fontWeight:700,color:md>0?T.green:T.orange}}>{Math.abs(md)}%</span> {L("milkVsWeek")}</span></div>}{sd!==0&&<div style={{display:"flex",alignItems:"center",gap:6,flex:1}}><Icon name={sd>0?"arrowUp":"arrowDown"} size={14} color={sd>0?T.green:T.orange}/><span style={{fontSize:11,color:T.sub}}><span style={{fontWeight:700,color:sd>0?T.green:T.orange}}>{Math.abs(sd)}%</span> sono</span></div>}</div></div>)}
+function WeeklyCard({entries}){const tw=[],lw=[];for(let i=0;i<7;i++){const d1=dateOffset(todayStr(),-i),d2=dateOffset(todayStr(),-7-i);tw.push(...entries.filter(e=>e.date===d1));lw.push(...entries.filter(e=>e.date===d2))}const tMl=tw.filter(e=>e.type==="bottle").reduce((s,e)=>s+(e.ml||0),0);const lMl=lw.filter(e=>e.type==="bottle").reduce((s,e)=>s+(e.ml||0),0);const tSl=sumRealSleep(tw);const lSl=sumRealSleep(lw);if(!lMl&&!lSl)return null;const md=lMl>0?Math.round(((tMl-lMl)/lMl)*100):0;const sd=lSl>0?Math.round(((tSl-lSl)/lSl)*100):0;if(!md&&!sd)return null;return(<div style={{padding:"0 20px",marginBottom:16}}><div style={{padding:"12px 16px",borderRadius:14,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",gap:16}}>{md!==0&&<div style={{display:"flex",alignItems:"center",gap:6,flex:1}}><Icon name={md>0?"arrowUp":"arrowDown"} size={14} color={md>0?T.green:T.orange}/><span style={{fontSize:11,color:T.sub}}><span style={{fontWeight:700,color:md>0?T.green:T.orange}}>{Math.abs(md)}%</span> {L("milkVsWeek")}</span></div>}{sd!==0&&<div style={{display:"flex",alignItems:"center",gap:6,flex:1}}><Icon name={sd>0?"arrowUp":"arrowDown"} size={14} color={sd>0?T.green:T.orange}/><span style={{fontSize:11,color:T.sub}}><span style={{fontWeight:700,color:sd>0?T.green:T.orange}}>{Math.abs(sd)}%</span> sono</span></div>}</div></div>)}
 
 function TimerBar({activeTimer,onStop,onSwitch,onPause}){const[tick,setTick]=useState(0);useEffect(()=>{if(!activeTimer)return;const iv=setInterval(()=>setTick(k=>k+1),1000);return()=>clearInterval(iv)},[activeTimer]);if(!activeTimer)return null;
   if(activeTimer.type==="nursing"){
@@ -1253,14 +1265,34 @@ function StatsPage({entries,onGrowth}){
   const[period,setPeriod]=useState(7);
   const days=period==="all"?[...new Set(entries.map(e=>e.date))].sort():Array.from({length:period},(_,i)=>{const d=new Date();d.setDate(d.getDate()-((period-1)-i));return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`});
   const numDays=days.length||1;
-  const data=days.map(dt=>{const de=entries.filter(e=>e.date===dt);return{date:dt,isToday:dt===todayStr(),label:numDays<=14?new Date(dt+"T12:00").toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{weekday:"short"}).replace(".",""):new Date(dt+"T12:00").toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{day:"numeric",month:"numeric"}).replace(/\/\d{4}/,""),ml:de.filter(e=>e.type==="bottle").reduce((s,e)=>s+(e.ml||0),0),sl:de.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin).reduce((s,e)=>s+e.durationMin,0)}});
-  const mxMl=Math.max(...data.map(d=>d.ml),1),mxSl=Math.max(...data.map(d=>d.sl),1);
+  const data=days.map(dt=>{
+    const de=entries.filter(e=>e.date===dt);
+    const sleeps=de.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin);
+    const slReal=sumRealSleep(sleeps);
+    const slAwake=sumAwakeInSleep(sleeps);
+    return{
+      date:dt,isToday:dt===todayStr(),
+      label:numDays<=14?new Date(dt+"T12:00").toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{weekday:"short"}).replace(".",""):new Date(dt+"T12:00").toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{day:"numeric",month:"numeric"}).replace(/\/\d{4}/,""),
+      ml:de.filter(e=>e.type==="bottle").reduce((s,e)=>s+(e.ml||0),0),
+      sl:slReal,        // real sleep (was: total bedtime including wakings)
+      slAwake:slAwake,  // night-waking time
+      slBed:slReal+slAwake // total time in bed
+    }
+  });
+  const mxMl=Math.max(...data.map(d=>d.ml),1);
+  const mxSl=Math.max(...data.map(d=>d.sl+d.slAwake),1); // stack height = real + awake
   const avgMl=Math.round(data.reduce((s,d)=>s+d.ml,0)/numDays);
   const avgSl=Math.round(data.reduce((s,d)=>s+d.sl,0)/numDays);
-  // Trend: compare to previous period
+  const avgAwake=Math.round(data.reduce((s,d)=>s+d.slAwake,0)/numDays);
+  const avgBed=avgSl+avgAwake;
+  // Wakings count per night (only nights with bedtime data)
+  const totalWakings=days.reduce((s,dt)=>s+countWakings(entries.filter(e=>e.date===dt)),0);
+  const nightsWithSleep=days.filter(dt=>entries.some(e=>e.date===dt&&e.type==="sleep"&&e.durationMin)).length;
+  const avgWakings=nightsWithSleep>0?Math.round((totalWakings/nightsWithSleep)*10)/10:0;
+  // Trend: compare to previous period (using REAL sleep)
   const prevDays=period!=="all"?Array.from({length:period},(_,i)=>{const d=new Date();d.setDate(d.getDate()-period-((period-1)-i));return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}):[];
   const prevMl=prevDays.length?Math.round(prevDays.reduce((s,dt)=>s+entries.filter(e=>e.date===dt&&e.type==="bottle").reduce((ss,e)=>ss+(e.ml||0),0),0)/prevDays.length):0;
-  const prevSl=prevDays.length?Math.round(prevDays.reduce((s,dt)=>s+entries.filter(e=>e.date===dt&&(e.type==="sleep"||e.type==="nap")&&e.durationMin).reduce((ss,e)=>ss+e.durationMin,0),0)/prevDays.length):0;
+  const prevSl=prevDays.length?Math.round(prevDays.reduce((s,dt)=>s+sumRealSleep(entries.filter(e=>e.date===dt)),0)/prevDays.length):0;
   const trendMl=prevMl>0?Math.round(((avgMl-prevMl)/prevMl)*100):0;
   const trendSl=prevSl>0?Math.round(((avgSl-prevSl)/prevSl)*100):0;
   // Extra daily avgs
@@ -1284,21 +1316,53 @@ function StatsPage({entries,onGrowth}){
     </div>
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
       <div style={{background:`${T.green}08`,borderRadius:14,border:`1px solid ${T.green}0a`,padding:12}}><div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}><Icon name="bottle" size={14} color={T.green}/><span style={{fontSize:9,color:T.sub}}>{_lang==="en"?"Avg milk/day":"Média leite/dia"}</span></div><div style={{fontSize:22,fontWeight:800,color:T.green}}>{avgMl} <span style={{fontSize:12,opacity:0.6}}>ml</span></div><TrendBadge val={trendMl}/></div>
-      <div style={{background:`${T.purple}08`,borderRadius:14,border:`1px solid ${T.purple}0a`,padding:12}}><div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}><Icon name="moon" size={14} color={T.purple}/><span style={{fontSize:9,color:T.sub}}>{_lang==="en"?"Avg sleep/day":"Média sono/dia"}</span></div><div style={{fontSize:22,fontWeight:800,color:T.purple}}>{fmtDur(avgSl)}</div><TrendBadge val={trendSl}/></div>
+      <div style={{background:`${T.purple}08`,borderRadius:14,border:`1px solid ${T.purple}0a`,padding:12}}>
+        <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}><Icon name="moon" size={14} color={T.purple}/><span style={{fontSize:9,color:T.sub}}>{_lang==="en"?"Real sleep/day":"Sono real/dia"}</span></div>
+        <div style={{fontSize:22,fontWeight:800,color:T.purple}}>{fmtDur(avgSl)}</div>
+        <TrendBadge val={trendSl}/>
+        {avgAwake>0&&<div style={{marginTop:8,paddingTop:6,borderTop:`1px solid ${T.purple}15`,display:"flex",flexDirection:"column",gap:3}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline"}}><span style={{fontSize:8,color:T.dim}}>{_lang==="en"?"In bed":"Na cama"}</span><span style={{fontSize:10,fontWeight:600,color:T.sub,fontVariantNumeric:"tabular-nums"}}>{fmtDur(avgBed)}</span></div>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline"}}><span style={{fontSize:8,color:T.dim}}>{_lang==="en"?"Awake":"Acordada"}</span><span style={{fontSize:10,fontWeight:600,color:"#60a5fa",fontVariantNumeric:"tabular-nums"}}>{fmtDur(avgAwake)}{avgWakings>0?` · ${avgWakings}x`:""}</span></div>
+        </div>}
+      </div>
     </div>
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:16}}>
       <div style={{background:"rgba(22,28,60,0.4)",borderRadius:12,border:`1px solid ${T.gB}`,padding:"10px 8px",textAlign:"center"}}><div style={{fontSize:8,color:T.dim,textTransform:"uppercase",letterSpacing:0.5,marginBottom:4}}>{_lang==="en"?"Diapers/day":"Fraldas/dia"}</div><div style={{fontSize:18,fontWeight:800,color:T.pink}}>{avgDiapers}</div></div>
       <div style={{background:"rgba(22,28,60,0.4)",borderRadius:12,border:`1px solid ${T.gB}`,padding:"10px 8px",textAlign:"center"}}><div style={{fontSize:8,color:T.dim,textTransform:"uppercase",letterSpacing:0.5,marginBottom:4}}>{_lang==="en"?"Feedings/day":"Mamadas/dia"}</div><div style={{fontSize:18,fontWeight:800,color:T.blue}}>{avgFeedings}</div></div>
       <div style={{background:"rgba(22,28,60,0.4)",borderRadius:12,border:`1px solid ${T.gB}`,padding:"10px 8px",textAlign:"center"}}><div style={{fontSize:8,color:T.dim,textTransform:"uppercase",letterSpacing:0.5,marginBottom:4}}>{_lang==="en"?"Naps/day":"Sonecas/dia"}</div><div style={{fontSize:18,fontWeight:800,color:T.accent}}>{avgNaps}</div></div>
     </div>
-    {[{t:_lang==="en"?"Milk (ml)":"Leite (ml)",f:"ml",max:mxMl,c:T.green},{t:_lang==="en"?"Total sleep":"Sono total",f:"sl",max:mxSl,c:T.purple}].map(ch=>(
-      <div key={ch.f} style={{marginBottom:22}}><div style={{fontSize:12,fontWeight:600,color:T.sub,marginBottom:8}}>{ch.t}</div>
+    {[{t:_lang==="en"?"Milk (ml)":"Leite (ml)",f:"ml",max:mxMl,c:T.green,stacked:false},{t:_lang==="en"?"Sleep · real + awake":"Sono · real + acordada",f:"sl",max:mxSl,c:T.purple,stacked:true}].map(ch=>(
+      <div key={ch.f} style={{marginBottom:22}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
+          <span style={{fontSize:12,fontWeight:600,color:T.sub}}>{ch.t}</span>
+          {ch.stacked&&avgAwake>0&&<div style={{display:"flex",gap:10}}>
+            <span style={{display:"flex",alignItems:"center",gap:4,fontSize:9,color:T.sub,fontWeight:600}}><span style={{width:8,height:8,borderRadius:2,background:`linear-gradient(180deg,${T.purple},#7c3aed)`}}/>{_lang==="en"?"Real":"Real"}</span>
+            <span style={{display:"flex",alignItems:"center",gap:4,fontSize:9,color:T.sub,fontWeight:600}}><span style={{width:8,height:8,borderRadius:2,background:"rgba(96,165,250,0.6)",border:"1px solid #60a5fa"}}/>{_lang==="en"?"Awake":"Acordada"}</span>
+          </div>}
+        </div>
         <div style={{display:"flex",gap:numDays>20?1:numDays>14?2:5,alignItems:"flex-end",height:100,background:"rgba(22,28,60,0.4)",borderRadius:14,padding:"12px 4px 6px",border:`1px solid ${T.gB}`,overflow:"hidden",position:"relative"}}>
-          {data.map(d=>{const v=d[ch.f];return<div key={d.date} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2,minWidth:0}}>
-            {numDays<=14&&<span style={{fontSize:10,color:T.sub,fontWeight:600}}>{v>0?(ch.f==="sl"?fmtDur(v):v):""}</span>}
-            <div style={{width:"85%",maxWidth:numDays>20?8:20,height:Math.max((v/ch.max)*65,2),borderRadius:numDays>20?2:5,background:v>0?ch.c:T.bg3,transition:"height .5s",opacity:d.isToday?1:0.7}}/>
-            {numDays<=14&&<span style={{fontSize:8,color:d.isToday?T.accent:T.dim,fontWeight:d.isToday?700:400}}>{d.isToday?(_lang==="en"?"Today":"Hoje"):d.label}</span>}
-          </div>})}
+          {data.map(d=>{
+            if(ch.stacked){
+              const v=d.sl;const aw=d.slAwake;const total=v+aw;
+              const totalPct=Math.max((total/ch.max)*65,2);
+              const realPct=total>0?(v/total)*totalPct:totalPct;
+              const awakePct=total>0?(aw/total)*totalPct:0;
+              return<div key={d.date} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2,minWidth:0}}>
+                {numDays<=14&&<span style={{fontSize:10,color:T.sub,fontWeight:600}}>{v>0?fmtDur(v):""}</span>}
+                <div style={{width:"85%",maxWidth:numDays>20?8:20,height:totalPct,borderRadius:numDays>20?2:5,overflow:"hidden",display:"flex",flexDirection:"column",justifyContent:"flex-end",background:T.bg3,opacity:d.isToday?1:0.7,transition:"height .5s"}}>
+                  {aw>0&&<div style={{height:awakePct,background:"rgba(96,165,250,0.55)",borderBottom:"1px solid #60a5fa"}}/>}
+                  <div style={{height:realPct,background:v>0?`linear-gradient(180deg,${T.purple},#7c3aed)`:T.bg3,borderRadius:numDays>20?"2px 2px 0 0":"5px 5px 0 0"}}/>
+                </div>
+                {numDays<=14&&<span style={{fontSize:8,color:d.isToday?T.accent:T.dim,fontWeight:d.isToday?700:400}}>{d.isToday?(_lang==="en"?"Today":"Hoje"):d.label}</span>}
+              </div>
+            }else{
+              const v=d[ch.f];return<div key={d.date} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2,minWidth:0}}>
+                {numDays<=14&&<span style={{fontSize:10,color:T.sub,fontWeight:600}}>{v>0?v:""}</span>}
+                <div style={{width:"85%",maxWidth:numDays>20?8:20,height:Math.max((v/ch.max)*65,2),borderRadius:numDays>20?2:5,background:v>0?ch.c:T.bg3,transition:"height .5s",opacity:d.isToday?1:0.7}}/>
+                {numDays<=14&&<span style={{fontSize:8,color:d.isToday?T.accent:T.dim,fontWeight:d.isToday?700:400}}>{d.isToday?(_lang==="en"?"Today":"Hoje"):d.label}</span>}
+              </div>
+            }
+          })}
         </div>
         {numDays>14&&<div style={{display:"flex",justifyContent:"space-between",padding:"4px 4px 0",fontSize:8,color:T.dim}}><span>{data[0]?.label}</span><span>{data[Math.floor(data.length/2)]?.label}</span><span>{data[data.length-1]?.label}</span></div>}
       </div>
@@ -1317,7 +1381,7 @@ function HistoryPage({entries,onDelete,onEdit}){
     return e.type===filter;
   });
   const dMl=dayE.filter(e=>e.type==="bottle").reduce((s,e)=>s+(e.ml||0),0);
-  const dSl=dayE.filter(e=>(e.type==="sleep"||e.type==="nap")&&e.durationMin).reduce((s,e)=>s+e.durationMin,0);
+  const dSl=sumRealSleep(dayE);
   const dLbl=new Date(viewDate+"T12:00").toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{weekday:"long",day:"numeric",month:"long"});
   const isToday=dateIdx===0;
   const filters=[{v:"all",l:L("all"),c:T.accent},{v:"feed",l:L("milk"),c:T.green},{v:"sleep",l:L("sleepLabel"),c:T.purple},{v:"diaper",l:typeLabel("diaper",_lang),c:T.pink},{v:"medicine",l:_lang==="en"?"Meds":"Med.",c:T.amber}];
