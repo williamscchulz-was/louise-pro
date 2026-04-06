@@ -500,8 +500,52 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "8.4.5";
+const APP_VERSION = "8.4.7";
 const CHANGELOG = [
+  {
+    v: "8.4.7", date: "2026-04-06",
+    pt: {
+      title: "Stats: 7d agora significa 7 dias completos",
+      bullets: [
+        '★ **Coerência entre seletor e cálculo.** Quando você seleciona "7d", agora a média é exatamente dos últimos 7 dias completos — não mais 6.',
+        'O dia de hoje continua aparecendo no gráfico como **8ª barra de contexto** (destacada visualmente), mas não entra no cálculo da média.',
+        'Mesmo princípio para 14d (14 completos + hoje) e 30d (30 completos + hoje).',
+        'Subtítulo agora bate certinho: **"Últimos 7 dias completos"** quando você seleciona 7d.'
+      ]
+    },
+    en: {
+      title: "Stats: 7d now means 7 complete days",
+      bullets: [
+        '★ **Selector and calculation now match.** When you pick "7d", the average is exactly the last 7 complete days — no longer 6.',
+        'Today still shows in the chart as an **8th context bar** (visually highlighted), but doesn\'t count toward the average.',
+        'Same principle for 14d (14 complete + today) and 30d (30 complete + today).',
+        'Subtitle now matches the selector: **"Last 7 complete days"** when you pick 7d.'
+      ]
+    }
+  },
+  {
+    v: "8.4.6", date: "2026-04-06",
+    pt: {
+      title: "Médias honestas: hoje não polui mais o cálculo",
+      bullets: [
+        '★ **Fix de cálculo de médias.** As médias do Stats agora excluem o dia atual (que ainda não terminou) — antes ele puxava as médias pra baixo de manhã e pra cima à noite, criando ilusão de tendência.',
+        'Hoje continua aparecendo no gráfico (com destaque visual), só não conta no cálculo da média.',
+        'Novo subtítulo embaixo do seletor de período: **"Últimos 6 dias completos"** — deixa transparente o que está sendo calculado.',
+        'Trends (comparação vs período anterior) agora comparam períodos completos com períodos completos — apples to apples.',
+        'Fallback inteligente: se você só tem dados de hoje (primeiros dias usando o app), a média mostra hoje mesmo, com nota "Apenas hoje · ainda em curso".'
+      ]
+    },
+    en: {
+      title: "Honest averages: today no longer skews stats",
+      bullets: [
+        '★ **Average calculation fix.** Stats averages now exclude the current day (still in progress) — it used to pull averages down in the morning and up at night, creating fake trends.',
+        'Today still appears in the chart (with visual highlight), it just doesn\'t count toward the average.',
+        'New subtitle under the period selector: **"Last 6 complete days"** — makes it transparent what\'s being calculated.',
+        'Trends (vs previous period) now compare complete periods to complete periods — apples to apples.',
+        'Smart fallback: if you only have data from today (first days using the app), the average shows today anyway, with a note "Today only · still in progress".'
+      ]
+    }
+  },
   {
     v: "8.4.5", date: "2026-04-06",
     pt: {
@@ -1753,7 +1797,24 @@ function UpdateToast({fromVersion,toVersion,onView,onDismiss,lang}){
 
 function StatsPage({entries,onGrowth}){
   const[period,setPeriod]=useState(7);
-  const days=period==="all"?[...new Set(entries.map(e=>e.date))].sort():Array.from({length:period},(_,i)=>{const d=new Date();d.setDate(d.getDate()-((period-1)-i));return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`});
+  const today=todayStr();
+  // Build the day window:
+  // - For numeric periods (7/14/30): N complete past days (yesterday → N days ago) + today as bonus
+  //   This way "7d" means "average of last 7 complete days, with today shown as context"
+  // - For "all": every date that has entries (including today)
+  const days=period==="all"
+    ?[...new Set(entries.map(e=>e.date))].sort()
+    :(()=>{
+      const arr=[];
+      // Past complete days: from N days ago up to yesterday (inclusive)
+      for(let i=period;i>=1;i--){
+        const d=new Date();d.setDate(d.getDate()-i);
+        arr.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`);
+      }
+      // Today as bonus visual (still in progress, not part of the average)
+      arr.push(today);
+      return arr;
+    })();
   const numDays=days.length||1;
   const data=days.map(dt=>{
     const de=entries.filter(e=>e.date===dt);
@@ -1761,7 +1822,7 @@ function StatsPage({entries,onGrowth}){
     const slReal=sumRealSleep(sleeps);
     const slAwake=sumAwakeInSleep(sleeps);
     return{
-      date:dt,isToday:dt===todayStr(),
+      date:dt,isToday:dt===today,
       label:numDays<=14?new Date(dt+"T12:00").toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{weekday:"short"}).replace(".",""):new Date(dt+"T12:00").toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{day:"numeric",month:"numeric"}).replace(/\/\d{4}/,""),
       ml:de.filter(e=>e.type==="bottle").reduce((s,e)=>s+(e.ml||0),0),
       sl:slReal,        // real sleep (was: total bedtime including wakings)
@@ -1769,26 +1830,42 @@ function StatsPage({entries,onGrowth}){
       slBed:slReal+slAwake // total time in bed
     }
   });
+  // ─────────────────────────────────────────────────
+  // AVERAGES: exclude today (still in progress) so the math is honest.
+  // Today still appears in the chart, but doesn't pull the average down/up.
+  // If today is the only day with data, we fall back to including it
+  // (otherwise users would see nothing on first launch).
+  // ─────────────────────────────────────────────────
+  const completeData=data.filter(d=>!d.isToday);
+  const usingFallback=completeData.length===0;
+  const avgData=usingFallback?data:completeData;
+  const numComplete=avgData.length||1;
   const mxMl=Math.max(...data.map(d=>d.ml),1);
   const mxSl=Math.max(...data.map(d=>d.sl+d.slAwake),1); // stack height = real + awake
-  const avgMl=Math.round(data.reduce((s,d)=>s+d.ml,0)/numDays);
-  const avgSl=Math.round(data.reduce((s,d)=>s+d.sl,0)/numDays);
-  const avgAwake=Math.round(data.reduce((s,d)=>s+d.slAwake,0)/numDays);
+  const avgMl=Math.round(avgData.reduce((s,d)=>s+d.ml,0)/numComplete);
+  const avgSl=Math.round(avgData.reduce((s,d)=>s+d.sl,0)/numComplete);
+  const avgAwake=Math.round(avgData.reduce((s,d)=>s+d.slAwake,0)/numComplete);
   const avgBed=avgSl+avgAwake;
-  // Wakings count per night (only nights with bedtime data)
-  const totalWakings=days.reduce((s,dt)=>s+countWakings(entries.filter(e=>e.date===dt)),0);
-  const nightsWithSleep=days.filter(dt=>entries.some(e=>e.date===dt&&e.type==="sleep"&&e.durationMin)).length;
+  // Wakings count per night (only nights with bedtime data, excluding today)
+  const avgDays=avgData.map(d=>d.date);
+  const totalWakings=avgDays.reduce((s,dt)=>s+countWakings(entries.filter(e=>e.date===dt)),0);
+  const nightsWithSleep=avgDays.filter(dt=>entries.some(e=>e.date===dt&&e.type==="sleep"&&e.durationMin)).length;
   const avgWakings=nightsWithSleep>0?Math.round((totalWakings/nightsWithSleep)*10)/10:0;
-  // Trend: compare to previous period (using REAL sleep)
-  const prevDays=period!=="all"?Array.from({length:period},(_,i)=>{const d=new Date();d.setDate(d.getDate()-period-((period-1)-i));return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}):[];
+  // Trend: compare COMPLETE current period to COMPLETE previous period (apples to apples)
+  // Previous period = the N days before the current period started
+  const prevDays=period!=="all"?Array.from({length:numComplete},(_,i)=>{const d=new Date();d.setDate(d.getDate()-numComplete-1-((numComplete-1)-i));return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}):[];
   const prevMl=prevDays.length?Math.round(prevDays.reduce((s,dt)=>s+entries.filter(e=>e.date===dt&&e.type==="bottle").reduce((ss,e)=>ss+(e.ml||0),0),0)/prevDays.length):0;
   const prevSl=prevDays.length?Math.round(prevDays.reduce((s,dt)=>s+sumRealSleep(entries.filter(e=>e.date===dt)),0)/prevDays.length):0;
   const trendMl=prevMl>0?Math.round(((avgMl-prevMl)/prevMl)*100):0;
   const trendSl=prevSl>0?Math.round(((avgSl-prevSl)/prevSl)*100):0;
-  // Extra daily avgs
-  const avgDiapers=Math.round(days.reduce((s,dt)=>s+entries.filter(e=>e.date===dt&&e.type==="diaper").length,0)/numDays*10)/10;
-  const avgFeedings=Math.round(days.reduce((s,dt)=>s+entries.filter(e=>e.date===dt&&(e.type==="bottle"||e.type==="nursing")).length,0)/numDays*10)/10;
-  const avgNaps=Math.round(days.reduce((s,dt)=>s+entries.filter(e=>e.date===dt&&e.type==="nap").length,0)/numDays*10)/10;
+  // Extra daily avgs (also exclude today)
+  const avgDiapers=Math.round(avgDays.reduce((s,dt)=>s+entries.filter(e=>e.date===dt&&e.type==="diaper").length,0)/numComplete*10)/10;
+  const avgFeedings=Math.round(avgDays.reduce((s,dt)=>s+entries.filter(e=>e.date===dt&&(e.type==="bottle"||e.type==="nursing")).length,0)/numComplete*10)/10;
+  const avgNaps=Math.round(avgDays.reduce((s,dt)=>s+entries.filter(e=>e.date===dt&&e.type==="nap").length,0)/numComplete*10)/10;
+  // Subtitle for averages: tells user what's actually being averaged
+  const avgSubtitle=usingFallback
+    ?(_lang==="en"?"Today only · still in progress":"Apenas hoje · ainda em curso")
+    :(_lang==="en"?`Last ${numComplete} complete day${numComplete>1?"s":""}`:`Últimos ${numComplete} ${numComplete>1?"dias completos":"dia completo"}`);
   const exportCSV=()=>{const h="Data,Hora,Tipo,Detalhe,Notas\n";const rows=entries.map(e=>{let d="";if(e.ml)d=`${e.ml}ml`;else if(e.durationMin)d=fmtDur(e.durationMin);else if(e.name)d=e.name;else if(e.value)d=`${e.value}°C`;else if(e.subtype)d=e.subtype;return`${e.date},${e.time},${TL(e.type)||e.type},${d},${e.notes||""}`}).join("\n");const blob=new Blob([h+rows],{type:"text/csv"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=`louise-pro-${todayStr()}.csv`;a.click();URL.revokeObjectURL(url)};
   const TrendBadge=({val})=>val===0?null:<div style={{display:"flex",alignItems:"center",gap:3,marginTop:4}}><Icon name={val>0?"arrowUp":"arrowDown"} size={10} color={val>0?T.green:T.orange}/><span style={{fontSize:9,fontWeight:600,color:val>0?T.green:T.orange}}>{val>0?"+":""}{val}%</span><span style={{fontSize:8,color:T.dim}}>vs {_lang==="en"?"prev":"ant"}</span></div>;
   return(<div style={{padding:"calc(16px + env(safe-area-inset-top)) 20px 0"}}>
@@ -1799,10 +1876,14 @@ function StatsPage({entries,onGrowth}){
         <button onClick={exportCSV} style={{display:"flex",alignItems:"center",gap:4,padding:"6px 10px",borderRadius:8,background:"rgba(22,28,60,0.6)",border:`1px solid ${T.gB}`,fontSize:11,fontWeight:600,color:T.sub}}>CSV</button>
       </div>
     </div>
-    <div style={{background:"rgba(22,28,60,0.4)",borderRadius:14,border:`1px solid ${T.gB}`,padding:4,marginBottom:14}}>
+    <div style={{background:"rgba(22,28,60,0.4)",borderRadius:14,border:`1px solid ${T.gB}`,padding:4,marginBottom:6}}>
       {[{v:7,l:"7d"},{v:14,l:"14d"},{v:30,l:"30d"},{v:"all",l:L("all")}].map(p=>
         <button key={p.v} onClick={()=>setPeriod(p.v)} style={{width:"25%",padding:"8px 0",borderRadius:10,fontSize:12,fontWeight:700,background:period===p.v?T.accent:"transparent",color:period===p.v?"#fff":T.sub}}>{p.l}</button>
       )}
+    </div>
+    <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:5,marginBottom:14,fontSize:9,color:T.dim,fontWeight:500}}>
+      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span>{avgSubtitle}</span>
     </div>
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
       <div style={{background:`${T.green}08`,borderRadius:14,border:`1px solid ${T.green}0a`,padding:12}}><div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}><Icon name="bottle" size={14} color={T.green}/><span style={{fontSize:9,color:T.sub}}>{_lang==="en"?"Avg milk/day":"Média leite/dia"}</span></div><div style={{fontSize:22,fontWeight:800,color:T.green}}>{avgMl} <span style={{fontSize:12,opacity:0.6}}>ml</span></div><TrendBadge val={trendMl}/></div>
