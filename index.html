@@ -495,8 +495,29 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "8.4.9";
+const APP_VERSION = "8.4.10";
 const CHANGELOG = [
+  {
+    v: "8.4.10", date: "2026-04-06",
+    pt: {
+      title: "Curiosidades na inbox de notificações",
+      bullets: [
+        '★ **Curiosidade do dia agora fica na inbox** até as 23:59. Se você não vir o card no Home pela manhã, pode abrir o sininho a qualquer hora do dia e ler com calma.',
+        'Visual **distinguível das outras notificações**: borda lateral lavanda, fundo com gradiente sutil, label "CURIOSIDADE DO DIA" no topo e ícone de sol com glow.',
+        'Continua **também no Home** — o card rápido segue aparecendo no horário usual, sem mudança.',
+        'Reseta automaticamente à meia-noite junto com o resto da inbox.'
+      ]
+    },
+    en: {
+      title: "Curiosities in the notifications inbox",
+      bullets: [
+        '★ **Daily curiosity now lives in the inbox** until 23:59. If you miss the card on Home in the morning, you can open the bell anytime during the day and read it calmly.',
+        'Visually **distinguishable from other notifications**: lavender side border, subtle gradient background, "DAILY CURIOSITY" label on top and glowing sun icon.',
+        'Still **also appears on Home** — the quick card continues to show at the usual time, unchanged.',
+        'Auto-resets at midnight along with the rest of the inbox.'
+      ]
+    }
+  },
   {
     v: "8.4.9", date: "2026-04-06",
     pt: {
@@ -948,6 +969,42 @@ function dateOffset(b,o){const d=new Date(b+"T12:00:00");d.setDate(d.getDate()+o
 
 // ── CURIOSITIES + MILESTONES (loaded from curiosities.js) ──
 const {CURIOSITIES, WEEKLY_CURIOSITIES, MILESTONES} = window;
+// Helper: pick today's curiosity based on age (same cascade used by CuriosityCard).
+// Returns {title, body, tagLabel} in requested lang, or null if no curiosity fits today.
+function getTodayCuriosity(age,lang){
+  if(!age) return null;
+  const dayNum=age.totalDays;
+  const monthNum=age.months;
+  const weekNum=age.totalWeeks;
+  let txt=null,tagLabel="";
+  // Priority 1: daily curiosities (days 1-30)
+  if(dayNum>=1&&dayNum<=30){
+    const c=CURIOSITIES&&CURIOSITIES[dayNum-1];
+    if(c){
+      txt=lang==="en"?c.en:c.pt;
+      tagLabel=lang==="en"?`Day ${dayNum}`:`Dia ${dayNum}`;
+    }
+  }
+  // Priority 2: monthly milestones (only on the exact day of the month anniversary)
+  else if(monthNum>=2&&monthNum<=12&&age.days===0){
+    const ms=MILESTONES&&MILESTONES.find(m=>m.m===monthNum);
+    if(ms){
+      txt=lang==="en"?ms.en:ms.pt;
+      tagLabel=lang==="en"?`${monthNum} months`:`${monthNum} meses`;
+    }
+  }
+  // Priority 3: weekly curiosities (weeks 5-52)
+  if(!txt&&weekNum>=5&&weekNum<=52){
+    const idx=weekNum-5;
+    const wc=WEEKLY_CURIOSITIES&&WEEKLY_CURIOSITIES[idx];
+    if(wc){
+      txt=lang==="en"?wc.en:wc.pt;
+      tagLabel=lang==="en"?`Week ${weekNum}`:`Semana ${weekNum}`;
+    }
+  }
+  if(!txt) return null;
+  return{title:txt.t,body:txt.b,tagLabel};
+}
 
 // ── WAKE LOCK (loaded from wake-lock.js) ──
 // Keeps screen on during night wake / nursing timers.
@@ -1592,9 +1649,9 @@ function InboxPanel({inbox,onClose,onMarkRead,onMarkAllRead,lang}){
   const items=(inbox.items||[]).slice().sort((a,b)=>(b.timestamp||0)-(a.timestamp||0));
   const unreadCount=items.filter(it=>!it.read).length;
   const todayLabel=new Date().toLocaleDateString(lang==="pt"?"pt-BR":"en-US",{weekday:"short",day:"numeric",month:"short"}).toUpperCase().replace(".","");
-  const iconByType={good:"check",warn:"zap",info:"star"};
-  const colorByType={good:T.green,warn:T.orange,info:T.blue};
-  const bgByType={good:T.greenS,warn:T.orangeS,info:`${T.blue}1a`};
+  const iconByType={good:"check",warn:"zap",info:"star",curiosity:"sun"};
+  const colorByType={good:T.green,warn:T.orange,info:T.blue,curiosity:T.purple};
+  const bgByType={good:T.greenS,warn:T.orangeS,info:`${T.blue}1a`,curiosity:`${T.purple}1a`};
   const fmtAgo=ts=>{
     if(!ts)return"";
     const diff=Math.floor((Date.now()-ts)/60000);
@@ -1645,12 +1702,14 @@ function InboxPanel({inbox,onClose,onMarkRead,onMarkAllRead,lang}){
         const bg=bgByType[it.type]||T.blueS;
         const ic=iconByType[it.type]||"star";
         const unread=!it.read;
-        return(<button key={it.key} onClick={()=>unread&&onMarkRead(it.key)} style={{display:"flex",alignItems:"flex-start",gap:12,padding:"14px 20px 14px 24px",borderBottom:"1px solid rgba(139,124,246,0.04)",position:"relative",width:"100%",textAlign:"left",background:unread?"rgba(139,124,246,0.04)":"transparent",cursor:unread?"pointer":"default"}}>
-          {unread&&<div style={{position:"absolute",left:9,top:"50%",transform:"translateY(-50%)",width:5,height:5,borderRadius:"50%",background:"#60a5fa",boxShadow:"0 0 8px #60a5fa, 0 0 2px #60a5fa",animation:"pulse 2s ease-in-out infinite"}}/>}
-          <div style={{width:34,height:34,borderRadius:11,background:bg,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,opacity:unread?1:0.5}}>
+        const isCuriosity=it.type==="curiosity";
+        return(<button key={it.key} onClick={()=>unread&&onMarkRead(it.key)} style={{display:"flex",alignItems:"flex-start",gap:12,padding:"14px 20px 14px 24px",borderBottom:"1px solid rgba(139,124,246,0.04)",position:"relative",width:"100%",textAlign:"left",background:isCuriosity&&unread?`linear-gradient(90deg,${T.purple}10,${T.purple}04)`:unread?"rgba(139,124,246,0.04)":"transparent",cursor:unread?"pointer":"default",borderLeft:isCuriosity?`3px solid ${T.purple}${unread?"cc":"55"}`:"none"}}>
+          {unread&&!isCuriosity&&<div style={{position:"absolute",left:9,top:"50%",transform:"translateY(-50%)",width:5,height:5,borderRadius:"50%",background:"#60a5fa",boxShadow:"0 0 8px #60a5fa, 0 0 2px #60a5fa",animation:"pulse 2s ease-in-out infinite"}}/>}
+          <div style={{width:34,height:34,borderRadius:11,background:bg,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,opacity:unread?1:0.5,boxShadow:isCuriosity&&unread?`0 0 12px ${T.purple}30`:"none"}}>
             <Icon name={ic} size={15} color={col}/>
           </div>
           <div style={{flex:1,minWidth:0}}>
+            {isCuriosity&&<div style={{fontSize:8,fontWeight:800,letterSpacing:1.2,textTransform:"uppercase",color:col,marginBottom:3,opacity:unread?1:0.5}}>{lang==="en"?"Daily curiosity":"Curiosidade do dia"}</div>}
             <div style={{fontSize:13,fontWeight:700,marginBottom:3,color:unread?T.text:T.sub,lineHeight:1.3}}>{it.title}</div>
             <div style={{fontSize:11,color:unread?T.sub:T.dim,lineHeight:1.45}}>{it.sub}</div>
             <div style={{fontSize:9,color:T.dim,marginTop:5,fontWeight:600,letterSpacing:0.5}}>{fmtAgo(it.timestamp)}</div>
@@ -2598,6 +2657,35 @@ function App(){
       FB.saveInbox({items:inbox.items||[],lastReset:td});
     }
   },[tick,inbox.lastReset]);
+
+  // ── INBOX CURIOSITY CAPTURE ──
+  // Inject today's curiosity into the inbox once per day, so the user can read it
+  // anytime until midnight (not only when it auto-shows on Home).
+  // Key is stable (curiosity-YYYY-MM-DD) so it's dedup'd correctly and persists
+  // the read state across re-renders.
+  useEffect(()=>{
+    if(!age)return;
+    const td=todayStr();
+    // Skip if inbox not yet initialized (midnight reset effect handles first load)
+    if(!inbox.lastReset||inbox.lastReset!==td)return;
+    const curi=getTodayCuriosity(age,_lang);
+    if(!curi)return;
+    const key=`curiosity-${td}`;
+    const exists=(inbox.items||[]).some(it=>it.key===key);
+    if(exists)return;
+    // Insert curiosity as a new item with type "curiosity" (distinct visual)
+    const newItem={
+      key,
+      title:`${curi.tagLabel} · ${curi.title}`,
+      sub:curi.body,
+      type:"curiosity",
+      timestamp:Date.now(),
+      read:false,
+      date:td
+    };
+    const merged=[newItem,...(inbox.items||[])].sort((a,b)=>(b.timestamp||0)-(a.timestamp||0));
+    FB.saveInbox({items:merged,lastReset:td});
+  },[age,inbox.items,inbox.lastReset]);
 
   // ── INBOX HANDLERS ──
   const markInboxRead=useCallback(async key=>{
