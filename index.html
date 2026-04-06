@@ -482,8 +482,9 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "8.2.0";
+const APP_VERSION = "8.3.0";
 const CHANGELOG = [
+  { v: "8.3.0", date: "2026-04-05", changes: "Curiosities massivamente expandido: 30 curiosidades diarias (dias 1-30, reescritas com mais profundidade cientifica) + 48 NOVAS curiosidades semanais (semanas 5-52, cobrindo do mes 2 ao mes 12) + 11 milestones mensais revisados. Total: 89 entradas bilingues baseadas em AAP, OMS, NHS, Mayo Clinic, Harvard, CDC, Zero to Three, Stanford. Corrige bug onde milestones mensais nao apareciam (age.totalMonths era undefined, deveria ser age.months). Novo export: window.WEEKLY_CURIOSITIES. curiosities.js 12KB -> 54KB." },
   { v: "8.2.0", date: "2026-04-05", changes: "Refactor: extraidos 3 arquivos estaticos do index.html para reduzir tamanho e facilitar manutencao. splash-icon.js (27KB base64 do icone da splash), who-growth.js (tabelas LMS OMS + funcoes de percentil), curiosities.js (30 curiosidades diarias + 11 milestones mensais). index.html reduzido de 220KB para 180KB (-18%). Zero mudanca visual ou funcional. Engine intocado. Todos os novos arquivos precisam ser subidos junto no deploy." },
   { v: "8.1.3", date: "2026-04-05", changes: "Night Wake mode: quick buttons reduzidos para apenas Bottle + Diaper (removido Nurse). De madrugada amamentacao nao se aplica (so mamadeira), entao a interface fica mais limpa e com touch targets maiores. Os 2 botoes dividem a largura total (flex:1 cada), ficando maiores e mais faceis de acertar com olhos meio fechados." },
   { v: "8.1.2", date: "2026-04-05", changes: "Night Wake botao (estado inativo) agora usa amber quente com pulse sutil 2.4s. Borda laranja saturada, glow pulsante e icone com scale animation. Estado ativo continua azul (indica modo waking ligado). Muito mais visivel de madrugada sem ser agressivo." },
@@ -551,7 +552,7 @@ function minSince(d,t){if(!d||!t)return null;return Math.max(0,Math.floor((new D
 function dateOffset(b,o){const d=new Date(b+"T12:00:00");d.setDate(d.getDate()+o);return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
 
 // ── CURIOSITIES + MILESTONES (loaded from curiosities.js) ──
-const {CURIOSITIES, MILESTONES} = window;
+const {CURIOSITIES, WEEKLY_CURIOSITIES, MILESTONES} = window;
 
 // Split sleep entry that crosses midnight into two entries
 function splitMidnight(entry){
@@ -890,17 +891,31 @@ function CuriosityCard({age,lang,tick}){
     return()=>{clearTimeout(t1);clearTimeout(t2)};
   },[vis]);
   if(!vis||!age)return null;
-  const dayNum=age.totalDays;const monthNum=age.totalMonths;
+  const dayNum=age.totalDays;const monthNum=age.months;const weekNum=age.totalWeeks;
   const colors=["#fbbf24","#34d399","#38bdf8","#a78bfa","#f472b6","#fb923c"];
   let txt=null,col=colors[0],tagLabel="",daysLeft=null;
+  // Priority 1: daily curiosities (days 1-30)
   if(dayNum>=1&&dayNum<=30){
     const c=CURIOSITIES[dayNum-1];if(!c)return null;
     txt=lang==="en"?c.en:c.pt;col=colors[(dayNum-1)%colors.length];
     tagLabel=lang==="en"?`Day ${dayNum}`:`Dia ${dayNum}`;daysLeft=30-dayNum;
-  }else if(monthNum>=2&&monthNum<=12){
-    const ms=MILESTONES.find(m=>m.m===monthNum);if(!ms)return null;
-    txt=lang==="en"?ms.en:ms.pt;col=colors[(monthNum-1)%colors.length];
-    tagLabel=lang==="en"?`${monthNum} months`:`${monthNum} meses`;
+  }
+  // Priority 2: monthly milestones (on the exact day of the month anniversary)
+  else if(monthNum>=2&&monthNum<=12&&age.days===0){
+    const ms=MILESTONES.find(m=>m.m===monthNum);
+    if(ms){
+      txt=lang==="en"?ms.en:ms.pt;col=colors[(monthNum-1)%colors.length];
+      tagLabel=lang==="en"?`${monthNum} months`:`${monthNum} meses`;
+    }
+  }
+  // Priority 3: weekly curiosities (weeks 5-52, i.e. days 31-364)
+  if(!txt&&weekNum>=5&&weekNum<=52){
+    const idx=weekNum-5;
+    const wc=WEEKLY_CURIOSITIES&&WEEKLY_CURIOSITIES[idx];
+    if(wc){
+      txt=lang==="en"?wc.en:wc.pt;col=colors[(weekNum-1)%colors.length];
+      tagLabel=lang==="en"?`Week ${weekNum}`:`Semana ${weekNum}`;
+    }
   }
   if(!txt)return null;
   return(<div style={{margin:"0 16px 12px",padding:"12px 14px",borderRadius:14,background:`linear-gradient(135deg,${col}08,${col}04)`,border:`1px solid ${col}15`,position:"relative",overflow:"hidden",animation:fading?"curiosityOut .5s ease forwards":"curiosityIn .5s ease"}}>
