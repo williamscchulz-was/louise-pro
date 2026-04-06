@@ -482,15 +482,10 @@ dbg('Firebase ready');
 </script>
 
 <script src="splash-icon.js"></script>
-
 <script src="who-growth.js"></script>
-
 <script src="curiosities.js"></script>
-
 <script src="wake-lock.js"></script>
-
 <script src="device-features.js"></script>
-
 <script src="routine-engine.js"></script>
 
 <script type="text/babel">
@@ -500,8 +495,48 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "8.4.7";
+const APP_VERSION = "8.4.9";
 const CHANGELOG = [
+  {
+    v: "8.4.9", date: "2026-04-06",
+    pt: {
+      title: "Wake up automático ao parar o bedtime",
+      bullets: [
+        '★ **Wake up automático.** Quando você para o timer do bedtime, o evento "Acordou" é criado automaticamente — com o resumo de quanto a Louise dormiu na noite (sono real, descontando despertares).',
+        'O botão **Wake up no Ring continua existindo** como rede de segurança, mas agora é raramente necessário.',
+        'Se você tocar o botão Wake up por hábito logo depois de parar o bedtime, o app detecta e **não duplica** — mostra um toast "Já acordou agora há pouco".'
+      ]
+    },
+    en: {
+      title: "Auto wake up when stopping bedtime",
+      bullets: [
+        '★ **Auto wake up.** When you stop the bedtime timer, the "Woke up" event is created automatically — with the summary of how much Louise slept that night (real sleep, minus wakings).',
+        'The **Wake up button on the Ring still exists** as a safety net, but is rarely needed now.',
+        'If you tap the Wake up button out of habit right after stopping the bedtime, the app detects it and **doesn\'t duplicate** — shows a toast "Already woke up just now".'
+      ]
+    }
+  },
+  {
+    v: "8.4.8", date: "2026-04-06",
+    pt: {
+      title: "Fix de wakings cruzando meia-noite + resumo no Wake up",
+      bullets: [
+        '★ **Bug crítico corrigido.** Quando um bedtime cruzava a meia-noite, os despertares eram **duplicados** nas duas metades, fazendo o tempo "acordada" aparecer contado em dobro nas Stats e atribuído ao dia errado.',
+        'A correção do **splitMidnight** atribui cada despertar à metade certa baseado no horário em que aconteceu — antes ou depois da meia-noite.',
+        '**Rede de proteção para dados antigos:** o app detecta despertares duplicados em registros pré-v8.4.8 e corrige automaticamente na leitura, sem mexer no Firestore.',
+        '★ **Resumo da noite no Wake up.** Quando você toca "Acordou" depois de um bedtime, o evento agora mostra **"9h57m de sono"** como detalhe — somando a noite completa (incluindo o pedaço de antes da meia-noite).'
+      ]
+    },
+    en: {
+      title: "Cross-midnight waking fix + sleep summary on Wake up",
+      bullets: [
+        '★ **Critical bug fixed.** When a bedtime crossed midnight, wakings were **duplicated** across both halves, making the "awake" time appear double in Stats and attributed to the wrong day.',
+        'The **splitMidnight** fix assigns each waking to the correct half based on when it actually happened — before or after midnight.',
+        '**Safety net for old data:** the app detects duplicated wakings in pre-v8.4.8 records and corrects them automatically on read, without modifying Firestore.',
+        '★ **Night summary on Wake up.** When you tap "Woke up" after a bedtime, the event now shows **"9h57m of sleep"** as detail — counting the complete night (including the pre-midnight portion).'
+      ]
+    }
+  },
   {
     v: "8.4.7", date: "2026-04-06",
     pt: {
@@ -869,6 +904,46 @@ function sumRealSleep(arr){return arr.filter(e=>(e.type==="sleep"||e.type==="nap
 function sumAwakeInSleep(arr){return arr.filter(e=>e.type==="sleep").reduce((s,e)=>s+awakeMinIn(e),0)}
 // Count total wakings across an array of sleep entries
 function countWakings(arr){return arr.filter(e=>e.type==="sleep"&&e.wakings).reduce((s,e)=>s+e.wakings.length,0)}
+// dedupeLegacyWakings: safety net for old data created before splitMidnight was fixed (pre-v8.4.8).
+// Old data has wakings duplicated in BOTH halves of cross-midnight sleeps (id + id_b).
+// Returns a NEW entries array with each waking attributed to the correct half only.
+// Does NOT mutate Firestore — runs on every read, idempotent.
+function dedupeLegacyWakings(entries){
+  if(!entries||!entries.length) return entries;
+  const baseGroups={};
+  for(const e of entries){
+    if(e.type!=="sleep"||!e.wakings||!e.wakings.length) continue;
+    const baseId=e.id.endsWith("_b")?e.id.slice(0,-2):e.id;
+    if(!baseGroups[baseId])baseGroups[baseId]=[];
+    baseGroups[baseId].push(e);
+  }
+  const fixedById={};
+  for(const baseId in baseGroups){
+    const pair=baseGroups[baseId];
+    if(pair.length!==2) continue;
+    const p1=pair.find(e=>!e.id.endsWith("_b"));
+    const p2=pair.find(e=>e.id.endsWith("_b"));
+    if(!p1||!p2) continue;
+    // Detect legacy bug: both halves have IDENTICAL wakings array
+    const sameWakings=p1.wakings.length===p2.wakings.length
+      &&p1.wakings.every((w,i)=>w.time===p2.wakings[i].time&&w.durationMin===p2.wakings[i].durationMin);
+    if(!sameWakings) continue;
+    // Re-split: wakings >= start time stay on p1, others move to p2
+    const [h,m]=(p1.time||"00:00").split(":").map(Number);
+    const startMin=h*60+m;
+    const wBefore=[],wAfter=[];
+    for(const w of p1.wakings){
+      const [wh,wm]=(w.time||"00:00").split(":").map(Number);
+      if(wh*60+wm>=startMin) wBefore.push(w);
+      else wAfter.push(w);
+    }
+    fixedById[p1.id]={...p1};
+    fixedById[p2.id]={...p2};
+    if(wBefore.length>0) fixedById[p1.id].wakings=wBefore; else delete fixedById[p1.id].wakings;
+    if(wAfter.length>0) fixedById[p2.id].wakings=wAfter; else delete fixedById[p2.id].wakings;
+  }
+  return entries.map(e=>fixedById[e.id]||e);
+}
 function dateOffset(b,o){const d=new Date(b+"T12:00:00");d.setDate(d.getDate()+o);return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
 
 // ── CURIOSITIES + MILESTONES (loaded from curiosities.js) ──
@@ -892,10 +967,27 @@ function splitMidnight(entry){
   const beforeMidnight=1440-startMin;
   const afterMidnight=entry.durationMin-beforeMidnight;
   const nextDay=dateOffset(entry.date,1);
-  return[
-    {...entry, durationMin:beforeMidnight, id:entry.id},
-    {...entry, date:nextDay, time:"00:00", durationMin:afterMidnight, id:entry.id+"_b"},
-  ];
+  // Split wakings: each waking belongs to ONE half based on its actual time.
+  // A waking is "before midnight" if its time-of-day is >= startMin (still on the start day).
+  // A waking is "after midnight" if its time-of-day is < startMin (rolled over to next day).
+  const wakings=entry.wakings||[];
+  const wakingsBefore=[];
+  const wakingsAfter=[];
+  for(const w of wakings){
+    const [wh,wm]=(w.time||"00:00").split(":").map(Number);
+    const wMin=wh*60+wm;
+    // If the waking time is greater or equal to start time, it's still on the start day
+    // (e.g., bedtime 20:42, waking 23:30 → before midnight)
+    // Otherwise it rolled over (e.g., bedtime 20:42, waking 04:28 → after midnight)
+    if(wMin>=startMin) wakingsBefore.push(w);
+    else wakingsAfter.push(w);
+  }
+  const part1={...entry, durationMin:beforeMidnight, id:entry.id};
+  const part2={...entry, date:nextDay, time:"00:00", durationMin:afterMidnight, id:entry.id+"_b"};
+  // Only attach wakings array if non-empty (keeps entries clean for old code paths)
+  if(wakingsBefore.length>0) part1.wakings=wakingsBefore; else delete part1.wakings;
+  if(wakingsAfter.length>0) part2.wakings=wakingsAfter; else delete part2.wakings;
+  return [part1, part2];
 }
 
 // ── ROUTINE ENGINE v2 (loaded from routine-engine.js) ──
@@ -1408,7 +1500,7 @@ function SleepBlock({entry,onDelete,onEdit,entries,isLive}){
   </div>);
 }
 
-function EntryRow({entry,onDelete,onEdit,napNum}){const[swipe,setSwipe]=useState(0);const[swiping,setSwiping]=useState(false);const startX=useRef(0);const cfg=TYPES[entry.type]||{label:entry.type,icon:"star",color:T.text,bg:T.glass};let detail="";if(entry.ml)detail=`${entry.ml} ml`;else if(entry.durationMin)detail=fmtDur(entry.durationMin);else if(entry.subtype)detail=L(entry.subtype)||entry.subtype;else if(entry.name)detail=entry.name+(entry.dose?` · ${entry.dose}`:"");else if(entry.value)detail=`${entry.value}°C`;else if(entry.weightKg||entry.lengthCm||entry.headCm){const parts=[];if(entry.weightKg)parts.push(`${entry.weightKg}kg`);if(entry.lengthCm)parts.push(`${entry.lengthCm}cm`);if(entry.headCm)parts.push(`${_lang==="en"?"Head":"Cab."} ${entry.headCm}cm`);detail=parts.join(" · ")}if(entry.type==="nursing"&&entry.side){if(entry.leftMin||entry.rightMin){detail=(detail?detail+" · ":"")+"L:"+String(entry.leftMin||0)+"m R:"+String(entry.rightMin||0)+"m"}else{detail=(detail?detail+" · ":"")+(L(entry.side)||entry.side)}};const napLabel=napNum?(_lang==="en"?["","1st","2nd","3rd","4th","5th","6th","7th","8th"][napNum]||napNum+"th":[""," 1a"," 2a"," 3a"," 4a"," 5a"," 6a"," 7a"," 8a"][napNum]||napNum+"a"):null;
+function EntryRow({entry,onDelete,onEdit,napNum}){const[swipe,setSwipe]=useState(0);const[swiping,setSwiping]=useState(false);const startX=useRef(0);const cfg=TYPES[entry.type]||{label:entry.type,icon:"star",color:T.text,bg:T.glass};let detail="";if(entry.type==="wakeup"&&entry.nightSleepMin)detail=`${fmtDur(entry.nightSleepMin)} ${_lang==="en"?"of sleep":"de sono"}`;else if(entry.ml)detail=`${entry.ml} ml`;else if(entry.durationMin)detail=fmtDur(entry.durationMin);else if(entry.subtype)detail=L(entry.subtype)||entry.subtype;else if(entry.name)detail=entry.name+(entry.dose?` · ${entry.dose}`:"");else if(entry.value)detail=`${entry.value}°C`;else if(entry.weightKg||entry.lengthCm||entry.headCm){const parts=[];if(entry.weightKg)parts.push(`${entry.weightKg}kg`);if(entry.lengthCm)parts.push(`${entry.lengthCm}cm`);if(entry.headCm)parts.push(`${_lang==="en"?"Head":"Cab."} ${entry.headCm}cm`);detail=parts.join(" · ")}if(entry.type==="nursing"&&entry.side){if(entry.leftMin||entry.rightMin){detail=(detail?detail+" · ":"")+"L:"+String(entry.leftMin||0)+"m R:"+String(entry.rightMin||0)+"m"}else{detail=(detail?detail+" · ":"")+(L(entry.side)||entry.side)}};const napLabel=napNum?(_lang==="en"?["","1st","2nd","3rd","4th","5th","6th","7th","8th"][napNum]||napNum+"th":[""," 1a"," 2a"," 3a"," 4a"," 5a"," 6a"," 7a"," 8a"][napNum]||napNum+"a"):null;
   const onTS=e=>{startX.current=e.touches[0].clientX;setSwiping(true)};
   const onTM=e=>{if(!swiping)return;const dx=startX.current-e.touches[0].clientX;setSwipe(Math.max(0,Math.min(70,dx)))};
   const onTE=()=>{setSwiping(false);if(swipe>40)setSwipe(70);else setSwipe(0)};
@@ -2268,7 +2360,7 @@ function App(){
   useEffect(()=>{
     let ready={e:false,p:false,m:false,a:false};
     const check=()=>{if(Object.values(ready).every(Boolean))setLoading(false)};
-    const u1=FB.subEntries(d=>{setEntries(d);ready.e=true;check()});
+    const u1=FB.subEntries(d=>{setEntries(dedupeLegacyWakings(d));ready.e=true;check()});
     const u2=FB.subProfile(d=>{if(d)setProfile(d);ready.p=true;check()});
     const u3=FB.subMeds(d=>{setSavedMeds(d||[{name:"Simeticona",dose:"3 gotas"},{name:"Floripa",dose:"6 gotas"},{name:"Vit. D",dose:"2 gotas"},{name:"Paracetamol",dose:"3 gotas"}]);ready.m=true;check()});
     const u4=FB.subTimer(d=>{setActiveTimer(d?.cleared?null:d);ready.a=true;check()});
@@ -2305,7 +2397,47 @@ function App(){
     setShowAdd(false);
   },[]);
   const deleteEntry=useCallback(async id=>{const entry=entries.find(e=>e.id===id);await FB.delEntry(id);showToast(`${TL(entry?.type)||""} ${L("removed")}`,async()=>{if(entry)await FB.addEntry(entry)})},[entries]);
-  const quickWakeup=useCallback(()=>addEntry({type:"wakeup",date:todayStr(),time:nowTime(),id:uid()}),[addEntry]);
+  // quickWakeup: creates a wakeup event. If a bedtime ended very recently (within last 30min),
+  // computes the total night sleep across both halves (cross-midnight) and stores it on the wakeup
+  // for display in the timeline.
+  // Anti-duplicate: if a wakeup was created in the last 60 seconds (likely auto-generated by stopTimer),
+  // skip — show a toast instead.
+  const quickWakeup=useCallback(()=>{
+    const now=Date.now();
+    // Check for very recent wakeup (auto-created by stopTimer or manual within 60s)
+    const recentWakeup=entries.find(e=>{
+      if(e.type!=="wakeup") return false;
+      const ms=new Date(`${e.date}T${e.time}`).getTime();
+      return now-ms<60000&&now-ms>=-5000;
+    });
+    if(recentWakeup){
+      showToast(_lang==="en"?"Already woke up just now":"Já acordou agora há pouco",null);
+      return;
+    }
+    const wakeup={type:"wakeup",date:todayStr(),time:nowTime(),id:uid()};
+    // Find the most recently ended sleep entries (could be 1 entry, or 2 if cross-midnight pair)
+    const recentSleeps=entries
+      .filter(e=>e.type==="sleep"&&e.durationMin)
+      .map(e=>{
+        const endMs=new Date(`${e.date}T${e.time}`).getTime()+e.durationMin*60000;
+        return{e,endMs};
+      })
+      .filter(x=>now-x.endMs<30*60000&&now-x.endMs>=-60000) // ended within last 30min (or about to end)
+      .sort((a,b)=>b.endMs-a.endMs);
+    if(recentSleeps.length>0){
+      // Find all entries that are part of the same logical night (same base id)
+      const top=recentSleeps[0].e;
+      const baseId=top.id.endsWith("_b")?top.id.slice(0,-2):top.id;
+      const pair=entries.filter(e=>e.type==="sleep"&&(e.id===baseId||e.id===baseId+"_b"));
+      if(pair.length>0){
+        const totalDur=pair.reduce((s,e)=>s+(e.durationMin||0),0);
+        const totalAwake=pair.reduce((s,e)=>s+awakeMinIn(e),0);
+        const realSleep=Math.max(0,totalDur-totalAwake);
+        wakeup.nightSleepMin=realSleep;
+      }
+    }
+    addEntry(wakeup);
+  },[addEntry,entries]);
   const duplicateLast=useCallback(()=>{if(!entries.length)return;const l=entries[0];addEntry({...l,id:uid(),date:todayStr(),time:nowTime(),_docId:undefined})},[entries,addEntry]);
   const startTimer=useCallback(async(type,side)=>{Haptic.heavy();const data={type,startTime:new Date().toISOString()};if(type==="nursing"){data.side=side||"left";data.leftMs=0;data.rightMs=0;data.sideStart=new Date().toISOString()}await FB.saveTimer(data);setShowAdd(false);setFormType(null)},[]);
   const switchSide=useCallback(async(newSide)=>{if(!activeTimer||activeTimer.type!=="nursing")return;const now=Date.now();const elapsed=activeTimer.paused?0:(now-new Date(activeTimer.sideStart).getTime());const updated={...activeTimer,side:newSide,sideStart:new Date().toISOString(),paused:false};if(activeTimer.side==="left")updated.leftMs=(activeTimer.leftMs||0)+elapsed;else updated.rightMs=(activeTimer.rightMs||0)+elapsed;await FB.saveTimer(updated)},[activeTimer]);
@@ -2348,6 +2480,14 @@ function App(){
     const entry={type:activeTimer.type,date:`${s.getFullYear()}-${String(s.getMonth()+1).padStart(2,"0")}-${String(s.getDate()).padStart(2,"0")}`,time:`${String(s.getHours()).padStart(2,"0")}:${String(s.getMinutes()).padStart(2,"0")}`,durationMin:mins,id:uid()};
     if(activeTimer.type==="sleep"&&wakings.length>0)entry.wakings=wakings;
     const parts=splitMidnight(entry);for(const p of parts) await FB.addEntry(p);await FB.saveTimer(null);
+    // Auto-create wakeup event when bedtime ends (not for naps).
+    // Includes total night sleep so the timeline shows it as "9h57m de sono".
+    if(activeTimer.type==="sleep"){
+      const totalAwake=wakings.reduce((s,w)=>s+(w.durationMin||0),0);
+      const realSleep=Math.max(0,mins-totalAwake);
+      const wakeup={type:"wakeup",date:todayStr(),time:nowTime(),id:uid(),nightSleepMin:realSleep,_autoFromBedtime:true};
+      await FB.addEntry(wakeup);
+    }
     const wakingNote=wakings.length>0?` (${wakings.length} ${_lang==="en"?"wake"+(wakings.length>1?"s":""):"despertar"+(wakings.length>1?"es":"")})`:"";
     showToast(`${mins}min ${_lang==="en"?"logged":"registrado"}${wakingNote}`,null)
   }},[activeTimer]);
