@@ -466,15 +466,28 @@ window.FB = {
   async saveTimer(t) { await db.collection('config').doc('active').set(t||{cleared:true}); },
   subInbox(cb) { return db.collection('config').doc('inbox').onSnapshot(s => cb(s.exists ? s.data() : null)); },
   async saveInbox(data) { await db.collection('config').doc('inbox').set(data); },
+  // Push notification token storage — keyed by token to dedupe across devices
+  async savePushToken(token, lang) {
+    if (!token) return;
+    await db.collection('config').doc('pushTokens').set({
+      [token]: { lang: lang || 'en', updatedAt: new Date().toISOString() }
+    }, { merge: true });
+  },
 };
 dbg('Firebase ready');
 } catch(e) { dbg('Firebase Error: '+e.message); throw e; }
 </script>
 
 <script src="splash-icon.js"></script>
+
 <script src="who-growth.js"></script>
+
 <script src="curiosities.js"></script>
+
 <script src="wake-lock.js"></script>
+
+<script src="device-features.js"></script>
+
 <script src="routine-engine.js"></script>
 
 <script type="text/babel">
@@ -484,8 +497,31 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "8.4.3";
+const APP_VERSION = "8.4.4";
 const CHANGELOG = [
+  {
+    v: "8.4.4", date: "2026-04-06",
+    pt: {
+      title: "Vibração e infraestrutura de notificações",
+      bullets: [
+        '★ **Vibração tátil** ao registrar eventos, iniciar e parar timers, e ativar Night Wake. Sutil mas confirma cada ação.',
+        'Novo toggle **Vibração** no Profile (ligado por padrão) — sua esposa pode desligar se preferir.',
+        '**Infraestrutura de push notifications** pronta: Service Worker registrado, permissão pedível pelo Profile, token salvo no Firestore. Nenhuma notificação é enviada ainda — só preparei o terreno pra quando decidirmos o que notificar.',
+        'Toggle **Notificações** no Profile mostra o estado atual: instalação necessária, permissão negada, ou pronto.',
+        'Novos arquivos: **device-features.js** (Haptic + PushNotifs helpers) e **sw.js** (Service Worker).'
+      ]
+    },
+    en: {
+      title: "Haptics and notification infrastructure",
+      bullets: [
+        '★ **Haptic feedback** when logging events, starting and stopping timers, and toggling Night Wake. Subtle but confirms each action.',
+        'New **Haptic feedback** toggle in Profile (enabled by default) — your partner can turn it off if they prefer.',
+        '**Push notification infrastructure** ready: Service Worker registered, permission requestable from Profile, token saved to Firestore. No notifications are sent yet — just laying the groundwork for when we decide what to notify.',
+        '**Notifications** toggle in Profile shows current state: install needed, permission denied, or ready.',
+        'New files: **device-features.js** (Haptic + PushNotifs helpers) and **sw.js** (Service Worker).'
+      ]
+    }
+  },
   {
     v: "8.4.3", date: "2026-04-06",
     pt: {
@@ -771,6 +807,10 @@ const {CURIOSITIES, WEEKLY_CURIOSITIES, MILESTONES} = window;
 // ── WAKE LOCK (loaded from wake-lock.js) ──
 // Keeps screen on during night wake / nursing timers.
 const {WakeLock} = window;
+
+// ── DEVICE FEATURES (loaded from device-features.js) ──
+// Haptic feedback (vibration) + push notification setup.
+const {Haptic, PushNotifs} = window;
 
 // Split sleep entry that crosses midnight into two entries
 function splitMidnight(entry){
@@ -1455,9 +1495,44 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
   const[birthHead,setBirthHead]=useState(String(profile.birthHead||""));
   const[langSel,setLangSel]=useState(profile.lang||"en");
   const[keepScreenOn,setKeepScreenOn]=useState(profile.keepScreenOn!==false);
+  const[hapticEnabled,setHapticEnabled]=useState(profile.hapticEnabled!==false);
+  const[pushEnabled,setPushEnabled]=useState(profile.pushEnabled===true);
+  const[pushPermission,setPushPermission]=useState(()=>typeof Notification!=="undefined"?Notification.permission:"unsupported");
+  const[pushBusy,setPushBusy]=useState(false);
+  const pushSupported=PushNotifs.isSupported();
+  const handlePushToggle=async()=>{
+    if(pushBusy)return;
+    if(!pushSupported){
+      // Show inline message — can't toggle
+      return;
+    }
+    if(pushEnabled){
+      // Disable: just flip the flag (token stays in Firestore for now, won't auto-clean)
+      setPushEnabled(false);
+      Haptic.light();
+      return;
+    }
+    // Enable: must request permission via user gesture
+    setPushBusy(true);
+    Haptic.medium();
+    try{
+      const granted=await PushNotifs.requestPermission();
+      setPushPermission(typeof Notification!=="undefined"?Notification.permission:"unsupported");
+      if(granted){
+        setPushEnabled(true);
+        // Try to fetch token (may return null if FCM SDK not loaded — that's OK)
+        const token=await PushNotifs.getToken();
+        if(token)await PushNotifs.saveToken(token);
+        Haptic.success();
+      }else{
+        Haptic.warning();
+      }
+    }catch(e){/* fail silent */}
+    setPushBusy(false);
+  };
   const fr=useRef(null);
   const handlePhoto=e=>{const f=e.target.files?.[0];if(!f)return;const rd=new FileReader();rd.onload=ev=>{const img=new Image();img.onload=()=>{const c=document.createElement("canvas"),mx=200;let w=img.width,h=img.height;if(w>h){h=(h/w)*mx;w=mx}else{w=(w/h)*mx;h=mx}c.width=w;c.height=h;c.getContext("2d").drawImage(img,0,0,w,h);setPhoto(c.toDataURL("image/jpeg",0.8))};img.src=ev.target.result};rd.readAsDataURL(f)};
-  const doSave=()=>{onSave({name:name.trim(),birthDate:birth,photo,mlGoal:parseInt(mlGoal)||0,birthWeight:parseFloat(birthWeight)||0,birthLength:parseFloat(birthLength)||0,birthHead:parseFloat(birthHead)||0,lang:langSel,keepScreenOn});onBack()};
+  const doSave=()=>{onSave({name:name.trim(),birthDate:birth,photo,mlGoal:parseInt(mlGoal)||0,birthWeight:parseFloat(birthWeight)||0,birthLength:parseFloat(birthLength)||0,birthHead:parseFloat(birthHead)||0,lang:langSel,keepScreenOn,hapticEnabled,pushEnabled});onBack()};
   const inp={width:"100%",padding:"14px 16px",background:"rgba(14,18,48,0.8)",border:`1px solid ${T.gB}`,borderRadius:12,color:T.text,fontSize:15,outline:"none"};
   return(<div style={{position:"fixed",inset:0,zIndex:200,maxWidth:480,margin:"0 auto",background:`radial-gradient(ellipse at 50% 0%,#10153d,${T.bg1} 65%)`,overflowY:"auto",overflowX:"hidden",overscrollBehavior:"contain",WebkitOverflowScrolling:"touch",paddingTop:"env(safe-area-inset-top)",paddingBottom:"calc(40px + env(safe-area-inset-bottom))"}}>
     <div style={{display:"flex",alignItems:"center",gap:14,padding:"16px 20px"}}><button onClick={onBack} style={{width:36,height:36,borderRadius:10,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="back" size={18} color={T.sub}/></button><span style={{fontSize:17,fontWeight:700}}>{L("profile")}</span></div>
@@ -1477,6 +1552,7 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
         </Fld>
       </div>
       <div style={{background:"rgba(22,28,60,0.4)",borderRadius:16,border:`1px solid ${T.gB}`,padding:16,marginBottom:12}}>
+        {/* Wake Lock toggle */}
         <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:12}}>
           <div style={{flex:1}}>
             <div style={{fontSize:13,fontWeight:700,marginBottom:4}}>{langSel==="en"?"Keep screen on":"Manter tela ligada"}</div>
@@ -1484,6 +1560,35 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
           </div>
           <button onClick={()=>setKeepScreenOn(!keepScreenOn)} style={{position:"relative",width:48,height:28,borderRadius:14,background:keepScreenOn?T.accent:"rgba(14,18,48,0.8)",border:`1px solid ${keepScreenOn?T.accent:T.gB}`,transition:"all .2s",flexShrink:0,cursor:"pointer",padding:0}}>
             <div style={{position:"absolute",top:2,left:keepScreenOn?22:2,width:22,height:22,borderRadius:"50%",background:"#fff",transition:"left .2s",boxShadow:"0 1px 3px rgba(0,0,0,0.4)"}}/>
+          </button>
+        </div>
+        {/* Separator */}
+        <div style={{height:1,background:"rgba(90,100,180,0.12)",margin:"14px 0"}}/>
+        {/* Haptic toggle */}
+        <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:12}}>
+          <div style={{flex:1}}>
+            <div style={{fontSize:13,fontWeight:700,marginBottom:4}}>{langSel==="en"?"Haptic feedback":"Vibração"}</div>
+            <div style={{fontSize:11,color:T.dim,lineHeight:1.4}}>{langSel==="en"?"Subtle vibration when logging events":"Vibração sutil ao registrar eventos"}</div>
+          </div>
+          <button onClick={()=>{setHapticEnabled(!hapticEnabled);if(!hapticEnabled){Haptic.setEnabled(true);Haptic.medium()}else{Haptic.setEnabled(false)}}} style={{position:"relative",width:48,height:28,borderRadius:14,background:hapticEnabled?T.accent:"rgba(14,18,48,0.8)",border:`1px solid ${hapticEnabled?T.accent:T.gB}`,transition:"all .2s",flexShrink:0,cursor:"pointer",padding:0}}>
+            <div style={{position:"absolute",top:2,left:hapticEnabled?22:2,width:22,height:22,borderRadius:"50%",background:"#fff",transition:"left .2s",boxShadow:"0 1px 3px rgba(0,0,0,0.4)"}}/>
+          </button>
+        </div>
+        {/* Separator */}
+        <div style={{height:1,background:"rgba(90,100,180,0.12)",margin:"14px 0"}}/>
+        {/* Push notifications toggle */}
+        <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:12}}>
+          <div style={{flex:1}}>
+            <div style={{fontSize:13,fontWeight:700,marginBottom:4,color:pushSupported?T.text:T.dim}}>{langSel==="en"?"Notifications":"Notificações"}</div>
+            <div style={{fontSize:11,color:T.dim,lineHeight:1.4}}>
+              {!pushSupported?(langSel==="en"?"Install to home screen first (iOS 16.4+)":"Instale na tela inicial primeiro (iOS 16.4+)"):
+               pushPermission==="denied"?(langSel==="en"?"Permission denied — enable in iOS Settings":"Permissão negada — ative nos Ajustes do iOS"):
+               pushEnabled?(langSel==="en"?"System ready — no notifications sent yet":"Sistema pronto — nenhuma notificação enviada ainda"):
+               (langSel==="en"?"Tap to enable when available":"Toque para ativar quando disponível")}
+            </div>
+          </div>
+          <button onClick={handlePushToggle} disabled={!pushSupported||pushBusy||pushPermission==="denied"} style={{position:"relative",width:48,height:28,borderRadius:14,background:pushEnabled&&pushSupported?T.accent:"rgba(14,18,48,0.8)",border:`1px solid ${pushEnabled&&pushSupported?T.accent:T.gB}`,transition:"all .2s",flexShrink:0,cursor:pushSupported&&!pushBusy&&pushPermission!=="denied"?"pointer":"not-allowed",padding:0,opacity:!pushSupported||pushPermission==="denied"?0.4:1}}>
+            <div style={{position:"absolute",top:2,left:pushEnabled&&pushSupported?22:2,width:22,height:22,borderRadius:"50%",background:"#fff",transition:"left .2s",boxShadow:"0 1px 3px rgba(0,0,0,0.4)"}}/>
           </button>
         </div>
       </div>
@@ -1978,6 +2083,23 @@ function App(){
   },[shouldLock]);
   useEffect(()=>()=>{WakeLock.release()},[]);
 
+  // Haptic feedback: sync enabled state from profile
+  useEffect(()=>{
+    Haptic.setEnabled(profile.hapticEnabled!==false);
+  },[profile.hapticEnabled]);
+
+  // Push Notifications: register Service Worker on mount (if supported)
+  // Does NOT request permission — that requires user gesture from Profile toggle
+  useEffect(()=>{
+    if(PushNotifs.isSupported()){
+      PushNotifs.registerServiceWorker().catch(()=>{/* fail silent */});
+    }
+    // Inject Firestore token saver so device-features.js stays decoupled
+    PushNotifs.setTokenSaver(async(token)=>{
+      try{await FB.savePushToken(token,profile.lang||"en")}catch(e){}
+    });
+  },[]);
+
   // Firebase real-time subscriptions
   useEffect(()=>{
     let ready={e:false,p:false,m:false,a:false};
@@ -1993,7 +2115,7 @@ function App(){
   const showToast=(msg,fn)=>{undoRef.current=fn;setToast(msg)};
   const handleUndo=()=>{if(undoRef.current)undoRef.current();setToast(null)};
   const addEntry=useCallback(async e=>{
-    if(navigator.vibrate)navigator.vibrate(8);
+    Haptic.medium();
     // If night wake is active, tag this event as part of the waking
     if(activeTimer&&activeTimer.type==="sleep"&&activeTimer.nightWake&&(e.type==="bottle"||e.type==="nursing"||e.type==="diaper")){
       e.nightWake=activeTimer.startTime; // link to parent sleep via its startTime
@@ -2021,7 +2143,7 @@ function App(){
   const deleteEntry=useCallback(async id=>{const entry=entries.find(e=>e.id===id);await FB.delEntry(id);showToast(`${TL(entry?.type)||""} ${L("removed")}`,async()=>{if(entry)await FB.addEntry(entry)})},[entries]);
   const quickWakeup=useCallback(()=>addEntry({type:"wakeup",date:todayStr(),time:nowTime(),id:uid()}),[addEntry]);
   const duplicateLast=useCallback(()=>{if(!entries.length)return;const l=entries[0];addEntry({...l,id:uid(),date:todayStr(),time:nowTime(),_docId:undefined})},[entries,addEntry]);
-  const startTimer=useCallback(async(type,side)=>{const data={type,startTime:new Date().toISOString()};if(type==="nursing"){data.side=side||"left";data.leftMs=0;data.rightMs=0;data.sideStart=new Date().toISOString()}await FB.saveTimer(data);setShowAdd(false);setFormType(null)},[]);
+  const startTimer=useCallback(async(type,side)=>{Haptic.heavy();const data={type,startTime:new Date().toISOString()};if(type==="nursing"){data.side=side||"left";data.leftMs=0;data.rightMs=0;data.sideStart=new Date().toISOString()}await FB.saveTimer(data);setShowAdd(false);setFormType(null)},[]);
   const switchSide=useCallback(async(newSide)=>{if(!activeTimer||activeTimer.type!=="nursing")return;const now=Date.now();const elapsed=activeTimer.paused?0:(now-new Date(activeTimer.sideStart).getTime());const updated={...activeTimer,side:newSide,sideStart:new Date().toISOString(),paused:false};if(activeTimer.side==="left")updated.leftMs=(activeTimer.leftMs||0)+elapsed;else updated.rightMs=(activeTimer.rightMs||0)+elapsed;await FB.saveTimer(updated)},[activeTimer]);
   const pauseNursing=useCallback(async()=>{if(!activeTimer||activeTimer.type!=="nursing")return;if(activeTimer.paused){await FB.saveTimer({...activeTimer,paused:false,sideStart:new Date().toISOString()})}else{const now=Date.now();const elapsed=now-new Date(activeTimer.sideStart).getTime();const updated={...activeTimer,paused:true};if(activeTimer.side==="left")updated.leftMs=(activeTimer.leftMs||0)+elapsed;else updated.rightMs=(activeTimer.rightMs||0)+elapsed;await FB.saveTimer(updated)}},[activeTimer]);
   const toggleNightWake=useCallback(async()=>{
@@ -2037,14 +2159,14 @@ function App(){
         events:nw.events||[]
       }];
       await FB.saveTimer({...activeTimer,nightWake:null,wakings});
-      if(navigator.vibrate)navigator.vibrate(8);
+      Haptic.light();
     }else{
       // Starting a night wake
       await FB.saveTimer({...activeTimer,nightWake:{startTime:new Date().toISOString(),events:[]}});
-      if(navigator.vibrate)navigator.vibrate([50,30,50]);
+      Haptic.warning();
     }
   },[activeTimer]);
-  const stopTimer=useCallback(async()=>{if(!activeTimer)return;const s=new Date(activeTimer.startTime);if(activeTimer.type==="nursing"){const now=Date.now();const elapsed=activeTimer.paused?0:(now-new Date(activeTimer.sideStart).getTime());let lMs=(activeTimer.leftMs||0),rMs=(activeTimer.rightMs||0);if(!activeTimer.paused){if(activeTimer.side==="left")lMs+=elapsed;else rMs+=elapsed}const totalMin=Math.max(1,Math.round((lMs+rMs)/60000));const lMin=Math.round(lMs/60000),rMin=Math.round(rMs/60000);const side=lMs>0&&rMs>0?"both":(lMs>0?"left":"right");const entry={type:"nursing",date:`${s.getFullYear()}-${String(s.getMonth()+1).padStart(2,"0")}-${String(s.getDate()).padStart(2,"0")}`,time:`${String(s.getHours()).padStart(2,"0")}:${String(s.getMinutes()).padStart(2,"0")}`,durationMin:totalMin,side,leftMin:lMin,rightMin:rMin,id:uid()};await FB.addEntry(entry);await FB.saveTimer(null);showToast(`${_lang==="en"?"Nursing":"Amam."} ${totalMin}min (L:${lMin} R:${rMin})`,null)}else{
+  const stopTimer=useCallback(async()=>{if(!activeTimer)return;Haptic.heavy();const s=new Date(activeTimer.startTime);if(activeTimer.type==="nursing"){const now=Date.now();const elapsed=activeTimer.paused?0:(now-new Date(activeTimer.sideStart).getTime());let lMs=(activeTimer.leftMs||0),rMs=(activeTimer.rightMs||0);if(!activeTimer.paused){if(activeTimer.side==="left")lMs+=elapsed;else rMs+=elapsed}const totalMin=Math.max(1,Math.round((lMs+rMs)/60000));const lMin=Math.round(lMs/60000),rMin=Math.round(rMs/60000);const side=lMs>0&&rMs>0?"both":(lMs>0?"left":"right");const entry={type:"nursing",date:`${s.getFullYear()}-${String(s.getMonth()+1).padStart(2,"0")}-${String(s.getDate()).padStart(2,"0")}`,time:`${String(s.getHours()).padStart(2,"0")}:${String(s.getMinutes()).padStart(2,"0")}`,durationMin:totalMin,side,leftMin:lMin,rightMin:rMin,id:uid()};await FB.addEntry(entry);await FB.saveTimer(null);showToast(`${_lang==="en"?"Nursing":"Amam."} ${totalMin}min (L:${lMin} R:${rMin})`,null)}else{
     // Sleep/nap stop — if sleep has wakings, persist them on the entry
     let wakings=activeTimer.wakings||[];
     // If there's an unclosed nightWake, close it now
