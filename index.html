@@ -473,6 +473,7 @@ dbg('Firebase ready');
 <script src="splash-icon.js"></script>
 <script src="who-growth.js"></script>
 <script src="curiosities.js"></script>
+<script src="wake-lock.js"></script>
 <script src="routine-engine.js"></script>
 
 <script type="text/babel">
@@ -482,8 +483,9 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "8.3.0";
+const APP_VERSION = "8.4.0";
 const CHANGELOG = [
+  { v: "8.4.0", date: "2026-04-06", changes: "Wake Lock: tela do iPhone fica acesa durante night wake e nursing timer (uso da Wake Lock API). Toggle nas configuracoes (Profile > Manter tela ligada), default ON. Auto-libera quando timer termina ou quando sai do app, re-adquire ao voltar. Falha silenciosa em iOS <16.4 ou modo economia. Resolve frustracao de tela bloqueando de madrugada com maos ocupadas." },
   { v: "8.3.0", date: "2026-04-05", changes: "Curiosities massivamente expandido: 30 curiosidades diarias (dias 1-30, reescritas com mais profundidade cientifica) + 48 NOVAS curiosidades semanais (semanas 5-52, cobrindo do mes 2 ao mes 12) + 11 milestones mensais revisados. Total: 89 entradas bilingues baseadas em AAP, OMS, NHS, Mayo Clinic, Harvard, CDC, Zero to Three, Stanford. Corrige bug onde milestones mensais nao apareciam (age.totalMonths era undefined, deveria ser age.months). Novo export: window.WEEKLY_CURIOSITIES. curiosities.js 12KB -> 54KB." },
   { v: "8.2.0", date: "2026-04-05", changes: "Refactor: extraidos 3 arquivos estaticos do index.html para reduzir tamanho e facilitar manutencao. splash-icon.js (27KB base64 do icone da splash), who-growth.js (tabelas LMS OMS + funcoes de percentil), curiosities.js (30 curiosidades diarias + 11 milestones mensais). index.html reduzido de 220KB para 180KB (-18%). Zero mudanca visual ou funcional. Engine intocado. Todos os novos arquivos precisam ser subidos junto no deploy." },
   { v: "8.1.3", date: "2026-04-05", changes: "Night Wake mode: quick buttons reduzidos para apenas Bottle + Diaper (removido Nurse). De madrugada amamentacao nao se aplica (so mamadeira), entao a interface fica mais limpa e com touch targets maiores. Os 2 botoes dividem a largura total (flex:1 cada), ficando maiores e mais faceis de acertar com olhos meio fechados." },
@@ -553,6 +555,10 @@ function dateOffset(b,o){const d=new Date(b+"T12:00:00");d.setDate(d.getDate()+o
 
 // ── CURIOSITIES + MILESTONES (loaded from curiosities.js) ──
 const {CURIOSITIES, WEEKLY_CURIOSITIES, MILESTONES} = window;
+
+// ── WAKE LOCK (loaded from wake-lock.js) ──
+// Keeps screen on during night wake / nursing timers.
+const {WakeLock} = window;
 
 // Split sleep entry that crosses midnight into two entries
 function splitMidnight(entry){
@@ -686,7 +692,7 @@ function L(key){return I[key]?.[_lang]||I[key]?.en||key}
 function TL(type){return typeLabel(type,_lang)}
 
 // ── UI COMPONENTS ──
-function Ring({activeTimer,napSug,tick,recentEvents,lang,showOrbit}){
+function Ring({activeTimer,napSug,tick,recentEvents,lang,showOrbit,screenLockActive}){
   const[tip,setTip]=useState(null);
   useEffect(()=>{if(tip!==null){const t=setTimeout(()=>setTip(null),3000);return()=>clearTimeout(t)}},[tip]);
   const sz=340,cx=sz/2,cy=sz/2,R=148;
@@ -807,7 +813,7 @@ function Ring({activeTimer,napSug,tick,recentEvents,lang,showOrbit}){
       </div>)})}
       {anchorSun&&<div style={{position:"absolute",left:anchorSun.x-20,top:anchorSun.y-20,display:"flex",flexDirection:"column",alignItems:"center",zIndex:1,pointerEvents:"none"}}><div style={{width:40,height:40,borderRadius:"50%",background:"radial-gradient(circle at 40% 30%,rgba(251,191,36,0.18),rgba(251,146,60,0.06))",border:"2px solid rgba(251,191,36,0.35)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 16px rgba(251,191,36,0.15)"}}><Icon name="sun" size={18} color="#fbbf24"/></div><span style={{fontSize:9,fontWeight:700,color:"#fbbf24",marginTop:2,textShadow:"0 1px 4px rgba(0,0,0,0.8)"}}>{anchorSun.time}</span></div>}
       {anchorMoon&&<div style={{position:"absolute",left:anchorMoon.x-20,top:anchorMoon.y-20,display:"flex",flexDirection:"column",alignItems:"center",zIndex:1,pointerEvents:"none"}}><div style={{width:40,height:40,borderRadius:"50%",background:"radial-gradient(circle at 40% 30%,rgba(167,139,250,0.18),rgba(139,124,246,0.06))",border:"2px solid rgba(167,139,250,0.35)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 16px rgba(167,139,250,0.15)"}}><Icon name="moon" size={18} color="#a78bfa"/></div><span style={{fontSize:9,fontWeight:700,color:"#a78bfa",marginTop:2,textShadow:"0 1px 4px rgba(0,0,0,0.8)"}}>{anchorMoon.time}</span></div>}
-      <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}><span style={{fontSize:14,color:isBedtime?"#c084fc":T.sub,fontWeight:500,letterSpacing:1.5,display:"flex",alignItems:"center",gap:5}}>{isBedtime&&<Icon name="moon" size={14} color="#c084fc"/>}{sub}</span><span style={{fontSize:52,fontWeight:800,letterSpacing:-2,marginTop:4,background:hasProgress?`linear-gradient(135deg,${col2},${col1})`:`linear-gradient(135deg,${T.text},${T.sub})`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>{lbl}</span>{napSug&&napSug.predictedTime&&!activeTimer&&<span style={{fontSize:10,fontWeight:600,color:col1,opacity:0.7,marginTop:2}}>{lang==="en"?"Nap":"Nap"} {napSug.napPos||""} ~{napSug.predictedTime}</span>}</div>
+      <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}><span style={{fontSize:14,color:isBedtime?"#c084fc":T.sub,fontWeight:500,letterSpacing:1.5,display:"flex",alignItems:"center",gap:5}}>{isBedtime&&<Icon name="moon" size={14} color="#c084fc"/>}{sub}{screenLockActive&&<span title={lang==="en"?"Screen on":"Tela ligada"} style={{display:"inline-flex",alignItems:"center",gap:3,marginLeft:4,padding:"2px 6px",borderRadius:8,background:"rgba(251,191,36,0.12)",border:"1px solid rgba(251,191,36,0.3)"}}><span style={{width:5,height:5,borderRadius:"50%",background:"#fbbf24",boxShadow:"0 0 6px #fbbf24",animation:"pulse 1.5s ease-in-out infinite"}}/><span style={{fontSize:8,fontWeight:700,color:"#fbbf24",letterSpacing:0.5,textTransform:"uppercase"}}>{lang==="en"?"On":"On"}</span></span>}</span><span style={{fontSize:52,fontWeight:800,letterSpacing:-2,marginTop:4,background:hasProgress?`linear-gradient(135deg,${col2},${col1})`:`linear-gradient(135deg,${T.text},${T.sub})`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>{lbl}</span>{napSug&&napSug.predictedTime&&!activeTimer&&<span style={{fontSize:10,fontWeight:600,color:col1,opacity:0.7,marginTop:2}}>{lang==="en"?"Nap":"Nap"} {napSug.napPos||""} ~{napSug.predictedTime}</span>}</div>
       {tip!==null&&<div onClick={()=>setTip(null)} style={{position:"absolute",inset:0,zIndex:1}}/>}
       {showOrbit&&<div key={Date.now()} style={{position:"absolute",left:167,top:167,width:6,height:6,zIndex:10,pointerEvents:"none",animation:"orbitComet 1.2s cubic-bezier(0.25,0.1,0.25,1) forwards"}}><div style={{width:6,height:6,borderRadius:"50%",background:"#fff",boxShadow:"0 0 8px #fff, 0 0 20px rgba(139,124,246,0.6), -8px 0 12px rgba(139,124,246,0.3), -16px 0 8px rgba(139,124,246,0.15)",transform:"translateY(-148px)"}}/></div>}
     </div>
@@ -1193,9 +1199,10 @@ function ProfilePage({profile,onSave,onBack,onGrowth}){
   const[birthLength,setBirthLength]=useState(String(profile.birthLength||""));
   const[birthHead,setBirthHead]=useState(String(profile.birthHead||""));
   const[langSel,setLangSel]=useState(profile.lang||"en");
+  const[keepScreenOn,setKeepScreenOn]=useState(profile.keepScreenOn!==false);
   const fr=useRef(null);
   const handlePhoto=e=>{const f=e.target.files?.[0];if(!f)return;const rd=new FileReader();rd.onload=ev=>{const img=new Image();img.onload=()=>{const c=document.createElement("canvas"),mx=200;let w=img.width,h=img.height;if(w>h){h=(h/w)*mx;w=mx}else{w=(w/h)*mx;h=mx}c.width=w;c.height=h;c.getContext("2d").drawImage(img,0,0,w,h);setPhoto(c.toDataURL("image/jpeg",0.8))};img.src=ev.target.result};rd.readAsDataURL(f)};
-  const doSave=()=>{onSave({name:name.trim(),birthDate:birth,photo,mlGoal:parseInt(mlGoal)||0,birthWeight:parseFloat(birthWeight)||0,birthLength:parseFloat(birthLength)||0,birthHead:parseFloat(birthHead)||0,lang:langSel});onBack()};
+  const doSave=()=>{onSave({name:name.trim(),birthDate:birth,photo,mlGoal:parseInt(mlGoal)||0,birthWeight:parseFloat(birthWeight)||0,birthLength:parseFloat(birthLength)||0,birthHead:parseFloat(birthHead)||0,lang:langSel,keepScreenOn});onBack()};
   const inp={width:"100%",padding:"14px 16px",background:"rgba(14,18,48,0.8)",border:`1px solid ${T.gB}`,borderRadius:12,color:T.text,fontSize:15,outline:"none"};
   return(<div style={{position:"fixed",inset:0,zIndex:200,maxWidth:480,margin:"0 auto",background:`radial-gradient(ellipse at 50% 0%,#10153d,${T.bg1} 65%)`,overflowY:"auto",overflowX:"hidden",overscrollBehavior:"contain",WebkitOverflowScrolling:"touch",paddingTop:"env(safe-area-inset-top)",paddingBottom:"calc(40px + env(safe-area-inset-bottom))"}}>
     <div style={{display:"flex",alignItems:"center",gap:14,padding:"16px 20px"}}><button onClick={onBack} style={{width:36,height:36,borderRadius:10,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="back" size={18} color={T.sub}/></button><span style={{fontSize:17,fontWeight:700}}>{L("profile")}</span></div>
@@ -1213,6 +1220,17 @@ function ProfilePage({profile,onSave,onBack,onGrowth}){
             <button onClick={()=>setLangSel("pt")} style={{flex:1,padding:"10px 0",borderRadius:8,fontSize:13,fontWeight:700,background:langSel==="pt"?T.accent:"transparent",color:langSel==="pt"?"#fff":T.sub}}>Português</button>
           </div>
         </Fld>
+      </div>
+      <div style={{background:"rgba(22,28,60,0.4)",borderRadius:16,border:`1px solid ${T.gB}`,padding:16,marginBottom:12}}>
+        <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:12}}>
+          <div style={{flex:1}}>
+            <div style={{fontSize:13,fontWeight:700,marginBottom:4}}>{langSel==="en"?"Keep screen on":"Manter tela ligada"}</div>
+            <div style={{fontSize:11,color:T.dim,lineHeight:1.4}}>{langSel==="en"?"During night wake & nursing timers":"Durante night wake e amamentação"}</div>
+          </div>
+          <button onClick={()=>setKeepScreenOn(!keepScreenOn)} style={{position:"relative",width:48,height:28,borderRadius:14,background:keepScreenOn?T.accent:"rgba(14,18,48,0.8)",border:`1px solid ${keepScreenOn?T.accent:T.gB}`,transition:"all .2s",flexShrink:0,cursor:"pointer",padding:0}}>
+            <div style={{position:"absolute",top:2,left:keepScreenOn?22:2,width:22,height:22,borderRadius:"50%",background:"#fff",transition:"left .2s",boxShadow:"0 1px 3px rgba(0,0,0,0.4)"}}/>
+          </button>
+        </div>
       </div>
       <div style={{background:"rgba(22,28,60,0.4)",borderRadius:16,border:`1px solid ${T.gB}`,padding:16,marginBottom:16}}>
         <div style={{fontSize:10,fontWeight:700,color:T.dim,marginBottom:10,textTransform:"uppercase",letterSpacing:1.2}}>{L("birthData")}</div>
@@ -1514,6 +1532,17 @@ function App(){
 
   useEffect(()=>{const iv=activeTimer?1000:30000;const t=setInterval(()=>setTick(k=>k+1),iv);return()=>clearInterval(t)},[activeTimer]);
 
+  // Wake Lock: keep screen on during night wake or nursing
+  const wakeLockEnabled=profile.keepScreenOn!==false;
+  const shouldLock=wakeLockEnabled&&activeTimer&&(activeTimer.type==="nursing"||(activeTimer.type==="sleep"&&activeTimer.nightWake));
+  useEffect(()=>{
+    if(shouldLock){WakeLock.request()}else{WakeLock.release()}
+    const onVis=()=>{if(document.visibilityState==="visible"&&shouldLock)WakeLock.request()};
+    document.addEventListener("visibilitychange",onVis);
+    return()=>{document.removeEventListener("visibilitychange",onVis)};
+  },[shouldLock]);
+  useEffect(()=>()=>{WakeLock.release()},[]);
+
   // Firebase real-time subscriptions
   useEffect(()=>{
     let ready={e:false,p:false,m:false,a:false};
@@ -1778,7 +1807,7 @@ function App(){
           <button onClick={()=>setShowInbox(true)} style={{position:"relative",width:34,height:34,borderRadius:11,background:inboxUnreadCount>0?"rgba(139,124,246,0.12)":"rgba(22,28,60,0.6)",border:`1px solid ${inboxUnreadCount>0?"rgba(139,124,246,0.3)":"rgba(139,124,246,0.08)"}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><div style={{animation:inboxUnreadCount>0?"bellWiggle 2.5s ease-in-out infinite":"none",transformOrigin:"top center",display:"flex"}}><Icon name="bell" size={17} color={inboxUnreadCount>0?T.accent:T.dim}/></div>{inboxUnreadCount>0&&<div style={{position:"absolute",top:-5,right:-5,minWidth:18,height:18,borderRadius:9,background:"linear-gradient(135deg,#f87171,#dc2626)",color:"#fff",fontSize:10,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 5px",border:`2px solid ${T.bg1}`,boxShadow:"0 0 10px rgba(239,68,68,0.6)"}}>{inboxUnreadCount}</div>}</button>
         </div>
         <CuriosityCard age={age} lang={lang} tick={tick}/>
-        <div style={{padding:"4px 0 0"}}><Ring activeTimer={activeTimer} napSug={napSug} tick={tick} recentEvents={cycleE} lang={lang} showOrbit={showOrbit}/></div>
+        <div style={{padding:"4px 0 0"}}><Ring activeTimer={activeTimer} napSug={napSug} tick={tick} recentEvents={cycleE} lang={lang} showOrbit={showOrbit} screenLockActive={shouldLock}/></div>
         {activeTimer&&activeTimer.type==="sleep"&&<div style={{padding:"0 20px",marginBottom:10}}><button onClick={toggleNightWake} style={{width:"100%",padding:"12px 16px",borderRadius:14,background:activeTimer.nightWake?"linear-gradient(135deg,rgba(96,165,250,0.2),rgba(167,139,250,0.15))":"linear-gradient(135deg,rgba(251,146,60,0.18),rgba(251,191,36,0.12))",border:`1px solid ${activeTimer.nightWake?"rgba(96,165,250,0.6)":"rgba(251,146,60,0.55)"}`,display:"flex",alignItems:"center",gap:12,boxShadow:activeTimer.nightWake?"0 0 20px rgba(96,165,250,0.2)":"0 0 20px rgba(251,146,60,0.15), 0 4px 16px rgba(0,0,0,0.3)",transition:"all 0.3s",animation:activeTimer.nightWake?"none":"nwPulseAmber 2.4s ease-in-out infinite"}}><div style={{width:36,height:36,borderRadius:12,background:activeTimer.nightWake?"rgba(96,165,250,0.3)":"rgba(251,146,60,0.25)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:activeTimer.nightWake?"none":"0 0 14px rgba(251,146,60,0.3)",animation:activeTimer.nightWake?"pulse 2s ease-in-out infinite":"nwIconPulseAmber 2.4s ease-in-out infinite"}}><Icon name="sun" size={18} color={activeTimer.nightWake?"#60a5fa":"#fbbf24"}/></div><div style={{flex:1,textAlign:"left"}}><div style={{fontSize:13,fontWeight:700,color:activeTimer.nightWake?"#60a5fa":"#fbbf24"}}>{_lang==="en"?"Night Wake":"Despertar"}{activeTimer.nightWake&&` · ${fmtDur(Math.max(1,Math.floor((Date.now()-new Date(activeTimer.nightWake.startTime).getTime())/60000)))}`}</div><div style={{fontSize:9,color:activeTimer.nightWake?T.sub:"rgba(251,191,36,0.75)",marginTop:1}}>{activeTimer.nightWake?(_lang==="en"?"Tap to go back to sleep":"Toque para voltar a dormir"):(_lang==="en"?"Tap if Louise woke up":"Toque se Louise acordou")}</div></div>{activeTimer.nightWake&&<div style={{width:10,height:10,borderRadius:"50%",background:"#60a5fa",boxShadow:"0 0 8px #60a5fa",animation:"pulse 1.5s ease-in-out infinite"}}/>}</button></div>}
         <div style={{display:"flex",gap:6,padding:"0 20px",marginBottom:12}}>{(!activeTimer||(activeTimer.type==="sleep"&&activeTimer.nightWake))&&<><button onClick={()=>{setFormType("bottle");setShowAdd(false)}} style={{flex:1,padding:"12px 0 8px",borderRadius:14,background:activeTimer?.nightWake?`${T.green}16`:`${T.green}08`,border:`1px solid ${activeTimer?.nightWake?`${T.green}40`:`${T.green}14`}`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="bottle" size={18} color={T.green}/><span style={{fontSize:9,fontWeight:700,color:T.green}}>{_lang==="en"?"Bottle":"Mamad."}</span></button>{!activeTimer?.nightWake&&<button onClick={()=>{if(activeTimer?.nightWake){setFormType("nursing");setShowAdd(false)}else{startTimer("nursing",nextNursingSide)}}} style={{flex:1,padding:"12px 0 8px",borderRadius:14,background:activeTimer?.nightWake?`${T.blue}16`:`${T.blue}08`,border:`1px solid ${activeTimer?.nightWake?`${T.blue}40`:`${T.blue}14`}`,display:"flex",flexDirection:"column",alignItems:"center",gap:5,position:"relative"}}><Icon name="breast" size={18} color={T.blue}/><span style={{fontSize:9,fontWeight:700,color:T.blue}}>{_lang==="en"?"Nurse":"Amam."}</span>{lastNursingSide&&<span style={{position:"absolute",top:4,right:6,fontSize:7,fontWeight:800,color:T.blue,opacity:0.5}}>{nextNursingSide==="left"?"L→":"R→"}</span>}</button>}{!activeTimer&&<button onClick={()=>startTimer("nap")} style={{flex:1,padding:"12px 0 8px",borderRadius:14,background:`${T.accent}08`,border:`1px solid ${T.accent}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="cloud" size={18} color={T.accent}/><span style={{fontSize:9,fontWeight:700,color:T.accent}}>{_lang==="en"?"Nap":"Soneca"}</span></button>}{activeTimer?.nightWake&&<button onClick={()=>{setFormType("diaper");setShowAdd(false)}} style={{flex:1,padding:"12px 0 8px",borderRadius:14,background:`${T.pink}16`,border:`1px solid ${T.pink}40`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="diaper" size={18} color={T.pink}/><span style={{fontSize:9,fontWeight:700,color:T.pink}}>{_lang==="en"?"Diaper":"Fralda"}</span></button>}{!activeTimer&&<button onClick={()=>startTimer("sleep")} style={{flex:1,padding:"12px 0 8px",borderRadius:14,background:`${T.purple}08`,border:`1px solid ${T.purple}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="moon" size={18} color={T.purple}/><span style={{fontSize:9,fontWeight:700,color:T.purple}}>{_lang==="en"?"Sleep":"Sono"}</span></button>}</>}</div>
         {napSug&&napSug.state==="opening"&&<div style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:T.amberS,border:`1px solid ${T.amber}22`,display:"flex",alignItems:"center",gap:10,animation:"pulse 2s infinite"}}><Icon name="bell" size={18} color={T.amber}/><div><div style={{fontSize:12,fontWeight:700,color:T.amber}}>{_lang==="en"?"Sleep window opening":"Janela abrindo"}</div><div style={{fontSize:10,color:T.sub}}>{_lang==="en"?"Watch for sleepy cues":"Observe sinais de sono"}{napSug.predictedTime?` · ~${napSug.predictedTime}`:""}</div></div></div>}
