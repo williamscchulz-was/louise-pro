@@ -358,6 +358,7 @@
     @keyframes fadeIn{from{opacity:0}to{opacity:1}}
     @keyframes slideUp{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
     @keyframes slideDown{from{transform:translateX(-50%) translateY(-20px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
+    @keyframes toastSlideDown{from{transform:translateY(-20px);opacity:0}to{transform:translateY(0);opacity:1}}
     @keyframes curiosityIn{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
     @keyframes curiosityOut{from{transform:translateY(0);opacity:1}to{transform:translateY(-12px);opacity:0}}
     @keyframes twinkle{0%,100%{opacity:.1}50%{opacity:.6}}
@@ -483,62 +484,260 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "8.4.2";
+const APP_VERSION = "8.4.3";
 const CHANGELOG = [
-  { v: "8.4.2", date: "2026-04-06", changes: "SleepBlock redesenhado: Bedtime vira evento pai expandido por padrao com header roxo (label BEDTIME, gradiente, icone grande), timeline visual com marcas de hora e bandas azuis dos wakings, e secao 'Atividade da noite' com despertares como separadores horizontais (pill azul com horario+duracao) e eventos linkados aninhados (mamada/fralda/medicina) com icones cheios. Os eventos da madrugada que antes ficavam escondidos agora aparecem claramente agrupados sob cada despertar. Lista flat enxuta, sem sub-cards aninhados. Backward compatible com sleeps sem wakings (renderiza header simples sem secao de atividade)." },
-  { v: "8.4.1", date: "2026-04-06", changes: "Stats agora descontam wakings do tempo de sono total. Card Sono mostra 3 conceitos: sono real (destaque, descontando wakings), tempo na cama, tempo acordada (com numero de wakings/noite). Grafico de barras de sono fica empilhado: roxo = sono real, faixa azul fina no topo = tempo acordada. Resumo do dia no Historico tambem usa sono real. WeeklyCard (comparacao vs semana passada) usa sono real. Engine de insights ja fazia esse desconto desde v8.0.0 — agora as visualizacoes estao alinhadas. Novos helpers: realSleepMin, awakeMinIn, sumRealSleep, sumAwakeInSleep, countWakings." },
-  { v: "8.4.0", date: "2026-04-06", changes: "Wake Lock: tela do iPhone fica acesa durante night wake e nursing timer (uso da Wake Lock API). Toggle nas configuracoes (Profile > Manter tela ligada), default ON. Auto-libera quando timer termina ou quando sai do app, re-adquire ao voltar. Falha silenciosa em iOS <16.4 ou modo economia. Resolve frustracao de tela bloqueando de madrugada com maos ocupadas." },
-  { v: "8.3.0", date: "2026-04-05", changes: "Curiosities massivamente expandido: 30 curiosidades diarias (dias 1-30, reescritas com mais profundidade cientifica) + 48 NOVAS curiosidades semanais (semanas 5-52, cobrindo do mes 2 ao mes 12) + 11 milestones mensais revisados. Total: 89 entradas bilingues baseadas em AAP, OMS, NHS, Mayo Clinic, Harvard, CDC, Zero to Three, Stanford. Corrige bug onde milestones mensais nao apareciam (age.totalMonths era undefined, deveria ser age.months). Novo export: window.WEEKLY_CURIOSITIES. curiosities.js 12KB -> 54KB." },
-  { v: "8.2.0", date: "2026-04-05", changes: "Refactor: extraidos 3 arquivos estaticos do index.html para reduzir tamanho e facilitar manutencao. splash-icon.js (27KB base64 do icone da splash), who-growth.js (tabelas LMS OMS + funcoes de percentil), curiosities.js (30 curiosidades diarias + 11 milestones mensais). index.html reduzido de 220KB para 180KB (-18%). Zero mudanca visual ou funcional. Engine intocado. Todos os novos arquivos precisam ser subidos junto no deploy." },
-  { v: "8.1.3", date: "2026-04-05", changes: "Night Wake mode: quick buttons reduzidos para apenas Bottle + Diaper (removido Nurse). De madrugada amamentacao nao se aplica (so mamadeira), entao a interface fica mais limpa e com touch targets maiores. Os 2 botoes dividem a largura total (flex:1 cada), ficando maiores e mais faceis de acertar com olhos meio fechados." },
-  { v: "8.1.2", date: "2026-04-05", changes: "Night Wake botao (estado inativo) agora usa amber quente com pulse sutil 2.4s. Borda laranja saturada, glow pulsante e icone com scale animation. Estado ativo continua azul (indica modo waking ligado). Muito mais visivel de madrugada sem ser agressivo." },
-  { v: "8.1.1", date: "2026-04-05", changes: "Fix hints spam: gates de horario para hints retrospectivas. Analise noturna (Sleeping through the night, Consistent night sleep, Frequent wakings, Waking pattern, Waking cause, Wakings trend) so aparece 06h-10h (janela de manha). Balanco do dia vs WHO (Below/above recommended sleep, Great sleep day, Short naps good night) so aparece depois das 22h. Hints contextuais (feed overdue, bedtime approaching, bath reminder, excellent nap, diaper check) continuam o dia todo. Engine bumped to v2.1.0." },
-  { v: "8.1.0", date: "2026-04-05", changes: "Notifications Inbox: sininho discreto no header com badge vermelho e animacao bellWiggle 2.5s. Painel slide-in cobre a tela mostrando todas as hints do engine (good/info/warn) com fundo roxo sutil + ponto azul pulsante nas nao-lidas. Dedup via hintKey estavel (slug do title + data). Tocar num item marca como lido; Mark all read zera o badge; abrir painel NAO marca como lido. Reset estrito a meia-noite (check no mount + tick). Persistencia em config/inbox com sync via onSnapshot entre dispositivos. Auto-dismiss inline do home preservado (InsightCards intocado). Sem som, sem push — puramente visual." },
-  { v: "8.0.0", date: "2026-04-05", changes: "MAJOR: Night Wake feature completa (botao toggle, wakings salvos no sleep, SleepBlock visual com marcadores, engine calcula sono real) + 9 Smart Hints (pre-feed, bedtime approaching, bath reminder, last feed, excellent nap, feed overdue, cluster feeding, diaper check, feed volume WHO) + Waking intelligence (frequencia, cluster de horario, tipo, trend improving/worsening). Engine agora tem memoria completa da rotina." },
-  { v: "7.0.0", date: "2026-04-04", changes: "Routine Engine v2: analisa sono+mamada+banho, 5 estados no ring (calm/opening/sweet/stretching/overdue), horario previsto no centro, desbloqueio com 3+ dias de dados, WW por posicao, recency decay, blend com WHO/AAP, modal rotina com feeds+banho" },
-  { v: "6.1.0", date: "2026-04-04", changes: "Nav bar wider pill: gap 6, padding 8/16, icons 20px, botao + 50px, buttons 8/14px" },
-  { v: "6.0.9", date: "2026-04-04", changes: "Nav bar test: bottom fixo 4px sem calc/env para diagnosticar posicionamento" },
-  { v: "6.0.8", date: "2026-04-04", changes: "Nav bar mais rente: safe-area - 22px, ~12px da borda inferior" },
-  { v: "6.0.7", date: "2026-04-04", changes: "Nav bar rente: bottom calc(safe-area - 14px) para ficar mais proximo do Home Indicator estilo Nubank" },
-  { v: "6.0.2", date: "2026-04-04", changes: "Revert CSS hacks (html::after, --sab, nuclear div) que quebraram scroll/nav. Volta ao padrao calc+env. Splash gradient fix. Glow animations fix (glowCenter/glowBreathe split)." },
-  { v: "6.0.0", date: "2026-04-04", changes: "Ring Napper-style: last event global (dots+arcs), timer ativo com dashes fluindo + comet tip, ultimo sleep arc com dashes + glow forte, ultimo dot com dashed orbit, nav bar colado no fundo, duration labels, Sleep Engine separado" },
-  { v: "5.8.0", date: "2026-04-04", changes: "Ring refinements: duration labels on sleep arcs, last event pulses with 3-layer glow animation (Napper-style), CuriosityCard window 9-10h" },
-  { v: "5.7.0", date: "2026-04-04", changes: "Bug fixes: CuriosityCard auto-dismiss timer, stats bar values legibility (7→10px), date input overflow on mobile, nav bar closer to bottom (8→2px gap)" },
-  { v: "5.6.0", date: "2026-04-04", changes: "Time-ago legibility: summary cards 8→12px cor da categoria, timeline 9→11px, bottom sheet 10→12px, tudo com peso 500-600 e cor mais visivel" },
-  { v: "5.5.0", date: "2026-04-04", changes: "UI redesign: header, quick buttons verticais, summary 2x2, daily goal enhanced, timeline separators com WW, nav com labels, sleep end time range, profile page redesign com cards, traducoes corrigidas" },
-  { v: "5.4.0", date: "2026-04-04", changes: "Splash Elegante com icone oficial, swipe-to-delete fix, summary tappable, last nursing side L/R, bottle smart fill, mini timeline History, safe-area fix, pumping removido, traducoes corrigidas" },
-  { v: "5.3.0", date: "2026-04-04", changes: "Sleep Engine v2: analise de padroes 7 dias, rotina projetada, next nap alert, day insights, nap counting, banho" },
-  { v: "5.2.0", date: "2026-04-03", changes: "Nursing timer L/R com troca de lado, botao rapido Nurse, timer bar azul com L/R" },
-  { v: "5.1.0", date: "2026-04-03", changes: "Ring diurno wake-to-midnight, wakeup no menu+, lua auto no sleep timer, nav glass bottom, time-ago preciso, summary bar com ago" },
-  { v: "5.0.0", date: "2026-04-03", changes: "Fix ${c} bug, stacked dots, toast contextual, starfield memo, bottle pre-fill, haptic, icon 22px, remove cards" },
-  { v: "3.9.0", date: "2026-04-02", changes: "Timer live arc no ring (cresce enquanto dorme), nav mais baixo, estrelas mais vivas, ícones filled" },
-  { v: "3.8.0", date: "2026-04-02", changes: "Ícones preenchidos com gradiente (Napper-style): bottle, moon, cloud, droplet, pill, thermo preenchidos" },
-  { v: "3.7.0", date: "2026-04-02", changes: "Ring v2: dots 36px anti-overlap (14° min gap), sleep arcs dominantes (48px glow), track fino 5px" },
-  { v: "3.6.0", date: "2026-04-02", changes: "Ring Napper: sleep arcs, time-proportional dots, summary awake+sleep, wakeup/nightwaking removed, timezone fix" },
-  { v: "3.5.0", date: "2026-04-02", changes: "Ring Napper-level: 300px, ícones 42px com glow+inner light+glass, até 12 eventos, texto 50px" },
-  { v: "3.4.0", date: "2026-04-02", changes: "Awake for/Asleep for no ring (Napper-style), estrelas mais visíveis, Last Feed card, fix NightCard removido" },
-  { v: "3.3.1", date: "2026-04-02", changes: "Fix critical: i18n dictionary had runtime code instead of strings, causing blank screen" },
-  { v: "3.3.0", date: "2026-04-02", changes: "Tooltip nos eventos do ring: toque no ícone pra ver detalhes (tipo, ml, duração, horário)" },
-  { v: "3.2.1", date: "2026-04-02", changes: "Fix syntax: brace balance, broken template literals, JSX expressions" },
-  { v: "3.2.0", date: "2026-04-02", changes: "i18n EN/PT-BR, ring events proporcional ao horário, ícones maiores no ring" },
-  { v: "3.1.0", date: "2026-04-02", changes: "Resumo da noite, vibração na janela de sono, filtros no histórico (Leite/Sono/Fralda/Med), fix scroll e fade-out" },
-  { v: "3.0.1", date: "2026-04-02", changes: "Fix scroll: fundo fixo, só conteúdo rola, sem bounce preto no iOS" },
-  { v: "3.0.0", date: "2026-04-02", changes: "Visual Napper-level: céu estrelado com nebulosas, ícones com glow vivo, header abaixo Dynamic Island" },
-  { v: "2.5.0", date: "2026-04-02", changes: "Splash screen com lua animada, estrelas e gradiente (1.8s)" },
-  { v: "2.4.0", date: "2026-04-02", changes: "Ring redesign: gradiente SVG, glow duplo, lua transparente, texto com gradient, animação suave" },
-  { v: "2.3.2", date: "2026-04-02", changes: "Fix toast: auto-some em 2s, não fica mais travado na tela" },
-  { v: "2.3.1", date: "2026-04-02", changes: "Sono: toggle Duração/Horário fim, calcula auto. Safe-area iPhone 15+. Versão no header" },
-  { v: "2.3.0", date: "2026-04-02", changes: "Editar registros: toque no ícone ou texto de qualquer lançamento pra abrir e editar" },
-  { v: "2.2.5", date: "2026-04-02", changes: "Versão visível no header, safe-area iPhone 15+ (Dynamic Island, home indicator), inputs selecionáveis" },
-  { v: "2.2.4", date: "2026-04-02", changes: "Fix idade (timezone), sono que cruza meia-noite auto-divide em 2 dias" },
-  { v: "2.2.3", date: "2026-04-02", changes: "Botão + em cada card de crescimento, adicionar peso/comprimento/cabeça individualmente" },
-  { v: "2.2.2", date: "2026-04-02", changes: "Seletor de dia em todos os registros, labels mais claros (Cabeça em vez de PC)" },
-  { v: "2.2.1", date: "2026-04-02", changes: "Glassmorphism Napper-style: sheet blur(40px), glow sutil nos ícones, profundidade visual" },
-  { v: "2.2.0", date: "2026-04-02", changes: "Crescimento no Perfil: dados nascimento, curvas OMS com gráficos SVG, adicionar medição inline" },
-  { v: "2.1.0", date: "2026-04-02", changes: "Resumo com filtros: 7d, 14d, 30d e Tudo. Gráficos adaptam barras e labels ao período" },
-  { v: "2.0.1", date: "2026-04-02", changes: "Fix save Firebase, glassmorphism sheets, safe-area iPhone 15+, atalho mamadeira" },
-  { v: "2.0.0", date: "2026-04-02", changes: "Crescimento com percentil OMS, versionamento, changelog" },
-  { v: "1.0.0", date: "2026-04-02", changes: "Lançamento: timer ao vivo, sync Firebase, algoritmo de sono, meta ML, histórico navegável, CSV export, undo, duplicar, import Baby+" },
+  {
+    v: "8.4.3", date: "2026-04-06",
+    pt: {
+      title: "Changelog bilíngue e modal de novidades",
+      bullets: [
+        '★ **Changelog bilíngue.** As notas de versão agora respeitam o idioma do app — português ou inglês.',
+        'Novo botão **Ler novidades** no Profile abre um modal elegante com o histórico de todas as versões.',
+        'Badge **Novo** no botão quando há versões que você ainda não viu.',
+        'Toast discreto no Home aparece uma única vez após cada atualização, oferecendo abrir as novidades.'
+      ]
+    },
+    en: {
+      title: "Bilingual changelog and updates modal",
+      bullets: [
+        '★ **Bilingual changelog.** Release notes now respect the app language — Portuguese or English.',
+        'New **Read updates** button in Profile opens an elegant modal with full version history.',
+        '**New** badge on the button when there are versions you haven\'t seen yet.',
+        'Discreet toast on Home appears once after each update, offering to open the release notes.'
+      ]
+    }
+  },
+  {
+    v: "8.4.2", date: "2026-04-06",
+    pt: {
+      title: "Sono noturno redesenhado",
+      bullets: [
+        '★ **Sono noturno redesenhado.** O bloco do Bedtime agora tem header roxo com label SONO NOTURNO, timeline com marcas de hora e cada despertar como separador visual com os eventos aninhados.',
+        'Mamadeiras e fraldas de madrugada agora aparecem agrupadas sob cada despertar — antes sumiam da lista.',
+        'Bloco abre expandido por padrão pra você ver o resumo da noite logo de manhã.',
+        'Compatível com sonos antigos: sem wakings mostra apenas o header limpo.'
+      ]
+    },
+    en: {
+      title: "Night sleep redesigned",
+      bullets: [
+        '★ **Night sleep redesigned.** The Bedtime block now has a purple header with BEDTIME label, timeline with hour marks, and each waking as a visual separator with nested events.',
+        'Night-time bottles and diapers now appear grouped under each waking — they used to disappear from the list.',
+        'Block opens expanded by default so you can see the night summary first thing in the morning.',
+        'Backward compatible with old sleeps: without wakings it shows just the clean header.'
+      ]
+    }
+  },
+  {
+    v: "8.4.1", date: "2026-04-06",
+    pt: {
+      title: "Estatísticas descontam wakings",
+      bullets: [
+        '★ **Estatísticas corrigidas.** Agora descontam o tempo acordada do total de sono noturno.',
+        'Card Sono médio mostra 3 valores: sono real (destaque roxo), tempo na cama e tempo acordada com média de wakings por noite.',
+        'Gráfico de barras empilhado: roxo = sono real, faixa azul fina no topo = tempo acordada.',
+        'Resumo do dia no Histórico e comparação semanal também usam sono real agora.'
+      ]
+    },
+    en: {
+      title: "Stats now subtract wakings",
+      bullets: [
+        '★ **Stats fixed.** They now subtract awake time from total night sleep.',
+        'Average Sleep card shows 3 values: real sleep (purple highlight), time in bed, and awake time with average wakings per night.',
+        'Stacked bar chart: purple = real sleep, thin blue band on top = awake time.',
+        'Day summary in History and weekly comparison also use real sleep now.'
+      ]
+    }
+  },
+  {
+    v: "8.4.0", date: "2026-04-06",
+    pt: {
+      title: "Tela sempre acesa",
+      bullets: [
+        '★ **Wake Lock.** Durante Night Wake e amamentação, a tela do iPhone não bloqueia mais — útil quando você está com as mãos ocupadas.',
+        'Novo toggle **Manter tela ligada** no Profile (ligado por padrão).',
+        'Indicador visual sutil no Ring quando a tela está travada.',
+        'Falha silenciosa em iOS antigo ou modo economia de bateria.'
+      ]
+    },
+    en: {
+      title: "Keep screen awake",
+      bullets: [
+        '★ **Wake Lock.** During Night Wake and nursing, the iPhone screen no longer locks — useful when your hands are busy.',
+        'New **Keep screen on** toggle in Profile (enabled by default).',
+        'Subtle visual indicator on the Ring when the screen is locked on.',
+        'Silent fallback on older iOS or battery saver mode.'
+      ]
+    }
+  },
+  {
+    v: "8.3.0", date: "2026-04-05",
+    pt: {
+      title: "Curiosidades expandidas",
+      bullets: [
+        '★ **89 curiosidades bilíngues** cobrindo do dia 1 ao mês 12, baseadas em AAP, OMS, NHS, Mayo Clinic, Harvard, CDC, Zero to Three e Stanford.',
+        'Nova seção semanal (semanas 5 a 52) além das diárias e mensais.',
+        'Curiosidades diárias (dias 1-30) reescritas com mais profundidade científica.',
+        'Correção: milestones mensais agora aparecem corretamente no card de curiosidades.'
+      ]
+    },
+    en: {
+      title: "Curiosities expanded",
+      bullets: [
+        '★ **89 bilingual curiosities** covering day 1 through month 12, based on AAP, WHO, NHS, Mayo Clinic, Harvard, CDC, Zero to Three, and Stanford.',
+        'New weekly section (weeks 5 to 52) in addition to daily and monthly.',
+        'Daily curiosities (days 1-30) rewritten with more scientific depth.',
+        'Fix: monthly milestones now appear correctly in the curiosity card.'
+      ]
+    }
+  },
+  {
+    v: "8.2.0", date: "2026-04-05",
+    pt: {
+      title: "Refactor: arquivos separados",
+      bullets: [
+        '★ **Arquitetura modular.** Código estático extraído em 3 arquivos separados pra reduzir tamanho do index.html.',
+        'index.html reduzido de 220KB pra 180KB (-18%).',
+        'Splash icon, tabelas de crescimento OMS e curiosidades agora em arquivos dedicados.',
+        'Zero mudança visual ou funcional — pura reorganização.'
+      ]
+    },
+    en: {
+      title: "Refactor: separate files",
+      bullets: [
+        '★ **Modular architecture.** Static code extracted into 3 separate files to reduce index.html size.',
+        'index.html reduced from 220KB to 180KB (-18%).',
+        'Splash icon, WHO growth tables, and curiosities now in dedicated files.',
+        'Zero visual or functional change — pure reorganization.'
+      ]
+    }
+  },
+  {
+    v: "8.1.3", date: "2026-04-05",
+    pt: {
+      title: "Night Wake: botões maiores",
+      bullets: [
+        'Quick buttons do modo Night Wake reduzidos pra apenas Bottle e Diaper (removido Nursing).',
+        'De madrugada amamentação raramente se aplica, então a interface fica mais limpa com touch targets maiores.',
+        'Os 2 botões agora dividem a largura total, ficando mais fáceis de acertar com olhos meio fechados.'
+      ]
+    },
+    en: {
+      title: "Night Wake: bigger buttons",
+      bullets: [
+        'Night Wake mode quick buttons reduced to only Bottle and Diaper (removed Nursing).',
+        'Nursing rarely applies at night, so the interface is cleaner with bigger touch targets.',
+        'The 2 buttons now split the full width, making them easier to tap with half-closed eyes.'
+      ]
+    }
+  },
+  {
+    v: "8.1.2", date: "2026-04-05",
+    pt: {
+      title: "Night Wake: botão amber pulsante",
+      bullets: [
+        'Botão Night Wake (estado inativo) agora usa amber quente com pulse sutil.',
+        'Borda laranja saturada, glow pulsante e ícone com scale animation.',
+        'Estado ativo continua azul, indicando que o modo waking está ligado.',
+        'Muito mais visível de madrugada sem ser agressivo.'
+      ]
+    },
+    en: {
+      title: "Night Wake: pulsing amber button",
+      bullets: [
+        'Night Wake button (inactive state) now uses warm amber with subtle pulse.',
+        'Saturated orange border, pulsing glow, and icon scale animation.',
+        'Active state remains blue, indicating waking mode is on.',
+        'Much more visible at night without being aggressive.'
+      ]
+    }
+  },
+  {
+    v: "8.1.1", date: "2026-04-05",
+    pt: {
+      title: "Fix spam de hints",
+      bullets: [
+        '★ **Gates de horário pra hints.** Análises noturnas (sono pela noite, wakings frequentes, etc) só aparecem das 06h-10h.',
+        'Balanço do dia vs recomendações da OMS só aparece depois das 22h.',
+        'Hints contextuais (feed overdue, bedtime approaching, bath reminder, excellent nap, diaper check) continuam aparecendo o dia todo.',
+        'Elimina repetição de insights fora de contexto.'
+      ]
+    },
+    en: {
+      title: "Hints spam fix",
+      bullets: [
+        '★ **Time gates for hints.** Night analyses (sleeping through, frequent wakings, etc) only appear from 6am-10am.',
+        'Day vs WHO recommendations balance only shows after 10pm.',
+        'Contextual hints (feed overdue, bedtime approaching, bath reminder, excellent nap, diaper check) keep showing throughout the day.',
+        'Eliminates repetition of out-of-context insights.'
+      ]
+    }
+  },
+  {
+    v: "8.1.0", date: "2026-04-05",
+    pt: {
+      title: "Caixa de notificações",
+      bullets: [
+        '★ **Inbox de insights.** Sininho discreto no header com badge vermelho mostra hints não-lidos do engine.',
+        'Painel slide-in com todas as hints do dia agrupadas por tipo (good/info/warn).',
+        'Dedup inteligente via hintKey estável.',
+        'Sincroniza entre dispositivos via Firestore. Sem som, sem push — puramente visual.'
+      ]
+    },
+    en: {
+      title: "Notifications inbox",
+      bullets: [
+        '★ **Insights inbox.** Discreet bell in the header with red badge shows unread engine hints.',
+        'Slide-in panel with all the day\'s hints grouped by type (good/info/warn).',
+        'Smart dedup via stable hintKey.',
+        'Syncs between devices via Firestore. No sound, no push — purely visual.'
+      ]
+    }
+  },
+  {
+    v: "8.0.0", date: "2026-04-05",
+    pt: {
+      title: "Night Wake + 9 Smart Hints",
+      bullets: [
+        '★ **Night Wake completo.** Botão toggle durante Bedtime, wakings salvos dentro do sleep, cálculo de sono real.',
+        '9 novos Smart Hints: pre-feed, bedtime approaching, bath reminder, last feed, excellent nap, feed overdue, cluster feeding, diaper check e feed volume vs OMS.',
+        'Engine agora analisa frequência de wakings, cluster de horário e tendência (melhorando/piorando).',
+        'Memória completa da rotina pra insights cada vez mais personalizados.'
+      ]
+    },
+    en: {
+      title: "Night Wake + 9 Smart Hints",
+      bullets: [
+        '★ **Complete Night Wake.** Toggle button during Bedtime, wakings saved inside the sleep, real sleep calculation.',
+        '9 new Smart Hints: pre-feed, bedtime approaching, bath reminder, last feed, excellent nap, feed overdue, cluster feeding, diaper check, and feed volume vs WHO.',
+        'Engine now analyzes waking frequency, time clustering, and trend (improving/worsening).',
+        'Complete routine memory for increasingly personalized insights.'
+      ]
+    }
+  },
+  {
+    v: "earlier", date: "2026-04-02 → 04-04",
+    pt: {
+      title: "Versões anteriores (v1.0.0 → v7.0.0)",
+      bullets: [
+        '**Routine Engine v2** com 5 estados no ring (calm/opening/sweet/stretching/overdue), horário previsto, blend com WHO/AAP.',
+        '**Ring estilo Napper**: timer ativo com dashes fluindo, último evento com glow, nav bar colada no fundo.',
+        '**UI redesign**: header, quick buttons verticais, summary 2x2, timeline separators, profile redesign.',
+        '**Import Baby+**, splash elegante, swipe-to-delete, curvas de crescimento OMS, percentil, histórico navegável.',
+        '**Base**: timer ao vivo, sync Firebase, algoritmo de sono, meta ML, CSV export, undo, duplicar.'
+      ]
+    },
+    en: {
+      title: "Earlier versions (v1.0.0 → v7.0.0)",
+      bullets: [
+        '**Routine Engine v2** with 5 ring states (calm/opening/sweet/stretching/overdue), predicted time, WHO/AAP blend.',
+        '**Napper-style Ring**: active timer with flowing dashes, last event with glow, nav bar stuck to the bottom.',
+        '**UI redesign**: header, vertical quick buttons, 2x2 summary, timeline separators, profile redesign.',
+        '**Baby+ import**, elegant splash, swipe-to-delete, WHO growth curves, percentile, navigable history.',
+        '**Foundation**: live timer, Firebase sync, sleep algorithm, ML goal, CSV export, undo, duplicate.'
+      ]
+    }
+  }
 ];
 
 // ── WHO Growth Standards (loaded from who-growth.js) ──
@@ -1246,7 +1445,7 @@ function InboxPanel({inbox,onClose,onMarkRead,onMarkAllRead,lang}){
   </div>);
 }
 
-function ProfilePage({profile,onSave,onBack,onGrowth}){
+function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadChangelog}){
   const[name,setName]=useState(profile.name||"");
   const[birth,setBirth]=useState(profile.birthDate||"");
   const[photo,setPhoto]=useState(profile.photo||"");
@@ -1300,8 +1499,110 @@ function ProfilePage({profile,onSave,onBack,onGrowth}){
         <Icon name="ruler" size={16} color="#a3e635"/><span style={{fontSize:14,fontWeight:700,color:"#a3e635"}}>{L("viewGrowth")}</span>
       </button>
       <button onClick={doSave} style={{width:"100%",padding:14,borderRadius:12,background:`linear-gradient(135deg,#7c3aed,${T.accent})`,color:"#fff",fontSize:15,fontWeight:700,boxShadow:`0 4px 16px ${T.accent}33`}}>{L("save")}</button>
-      <div style={{marginTop:20,padding:14,background:"rgba(22,28,60,0.4)",borderRadius:12,border:`1px solid ${T.gB}`}}><div style={{fontSize:12,fontWeight:700,color:T.sub,marginBottom:8}}>Louise Pro v{APP_VERSION}</div>{CHANGELOG.map((c,i)=><div key={i} style={{fontSize:10,color:T.dim,marginBottom:4}}><span style={{fontWeight:700}}>v{c.v}</span> ({c.date}) — {c.changes}</div>)}</div>
+      <div style={{marginTop:20}}>
+        <button onClick={onShowChangelog} style={{width:"100%",padding:"14px 16px",borderRadius:14,background:"rgba(22,28,60,0.4)",border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",gap:12,textAlign:"left",cursor:"pointer"}}>
+          <div style={{width:36,height:36,borderRadius:10,background:"linear-gradient(135deg,rgba(139,124,246,0.18),rgba(124,58,237,0.10))",border:"1px solid rgba(139,124,246,0.22)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c4b5fd" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
+          </div>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontSize:13,fontWeight:700,color:T.text,display:"flex",alignItems:"center",flexWrap:"wrap",gap:6}}>
+              <span>Louise Pro <span style={{color:T.accent,fontWeight:800}}>v{APP_VERSION}</span></span>
+              {hasUnreadChangelog&&<span style={{display:"inline-flex",alignItems:"center",gap:4,padding:"2px 7px",borderRadius:8,background:`linear-gradient(135deg,${T.accent},#7c3aed)`,color:"#fff",fontSize:9,fontWeight:800,textTransform:"uppercase",letterSpacing:0.5,boxShadow:`0 2px 8px ${T.accent}66`}}>
+                <span style={{width:5,height:5,borderRadius:"50%",background:"#fff",animation:"pulse 1.5s infinite"}}/>
+                {langSel==="en"?"New":"Novo"}
+              </span>}
+            </div>
+            <div style={{fontSize:10,color:T.sub,marginTop:2}}>{langSel==="en"?"Tap to see what's new":"Toque para ver as novidades"}</div>
+          </div>
+          <div style={{color:T.dim,flexShrink:0}}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
+          </div>
+        </button>
+      </div>
     </div>
+  </div>);
+}
+
+function ChangelogModal({onClose,lang}){
+  // Render a bullet: detect highlight prefix "★ " and bold markers **text**
+  const renderBullet=(text,idx)=>{
+    const highlighted=text.startsWith("\u2605 ");
+    const clean=highlighted?text.slice(2):text;
+    // Parse **bold** segments
+    const parts=[];
+    let remaining=clean;
+    let key=0;
+    while(remaining.length>0){
+      const boldStart=remaining.indexOf("**");
+      if(boldStart===-1){parts.push(<span key={key++}>{remaining}</span>);break}
+      if(boldStart>0)parts.push(<span key={key++}>{remaining.slice(0,boldStart)}</span>);
+      const boldEnd=remaining.indexOf("**",boldStart+2);
+      if(boldEnd===-1){parts.push(<span key={key++}>{remaining.slice(boldStart)}</span>);break}
+      parts.push(<strong key={key++} style={{color:"#c4b5fd",fontWeight:700}}>{remaining.slice(boldStart+2,boldEnd)}</strong>);
+      remaining=remaining.slice(boldEnd+2);
+    }
+    return(<li key={idx} style={{fontSize:12,color:T.text,lineHeight:1.55,padding:"5px 0 5px 18px",position:"relative",listStyle:"none"}}>
+      <span style={{position:"absolute",left:3,top:12,width:6,height:6,borderRadius:"50%",background:highlighted?T.green:T.purple,boxShadow:highlighted?`0 0 8px ${T.green}`:"none"}}/>
+      {parts}
+    </li>);
+  };
+  // Format date by language
+  const fmtDate=(dateStr)=>{
+    if(dateStr.includes("→"))return dateStr;
+    const d=new Date(dateStr+"T12:00");
+    if(lang==="en")return d.toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});
+    return d.toLocaleDateString("pt-BR",{day:"2-digit",month:"short",year:"numeric"}).replace(".","");
+  };
+  return(<div style={{position:"fixed",inset:0,zIndex:300,background:"rgba(7,11,30,0.75)",backdropFilter:"blur(6px)",WebkitBackdropFilter:"blur(6px)",display:"flex",alignItems:"stretch",justifyContent:"center",padding:"calc(14px + env(safe-area-inset-top)) 14px calc(14px + env(safe-area-inset-bottom))"}} onClick={onClose}>
+    <div onClick={e=>e.stopPropagation()} style={{background:T.bg1,borderRadius:20,border:"1px solid rgba(139,124,246,0.25)",boxShadow:"0 20px 60px rgba(0,0,0,0.6)",display:"flex",flexDirection:"column",width:"100%",maxWidth:460,maxHeight:"100%",overflow:"hidden"}}>
+      {/* Header */}
+      <div style={{padding:"16px 18px",borderBottom:"1px solid rgba(139,124,246,0.12)",display:"flex",alignItems:"center",gap:12,background:"linear-gradient(180deg,rgba(139,124,246,0.08),transparent)",flexShrink:0}}>
+        <div style={{width:38,height:38,borderRadius:11,background:"linear-gradient(135deg,rgba(139,124,246,0.25),rgba(124,58,237,0.15))",border:"1px solid rgba(139,124,246,0.3)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c4b5fd" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/></svg>
+        </div>
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{fontSize:9,fontWeight:800,color:"rgba(139,124,246,0.7)",textTransform:"uppercase",letterSpacing:1}}>{lang==="en"?"What's new · Louise Pro":"Novidades · Louise Pro"}</div>
+          <div style={{fontSize:15,fontWeight:800,marginTop:2,color:T.text}}>{lang==="en"?"Version history":"Histórico de versões"}</div>
+        </div>
+        <button onClick={onClose} style={{width:32,height:32,borderRadius:10,background:"rgba(90,100,180,0.1)",border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center",color:T.sub,cursor:"pointer",fontSize:16,flexShrink:0}}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      {/* Scroll */}
+      <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch",padding:"16px 18px 20px"}}>
+        {CHANGELOG.map((entry,i)=>{
+          const data=entry[lang]||entry.pt;
+          const isCurrent=entry.v===APP_VERSION;
+          return(<div key={entry.v} style={{paddingBottom:18,paddingTop:i>0?18:0,borderTop:i>0?"1px solid rgba(139,124,246,0.08)":"none"}}>
+            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10,flexWrap:"wrap"}}>
+              <span style={{fontSize:15,fontWeight:800,color:T.text,fontVariantNumeric:"tabular-nums"}}>{entry.v==="earlier"?(lang==="en"?"Earlier":"Anteriores"):`v${entry.v}`}</span>
+              <span style={{fontSize:11,color:T.sub,fontWeight:500}}>{fmtDate(entry.date)}</span>
+              {isCurrent&&<span style={{display:"inline-flex",alignItems:"center",gap:4,padding:"2px 8px",borderRadius:8,background:"rgba(52,211,153,0.12)",color:T.green,fontSize:9,fontWeight:800,textTransform:"uppercase",letterSpacing:0.5,border:"1px solid rgba(52,211,153,0.25)"}}>{lang==="en"?"Current":"Atual"}</span>}
+            </div>
+            <ul style={{margin:0,padding:0}}>{data.bullets.map((b,j)=>renderBullet(b,j))}</ul>
+          </div>);
+        })}
+      </div>
+    </div>
+  </div>);
+}
+
+function UpdateToast({fromVersion,toVersion,onView,onDismiss,lang}){
+  return(<div style={{position:"fixed",top:"calc(14px + env(safe-area-inset-top))",left:14,right:14,maxWidth:460,margin:"0 auto",padding:"14px 16px",borderRadius:16,background:"linear-gradient(135deg,rgba(139,124,246,0.96),rgba(124,58,237,0.94))",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",border:"1px solid rgba(255,255,255,0.15)",boxShadow:"0 10px 40px rgba(139,124,246,0.4)",display:"flex",alignItems:"flex-start",gap:12,color:"#fff",zIndex:150,animation:"toastSlideDown .4s ease"}}>
+    <div style={{width:36,height:36,borderRadius:10,background:"rgba(255,255,255,0.18)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <div style={{flex:1,minWidth:0}}>
+      <div style={{fontSize:13,fontWeight:800,marginBottom:2}}>{lang==="en"?"Louise Pro updated":"Louise Pro atualizada"}</div>
+      <div style={{fontSize:11,opacity:0.92,lineHeight:1.4}}>{lang==="en"?`You're on v${toVersion}. Tap to see what's new.`:`Você está na v${toVersion}. Toque para ver as novidades.`}</div>
+      <div style={{display:"flex",gap:8,marginTop:10}}>
+        <button onClick={onView} style={{padding:"6px 14px",borderRadius:8,fontSize:11,fontWeight:700,background:"#fff",color:"#7c3aed",border:"none",cursor:"pointer"}}>{lang==="en"?"See what's new":"Ver novidades"}</button>
+        <button onClick={onDismiss} style={{padding:"6px 12px",borderRadius:8,fontSize:11,fontWeight:700,background:"rgba(255,255,255,0.2)",color:"#fff",border:"none",cursor:"pointer"}}>{lang==="en"?"Later":"Depois"}</button>
+      </div>
+    </div>
+    <button onClick={onDismiss} style={{width:24,height:24,borderRadius:6,background:"rgba(255,255,255,0.15)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,color:"#fff",border:"none",cursor:"pointer"}}>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
   </div>);
 }
 
@@ -1633,10 +1934,36 @@ function App(){
   const[page,setPage]=useState("home");const[showAdd,setShowAdd]=useState(false);const[formType,setFormType]=useState(null);const[editEntry,setEditEntry]=useState(null);const[showOrbit,setShowOrbit]=useState(false);
   const[showProfile,setShowProfile]=useState(false);const[showSleepInfo,setShowSleepInfo]=useState(false);
   const[inbox,setInbox]=useState({items:[],lastReset:""});const[showInbox,setShowInbox]=useState(false);
+  const[showChangelog,setShowChangelog]=useState(false);const[showUpdateToast,setShowUpdateToast]=useState(false);
   const lang=profile.lang||"en";_lang=lang;
   const[toast,setToast]=useState(null);const[tick,setTick]=useState(0);const undoRef=useRef(null);
   const[splash,setSplash]=useState(true);
   useEffect(()=>{const t=setTimeout(()=>setSplash(false),1800);return()=>clearTimeout(t)},[]);
+
+  // Changelog unread detection + one-time toast after update
+  const hasUnreadChangelog=profile.lastSeenVersion!==APP_VERSION;
+  const profileLoadedRef=useRef(false);
+  useEffect(()=>{
+    // Wait for profile to be loaded from Firestore first (has at least a lang or explicit marker)
+    if(loading||profileLoadedRef.current)return;
+    profileLoadedRef.current=true;
+    // Only show toast if there's a previous version recorded and it differs from current
+    // (first-ever install: lastSeenVersion undefined → skip toast, just mark as seen silently)
+    if(profile.lastSeenVersion&&profile.lastSeenVersion!==APP_VERSION){
+      setShowUpdateToast(true);
+    }else if(!profile.lastSeenVersion){
+      // First time: mark silently without showing toast
+      FB.saveProfile({...profile,lastSeenVersion:APP_VERSION}).catch(()=>{});
+    }
+  },[loading,profile.lastSeenVersion]);
+  const markChangelogSeen=()=>{
+    if(profile.lastSeenVersion!==APP_VERSION){
+      FB.saveProfile({...profile,lastSeenVersion:APP_VERSION}).catch(()=>{});
+    }
+  };
+  const openChangelog=()=>{setShowChangelog(true);setShowUpdateToast(false);markChangelogSeen()};
+  const dismissUpdateToast=()=>{setShowUpdateToast(false);markChangelogSeen()};
+  const closeChangelog=()=>{setShowChangelog(false);markChangelogSeen()};
 
   useEffect(()=>{const iv=activeTimer?1000:30000;const t=setInterval(()=>setTick(k=>k+1),iv);return()=>clearInterval(t)},[activeTimer]);
 
@@ -1981,8 +2308,10 @@ function App(){
       {formType&&<AddForm type={formType} onSave={addEntry} savedMeds={savedMeds} onSaveMeds={async m=>await FB.saveMeds(m)} editEntry={editEntry} lastBottleMl={lastBottleMl} topMl={topMl}/>}
     </Sheet>
 
-    {showProfile&&<ProfilePage profile={profile} onSave={async p=>await FB.saveProfile(p)} onBack={()=>setShowProfile(false)} onGrowth={()=>{setShowProfile(false);goTo("growth")}}/>}
+    {showProfile&&<ProfilePage profile={profile} onSave={async p=>await FB.saveProfile(p)} onBack={()=>setShowProfile(false)} onGrowth={()=>{setShowProfile(false);goTo("growth")}} onShowChangelog={()=>setShowChangelog(true)} hasUnreadChangelog={hasUnreadChangelog}/>}
     {showInbox&&<InboxPanel inbox={inbox} onClose={()=>setShowInbox(false)} onMarkRead={markInboxRead} onMarkAllRead={markAllInboxRead} lang={lang}/>}
+    {showChangelog&&<ChangelogModal onClose={closeChangelog} lang={lang}/>}
+    {showUpdateToast&&!showChangelog&&<UpdateToast fromVersion={profile.lastSeenVersion} toVersion={APP_VERSION} onView={openChangelog} onDismiss={dismissUpdateToast} lang={lang}/>}
     <TimerBar activeTimer={activeTimer} onStop={stopTimer} onSwitch={switchSide} onPause={pauseNursing}/>
 
     <nav style={{position:"fixed",bottom:"4px",left:"50%",transform:"translateX(-50%)",display:"flex",alignItems:"center",gap:6,padding:"8px 16px",background:"rgba(8,10,28,0.95)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",borderRadius:40,border:"1px solid rgba(80,90,160,0.06)",boxShadow:"0 4px 24px rgba(0,0,0,0.6)",zIndex:50}}>
