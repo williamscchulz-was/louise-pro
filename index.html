@@ -510,10 +510,15 @@ dbg('Firebase ready');
 </script>
 
 <script src="splash-icon.js"></script>
+
 <script src="who-growth.js"></script>
+
 <script src="curiosities.js"></script>
+
 <script src="wake-lock.js"></script>
+
 <script src="device-features.js"></script>
+
 <script src="routine-engine.js"></script>
 
 <script type="text/babel">
@@ -523,8 +528,48 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "8.5.2";
+const APP_VERSION = "8.5.4";
 const CHANGELOG = [
+  {
+    v: "8.5.4", date: "2026-04-06",
+    pt: {
+      title: "Sleep em progresso aparece no Home, History só finalizado",
+      bullets: [
+        '★ **Bedtime/nap em andamento agora aparece no Home**, no topo da lista "Hoje", como bloco ao vivo (pulsante azul, "ao vivo"). Antes só aparecia na aba History.',
+        '★ **Aba History agora só mostra sonos finalizados.** Enquanto o sleep está rolando, ele fica reservado pro Home. Ao terminar, vira entry consolidada e aparece nos dois lugares (com Edit/lixeira).',
+        'Ajuste de coerência: a lista do Home também passa a esconder eventos que caem dentro de qualquer bedtime (igual a History já fazia desde a v8.5.3), pra não duplicar com o que aparece dentro do bloco.'
+      ]
+    },
+    en: {
+      title: "In-progress sleep now shows on Home, History only finalized",
+      bullets: [
+        '★ **In-progress bedtime/nap now appears on Home**, at the top of the "Today" list, as a live block (pulsing blue, "live"). Previously it only appeared in the History tab.',
+        '★ **History tab now only shows finalized sleeps.** While the sleep is running, it stays reserved for Home. Once it ends, it becomes a consolidated entry and appears in both places (with Edit/trash).',
+        'Consistency tweak: the Home list also now hides events that fall inside any bedtime (matching what History already did since v8.5.3), so they do not duplicate with what shows inside the block.'
+      ]
+    }
+  },
+  {
+    v: "8.5.3", date: "2026-04-06",
+    pt: {
+      title: "Eventos da madrugada agora ficam dentro do bedtime e podem ser editados",
+      bullets: [
+        '★ **Qualquer evento registrado durante a madrugada agora aparece dentro do bloco do bedtime** — não só mamada e fralda. Vale para remédio, temperatura, banho. A regra é: se o tipo do evento não é sleep/nap/wakeup/nightwaking/growth e o horário cai dentro do range da noite, ele entra.',
+        '★ **Detecção retroativa.** Eventos antigos sem o link explícito (registrados antes desta versão ou cadastrados manualmente sem ativar Night Wake) também são detectados pelo horário e mostrados dentro do bloco. Não some nada — só reorganiza.',
+        '★ **Editar e excluir eventos aninhados.** Cada item da lista "Atividade da noite" agora é tocável (abre o form de edição) e tem uma lixeirinha do lado pra excluir. Resolve o caso clássico: cadastrei fralda dupla por engano, agora consigo apagar uma.',
+        'Eventos que caem dentro do bedtime mas fora dos ranges dos despertares aparecem numa seção "Outros eventos" no fim do bloco — não somem, só ficam separados visualmente.'
+      ]
+    },
+    en: {
+      title: "Night events nest inside bedtime and can be edited",
+      bullets: [
+        '★ **Any event logged during the night now appears inside the bedtime block** — not just bottle and diaper. Works for medicine, temperature, bath. Rule: if the type is not sleep/nap/wakeup/nightwaking/growth and the time falls inside the night range, it nests.',
+        '★ **Retroactive detection.** Old events without the explicit link (logged before this version or added manually without Night Wake on) are also detected by time and shown inside the block. Nothing disappears — just reorganized.',
+        '★ **Edit and delete nested events.** Each item in the "Night activity" list is now tappable (opens the edit form) and has a small trash button to delete. Solves the classic case: logged a double diaper by mistake, can now remove one.',
+        'Events that fall inside the bedtime but outside any waking range appear in a "Other events" section at the end of the block — not hidden, just visually separated.'
+      ]
+    }
+  },
   {
     v: "8.5.2", date: "2026-04-06",
     pt: {
@@ -1033,6 +1078,31 @@ function sumRealSleep(arr){return arr.filter(e=>(e.type==="sleep"||e.type==="nap
 function sumAwakeInSleep(arr){return arr.filter(e=>e.type==="sleep").reduce((s,e)=>s+awakeMinIn(e),0)}
 // Count total wakings across an array of sleep entries
 function countWakings(arr){return arr.filter(e=>e.type==="sleep"&&e.wakings).reduce((s,e)=>s+e.wakings.length,0)}
+// findContainingBedtime: given an entry and the full entries list, returns the
+// bedtime entry (type "sleep" with wakings) whose time range contains this entry,
+// or null. Used to retroactively show events inside the SleepBlock even when they
+// were registered without an explicit nightWake link (e.g. medicine added later
+// or events from before v8.5.x linking).
+// Excludes the types that delimit/fragment the night themselves.
+const NIGHT_NESTED_EXCLUDED=["sleep","nap","wakeup","nightwaking","growth"];
+function findContainingBedtime(ev,allEntries){
+  if(!ev||!ev.date||!ev.time)return null;
+  if(NIGHT_NESTED_EXCLUDED.includes(ev.type))return null;
+  const evMs=new Date(`${ev.date}T${ev.time}`).getTime();
+  if(isNaN(evMs))return null;
+  // Look at all bedtime entries (type sleep with wakings or with reasonable duration)
+  // We accept any sleep entry that has durationMin (regardless of wakings) as a candidate,
+  // because the "container" concept doesn't strictly require having wakings.
+  // But we only render SleepBlock when wakings.length>0, so practically this is the same.
+  for(const s of allEntries){
+    if(s.type!=="sleep"||!s.durationMin)continue;
+    const startMs=new Date(`${s.date}T${s.time}`).getTime();
+    if(isNaN(startMs))continue;
+    const endMs=startMs+s.durationMin*60000;
+    if(evMs>=startMs&&evMs<=endMs)return s;
+  }
+  return null;
+}
 // dedupeLegacyWakings: safety net for old data created before splitMidnight was fixed (pre-v8.4.8).
 // Old data has wakings duplicated in BOTH halves of cross-midnight sleeps (id + id_b).
 // Returns a NEW entries array with each waking attributed to the correct half only.
@@ -1554,7 +1624,25 @@ function SleepBlock({entry,onDelete,onEdit,entries,isLive}){
   const startMin=(()=>{const[h,m]=entry.time.split(":").map(Number);return h*60+m})();
   // Resolve linked events from entries array
   const findEvent=id=>entries.find(e=>e.id===id);
-  // Render a small linked event row (bottle / diaper / nursing / etc)
+  // Compute the bedtime's time range (for retroactive discovery of events
+  // that were registered without an explicit nightWake link)
+  const bedStartMs=new Date(`${entry.date}T${entry.time}`).getTime();
+  const bedEndMs=bedStartMs+totalMin*60000;
+  // Find events that temporally fall inside this bedtime AND are NOT explicitly
+  // linked to ANY waking (avoid duplicates with the explicit-link path)
+  const explicitlyLinkedIds=new Set();
+  wakings.forEach(w=>(w.events||[]).forEach(id=>explicitlyLinkedIds.add(id)));
+  const retroactiveEvents=entries.filter(e=>{
+    if(!e||NIGHT_NESTED_EXCLUDED.includes(e.type))return false;
+    if(e.id===entry.id)return false; // not the bedtime itself
+    if(explicitlyLinkedIds.has(e.id))return false; // already shown via w.events
+    if(!e.date||!e.time)return false;
+    const evMs=new Date(`${e.date}T${e.time}`).getTime();
+    if(isNaN(evMs))return false;
+    return evMs>=bedStartMs&&evMs<=bedEndMs;
+  });
+  // Render a small linked event row (bottle / diaper / nursing / medicine / etc)
+  // Clickable to edit, with a small trash button.
   const EventMini=({le})=>{
     const cfg=TYPES[le.type]||{icon:"star",color:T.text,bg:T.glass};
     let txt="";
@@ -1562,15 +1650,41 @@ function SleepBlock({entry,onDelete,onEdit,entries,isLive}){
     else if(le.type==="nursing")txt=`${_lang==="en"?"Nursing":"Amamentação"} · ${le.durationMin||"?"} min`;
     else if(le.type==="diaper")txt=`${_lang==="en"?"Diaper":"Fralda"}${le.subtype?` · ${L(le.subtype)||le.subtype}`:""}`;
     else if(le.type==="medicine")txt=`${le.name||""}${le.dose?` · ${le.dose}`:""}`;
+    else if(le.type==="temperature")txt=`${le.value||"?"}°C`;
+    else if(le.type==="bath")txt=_lang==="en"?"Bath":"Banho";
     else txt=TL(le.type);
     return(<div style={{display:"flex",alignItems:"center",gap:9,padding:"6px 0"}}>
-      <div style={{width:24,height:24,borderRadius:7,background:cfg.bg,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+      <div onClick={ev=>{ev.stopPropagation();onEdit&&onEdit(le)}} style={{width:24,height:24,borderRadius:7,background:cfg.bg,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,cursor:"pointer"}}>
         <Icon name={cfg.icon} size={13} color={cfg.color}/>
       </div>
-      <div style={{flex:1,fontSize:11,color:T.text,fontWeight:500}}>{txt}</div>
+      <div onClick={ev=>{ev.stopPropagation();onEdit&&onEdit(le)}} style={{flex:1,fontSize:11,color:T.text,fontWeight:500,cursor:"pointer"}}>{txt}</div>
       <div style={{fontSize:10,color:T.sub,fontWeight:600,fontVariantNumeric:"tabular-nums"}}>{le.time}</div>
+      <button onClick={ev=>{ev.stopPropagation();if(confirm(_lang==="en"?`Delete this ${TL(le.type)||le.type}?`:`Excluir ${TL(le.type)||le.type}?`)){onDelete&&onDelete(le.id)}}} style={{width:22,height:22,borderRadius:6,background:"transparent",border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginLeft:2}}>
+        <Icon name="trash" size={11} color={T.dim}/>
+      </button>
     </div>);
   };
+  // Pre-compute waking ranges + retroactive event distribution (avoid IIFE in JSX, Babel-safe rule)
+  const wakingRanges=wakings.map(w=>{
+    const[wh,wm]=w.time.split(":").map(Number);
+    let wMin=wh*60+wm;
+    if(wMin<startMin)wMin+=1440;
+    const wStartMs=bedStartMs+(wMin-startMin)*60000;
+    const wEndMs=wStartMs+(w.durationMin||0)*60000;
+    return{wStartMs,wEndMs};
+  });
+  const _assignedRetro=new Set();
+  const retroForWaking=wakingRanges.map(({wStartMs,wEndMs})=>{
+    return retroactiveEvents.filter(e=>{
+      if(_assignedRetro.has(e.id))return false;
+      const evMs=new Date(`${e.date}T${e.time}`).getTime();
+      if(isNaN(evMs))return false;
+      if(evMs>=wStartMs&&evMs<=wEndMs){_assignedRetro.add(e.id);return true}
+      return false;
+    });
+  });
+  const orphanRetro=retroactiveEvents.filter(e=>!_assignedRetro.has(e.id));
+
   // Live mode: end label is "agora / now" instead of computed end time
   const endLabel=isLive?(_lang==="en"?"now":"agora"):endT;
   return(<div style={{marginBottom:6,borderRadius:14,background:"rgba(167,139,250,0.05)",border:`1px solid ${isLive?"rgba(96,165,250,0.4)":"rgba(167,139,250,0.18)"}`,overflow:"hidden",position:"relative",animation:isLive?"livePulse 2.5s ease-in-out infinite":"none",boxShadow:isLive?"0 0 16px rgba(96,165,250,0.18)":"none"}}>
@@ -1637,6 +1751,8 @@ function SleepBlock({entry,onDelete,onEdit,entries,isLive}){
       <div style={{padding:"0 16px"}}>
         {wakings.map((w,i)=>{
           const linkedEvents=(w.events||[]).map(findEvent).filter(Boolean);
+          const allEventsForWaking=[...linkedEvents,...retroForWaking[i]]
+            .sort((a,b)=>(a.time||"").localeCompare(b.time||""));
           const isActive=w.isActive;
           return<div key={i}>
             {/* Waking separator with pill — amber if active, blue if closed */}
@@ -1647,10 +1763,20 @@ function SleepBlock({entry,onDelete,onEdit,entries,isLive}){
               </span>
               <span style={{flex:1,height:1,background:isActive?"rgba(251,191,36,0.15)":"rgba(96,165,250,0.12)"}}/>
             </div>
-            {/* Linked events for this waking */}
-            {linkedEvents.length>0?linkedEvents.map((le,j)=><EventMini key={j} le={le}/>):<div style={{fontSize:10,color:T.dim,fontStyle:"italic",padding:"6px 0"}}>{_lang==="en"?"No events recorded":"Nenhum evento registrado"}</div>}
+            {/* All events for this waking (explicit + retroactive merged) */}
+            {allEventsForWaking.length>0?allEventsForWaking.map((le,j)=><EventMini key={le.id||j} le={le}/>):<div style={{fontSize:10,color:T.dim,fontStyle:"italic",padding:"6px 0"}}>{_lang==="en"?"No events recorded":"Nenhum evento registrado"}</div>}
           </div>
         })}
+        {/* Orphan events: inside bedtime but outside any waking range */}
+        {orphanRetro.length>0&&<div>
+          <div style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0 4px",marginTop:6,borderTop:"1px dashed rgba(167,139,250,0.18)"}}>
+            <span style={{display:"inline-flex",alignItems:"center",gap:4,fontSize:10,fontWeight:700,color:"#a78bfa",padding:"3px 9px",borderRadius:8,background:"rgba(167,139,250,0.12)",border:"1px solid rgba(167,139,250,0.28)"}}>
+              {_lang==="en"?"Other events":"Outros eventos"}
+            </span>
+            <span style={{flex:1,height:1,background:"rgba(167,139,250,0.12)"}}/>
+          </div>
+          {orphanRetro.slice().sort((a,b)=>(a.time||"").localeCompare(b.time||"")).map((le,j)=><EventMini key={le.id||j} le={le}/>)}
+        </div>}
       </div>
     </div>}
     {/* Footer hint (only when isLive) */}
@@ -2281,16 +2407,9 @@ function StatsPage({entries,onGrowth}){
   </div>);
 }
 
-function HistoryPage({entries,onDelete,onEdit,activeTimer}){
+function HistoryPage({entries,onDelete,onEdit}){
   const[dateIdx,setDateIdx]=useState(0);
   const[filter,setFilter]=useState("all");
-  // Tick every 30s to keep live bedtime preview fresh
-  const[,setLiveTick]=useState(0);
-  useEffect(()=>{
-    if(!activeTimer||activeTimer.type!=="sleep")return;
-    const iv=setInterval(()=>setLiveTick(k=>k+1),30000);
-    return()=>clearInterval(iv);
-  },[activeTimer]);
   const viewDate=dateOffset(todayStr(),-dateIdx);
   const dayE=entries.filter(e=>e.date===viewDate);
   const filtered=filter==="all"?dayE:dayE.filter(e=>{
@@ -2302,40 +2421,8 @@ function HistoryPage({entries,onDelete,onEdit,activeTimer}){
   const dSl=sumRealSleep(dayE);
   const dLbl=new Date(viewDate+"T12:00").toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{weekday:"long",day:"numeric",month:"long"});
   const isToday=dateIdx===0;
-  // Build live virtual sleep entry if a Bedtime timer is active and we're viewing today
-  // (or yesterday if the bedtime started yesterday and crossed midnight)
-  const virtualSleep=(()=>{
-    if(!activeTimer||activeTimer.type!=="sleep")return null;
-    const startMs=new Date(activeTimer.startTime).getTime();
-    const startD=new Date(startMs);
-    const startDate=`${startD.getFullYear()}-${String(startD.getMonth()+1).padStart(2,"0")}-${String(startD.getDate()).padStart(2,"0")}`;
-    // Show on the date the bedtime started, OR today (in case it crossed midnight)
-    if(viewDate!==startDate&&viewDate!==todayStr())return null;
-    // Only show on the start date — avoids duplication if we view today and bedtime started yesterday
-    if(viewDate!==startDate)return null;
-    const startTime=`${String(startD.getHours()).padStart(2,"0")}:${String(startD.getMinutes()).padStart(2,"0")}`;
-    const totalMin=Math.max(1,Math.floor((Date.now()-startMs)/60000));
-    // Build wakings array: closed wakings + active waking (if any)
-    const wakings=[...(activeTimer.wakings||[])];
-    if(activeTimer.nightWake){
-      const nwStart=new Date(activeTimer.nightWake.startTime);
-      const nwDur=Math.max(1,Math.floor((Date.now()-nwStart.getTime())/60000));
-      wakings.push({
-        time:`${String(nwStart.getHours()).padStart(2,"0")}:${String(nwStart.getMinutes()).padStart(2,"0")}`,
-        durationMin:nwDur,
-        events:activeTimer.nightWake.events||[],
-        isActive:true
-      });
-    }
-    return{
-      id:"__live__",
-      type:"sleep",
-      date:startDate,
-      time:startTime,
-      durationMin:totalMin,
-      wakings
-    };
-  })();
+  // Note: live in-progress bedtime is NOT shown here. It only appears in Home.
+  // History is reserved for finalized entries.
   const filters=[{v:"all",l:L("all"),c:T.accent},{v:"feed",l:L("milk"),c:T.green},{v:"sleep",l:L("sleepLabel"),c:T.purple},{v:"diaper",l:typeLabel("diaper",_lang),c:T.pink},{v:"medicine",l:_lang==="en"?"Meds":"Med.",c:T.amber}];
   return(<div style={{padding:"calc(16px + env(safe-area-inset-top)) 20px 0"}}>
     <h2 style={{fontSize:17,fontWeight:700,marginBottom:12}}>{L("history")}</h2>
@@ -2374,10 +2461,14 @@ function HistoryPage({entries,onDelete,onEdit,activeTimer}){
         </div>
       </div>
     })()}
-    {filtered.length===0&&!virtualSleep&&<p style={{color:T.dim,textAlign:"center",padding:40,fontSize:13}}>{L("noEntries")}{filter!=="all"?(_lang==="en"?" of this type":" desse tipo"):""}</p>}
-    {/* Live bedtime preview at top */}
-    {virtualSleep&&(filter==="all"||filter==="sleep")&&<SleepBlock entry={virtualSleep} entries={entries} isLive={true}/>}
-    {filtered.filter(e=>!e.nightWake).map(e=>(e.type==="sleep"&&e.wakings&&e.wakings.length>0)?<SleepBlock key={e.id} entry={e} onDelete={onDelete} onEdit={onEdit} entries={entries}/>:<EntryRow key={e.id} entry={e} onDelete={onDelete} onEdit={onEdit}/>)}
+    {filtered.length===0&&<p style={{color:T.dim,textAlign:"center",padding:40,fontSize:13}}>{L("noEntries")}{filter!=="all"?(_lang==="en"?" of this type":" desse tipo"):""}</p>}
+    {filtered.filter(e=>{
+      if(e.nightWake)return false; // explicit link (new flow)
+      // Retroactive: also hide events that temporally fall inside any bedtime
+      // (catches medicine, temperature, etc registered without the explicit link)
+      if(findContainingBedtime(e,entries))return false;
+      return true;
+    }).map(e=>(e.type==="sleep"&&e.wakings&&e.wakings.length>0)?<SleepBlock key={e.id} entry={e} onDelete={onDelete} onEdit={onEdit} entries={entries}/>:<EntryRow key={e.id} entry={e} onDelete={onDelete} onEdit={onEdit}/>)}
   </div>);
 }
 
@@ -2624,8 +2715,11 @@ function App(){
   const handleUndo=()=>{if(undoRef.current)undoRef.current();setToast(null)};
   const addEntry=useCallback(async e=>{
     Haptic.medium();
-    // If night wake is active, tag this event as part of the waking
-    if(activeTimer&&activeTimer.type==="sleep"&&activeTimer.nightWake&&(e.type==="bottle"||e.type==="nursing"||e.type==="diaper")){
+    // If night wake is active, tag this event as part of the waking.
+    // Any event type can be linked EXCEPT the ones that delimit/fragment the night:
+    // sleep, nap, wakeup, nightwaking (handled via wakings[]), growth.
+    const NIGHT_WAKE_EXCLUDED=["sleep","nap","wakeup","nightwaking","growth"];
+    if(activeTimer&&activeTimer.type==="sleep"&&activeTimer.nightWake&&!NIGHT_WAKE_EXCLUDED.includes(e.type)){
       e.nightWake=activeTimer.startTime; // link to parent sleep via its startTime
       const updatedNw={...activeTimer.nightWake,events:[...(activeTimer.nightWake.events||[]),e.id]};
       await FB.saveTimer({...activeTimer,nightWake:updatedNw});
@@ -2787,6 +2881,30 @@ function App(){
   },[sleepPattern,todayE,age]);
   const dayInsights=useMemo(()=>getDayInsights(todayE,sleepPattern,sleepRec?.g),[todayE,sleepPattern,sleepRec]);
   const napSug=useMemo(()=>!activeTimer?getNapSug(cycleE,sleepRec):null,[cycleE,sleepRec,activeTimer,tick]);
+  // Live bedtime virtual entry: built when an active sleep timer is running.
+  // Used by Home (shows in-progress block at top of today's list) and HistoryPage
+  // (which intentionally HIDES it — bedtimes only appear in history once finalized).
+  // Recomputes on every tick so the totalMin and active waking advance live.
+  const liveBedtime=useMemo(()=>{
+    if(!activeTimer||activeTimer.type!=="sleep")return null;
+    const startMs=new Date(activeTimer.startTime).getTime();
+    const startD=new Date(startMs);
+    const startDate=`${startD.getFullYear()}-${String(startD.getMonth()+1).padStart(2,"0")}-${String(startD.getDate()).padStart(2,"0")}`;
+    const startTime=`${String(startD.getHours()).padStart(2,"0")}:${String(startD.getMinutes()).padStart(2,"0")}`;
+    const totalMin=Math.max(1,Math.floor((Date.now()-startMs)/60000));
+    const wakings=[...(activeTimer.wakings||[])];
+    if(activeTimer.nightWake){
+      const nwStart=new Date(activeTimer.nightWake.startTime);
+      const nwDur=Math.max(1,Math.floor((Date.now()-nwStart.getTime())/60000));
+      wakings.push({
+        time:`${String(nwStart.getHours()).padStart(2,"0")}:${String(nwStart.getMinutes()).padStart(2,"0")}`,
+        durationMin:nwDur,
+        events:activeTimer.nightWake.events||[],
+        isActive:true
+      });
+    }
+    return{id:"__live__",type:"sleep",date:startDate,time:startTime,durationMin:totalMin,wakings};
+  },[activeTimer,tick]);
   const daysLeft=sleepRec?.phase===1?sleepRec.dl:null;
 
   // ── INBOX CAPTURE: sync dayInsights into persistent inbox ──
@@ -2958,9 +3076,13 @@ function App(){
         {!activeTimer&&sleepRec?.phase===2&&daySchedule.length>0&&daySchedule.filter(s=>s.status==="next").map((s,i)=><div key={"ns"+i} style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:`${T.accent}10`,border:`1px solid ${T.accent}18`,display:"flex",alignItems:"center",gap:10}}><Icon name="star" size={18} color={T.accent} fill={T.accent}/><div><div style={{fontSize:12,fontWeight:700,color:T.accent}}>{s.bed?(_lang==="en"?"Bedtime ~":"Sono ~"):(_lang==="en"?"Next nap ~":"Prox. soneca ~")}{minToTime(s.startMin)}</div><div style={{fontSize:10,color:T.sub}}>{s.bed?"":`${s.pos}${_lang==="en"?["","st","nd","rd"][s.pos]||"th":"a"} · `}WW {fmtDur(s.ww)}{s.durRange?" · "+s.durRange:""}</div></div></div>)}
         <InsightCards insights={dayInsights} phase={sleepRec?.phase}/>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,padding:"0 20px",marginBottom:14}}>{[{i:"bottle",v:`${totalMl}`,u:"ml",c:T.green,t:["bottle"],tap:"bottle",l:_lang==="en"?"Bottle":"Mamad."},{i:"breast",v:totalNursingMin>0?fmtDur(totalNursingMin):`${totalNursing}x`,c:T.blue,t:["nursing"],tap:"nursing",l:_lang==="en"?"Nursing":"Amam."},{i:"moon",v:fmtDur(totalSleep),c:T.purple,t:["sleep","nap"],tap:"nap",l:_lang==="en"?"Sleep":"Sono"},{i:"diaper",v:`${totalDiapers}`,c:T.pink,t:["diaper"],tap:"diaper",l:_lang==="en"?"Diaper":"Fralda"}].map((p,idx)=>{const last=entries.find(e=>p.t.includes(e.type));let ago=null;if(last){if(p.t.includes("sleep")&&last.durationMin){const endMs=new Date(`${last.date}T${last.time}`).getTime()+last.durationMin*60000;const endD=new Date(endMs);const ed=`${endD.getFullYear()}-${String(endD.getMonth()+1).padStart(2,"0")}-${String(endD.getDate()).padStart(2,"0")}`;const et=`${String(endD.getHours()).padStart(2,"0")}:${String(endD.getMinutes()).padStart(2,"0")}`;ago=timeSince(ed,et)}else{ago=timeSince(last.date,last.time)}}return<button key={idx} onClick={()=>{if(p.tap==="nap"&&!activeTimer)startTimer("nap");else if(p.tap==="nursing"&&!activeTimer)startTimer("nursing",nextNursingSide);else if(!activeTimer)setFormType(p.tap)}} style={{padding:"10px",borderRadius:12,background:`${p.c}06`,border:`1px solid ${p.c}0a`,textAlign:"left"}}><div style={{display:"flex",alignItems:"center",gap:5,marginBottom:3}}><Icon name={p.i} size={12} color={p.c}/><span style={{fontSize:9,color:T.dim}}>{p.l}</span></div><div style={{fontSize:16,fontWeight:800,color:p.c}}>{p.v}{p.u?<span style={{fontSize:11,opacity:0.6}}>{p.u}</span>:null}</div>{ago&&<div style={{fontSize:12,color:`${p.c}88`,fontWeight:600,marginTop:3}}>{ago}</div>}</button>})}</div>
-        <div style={{padding:"0 20px"}}><div style={{fontSize:11,fontWeight:600,color:T.dim,marginBottom:8,textTransform:"uppercase",letterSpacing:0.8}}>{L("today")}</div>{todayE.length===0&&<div style={{textAlign:"center",padding:"32px 20px",color:T.dim}}><Icon name="star" size={32} color={T.dim} fill={T.dim}/><div style={{fontSize:13,marginTop:8}}>{_lang==="en"?"Tap + to add":"Toque + para registrar"}</div></div>}{todayE.filter(e=>!e.nightWake).map((e,i,arr)=>{const prev=arr[i-1];let gap=null;if(prev){const t1=new Date(`${e.date}T${e.time}`).getTime();let t2=new Date(`${prev.date}T${prev.time}`).getTime();if(prev.durationMin)t2+=prev.durationMin*60000;const diffMin=Math.abs(Math.round((t1-t2)/60000));if(diffMin>=30){const isSleep=(e.type==="nap"||e.type==="sleep")&&e.durationMin;gap=<div style={{display:"flex",alignItems:"center",gap:10,padding:"4px 16px",margin:"2px 0"}}><div style={{flex:1,height:1,background:`linear-gradient(90deg,transparent,${isSleep?T.accent:T.accent}0a,transparent)`}}/><span style={{fontSize:8,color:isSleep?T.accent:T.dim,letterSpacing:0.5}}>{isSleep?"WW ":""}{fmtDur(diffMin)}</span><div style={{flex:1,height:1,background:`linear-gradient(90deg,transparent,${isSleep?T.accent:T.accent}0a,transparent)`}}/></div>}}const useBlock=e.type==="sleep"&&e.wakings&&e.wakings.length>0;return<React.Fragment key={e.id}>{gap}{useBlock?<SleepBlock entry={e} onDelete={deleteEntry} onEdit={startEdit} entries={entries}/>:<EntryRow entry={e} onDelete={deleteEntry} onEdit={startEdit} napNum={napNums[e.id]||null}/>}</React.Fragment>})}</div>
+        <div style={{padding:"0 20px"}}><div style={{fontSize:11,fontWeight:600,color:T.dim,marginBottom:8,textTransform:"uppercase",letterSpacing:0.8}}>{L("today")}</div>{todayE.length===0&&!liveBedtime&&<div style={{textAlign:"center",padding:"32px 20px",color:T.dim}}><Icon name="star" size={32} color={T.dim} fill={T.dim}/><div style={{fontSize:13,marginTop:8}}>{_lang==="en"?"Tap + to add":"Toque + para registrar"}</div></div>}{liveBedtime&&<SleepBlock entry={liveBedtime} entries={entries} isLive={true}/>}{todayE.filter(e=>{
+          if(e.nightWake)return false;
+          if(findContainingBedtime(e,entries))return false;
+          return true;
+        }).map((e,i,arr)=>{const prev=arr[i-1];let gap=null;if(prev){const t1=new Date(`${e.date}T${e.time}`).getTime();let t2=new Date(`${prev.date}T${prev.time}`).getTime();if(prev.durationMin)t2+=prev.durationMin*60000;const diffMin=Math.abs(Math.round((t1-t2)/60000));if(diffMin>=30){const isSleep=(e.type==="nap"||e.type==="sleep")&&e.durationMin;gap=<div style={{display:"flex",alignItems:"center",gap:10,padding:"4px 16px",margin:"2px 0"}}><div style={{flex:1,height:1,background:`linear-gradient(90deg,transparent,${isSleep?T.accent:T.accent}0a,transparent)`}}/><span style={{fontSize:8,color:isSleep?T.accent:T.dim,letterSpacing:0.5}}>{isSleep?"WW ":""}{fmtDur(diffMin)}</span><div style={{flex:1,height:1,background:`linear-gradient(90deg,transparent,${isSleep?T.accent:T.accent}0a,transparent)`}}/></div>}}const useBlock=e.type==="sleep"&&e.wakings&&e.wakings.length>0;return<React.Fragment key={e.id}>{gap}{useBlock?<SleepBlock entry={e} onDelete={deleteEntry} onEdit={startEdit} entries={entries}/>:<EntryRow entry={e} onDelete={deleteEntry} onEdit={startEdit} napNum={napNums[e.id]||null}/>}</React.Fragment>})}</div>
       </div>}
-      {page==="history"&&<HistoryPage entries={entries} onDelete={deleteEntry} onEdit={startEdit} activeTimer={activeTimer}/>}
+      {page==="history"&&<HistoryPage entries={entries} onDelete={deleteEntry} onEdit={startEdit}/>}
       {page==="stats"&&<StatsPage entries={entries} onGrowth={()=>goTo("growth")}/>}
       {page==="growth"&&<GrowthPage entries={entries} birthDate={profile.birthDate} profile={profile} onBack={()=>goTo("stats")} onAddEntry={addEntry}/>}
       {/* Bottom spacer so content clears nav bar */}
