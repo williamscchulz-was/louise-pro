@@ -291,8 +291,11 @@
       var bed = de.find(function(e) { return e.type === "sleep"; });
       var bedMin = bed ? toMinutes(bed.time) : null;
       var nightTimeInBed = bed && bed.durationMin ? bed.durationMin : null;
-      // Extract wakings and compute real sleep (time in bed minus awake time)
-      var nightWakings = (bed && bed.wakings) ? bed.wakings : [];
+      // Extract wakings and compute real sleep (time in bed minus awake time).
+      // hasWakingsTracking distinguishes "no field at all" (legacy/no Night Wake usage)
+      // from "field exists but empty" (Night Wake was used and the baby actually didn't wake).
+      var hasWakingsTracking = !!(bed && Array.isArray(bed.wakings));
+      var nightWakings = hasWakingsTracking ? bed.wakings : [];
       var awakeMin = nightWakings.reduce(function(s, w) { return s + (w.durationMin || 0); }, 0);
       var nightSleepMin = nightTimeInBed != null ? Math.max(0, nightTimeInBed - awakeMin) : null;
 
@@ -314,6 +317,7 @@
         nightTimeInBed: nightTimeInBed,
         nightWakings: nightWakings,
         nightWakingsCount: nightWakings.length,
+        hasWakingsTracking: hasWakingsTracking,
         nightAwakeMin: awakeMin,
         totalSleepMin: napTotalMin + (nightSleepMin || 0),
         feeds: feeds,
@@ -467,12 +471,19 @@
     var allWakingTimes = []; // minutes from 0-1440 (treating post-midnight as +1440)
     var allWakingDurations = [];
     var wakingTypeCounter = { feed: 0, diaper: 0, other: 0 };
-    var nightsWithData = 0; // nights where we have a sleep with wakings data
+    var nightsWithData = 0; // nights where Night Wake was used (explicit tracking)
+    var nightsWithSleepNoTracking = 0; // nights with sleep registered but no Night Wake usage
 
     for (var wi2 = 0; wi2 < dayData.length; wi2++) {
       var wdd = dayData[wi2];
-      // Only count if there's an actual sleep event (not just undefined)
+      // Only count nights where the user explicitly used Night Wake (wakings array exists).
+      // Otherwise, "0 wakings" would be a false positive caused by the user not tracking
+      // (e.g. "Sleeping through the night" insight on a 1-month-old, which is impossible).
       if (wdd.nightTimeInBed != null && wdd.nightTimeInBed > 60) {
+        if (!wdd.hasWakingsTracking) {
+          nightsWithSleepNoTracking++;
+          continue;
+        }
         nightsWithData++;
         wakingCounts.push(wdd.nightWakingsCount);
         wakingCountWeights.push(wdd.weight);
@@ -720,6 +731,7 @@
       daysAnalyzed: dayData.length,
       daysWithSleep: sleepDays.length,
       confidence: confidence,
+      ageWeeks: ageWeeks != null ? ageWeeks : null,
 
       sleep: {
         positions: positions,
@@ -1465,10 +1477,15 @@
     // 4-7. WAKINGS INSIGHTS (morning review, 6h-10h)
     if (isMorning && pattern.fullPattern && pattern.fullPattern.sleep && pattern.fullPattern.sleep.wakings) {
       var wa = pattern.fullPattern.sleep.wakings;
+      // Sanity check: "sleeping through the night" only makes biological sense
+      // from ~4 months. Below that, 0 wakings means the user didn't track,
+      // not that the baby slept through (newborns physiologically must wake to feed).
+      var ageWeeksForInsight = pattern.fullPattern.ageWeeks;
+      var oldEnoughForSTTN = ageWeeksForInsight != null && ageWeeksForInsight >= 16;
 
       // 4. Waking frequency
       if (wa.avgPerNight != null && wa.nightsAnalyzed >= 3) {
-        if (wa.avgPerNight === 0) {
+        if (wa.avgPerNight === 0 && oldEnoughForSTTN) {
           hints.push({
             type: "good",
             title: l === "en" ? "Sleeping through the night" : "Dormindo a noite toda",
