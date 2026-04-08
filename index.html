@@ -5,9 +5,9 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v9.1.0  Apple Polish Full Sweep + fix do grafico Simeticona
   v9.0.0  MAJOR: Apple Polish · redesign sutil em todo o app
   v8.5.11 Fix definitivo dos inputs colidindo (Safari minmax fix)
-  v8.5.10 Fix inputs colidindo no AddForm (1a tentativa, parcial)
 
   Stack: HTML puro + React 18 CDN + Babel + Firebase 10.x compat
   Repo: https://github.com/williamscchulz-was/louise-pro
@@ -227,8 +227,41 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "9.0.0";
+const APP_VERSION = "9.1.0";
 const CHANGELOG = [
+  {
+    v: "9.1.0", date: "2026-04-08",
+    pt: {
+      title: "Apple Polish Full Sweep + fix do gráfico Simeticona",
+      bullets: [
+        '★ **Continuação do redesign Apple-style começado na v9.0.0.** Aplicado o tratamento "confident" em mais 7 componentes que ainda estavam no estilo antigo. Agora o app tem polish consistente em quase tudo.',
+        '★ **Bug do stripe colorido reto corrigido.** Na v9.0.0 a borda esquerda dos itens da lista (verde nas mamadeiras, roxo nos sonos, etc) estava ficando torta/cortada por causa da combinação de `borderLeft` + `overflow:hidden` + `transform` do swipe-to-delete. Refeita como **div absoluto de 4px com gradient**, garantindo que a linha sempre fica reta de cima a baixo.',
+        '★ **Bug do gráfico de Simeticona corrigido.** Os labels "2" no topo das barras estavam sendo cortados pelo `overflow:hidden` do contêiner. Removido o overflow, altura aumentada de 80→100px.',
+        '**EntryRow** (itens da History) refeito: stripe colorido reto, background mais sólido, ícone 42px com gradient duplo, título 15px peso 600, horário 16px peso 700 com tracking -0.4 e tabular numerals.',
+        '**SleepBlock header** com mesma técnica do stripe + ícone 50px, time-range 18px com tracking, padding generoso.',
+        '**Card "Today" da History** com gradient interno, raio 20px, botões de navegação 38px com inset, stats com weight 600 e tabular numerals.',
+        '**Filter pills** (All/Milk/Sleep/Diaper/Meds): padding +50%, raio 12px, todos com background sutil, ativo com gradient + glow + ring colorido.',
+        '**Active timer** (Bedtime/Nap em andamento): gradient duplo + radial highlight + sombra colorida profunda, ícone 50px, time 26px com tracking -1px.',
+        '**Profile toggles** (Notificações, Manter tela ligada, Vibração tátil): card maior, switches 52×32 com gradient vertical e sombra colorida, knob 24px com sombra mais marcada, separadores mais sutis.',
+        '**InsightCards** do Home: gradient + radial highlight + ícone 42px com borda colorida, sombra colorida sutil de glow, título 15px com cor mais vibrante.'
+      ]
+    },
+    en: {
+      title: "Apple Polish Full Sweep + Simeticone chart fix",
+      bullets: [
+        '★ **Continuation of the Apple-style redesign started in v9.0.0.** Applied the "confident" treatment to 7 more components that were still in the old style. The app now has consistent polish across almost everything.',
+        '★ **Straight colored stripe bug fixed.** In v9.0.0 the left border of list items (green on bottles, purple on sleeps, etc.) was rendering crooked/cut due to the combination of `borderLeft` + `overflow:hidden` + swipe-to-delete `transform`. Rebuilt as an **absolute 4px div with gradient**, ensuring the line always stays straight top to bottom.',
+        '★ **Simeticone chart bug fixed.** The "2" labels on top of the bars were being cut off by the container `overflow:hidden`. Removed the overflow, height bumped from 80→100px.',
+        '**EntryRow** (History list items) rebuilt: straight colored stripe, more solid background, 42px icon with double gradient, 15px title 600 weight, 16px time 700 weight with -0.4 tracking and tabular numerals.',
+        '**SleepBlock header** with the same stripe technique + 50px icon, 18px time-range with tracking, generous padding.',
+        '**History "Today" card** with internal gradient, 20px radius, 38px nav buttons with inset, stats with weight 600 and tabular numerals.',
+        '**Filter pills** (All/Milk/Sleep/Diaper/Meds): +50% padding, 12px radius, all with subtle background, active with gradient + glow + colored ring.',
+        '**Active timer** (Bedtime/Nap in progress): double gradient + radial highlight + deep colored shadow, 50px icon, 26px time with -1px tracking.',
+        '**Profile toggles** (Notifications, Keep screen on, Haptic feedback): larger card, 52×32 switches with vertical gradient and colored shadow, 24px knob with more pronounced shadow, subtler separators.',
+        '**Home InsightCards**: gradient + radial highlight + 42px icon with colored border, subtle colored glow shadow, 15px title with more vibrant color.'
+      ]
+    }
+  },
   {
     v: "9.0.0", date: "2026-04-08",
     pt: {
@@ -1393,7 +1426,15 @@ function TimerBar({activeTimer,onStop,onSwitch,onPause}){const[tick,setTick]=use
     </div>)
   }
   const secs=Math.max(0,Math.floor((Date.now()-new Date(activeTimer.startTime).getTime())/1000));
-  return(<div style={{position:"fixed",bottom:"calc(60px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 32px)",maxWidth:448,padding:"12px 16px",borderRadius:16,background:"rgba(20,26,66,0.92)",border:`1px solid ${T.purple}33`,backdropFilter:"blur(12px)",display:"flex",alignItems:"center",gap:12,zIndex:60,boxShadow:"0 4px 24px rgba(0,0,0,0.4)"}}><div style={{width:36,height:36,borderRadius:10,background:T.purpleS,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name={activeTimer.type==="nap"?"cloud":"moon"} size={18} color={T.purple}/></div><div style={{flex:1}}><div style={{fontSize:12,fontWeight:600,color:T.sub}}>{activeTimer.type==="nap"?TL("nap"):TL("sleep")}</div><div style={{fontSize:20,fontWeight:800,fontVariantNumeric:"tabular-nums"}}>{fmtTimer(secs)}</div></div><button onClick={onStop} style={{width:40,height:40,borderRadius:12,background:T.purpleS,border:`1px solid ${T.purple}33`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="stop" size={16} color={T.purple}/></button></div>)}
+  return(<div style={{position:"fixed",bottom:"calc(60px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 32px)",maxWidth:448,padding:"16px 18px",borderRadius:20,background:"linear-gradient(180deg,rgba(139,124,246,0.18),rgba(139,124,246,0.06))",border:`1px solid ${T.purple}55`,backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",display:"flex",alignItems:"center",gap:14,zIndex:60,boxShadow:`0 1px 0 0 rgba(255,255,255,0.08) inset, 0 0 0 1px ${T.purple}15, 0 12px 30px -10px ${T.purple}40`,overflow:"hidden",position:"fixed"}}>
+    <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse at 50% 0%,rgba(255,255,255,0.06),transparent 60%)",pointerEvents:"none"}}/>
+    <div style={{width:50,height:50,borderRadius:15,background:`linear-gradient(135deg,${T.purple}45,${T.purple}15)`,border:`1px solid ${T.purple}55`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,boxShadow:"0 1px 0 0 rgba(255,255,255,0.1) inset",position:"relative"}}><Icon name={activeTimer.type==="nap"?"cloud":"moon"} size={22} color="#c4b5fd"/></div>
+    <div style={{flex:1,position:"relative"}}>
+      <div style={{fontSize:11,fontWeight:600,color:"rgba(196,181,253,0.85)",letterSpacing:-0.05,marginBottom:3,textTransform:"uppercase"}}>{activeTimer.type==="nap"?TL("nap"):TL("sleep")}</div>
+      <div style={{fontSize:26,fontWeight:800,fontVariantNumeric:"tabular-nums",color:"#f0f2ff",letterSpacing:-1}}>{fmtTimer(secs)}</div>
+    </div>
+    <button onClick={onStop} style={{width:50,height:50,borderRadius:15,background:`linear-gradient(180deg,${T.purple}55,${T.purple}30)`,border:`1px solid ${T.purple}70`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 1px 0 0 rgba(255,255,255,0.15) inset, 0 6px 16px -6px ${T.purple}55`,position:"relative",flexShrink:0}}><Icon name="stop" size={16} color="#fff"/></button>
+  </div>)}
 
 function CuriosityCard({age,lang,tick}){
   const[vis,setVis]=useState(false);const[fading,setFading]=useState(false);const shownRef=useRef(null);
@@ -1465,7 +1506,14 @@ function InsightCards({insights,phase}){
     return()=>{clearTimeout(t1);clearTimeout(t2)};
   },[vis]);
   if(!vis||!insights||insights.length===0)return null;
-  return(<>{insights.map((h,i)=>{const col=h.type==="good"?T.green:h.type==="warn"?T.orange:T.blue;return<div key={"hi"+i} style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:h.type==="good"?T.greenS:h.type==="warn"?T.orangeS:`${T.blue}08`,border:`1px solid ${col}22`,display:"flex",alignItems:"center",gap:10,animation:fading?"curiosityOut .5s ease forwards":"curiosityIn .5s ease"}}><Icon name={h.type==="good"?"check":h.type==="warn"?"zap":"star"} size={18} color={col}/><div><div style={{fontSize:12,fontWeight:700,color:col}}>{h.title}</div><div style={{fontSize:10,color:T.sub}}>{h.sub}</div></div></div>})}</>);
+  return(<>{insights.map((h,i)=>{const col=h.type==="good"?T.green:h.type==="warn"?T.orange:T.blue;const colLight=h.type==="good"?"#6ee7b7":h.type==="warn"?"#fdba74":"#7dd3fc";return<div key={"hi"+i} style={{position:"relative",margin:"0 20px 12px",padding:"18px 20px",borderRadius:20,background:`linear-gradient(180deg,${col}1f,${col}08)`,border:`1px solid ${col}45`,display:"flex",alignItems:"flex-start",gap:14,boxShadow:`0 1px 0 0 rgba(255,255,255,0.08) inset, 0 0 0 1px ${col}10, 0 8px 24px -8px ${col}25`,overflow:"hidden",animation:fading?"curiosityOut .5s ease forwards":"curiosityIn .5s ease"}}>
+    <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse at 50% 0%,rgba(255,255,255,0.05),transparent 60%)",pointerEvents:"none"}}/>
+    <div style={{width:42,height:42,borderRadius:13,background:`linear-gradient(135deg,${col}45,${col}15)`,border:`1px solid ${col}55`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,boxShadow:"0 1px 0 0 rgba(255,255,255,0.1) inset",position:"relative"}}><Icon name={h.type==="good"?"check":h.type==="warn"?"zap":"star"} size={20} color={colLight}/></div>
+    <div style={{flex:1,minWidth:0,position:"relative"}}>
+      <div style={{fontSize:15,fontWeight:700,color:colLight,letterSpacing:-0.2}}>{h.title}</div>
+      <div style={{fontSize:12,color:"#9099c3",marginTop:4,lineHeight:1.55}}>{h.sub}</div>
+    </div>
+  </div>})}</>);
 }
 
 function Toast({message,onUndo,onClose}){const closeRef=useRef(onClose);closeRef.current=onClose;useEffect(()=>{const t=setTimeout(()=>closeRef.current(),2000);return()=>clearTimeout(t)},[]);return(<div style={{position:"fixed",top:"calc(20px + env(safe-area-inset-top))",left:"50%",transform:"translateX(-50%)",zIndex:300,padding:"10px 16px",borderRadius:14,background:"rgba(20,26,66,0.95)",border:`1px solid ${T.gB}`,backdropFilter:"blur(12px)",display:"flex",alignItems:"center",gap:10,boxShadow:"0 8px 24px rgba(0,0,0,0.5)",animation:"slideDown .3s ease"}}><span style={{fontSize:13,color:T.text}}>{message}</span>{onUndo&&<button onClick={onUndo} style={{padding:"4px 12px",borderRadius:8,background:T.accent,color:"#fff",fontSize:12,fontWeight:700}}>{L("undo")}</button>}</div>)}
@@ -1553,22 +1601,24 @@ function SleepBlock({entry,onDelete,onEdit,entries,isLive}){
 
   // Live mode: end label is "agora / now" instead of computed end time
   const endLabel=isLive?(_lang==="en"?"now":"agora"):endT;
-  return(<div style={{marginBottom:6,borderRadius:14,background:"rgba(167,139,250,0.05)",border:`1px solid ${isLive?"rgba(96,165,250,0.4)":"rgba(167,139,250,0.18)"}`,overflow:"hidden",position:"relative",animation:isLive?"livePulse 2.5s ease-in-out infinite":"none",boxShadow:isLive?"0 0 16px rgba(96,165,250,0.18)":"none"}}>
+  return(<div style={{position:"relative",marginBottom:8,borderRadius:20,background:"linear-gradient(180deg,rgba(167,139,250,0.08),rgba(167,139,250,0.03))",border:`1px solid ${isLive?"rgba(96,165,250,0.4)":T.gBSoft}`,overflow:"hidden",animation:isLive?"livePulse 2.5s ease-in-out infinite":"none",boxShadow:isLive?"0 0 16px rgba(96,165,250,0.18), "+T.insetTop:T.insetTop}}>
+    {/* Colored stripe (matches new EntryRow style) */}
+    <div style={{position:"absolute",left:0,top:0,bottom:0,width:4,background:"linear-gradient(180deg,#a78bfa,rgba(167,139,250,0.3))",borderRadius:"0 2px 2px 0",pointerEvents:"none",zIndex:1}}/>
     {/* Live ribbon (only when isLive) */}
-    {isLive&&<div style={{display:"flex",alignItems:"center",gap:8,padding:"8px 16px",background:"linear-gradient(90deg,rgba(96,165,250,0.18),rgba(167,139,250,0.10))",borderBottom:"1px solid rgba(96,165,250,0.25)"}}>
+    {isLive&&<div style={{display:"flex",alignItems:"center",gap:8,padding:"8px 16px 8px 22px",background:"linear-gradient(90deg,rgba(96,165,250,0.18),rgba(167,139,250,0.10))",borderBottom:"1px solid rgba(96,165,250,0.25)",position:"relative"}}>
       <span style={{width:8,height:8,borderRadius:"50%",background:"#60a5fa",boxShadow:"0 0 8px #60a5fa",animation:"liveDotPulse 1.5s ease-in-out infinite"}}/>
       <span style={{fontSize:9,fontWeight:800,color:"#60a5fa",textTransform:"uppercase",letterSpacing:1.5,flex:1}}>{_lang==="en"?"In progress":"Em andamento"}</span>
       <span style={{fontSize:10,color:T.sub,fontWeight:600,fontVariantNumeric:"tabular-nums"}}>{_lang==="en"?"for ":"há "}{fmtDur(totalMin)}</span>
     </div>}
     {/* Header */}
-    <button onClick={()=>setExpanded(!expanded)} style={{width:"100%",padding:"14px 16px",display:"flex",alignItems:"center",gap:12,textAlign:"left",background:"linear-gradient(180deg,rgba(167,139,250,0.07),rgba(167,139,250,0.02))"}}>
-      <div style={{width:40,height:40,borderRadius:12,background:"linear-gradient(135deg,rgba(167,139,250,0.25),rgba(124,58,237,0.18))",border:"1px solid rgba(167,139,250,0.25)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-        <Icon name="moon" size={20} color="#c084fc"/>
+    <button onClick={()=>setExpanded(!expanded)} style={{width:"100%",padding:"18px 20px 18px 24px",display:"flex",alignItems:"center",gap:14,textAlign:"left",background:"transparent",position:"relative"}}>
+      <div style={{width:50,height:50,borderRadius:15,background:"linear-gradient(135deg,rgba(167,139,250,0.28),rgba(167,139,250,0.08))",border:"1px solid rgba(167,139,250,0.4)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset"}}>
+        <Icon name="moon" size={24} color="#c4b5fd"/>
       </div>
       <div style={{flex:1,minWidth:0}}>
-        <div style={{fontSize:9,fontWeight:700,color:"rgba(167,139,250,0.7)",textTransform:"uppercase",letterSpacing:1,marginBottom:2}}>{_lang==="en"?"Bedtime":"Sono noturno"}{isLive&&<span style={{marginLeft:6,opacity:0.7}}>{_lang==="en"?"· live":"· ao vivo"}</span>}</div>
-        <div style={{fontSize:14,fontWeight:700,color:"#c084fc"}}>{entry.time} — {endLabel}</div>
-        <div style={{display:"flex",gap:8,marginTop:4,fontSize:10,color:T.sub,alignItems:"center",flexWrap:"wrap"}}>
+        <div style={{fontSize:10,fontWeight:700,color:"rgba(196,181,253,0.85)",textTransform:"uppercase",letterSpacing:0.5,marginBottom:3}}>{_lang==="en"?"Bedtime":"Sono noturno"}{isLive&&<span style={{marginLeft:6,opacity:0.7}}>{_lang==="en"?"· live":"· ao vivo"}</span>}</div>
+        <div style={{fontSize:18,fontWeight:800,color:"#f0f2ff",letterSpacing:-0.4,fontVariantNumeric:"tabular-nums",marginBottom:5}}>{entry.time} — {endLabel}</div>
+        <div style={{display:"flex",gap:8,fontSize:12,color:T.sub,alignItems:"center",flexWrap:"wrap"}}>
           <span style={{color:T.purple,fontWeight:700,fontVariantNumeric:"tabular-nums"}}>{fmtDur(realMin)} {_lang==="en"?"sleep":"sono"}</span>
           {awakeMin>0&&<>
             <span style={{width:3,height:3,borderRadius:"50%",background:T.dim}}/>
@@ -1661,12 +1711,14 @@ function EntryRow({entry,onDelete,onEdit,napNum,nightBadge}){const[swipe,setSwip
   const onTS=e=>{startX.current=e.touches[0].clientX;setSwiping(true)};
   const onTM=e=>{if(!swiping)return;const dx=startX.current-e.touches[0].clientX;setSwipe(Math.max(0,Math.min(70,dx)))};
   const onTE=()=>{setSwiping(false);if(swipe>40)setSwipe(70);else setSwipe(0)};
-  return(<div style={{position:"relative",marginBottom:6,overflow:"hidden",borderRadius:16}}>
-  {swipe>0&&<div style={{position:"absolute",right:0,top:0,bottom:0,width:70,background:"rgba(248,113,113,0.12)",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"0 16px 16px 0",opacity:swipe/70}}><button onClick={()=>onDelete(entry.id)} style={{padding:8}}><Icon name="trash" size={18} color={T.red}/></button></div>}
-  <div onTouchStart={onTS} onTouchMove={onTM} onTouchEnd={onTE} style={{display:"flex",alignItems:"center",gap:12,padding:"14px 16px",background:"rgba(22,28,60,0.55)",borderRadius:16,border:`1px solid ${T.gBSoft}`,borderLeft:`3px solid ${cfg.color}`,boxShadow:T.insetTop,transform:`translateX(${-swipe}px)`,transition:swiping?"none":"transform .3s ease"}}>
-  <button onClick={()=>onEdit&&onEdit(entry)} style={{width:38,height:38,borderRadius:12,background:cfg.bg,border:`1px solid ${cfg.color}25`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,boxShadow:T.insetTop}}><Icon name={cfg.icon} size={17} color={cfg.color}/></button>
-  <button onClick={()=>onEdit&&onEdit(entry)} style={{flex:1,textAlign:"left",minWidth:0}}><div style={{fontSize:14,fontWeight:600,letterSpacing:-0.1,display:"flex",alignItems:"center",gap:6}}>{napLabel&&<span style={{display:"inline-block",padding:"1px 6px",borderRadius:5,background:`${cfg.color}20`,color:cfg.color,fontSize:9,fontWeight:700}}>{napLabel}</span>}<span>{cfg.label[_lang]||cfg.label.en}</span>{nightBadge&&<span title={_lang==="en"?"During bedtime":"Durante bedtime"} style={{display:"inline-flex",alignItems:"center",gap:3,padding:"1px 6px 1px 5px",borderRadius:6,background:"rgba(96,165,250,0.12)",border:"1px solid rgba(96,165,250,0.28)",fontSize:9,fontWeight:700,color:"#60a5fa",letterSpacing:0.3}}><Icon name="moon" size={9} color="#60a5fa"/>{_lang==="en"?"night":"noite"}</span>}</div>{detail&&<div style={{fontSize:12,color:T.sub,marginTop:2}}>{detail}</div>}</button>
-  <div style={{textAlign:"right",flexShrink:0}}>{(entry.type==="sleep"||entry.type==="nap")&&entry.durationMin?(()=>{const endMs=new Date(`${entry.date}T${entry.time}`).getTime()+entry.durationMin*60000;const endD=new Date(endMs);const endT=`${String(endD.getHours()).padStart(2,"0")}:${String(endD.getMinutes()).padStart(2,"0")}`;const endDt=`${endD.getFullYear()}-${String(endD.getMonth()+1).padStart(2,"0")}-${String(endD.getDate()).padStart(2,"0")}`;return<><div style={{fontSize:14,fontWeight:600,fontVariantNumeric:"tabular-nums",letterSpacing:-0.2}}>{entry.time}–{endT}</div><div style={{fontSize:11,color:T.sub,fontWeight:500,marginTop:2}}>{timeSince(endDt,endT)}</div></>})():<><div style={{fontSize:14,fontWeight:600,fontVariantNumeric:"tabular-nums",letterSpacing:-0.2}}>{entry.time}</div><div style={{fontSize:11,color:T.sub,fontWeight:500,marginTop:2}}>{timeSince(entry.date,entry.time)}</div></>}</div>
+  return(<div style={{position:"relative",marginBottom:8,overflow:"hidden",borderRadius:18}}>
+  {swipe>0&&<div style={{position:"absolute",right:0,top:0,bottom:0,width:70,background:"rgba(248,113,113,0.12)",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"0 18px 18px 0",opacity:swipe/70}}><button onClick={()=>onDelete(entry.id)} style={{padding:8}}><Icon name="trash" size={18} color={T.red}/></button></div>}
+  <div onTouchStart={onTS} onTouchMove={onTM} onTouchEnd={onTE} style={{position:"relative",display:"flex",alignItems:"center",gap:14,padding:"16px 18px 16px 22px",background:"rgba(22,28,60,0.65)",borderRadius:18,border:`1px solid ${T.gBSoft}`,boxShadow:T.insetTop,transform:`translateX(${-swipe}px)`,transition:swiping?"none":"transform .3s ease",overflow:"hidden"}}>
+  {/* Colored stripe (replaces borderLeft for proper rendering with overflow+transform) */}
+  <div style={{position:"absolute",left:0,top:0,bottom:0,width:4,background:`linear-gradient(180deg,${cfg.color},${cfg.color}50)`,borderRadius:"0 2px 2px 0",pointerEvents:"none"}}/>
+  <button onClick={()=>onEdit&&onEdit(entry)} style={{width:42,height:42,borderRadius:13,background:`linear-gradient(135deg,${cfg.color}28,${cfg.color}0a)`,border:`1px solid ${cfg.color}45`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,boxShadow:"0 1px 0 0 rgba(255,255,255,0.06) inset"}}><Icon name={cfg.icon} size={18} color={cfg.color}/></button>
+  <button onClick={()=>onEdit&&onEdit(entry)} style={{flex:1,textAlign:"left",minWidth:0}}><div style={{fontSize:15,fontWeight:600,letterSpacing:-0.2,color:"#f0f2ff",display:"flex",alignItems:"center",gap:6}}>{napLabel&&<span style={{display:"inline-block",padding:"1px 6px",borderRadius:5,background:`${cfg.color}25`,color:cfg.color,fontSize:9,fontWeight:700}}>{napLabel}</span>}<span>{cfg.label[_lang]||cfg.label.en}</span>{nightBadge&&<span title={_lang==="en"?"During bedtime":"Durante bedtime"} style={{display:"inline-flex",alignItems:"center",gap:3,padding:"1px 6px 1px 5px",borderRadius:6,background:"rgba(96,165,250,0.14)",border:"1px solid rgba(96,165,250,0.32)",fontSize:9,fontWeight:700,color:"#60a5fa",letterSpacing:0.3}}><Icon name="moon" size={9} color="#60a5fa"/>{_lang==="en"?"night":"noite"}</span>}</div>{detail&&<div style={{fontSize:13,color:"#9099c3",marginTop:3,fontWeight:500}}>{detail}</div>}</button>
+  <div style={{textAlign:"right",flexShrink:0}}>{(entry.type==="sleep"||entry.type==="nap")&&entry.durationMin?(()=>{const endMs=new Date(`${entry.date}T${entry.time}`).getTime()+entry.durationMin*60000;const endD=new Date(endMs);const endT=`${String(endD.getHours()).padStart(2,"0")}:${String(endD.getMinutes()).padStart(2,"0")}`;const endDt=`${endD.getFullYear()}-${String(endD.getMonth()+1).padStart(2,"0")}-${String(endD.getDate()).padStart(2,"0")}`;return<><div style={{fontSize:16,fontWeight:700,color:"#f0f2ff",fontVariantNumeric:"tabular-nums",letterSpacing:-0.4}}>{entry.time}–{endT}</div><div style={{fontSize:12,color:T.sub,fontWeight:500,marginTop:3}}>{timeSince(endDt,endT)}</div></>})():<><div style={{fontSize:16,fontWeight:700,color:"#f0f2ff",fontVariantNumeric:"tabular-nums",letterSpacing:-0.4}}>{entry.time}</div><div style={{fontSize:12,color:T.sub,fontWeight:500,marginTop:3}}>{timeSince(entry.date,entry.time)}</div></>}</div>
 </div></div>)}
 
 function AddForm({type,onSave,savedMeds,onSaveMeds,editEntry,lastBottleMl,topMl}){const cfg=TYPES[type];const ed=editEntry||{};
@@ -1909,44 +1961,44 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
           </div>
         </Fld>
       </div>
-      <div style={{background:"rgba(22,28,60,0.4)",borderRadius:16,border:`1px solid ${T.gB}`,padding:16,marginBottom:12}}>
+      <div style={{background:"linear-gradient(180deg,rgba(22,28,60,0.55),rgba(20,26,60,0.4))",borderRadius:18,border:`1px solid ${T.gBSoft}`,padding:18,marginBottom:14,boxShadow:T.insetTop}}>
         {/* Wake Lock toggle */}
-        <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:12}}>
+        <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:14}}>
           <div style={{flex:1}}>
-            <div style={{fontSize:13,fontWeight:700,marginBottom:4}}>{langSel==="en"?"Keep screen on":"Manter tela ligada"}</div>
-            <div style={{fontSize:11,color:T.dim,lineHeight:1.4}}>{langSel==="en"?"During night wake & nursing timers":"Durante night wake e amamentação"}</div>
+            <div style={{fontSize:15,fontWeight:700,marginBottom:4,color:"#f0f2ff",letterSpacing:-0.2}}>{langSel==="en"?"Keep screen on":"Manter tela ligada"}</div>
+            <div style={{fontSize:12,color:"#7a80a8",lineHeight:1.5}}>{langSel==="en"?"During night wake & nursing timers":"Durante night wake e amamentação"}</div>
           </div>
-          <button onClick={()=>{const v=!keepScreenOn;setKeepScreenOn(v);persistToggle({keepScreenOn:v})}} style={{position:"relative",width:48,height:28,borderRadius:14,background:keepScreenOn?T.accent:"rgba(14,18,48,0.8)",border:`1px solid ${keepScreenOn?T.accent:T.gB}`,transition:"all .2s",flexShrink:0,cursor:"pointer",padding:0}}>
-            <div style={{position:"absolute",top:2,left:keepScreenOn?22:2,width:22,height:22,borderRadius:"50%",background:"#fff",transition:"left .2s",boxShadow:"0 1px 3px rgba(0,0,0,0.4)"}}/>
+          <button onClick={()=>{const v=!keepScreenOn;setKeepScreenOn(v);persistToggle({keepScreenOn:v})}} style={{position:"relative",width:52,height:32,borderRadius:16,background:keepScreenOn?`linear-gradient(180deg,${T.accent},#6d5cd4)`:"rgba(14,18,48,0.8)",border:`1px solid ${keepScreenOn?"rgba(139,124,246,0.5)":T.gBSoft}`,transition:"all .2s",flexShrink:0,cursor:"pointer",padding:0,boxShadow:keepScreenOn?"0 1px 0 0 rgba(255,255,255,0.18) inset, 0 4px 12px -4px rgba(139,124,246,0.4)":T.insetTop}}>
+            <div style={{position:"absolute",top:3,left:keepScreenOn?25:3,width:24,height:24,borderRadius:"50%",background:"#fff",transition:"left .2s",boxShadow:"0 2px 6px rgba(0,0,0,0.4)"}}/>
           </button>
         </div>
         {/* Separator */}
-        <div style={{height:1,background:"rgba(90,100,180,0.12)",margin:"14px 0"}}/>
+        <div style={{height:1,background:T.gBSoft,margin:"16px 0"}}/>
         {/* Haptic toggle */}
-        <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:12}}>
+        <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:14}}>
           <div style={{flex:1}}>
-            <div style={{fontSize:13,fontWeight:700,marginBottom:4}}>{langSel==="en"?"Haptic feedback":"Vibração"}</div>
-            <div style={{fontSize:11,color:T.dim,lineHeight:1.4}}>{langSel==="en"?"Subtle vibration when logging events":"Vibração sutil ao registrar eventos"}</div>
+            <div style={{fontSize:15,fontWeight:700,marginBottom:4,color:"#f0f2ff",letterSpacing:-0.2}}>{langSel==="en"?"Haptic feedback":"Vibração tátil"}</div>
+            <div style={{fontSize:12,color:"#7a80a8",lineHeight:1.5}}>{langSel==="en"?"Subtle vibration when logging events":"Vibração sutil ao registrar eventos"}</div>
           </div>
-          <button onClick={()=>{const v=!hapticEnabled;setHapticEnabled(v);if(v){Haptic.setEnabled(true);Haptic.medium()}else{Haptic.setEnabled(false)}persistToggle({hapticEnabled:v})}} style={{position:"relative",width:48,height:28,borderRadius:14,background:hapticEnabled?T.accent:"rgba(14,18,48,0.8)",border:`1px solid ${hapticEnabled?T.accent:T.gB}`,transition:"all .2s",flexShrink:0,cursor:"pointer",padding:0}}>
-            <div style={{position:"absolute",top:2,left:hapticEnabled?22:2,width:22,height:22,borderRadius:"50%",background:"#fff",transition:"left .2s",boxShadow:"0 1px 3px rgba(0,0,0,0.4)"}}/>
+          <button onClick={()=>{const v=!hapticEnabled;setHapticEnabled(v);if(v){Haptic.setEnabled(true);Haptic.medium()}else{Haptic.setEnabled(false)}persistToggle({hapticEnabled:v})}} style={{position:"relative",width:52,height:32,borderRadius:16,background:hapticEnabled?`linear-gradient(180deg,${T.accent},#6d5cd4)`:"rgba(14,18,48,0.8)",border:`1px solid ${hapticEnabled?"rgba(139,124,246,0.5)":T.gBSoft}`,transition:"all .2s",flexShrink:0,cursor:"pointer",padding:0,boxShadow:hapticEnabled?"0 1px 0 0 rgba(255,255,255,0.18) inset, 0 4px 12px -4px rgba(139,124,246,0.4)":T.insetTop}}>
+            <div style={{position:"absolute",top:3,left:hapticEnabled?25:3,width:24,height:24,borderRadius:"50%",background:"#fff",transition:"left .2s",boxShadow:"0 2px 6px rgba(0,0,0,0.4)"}}/>
           </button>
         </div>
         {/* Separator */}
-        <div style={{height:1,background:"rgba(90,100,180,0.12)",margin:"14px 0"}}/>
+        <div style={{height:1,background:T.gBSoft,margin:"16px 0"}}/>
         {/* Push notifications toggle */}
-        <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:12}}>
+        <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:14}}>
           <div style={{flex:1}}>
-            <div style={{fontSize:13,fontWeight:700,marginBottom:4,color:pushSupported?T.text:T.dim}}>{langSel==="en"?"Notifications":"Notificações"}</div>
-            <div style={{fontSize:11,color:T.dim,lineHeight:1.4}}>
+            <div style={{fontSize:15,fontWeight:700,marginBottom:4,color:pushSupported?"#f0f2ff":T.dim,letterSpacing:-0.2}}>{langSel==="en"?"Notifications":"Notificações"}</div>
+            <div style={{fontSize:12,color:"#7a80a8",lineHeight:1.5}}>
               {!pushSupported?(langSel==="en"?"Install to home screen first (iOS 16.4+)":"Instale na tela inicial primeiro (iOS 16.4+)"):
                pushPermission==="denied"?(langSel==="en"?"Permission denied — enable in iOS Settings":"Permissão negada — ative nos Ajustes do iOS"):
                pushEnabled?(langSel==="en"?"Notifications on — add reminders below":"Notificações ativas — cadastre lembretes abaixo"):
                (langSel==="en"?"Tap to enable":"Toque para ativar")}
             </div>
           </div>
-          <button onClick={handlePushToggle} disabled={!pushSupported||pushBusy||pushPermission==="denied"} style={{position:"relative",width:48,height:28,borderRadius:14,background:pushEnabled&&pushSupported?T.accent:"rgba(14,18,48,0.8)",border:`1px solid ${pushEnabled&&pushSupported?T.accent:T.gB}`,transition:"all .2s",flexShrink:0,cursor:pushSupported&&!pushBusy&&pushPermission!=="denied"?"pointer":"not-allowed",padding:0,opacity:!pushSupported||pushPermission==="denied"?0.4:1}}>
-            <div style={{position:"absolute",top:2,left:pushEnabled&&pushSupported?22:2,width:22,height:22,borderRadius:"50%",background:"#fff",transition:"left .2s",boxShadow:"0 1px 3px rgba(0,0,0,0.4)"}}/>
+          <button onClick={handlePushToggle} disabled={!pushSupported||pushBusy||pushPermission==="denied"} style={{position:"relative",width:52,height:32,borderRadius:16,background:pushEnabled&&pushSupported?`linear-gradient(180deg,${T.accent},#6d5cd4)`:"rgba(14,18,48,0.8)",border:`1px solid ${pushEnabled&&pushSupported?"rgba(139,124,246,0.5)":T.gBSoft}`,transition:"all .2s",flexShrink:0,cursor:pushSupported&&!pushBusy&&pushPermission!=="denied"?"pointer":"not-allowed",padding:0,opacity:!pushSupported||pushPermission==="denied"?0.4:1,boxShadow:pushEnabled&&pushSupported?"0 1px 0 0 rgba(255,255,255,0.18) inset, 0 4px 12px -4px rgba(139,124,246,0.4)":T.insetTop}}>
+            <div style={{position:"absolute",top:3,left:pushEnabled&&pushSupported?25:3,width:24,height:24,borderRadius:"50%",background:"#fff",transition:"left .2s",boxShadow:"0 2px 6px rgba(0,0,0,0.4)"}}/>
           </button>
         </div>
       </div>
@@ -2310,7 +2362,7 @@ function StatsPage({entries,onGrowth}){
         </div>
       ):(
         <>
-          <div style={{display:"flex",gap:numDays>20?1:numDays>14?2:5,alignItems:"flex-end",height:80,background:"rgba(14,18,48,0.5)",borderRadius:10,padding:"10px 4px 6px",border:`1px solid ${T.gB}`,overflow:"hidden",position:"relative"}}>
+          <div style={{display:"flex",gap:numDays>20?1:numDays>14?2:5,alignItems:"flex-end",height:100,background:"rgba(14,18,48,0.5)",borderRadius:10,padding:"14px 4px 6px",border:`1px solid ${T.gB}`,position:"relative"}}>
             {data.map(d=>{
               const v=d.simet;
               return<div key={d.date} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2,minWidth:0}}>
@@ -2365,25 +2417,25 @@ function HistoryPage({entries,onDelete,onEdit}){
   return(<div style={{padding:"calc(16px + env(safe-area-inset-top)) 20px 0"}}>
     <h2 style={{fontSize:17,fontWeight:700,marginBottom:12}}>{L("history")}</h2>
     {/* Date navigator card */}
-    <div style={{background:"rgba(22,28,60,0.4)",borderRadius:14,border:`1px solid ${T.gB}`,padding:"14px 16px",marginBottom:12}}>
-      <div style={{display:"flex",alignItems:"center",gap:8}}>
-        <button onClick={()=>setDateIdx(dateIdx+1)} style={{width:32,height:32,borderRadius:10,background:"rgba(22,28,60,0.8)",border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="back" size={14} color={T.sub}/></button>
+    <div style={{background:"linear-gradient(180deg,rgba(22,28,60,0.55),rgba(20,26,60,0.4))",borderRadius:20,border:`1px solid ${T.gBSoft}`,padding:"18px 18px 16px",marginBottom:14,boxShadow:T.insetTop}}>
+      <div style={{display:"flex",alignItems:"center",gap:12}}>
+        <button onClick={()=>setDateIdx(dateIdx+1)} style={{width:38,height:38,borderRadius:12,background:"rgba(22,28,60,0.6)",border:`1px solid ${T.gBSoft}`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:T.insetTop}}><Icon name="back" size={14} color={T.sub}/></button>
         <div style={{flex:1,textAlign:"center"}}>
-          <div style={{fontSize:15,fontWeight:700,color:isToday?T.accent:T.text}}>{isToday?L("today"):dLbl}</div>
-          <div style={{display:"flex",justifyContent:"center",gap:8,fontSize:10,color:T.sub,marginTop:3,flexWrap:"wrap"}}>
-            {dMl>0&&<span style={{display:"flex",alignItems:"center",gap:3}}><Icon name="bottle" size={10} color={T.green}/>{dMl}ml</span>}
-            {dSl>0&&<><span style={{width:3,height:3,borderRadius:"50%",background:T.dim,alignSelf:"center"}}/><span style={{display:"flex",alignItems:"center",gap:3}}><Icon name="moon" size={10} color={T.purple}/>{fmtDur(dSl)}</span></>}
-            {(dWet>0||dDirty>0)&&<><span style={{width:3,height:3,borderRadius:"50%",background:T.dim,alignSelf:"center"}}/><span style={{display:"flex",alignItems:"center",gap:3,color:"#93c5fd"}}><Icon name="droplet" size={10} color="#93c5fd"/>{dWet}</span><span style={{display:"flex",alignItems:"center",gap:3,color:"#a16b4a"}}><Icon name="poop" size={10} color="#a16b4a"/>{dDirty}</span></>}
-            <span style={{width:3,height:3,borderRadius:"50%",background:T.dim,alignSelf:"center"}}/>
-            <span>{dayE.length} {L("reg")}</span>
+          <div style={{fontSize:17,fontWeight:800,color:isToday?T.accent:T.text,letterSpacing:-0.3}}>{isToday?L("today"):dLbl}</div>
+          <div style={{display:"flex",justifyContent:"center",gap:10,fontSize:11,color:T.sub,marginTop:7,flexWrap:"wrap",alignItems:"center"}}>
+            {dMl>0&&<span style={{display:"inline-flex",alignItems:"center",gap:4,fontWeight:600,fontVariantNumeric:"tabular-nums"}}><Icon name="bottle" size={11} color={T.green}/>{dMl}ml</span>}
+            {dSl>0&&<><span style={{width:3,height:3,borderRadius:"50%",background:T.dim}}/><span style={{display:"inline-flex",alignItems:"center",gap:4,fontWeight:600,fontVariantNumeric:"tabular-nums"}}><Icon name="moon" size={11} color={T.purple}/>{fmtDur(dSl)}</span></>}
+            {(dWet>0||dDirty>0)&&<><span style={{width:3,height:3,borderRadius:"50%",background:T.dim}}/><span style={{display:"inline-flex",alignItems:"center",gap:4,color:"#93c5fd",fontWeight:600,fontVariantNumeric:"tabular-nums"}}><Icon name="droplet" size={11} color="#93c5fd"/>{dWet}</span><span style={{display:"inline-flex",alignItems:"center",gap:4,color:"#a16b4a",fontWeight:600,fontVariantNumeric:"tabular-nums"}}><Icon name="poop" size={11} color="#a16b4a"/>{dDirty}</span></>}
+            <span style={{width:3,height:3,borderRadius:"50%",background:T.dim}}/>
+            <span style={{fontWeight:600,fontVariantNumeric:"tabular-nums"}}>{dayE.length} {L("reg")}</span>
           </div>
         </div>
-        <button onClick={()=>setDateIdx(Math.max(0,dateIdx-1))} disabled={isToday} style={{width:32,height:32,borderRadius:10,background:"rgba(22,28,60,0.8)",border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center",opacity:isToday?0.3:1}}><Icon name="forward" size={14} color={T.sub}/></button>
+        <button onClick={()=>setDateIdx(Math.max(0,dateIdx-1))} disabled={isToday} style={{width:38,height:38,borderRadius:12,background:"rgba(22,28,60,0.6)",border:`1px solid ${T.gBSoft}`,display:"flex",alignItems:"center",justifyContent:"center",opacity:isToday?0.3:1,boxShadow:T.insetTop}}><Icon name="forward" size={14} color={T.sub}/></button>
       </div>
     </div>
     {/* Type filters */}
-    <div style={{display:"flex",gap:4,marginBottom:14,overflowX:"auto",paddingBottom:2}}>
-      {filters.map(f=><button key={f.v} onClick={()=>setFilter(f.v)} style={{padding:"6px 12px",borderRadius:8,fontSize:11,fontWeight:600,whiteSpace:"nowrap",background:filter===f.v?`${f.c}20`:"transparent",color:filter===f.v?f.c:T.dim,border:`1px solid ${filter===f.v?f.c+"30":T.gB}`}}>{f.l}</button>)}
+    <div style={{display:"flex",gap:6,marginBottom:14,overflowX:"auto",paddingBottom:2}}>
+      {filters.map(f=>{const isActive=filter===f.v;return<button key={f.v} onClick={()=>setFilter(f.v)} style={{padding:"9px 16px",borderRadius:12,fontSize:12,fontWeight:600,whiteSpace:"nowrap",letterSpacing:-0.1,background:isActive?`linear-gradient(180deg,${f.c}38,${f.c}12)`:"rgba(22,28,60,0.5)",color:isActive?f.c:T.sub,border:`1px solid ${isActive?f.c+"55":T.gBSoft}`,boxShadow:isActive?`0 1px 0 0 rgba(255,255,255,0.1) inset, 0 0 0 1px ${f.c}25, 0 6px 16px -8px ${f.c}50`:T.insetTop}}>{f.l}</button>})}
     </div>
     {filtered.length===0&&<p style={{color:T.dim,textAlign:"center",padding:40,fontSize:13}}>{L("noEntries")}{filter!=="all"?(_lang==="en"?" of this type":" desse tipo"):""}</p>}
     {listItems}
