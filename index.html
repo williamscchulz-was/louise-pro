@@ -5,9 +5,9 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
-  v8.5.10 Fix inputs colidindo no AddForm (Dia/Hora lado a lado)
+  v8.5.11 Fix definitivo dos inputs colidindo (Safari minmax fix)
+  v8.5.10 Fix inputs colidindo no AddForm (1a tentativa, parcial)
   v8.5.9  Fix bug bilingue no AddForm (Dia · Today misturado)
-  v8.5.8  Filtros especificos mostram tudo + badge noite
 
   Stack: HTML puro + React 18 CDN + Babel + Firebase 10.x compat
   Repo: https://github.com/williamscchulz-was/louise-pro
@@ -227,8 +227,29 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "8.5.10";
+const APP_VERSION = "8.5.11";
 const CHANGELOG = [
+  {
+    v: "8.5.11", date: "2026-04-08",
+    pt: {
+      title: "Fix definitivo dos inputs colidindo (Safari WebKit)",
+      bullets: [
+        '★ **Bug do retângulo transbordando finalmente resolvido.** A v8.5.10 aplicou `min-width:0` no Fld mas isso não foi suficiente. A causa real era que o `1fr` puro do CSS Grid no Safari WebKit tem um bug onde **paradoxalmente** força os items a respeitarem o tamanho intrínseco do conteúdo (em inputs date/time, isso é o tamanho do texto formatado tipo "8 Apr 2026").',
+        '**Fix em 2 partes:** (1) trocar todos os `gridTemplateColumns:"1fr 1fr"` por `"minmax(0,1fr) minmax(0,1fr)"` — força as colunas a poderem encolher até zero, o que faz o Safari calcular o `fr` corretamente. (2) adicionar `WebkitAppearance:"none"` em todos os inputs do app — remove o padding interno nativo do iOS Safari que escapa do controle CSS.',
+        'Aplicado em **7 grids** do app: AddForm (data+hora), ProfilePage (peso/comp/cabeça do nascimento), GrowthPage (nova medição), Stats (cards de média), Home (cards de quick stats) e mais. Todos respeitam minmax(0,1fr) agora.',
+        'Aplicado em **3 objetos `inp`**: AddForm, ProfilePage, GrowthPage — todos os formulários do app passam pelo fix.'
+      ]
+    },
+    en: {
+      title: "Definitive fix for colliding inputs (Safari WebKit)",
+      bullets: [
+        '★ **The overflowing rectangle bug is finally fixed.** v8.5.10 applied `min-width:0` to Fld but that wasn\'t enough. The real cause was that bare `1fr` in CSS Grid on Safari WebKit has a bug where it **paradoxically** forces items to respect content intrinsic size (for date/time inputs, that\'s the size of the formatted text like "8 Apr 2026").',
+        '**2-part fix:** (1) replace all `gridTemplateColumns:"1fr 1fr"` with `"minmax(0,1fr) minmax(0,1fr)"` — forces columns to be able to shrink to zero, which makes Safari calculate `fr` correctly. (2) add `WebkitAppearance:"none"` to all app inputs — removes the iOS Safari native internal padding that escapes CSS control.',
+        'Applied to **7 grids** in the app: AddForm (date+time), ProfilePage (birth weight/length/head), GrowthPage (new measurement), Stats (average cards), Home (quick stats cards) and more. All respect minmax(0,1fr) now.',
+        'Applied to **3 `inp` objects**: AddForm, ProfilePage, GrowthPage — all the app\'s forms go through the fix.'
+      ]
+    }
+  },
   {
     v: "8.5.10", date: "2026-04-08",
     pt: {
@@ -1649,7 +1670,7 @@ function AddForm({type,onSave,savedMeds,onSaveMeds,editEntry,lastBottleMl,topMl}
     else if(type==="temperature"){if(!tempV)return;onSave({...b,value:parseFloat(tempV)})}
     else if(type==="growth"){onSave({...b,weightKg:weightKg?parseFloat(weightKg):undefined,lengthCm:lengthCm?parseFloat(lengthCm):undefined,headCm:headCm?parseFloat(headCm):undefined})}
   };
-  const inp={width:"100%",maxWidth:"100%",boxSizing:"border-box",padding:"13px 16px",background:"rgba(14,18,48,0.8)",border:`1px solid ${T.gB}`,borderRadius:12,color:T.text,fontSize:15,outline:"none"};
+  const inp={width:"100%",maxWidth:"100%",boxSizing:"border-box",WebkitAppearance:"none",appearance:"none",padding:"13px 16px",background:"rgba(14,18,48,0.8)",border:`1px solid ${T.gB}`,borderRadius:12,color:T.text,fontSize:15,outline:"none"};
   const isToday=date===todayStr();
   const dateLbl=isToday?L("today"):new Date(date+"T12:00").toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{weekday:"short",day:"numeric",month:"short"});
   return(<div style={{paddingBottom:20}}>
@@ -1659,7 +1680,7 @@ function AddForm({type,onSave,savedMeds,onSaveMeds,editEntry,lastBottleMl,topMl}
     </div>
     <div style={{padding:"0 20px"}}>
       {/* Date + Time row */}
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:18}}>
+      <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr)",gap:8,marginBottom:18}}>
         <Fld label={(_lang==="en"?"Day · ":"Dia · ")+dateLbl}><input type="date" value={date} onChange={e=>setDate(e.target.value)} style={{...inp,colorScheme:"dark"}}/></Fld>
         <Fld label={L("time")}><input type="time" value={time} onChange={e=>setTime(e.target.value)} style={{...inp,colorScheme:"dark"}}/></Fld>
       </div>
@@ -1843,7 +1864,7 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
   const fr=useRef(null);
   const handlePhoto=e=>{const f=e.target.files?.[0];if(!f)return;const rd=new FileReader();rd.onload=ev=>{const img=new Image();img.onload=()=>{const c=document.createElement("canvas"),mx=200;let w=img.width,h=img.height;if(w>h){h=(h/w)*mx;w=mx}else{w=(w/h)*mx;h=mx}c.width=w;c.height=h;c.getContext("2d").drawImage(img,0,0,w,h);setPhoto(c.toDataURL("image/jpeg",0.8))};img.src=ev.target.result};rd.readAsDataURL(f)};
   const doSave=()=>{onSave({name:name.trim(),birthDate:birth,photo,mlGoal:parseInt(mlGoal)||0,birthWeight:parseFloat(birthWeight)||0,birthLength:parseFloat(birthLength)||0,birthHead:parseFloat(birthHead)||0,lang:langSel,keepScreenOn,hapticEnabled,pushEnabled});onBack()};
-  const inp={width:"100%",maxWidth:"100%",boxSizing:"border-box",padding:"14px 16px",background:"rgba(14,18,48,0.8)",border:`1px solid ${T.gB}`,borderRadius:12,color:T.text,fontSize:15,outline:"none"};
+  const inp={width:"100%",maxWidth:"100%",boxSizing:"border-box",WebkitAppearance:"none",appearance:"none",padding:"14px 16px",background:"rgba(14,18,48,0.8)",border:`1px solid ${T.gB}`,borderRadius:12,color:T.text,fontSize:15,outline:"none"};
   return(<div style={{position:"fixed",inset:0,zIndex:200,maxWidth:480,margin:"0 auto",background:`radial-gradient(ellipse at 50% 0%,#10153d,${T.bg1} 65%)`,overflowY:"auto",overflowX:"hidden",overscrollBehavior:"contain",WebkitOverflowScrolling:"touch",paddingTop:"env(safe-area-inset-top)",paddingBottom:"calc(40px + env(safe-area-inset-bottom))"}}>
     <div style={{display:"flex",alignItems:"center",gap:14,padding:"16px 20px"}}><button onClick={onBack} style={{width:36,height:36,borderRadius:10,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="back" size={18} color={T.sub}/></button><span style={{fontSize:17,fontWeight:700}}>{L("profile")}</span></div>
     <div style={{padding:"0 20px"}}>
@@ -1962,7 +1983,7 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
       </div>
       <div style={{background:"rgba(22,28,60,0.4)",borderRadius:16,border:`1px solid ${T.gB}`,padding:16,marginBottom:16}}>
         <div style={{fontSize:10,fontWeight:700,color:T.dim,marginBottom:10,textTransform:"uppercase",letterSpacing:1.2}}>{L("birthData")}</div>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
+        <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)",gap:8}}>
           <Fld label={`${L("weight")} (kg)`}><input type="number" inputMode="decimal" step="0.01" placeholder="3.2" value={birthWeight} onChange={e=>setBirthWeight(e.target.value)} style={{...inp,textAlign:"center",padding:"12px 8px"}}/></Fld>
           <Fld label={`${_lang==="en"?"Length":"Comp."} (cm)`}><input type="number" inputMode="decimal" step="0.1" placeholder="49" value={birthLength} onChange={e=>setBirthLength(e.target.value)} style={{...inp,textAlign:"center",padding:"12px 8px"}}/></Fld>
           <Fld label={`${L("head")} (cm)`}><input type="number" inputMode="decimal" step="0.1" placeholder="34" value={birthHead} onChange={e=>setBirthHead(e.target.value)} style={{...inp,textAlign:"center",padding:"12px 8px"}}/></Fld>
@@ -2178,7 +2199,7 @@ function StatsPage({entries,onGrowth}){
       <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
       <span>{avgSubtitle}</span>
     </div>
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
+    <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr)",gap:8,marginBottom:12}}>
       <div style={{background:`${T.green}08`,borderRadius:14,border:`1px solid ${T.green}0a`,padding:12}}><div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}><Icon name="bottle" size={14} color={T.green}/><span style={{fontSize:9,color:T.sub}}>{_lang==="en"?"Avg milk/day":"Média leite/dia"}</span></div><div style={{fontSize:22,fontWeight:800,color:T.green}}>{avgMl} <span style={{fontSize:12,opacity:0.6}}>ml</span></div><TrendBadge val={trendMl}/></div>
       <div style={{background:`${T.purple}08`,borderRadius:14,border:`1px solid ${T.purple}0a`,padding:12}}>
         <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}><Icon name="moon" size={14} color={T.purple}/><span style={{fontSize:9,color:T.sub}}>{_lang==="en"?"Real sleep/day":"Sono real/dia"}</span></div>
@@ -2190,7 +2211,7 @@ function StatsPage({entries,onGrowth}){
         </div>}
       </div>
     </div>
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:16}}>
+    <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)",gap:8,marginBottom:16}}>
       <div style={{background:"rgba(22,28,60,0.4)",borderRadius:12,border:`1px solid ${T.gB}`,padding:"10px 8px",textAlign:"center"}}><div style={{fontSize:8,color:T.dim,textTransform:"uppercase",letterSpacing:0.5,marginBottom:4}}>{_lang==="en"?"Diapers/day":"Fraldas/dia"}</div><div style={{fontSize:18,fontWeight:800,color:T.pink}}>{avgDiapers}</div></div>
       <div style={{background:"rgba(22,28,60,0.4)",borderRadius:12,border:`1px solid ${T.gB}`,padding:"10px 8px",textAlign:"center"}}><div style={{fontSize:8,color:T.dim,textTransform:"uppercase",letterSpacing:0.5,marginBottom:4}}>{_lang==="en"?"Feedings/day":"Mamadas/dia"}</div><div style={{fontSize:18,fontWeight:800,color:T.blue}}>{avgFeedings}</div></div>
       <div style={{background:"rgba(22,28,60,0.4)",borderRadius:12,border:`1px solid ${T.gB}`,padding:"10px 8px",textAlign:"center"}}><div style={{fontSize:8,color:T.dim,textTransform:"uppercase",letterSpacing:0.5,marginBottom:4}}>{_lang==="en"?"Naps/day":"Sonecas/dia"}</div><div style={{fontSize:18,fontWeight:800,color:T.accent}}>{avgNaps}</div></div>
@@ -2445,7 +2466,7 @@ function GrowthPage({entries,birthDate,profile,onBack,onAddEntry}){
     </div>);
   }
 
-  const inp={width:"100%",maxWidth:"100%",boxSizing:"border-box",padding:"12px",background:"rgba(14,18,48,0.8)",border:`1px solid ${T.gB}`,borderRadius:10,color:T.text,fontSize:15,outline:"none",textAlign:"center"};
+  const inp={width:"100%",maxWidth:"100%",boxSizing:"border-box",WebkitAppearance:"none",appearance:"none",padding:"12px",background:"rgba(14,18,48,0.8)",border:`1px solid ${T.gB}`,borderRadius:10,color:T.text,fontSize:15,outline:"none",textAlign:"center"};
 
   return(<div style={{padding:"calc(16px + env(safe-area-inset-top)) 20px 0"}}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
@@ -2455,7 +2476,7 @@ function GrowthPage({entries,birthDate,profile,onBack,onAddEntry}){
 
     {showForm&&<div style={{background:T.glass,borderRadius:14,padding:16,marginBottom:16,border:`1px solid ${T.gB}`}}>
       <div style={{fontSize:12,fontWeight:700,color:T.sub,marginBottom:12}}>{_lang==="en"?"New measurement":"Nova medição"}</div>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:12}}>
+      <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)",gap:8,marginBottom:12}}>
         <Fld label={`${L("weight")} (kg)`}><input type="number" inputMode="decimal" step="0.01" placeholder="4.5" value={wK} onChange={e=>setWK(e.target.value)} style={inp}/></Fld>
         <Fld label={`${_lang==="en"?"Length":"Comp."} (cm)`}><input type="number" inputMode="decimal" step="0.1" placeholder="55" value={lC} onChange={e=>setLC(e.target.value)} style={inp}/></Fld>
         <Fld label={`${L("head")} (cm)`}><input type="number" inputMode="decimal" step="0.1" placeholder="37" value={hC} onChange={e=>setHC(e.target.value)} style={inp}/></Fld>
@@ -2945,7 +2966,7 @@ function App(){
         {napSug&&(napSug.state==="stretching"||napSug.state==="overdue")&&<div style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:T.orangeS,border:`1px solid ${T.orange}22`,display:"flex",alignItems:"center",gap:10,animation:"pulse 1.5s infinite"}}><Icon name="zap" size={18} color={napSug.state==="overdue"?"#f87171":T.orange}/><div><div style={{fontSize:12,fontWeight:700,color:napSug.state==="overdue"?"#f87171":T.orange}}>{napSug.state==="overdue"?(_lang==="en"?"Past max window":"Passou do maximo"):(_lang==="en"?"Stretching":"Esticando")}</div><div style={{fontSize:10,color:T.sub}}>{napSug.state==="overdue"?(_lang==="en"?`${fmtDur(napSug.el)} awake — risk of overtired`:`${fmtDur(napSug.el)} acordada — risco de overtired`):(_lang==="en"?"Past average, still within range":"Passou da media, ainda dentro do range")}</div></div></div>}
         {!activeTimer&&sleepRec?.phase===2&&daySchedule.length>0&&daySchedule.filter(s=>s.status==="next").map((s,i)=><div key={"ns"+i} style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:`${T.accent}10`,border:`1px solid ${T.accent}18`,display:"flex",alignItems:"center",gap:10}}><Icon name="star" size={18} color={T.accent} fill={T.accent}/><div><div style={{fontSize:12,fontWeight:700,color:T.accent}}>{s.bed?(_lang==="en"?"Bedtime ~":"Sono ~"):(_lang==="en"?"Next nap ~":"Prox. soneca ~")}{minToTime(s.startMin)}</div><div style={{fontSize:10,color:T.sub}}>{s.bed?"":`${s.pos}${_lang==="en"?["","st","nd","rd"][s.pos]||"th":"a"} · `}WW {fmtDur(s.ww)}{s.durRange?" · "+s.durRange:""}</div></div></div>)}
         <InsightCards insights={dayInsights} phase={sleepRec?.phase}/>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,padding:"0 20px",marginBottom:14}}>{[{i:"bottle",v:`${totalMl}`,u:"ml",c:T.green,t:["bottle"],tap:"bottle",l:_lang==="en"?"Bottle":"Mamad."},{i:"breast",v:totalNursingMin>0?fmtDur(totalNursingMin):`${totalNursing}x`,c:T.blue,t:["nursing"],tap:"nursing",l:_lang==="en"?"Nursing":"Amam."},{i:"moon",v:fmtDur(totalSleep),c:T.purple,t:["sleep","nap"],tap:"nap",l:_lang==="en"?"Sleep":"Sono"},{i:"diaper",v:`${totalDiapers}`,c:T.pink,t:["diaper"],tap:"diaper",l:_lang==="en"?"Diaper":"Fralda"}].map((p,idx)=>{const last=entries.find(e=>p.t.includes(e.type));let ago=null;if(last){if(p.t.includes("sleep")&&last.durationMin){const endMs=new Date(`${last.date}T${last.time}`).getTime()+last.durationMin*60000;const endD=new Date(endMs);const ed=`${endD.getFullYear()}-${String(endD.getMonth()+1).padStart(2,"0")}-${String(endD.getDate()).padStart(2,"0")}`;const et=`${String(endD.getHours()).padStart(2,"0")}:${String(endD.getMinutes()).padStart(2,"0")}`;ago=timeSince(ed,et)}else{ago=timeSince(last.date,last.time)}}return<button key={idx} onClick={()=>{if(p.tap==="nap"&&!activeTimer)startTimer("nap");else if(p.tap==="nursing"&&!activeTimer)startTimer("nursing",nextNursingSide);else if(!activeTimer)setFormType(p.tap)}} style={{padding:"10px",borderRadius:12,background:`${p.c}06`,border:`1px solid ${p.c}0a`,textAlign:"left"}}><div style={{display:"flex",alignItems:"center",gap:5,marginBottom:3}}><Icon name={p.i} size={12} color={p.c}/><span style={{fontSize:9,color:T.dim}}>{p.l}</span></div><div style={{fontSize:16,fontWeight:800,color:p.c}}>{p.v}{p.u?<span style={{fontSize:11,opacity:0.6}}>{p.u}</span>:null}</div>{ago&&<div style={{fontSize:12,color:`${p.c}88`,fontWeight:600,marginTop:3}}>{ago}</div>}</button>})}</div>
+        <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr)",gap:6,padding:"0 20px",marginBottom:14}}>{[{i:"bottle",v:`${totalMl}`,u:"ml",c:T.green,t:["bottle"],tap:"bottle",l:_lang==="en"?"Bottle":"Mamad."},{i:"breast",v:totalNursingMin>0?fmtDur(totalNursingMin):`${totalNursing}x`,c:T.blue,t:["nursing"],tap:"nursing",l:_lang==="en"?"Nursing":"Amam."},{i:"moon",v:fmtDur(totalSleep),c:T.purple,t:["sleep","nap"],tap:"nap",l:_lang==="en"?"Sleep":"Sono"},{i:"diaper",v:`${totalDiapers}`,c:T.pink,t:["diaper"],tap:"diaper",l:_lang==="en"?"Diaper":"Fralda"}].map((p,idx)=>{const last=entries.find(e=>p.t.includes(e.type));let ago=null;if(last){if(p.t.includes("sleep")&&last.durationMin){const endMs=new Date(`${last.date}T${last.time}`).getTime()+last.durationMin*60000;const endD=new Date(endMs);const ed=`${endD.getFullYear()}-${String(endD.getMonth()+1).padStart(2,"0")}-${String(endD.getDate()).padStart(2,"0")}`;const et=`${String(endD.getHours()).padStart(2,"0")}:${String(endD.getMinutes()).padStart(2,"0")}`;ago=timeSince(ed,et)}else{ago=timeSince(last.date,last.time)}}return<button key={idx} onClick={()=>{if(p.tap==="nap"&&!activeTimer)startTimer("nap");else if(p.tap==="nursing"&&!activeTimer)startTimer("nursing",nextNursingSide);else if(!activeTimer)setFormType(p.tap)}} style={{padding:"10px",borderRadius:12,background:`${p.c}06`,border:`1px solid ${p.c}0a`,textAlign:"left"}}><div style={{display:"flex",alignItems:"center",gap:5,marginBottom:3}}><Icon name={p.i} size={12} color={p.c}/><span style={{fontSize:9,color:T.dim}}>{p.l}</span></div><div style={{fontSize:16,fontWeight:800,color:p.c}}>{p.v}{p.u?<span style={{fontSize:11,opacity:0.6}}>{p.u}</span>:null}</div>{ago&&<div style={{fontSize:12,color:`${p.c}88`,fontWeight:600,marginTop:3}}>{ago}</div>}</button>})}</div>
         <div style={{padding:"0 20px"}}><div style={{fontSize:11,fontWeight:600,color:T.dim,marginBottom:8,textTransform:"uppercase",letterSpacing:0.8}}>{L("today")}</div>{todayE.length===0&&!liveBedtime&&<div style={{textAlign:"center",padding:"32px 20px",color:T.dim}}><Icon name="star" size={32} color={T.dim} fill={T.dim}/><div style={{fontSize:13,marginTop:8}}>{_lang==="en"?"Tap + to add":"Toque + para registrar"}</div></div>}{liveBedtime&&<SleepBlock entry={liveBedtime} entries={entries} isLive={true}/>}{todayE.filter(e=>{
           if(e.nightWake)return false;
           if(findContainingBedtime(e,entries))return false;
@@ -2993,7 +3014,7 @@ function App(){
     </Modal>
 
     <Sheet open={showAdd&&!formType} onClose={()=>setShowAdd(false)}>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"10px 0",padding:"0 16px"}}>{["wakeup","bottle","nursing","sleep","nap","diaper","bath","medicine","temperature"].map((type,i)=>{const cfg=TYPES[type];const last=entries.find(e=>e.type===type);const agoRaw=last?timeSince(last.date,last.time):null;const ago=agoRaw==="now"?"Just now":agoRaw;return(<button key={type} onClick={()=>setFormType(type)} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:10,padding:"12px 4px 8px",animation:`slideUp .3s ease ${i*0.035}s both`}}>
+      <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)",gap:"10px 0",padding:"0 16px"}}>{["wakeup","bottle","nursing","sleep","nap","diaper","bath","medicine","temperature"].map((type,i)=>{const cfg=TYPES[type];const last=entries.find(e=>e.type===type);const agoRaw=last?timeSince(last.date,last.time):null;const ago=agoRaw==="now"?"Just now":agoRaw;return(<button key={type} onClick={()=>setFormType(type)} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:10,padding:"12px 4px 8px",animation:`slideUp .3s ease ${i*0.035}s both`}}>
         <div style={{width:70,height:70,borderRadius:"50%",background:`radial-gradient(circle at 35% 30%, rgba(50,60,120,0.95), rgba(18,22,55,0.98))`,border:`1.5px solid ${cfg.color}25`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 4px 20px rgba(0,0,0,0.4), 0 0 24px ${cfg.color}18, 0 0 48px ${cfg.color}08, inset 0 1px 0 rgba(200,210,255,0.08), inset 0 -2px 4px rgba(0,0,0,0.2)`,position:"relative",overflow:"hidden",filter:`drop-shadow(0 0 5px ${cfg.color}44)`}}>
           {/* Inner glow spot */}
           <div style={{position:"absolute",top:"15%",left:"25%",width:"40%",height:"30%",background:`radial-gradient(ellipse,${cfg.color}12,transparent)`,borderRadius:"50%",filter:"blur(6px)"}}/>
