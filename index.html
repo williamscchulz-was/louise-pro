@@ -5,9 +5,9 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v9.0.0  MAJOR: Apple Polish · redesign sutil em todo o app
   v8.5.11 Fix definitivo dos inputs colidindo (Safari minmax fix)
   v8.5.10 Fix inputs colidindo no AddForm (1a tentativa, parcial)
-  v8.5.9  Fix bug bilingue no AddForm (Dia · Today misturado)
 
   Stack: HTML puro + React 18 CDN + Babel + Firebase 10.x compat
   Repo: https://github.com/williamscchulz-was/louise-pro
@@ -227,8 +227,35 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "8.5.11";
+const APP_VERSION = "9.0.0";
 const CHANGELOG = [
+  {
+    v: "9.0.0", date: "2026-04-08",
+    pt: {
+      title: "MAJOR: Apple Polish · redesign sutil em todo o app",
+      bullets: [
+        '★ **Redesign visual estilo Apple aplicado em todo o app.** Seguindo o mockup "Confident" aprovado anteriormente. A identidade do Louise Pro continua a mesma (escuro, roxo, ícones SVG, starfield) — só ficou mais "premium".',
+        '**Inputs do AddForm** ganharam padding generoso (17×18px), raio 16px, fonte 17px com peso 600 e tracking negativo, background mais claro, borda super sutil (`rgba(255,255,255,0.06)`), inset highlight no topo. Sente como app nativo iOS.',
+        '**Labels dos campos** perderam o all-caps. Antes: "DIA · TODAY" todo em maiúsculas. Agora: "Dia · Hoje" em sentence case (mais Apple). Cor mais clara e tracking ajustado.',
+        '**Cards de stat** (Diapers/dia, Mamadas/dia, Sonecas/dia na Stats) ganharam raio 20px, padding maior, valores 26px com tracking negativo e tabular numerals. Os números viraram protagonistas.',
+        '**Itens de lista** (entries da History/Home) ganharam ícones 38px com borda colorida sutil, padding generoso, raio 16px, tracking negativo nos horários. Mantém o borderLeft característico.',
+        '**Botões "Salvar"** ganharam gradient vertical (luz vinda de cima), inset highlight branco no topo, sombras de 2 camadas (próxima + profunda), raio 18px, fonte 17px. Mais "physical".',
+        '**Tokens novos:** `T.gBSoft` (border sutil) e `T.insetTop` (inset highlight) — centralizados pra reusar e manter consistência. Não toquei no `T.gB` original (51 usos pelo app) pra não quebrar nada fora do escopo do redesign.'
+      ]
+    },
+    en: {
+      title: "MAJOR: Apple Polish · subtle redesign across the app",
+      bullets: [
+        '★ **Apple-style visual redesign applied across the entire app.** Following the "Confident" mockup approved earlier. Louise Pro\'s identity stays the same (dark, purple, SVG icons, starfield) — it just got more "premium".',
+        '**AddForm inputs** got generous padding (17×18px), 16px radius, 17px font with 600 weight and negative tracking, lighter background, super subtle border (`rgba(255,255,255,0.06)`), inset highlight on top. Feels like a native iOS app.',
+        '**Field labels** lost the all-caps. Before: "DAY · TODAY" all caps. Now: "Day · Today" in sentence case (more Apple). Lighter color and adjusted tracking.',
+        '**Stat cards** (Diapers/day, Feedings/day, Naps/day in Stats) got 20px radius, more padding, 26px values with negative tracking and tabular numerals. Numbers became the protagonists.',
+        '**List items** (History/Home entries) got 38px icons with subtle colored border, generous padding, 16px radius, negative tracking on the timestamps. Keeps the characteristic borderLeft.',
+        '**Save buttons** got a vertical gradient (light from above), white inset highlight on top, 2-layer shadows (close + deep), 18px radius, 17px font. More "physical".',
+        '**New tokens:** `T.gBSoft` (subtle border) and `T.insetTop` (inset highlight) — centralized to reuse and maintain consistency. Didn\'t touch the original `T.gB` (51 usages across the app) to avoid breaking anything outside the redesign scope.'
+      ]
+    }
+  },
   {
     v: "8.5.11", date: "2026-04-08",
     pt: {
@@ -1118,7 +1145,7 @@ function Icon({name,size=20,color="currentColor",fill="none"}){
 
 
 // ── THEME ──
-const T={bg1:"#070b1e",bg2:"#0d1133",bg3:"#141a42",glass:"rgba(22,28,60,0.6)",gB:"rgba(90,100,180,0.12)",text:"#e4e6f5",sub:"#8b90b8",dim:"#555a80",accent:"#8b7cf6",green:"#34d399",greenS:"rgba(52,211,153,0.1)",purple:"#a78bfa",purpleS:"rgba(167,139,250,0.1)",pink:"#f472b6",pinkS:"rgba(244,114,182,0.1)",amber:"#fbbf24",amberS:"rgba(251,191,36,0.1)",orange:"#fb923c",orangeS:"rgba(251,146,60,0.1)",blue:"#38bdf8",blueS:"rgba(56,189,248,0.12)",red:"#f87171",redS:"rgba(248,113,113,0.1)",cyan:"#22d3ee",cyanS:"rgba(34,211,238,0.1)"};
+const T={bg1:"#070b1e",bg2:"#0d1133",bg3:"#141a42",glass:"rgba(22,28,60,0.6)",gB:"rgba(90,100,180,0.12)",gBSoft:"rgba(255,255,255,0.06)",insetTop:"0 1px 0 0 rgba(255,255,255,0.04) inset",insetTopStrong:"0 1px 0 0 rgba(255,255,255,0.08) inset",text:"#e4e6f5",sub:"#8b90b8",dim:"#555a80",accent:"#8b7cf6",green:"#34d399",greenS:"rgba(52,211,153,0.1)",purple:"#a78bfa",purpleS:"rgba(167,139,250,0.1)",pink:"#f472b6",pinkS:"rgba(244,114,182,0.1)",amber:"#fbbf24",amberS:"rgba(251,191,36,0.1)",orange:"#fb923c",orangeS:"rgba(251,146,60,0.1)",blue:"#38bdf8",blueS:"rgba(56,189,248,0.12)",red:"#f87171",redS:"rgba(248,113,113,0.1)",cyan:"#22d3ee",cyanS:"rgba(34,211,238,0.1)"};
 const TYPES={bottle:{label:{pt:"Mamadeira",en:"Bottle"},icon:"bottle",color:T.green,bg:T.greenS},nursing:{label:{pt:"Amamentação",en:"Nursing"},icon:"breast",color:T.blue,bg:T.blueS},sleep:{label:{pt:"Sono",en:"Bedtime"},icon:"moon",color:T.purple,bg:T.purpleS},wakeup:{label:{pt:"Acordou",en:"Woke up"},icon:"sun",color:T.amber,bg:T.amberS},nap:{label:{pt:"Soneca",en:"Nap"},icon:"cloud",color:T.purple,bg:T.purpleS},nightwaking:{label:{pt:"Acordou à noite",en:"Night waking"},icon:"zap",color:T.orange,bg:T.orangeS},diaper:{label:{pt:"Fralda",en:"Diaper"},icon:"diaper",color:T.pink,bg:T.pinkS},medicine:{label:{pt:"Medicamento",en:"Medicine"},icon:"pill",color:T.amber,bg:T.amberS},temperature:{label:{pt:"Temperatura",en:"Temperature"},icon:"thermo",color:T.red,bg:T.redS},bath:{label:{pt:"Banho",en:"Bath"},icon:"bath",color:T.cyan,bg:T.cyanS},growth:{label:{pt:"Crescimento",en:"Growth"},icon:"ruler",color:"#a3e635",bg:"rgba(163,230,53,0.1)"}};
 
 // ── i18n ──
@@ -1447,7 +1474,7 @@ function Sheet({open,onClose,children}){const[vis,setVis]=useState(false),[show,
 
 function Modal({open,onClose,children}){const[vis,setVis]=useState(false),[show,setShow]=useState(false);useEffect(()=>{if(open){setVis(true);requestAnimationFrame(()=>requestAnimationFrame(()=>setShow(true)))}else{setShow(false);const t=setTimeout(()=>setVis(false),300);return()=>clearTimeout(t)}},[open]);if(!vis)return null;return(<div style={{position:"fixed",inset:0,zIndex:150,display:"flex",alignItems:"center",justifyContent:"center",padding:24}} onClick={onClose}><div style={{position:"absolute",inset:0,background:"rgba(2,3,10,0.55)",backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",opacity:show?1:0,transition:"opacity .35s"}}/><div onClick={e=>e.stopPropagation()} style={{position:"relative",width:"100%",maxWidth:340,background:"rgba(14,18,52,0.85)",backdropFilter:"blur(40px)",WebkitBackdropFilter:"blur(40px)",borderRadius:24,border:"1px solid rgba(100,115,220,0.12)",boxShadow:"0 16px 48px rgba(0,0,0,0.5), inset 0 1px 0 rgba(140,150,255,0.06)",padding:28,transform:show?"scale(1)":"scale(0.92)",opacity:show?1:0,transition:"all .35s cubic-bezier(0.22,1,0.36,1)"}}><button onClick={onClose} style={{position:"absolute",top:16,right:16,padding:4,color:T.dim}}><Icon name="x" size={16} color={T.dim}/></button>{children}</div></div>)}
 
-function Fld({label,children}){return<div style={{marginBottom:18,minWidth:0}}><label style={{fontSize:10,color:T.dim,fontWeight:600,marginBottom:6,display:"block",textTransform:"uppercase",letterSpacing:1.2}}>{label}</label>{children}</div>}
+function Fld({label,children}){return<div style={{marginBottom:18,minWidth:0}}><label style={{fontSize:11,color:"#7a80a8",fontWeight:600,marginBottom:10,display:"block",letterSpacing:-0.05}}>{label}</label>{children}</div>}
 function Seg({opts,val,set,color}){return<div style={{display:"flex",gap:6}}>{opts.map(o=><button key={o.v} onClick={()=>set(o.v)} style={{flex:1,padding:"12px 4px",borderRadius:10,fontSize:13,fontWeight:600,background:val===o.v?color:T.glass,color:val===o.v?T.bg1:T.text,border:`1px solid ${val===o.v?color:T.gB}`}}>{o.l}</button>)}</div>}
 
 function SleepBlock({entry,onDelete,onEdit,entries,isLive}){
@@ -1634,12 +1661,12 @@ function EntryRow({entry,onDelete,onEdit,napNum,nightBadge}){const[swipe,setSwip
   const onTS=e=>{startX.current=e.touches[0].clientX;setSwiping(true)};
   const onTM=e=>{if(!swiping)return;const dx=startX.current-e.touches[0].clientX;setSwipe(Math.max(0,Math.min(70,dx)))};
   const onTE=()=>{setSwiping(false);if(swipe>40)setSwipe(70);else setSwipe(0)};
-  return(<div style={{position:"relative",marginBottom:4,overflow:"hidden",borderRadius:12}}>
-  {swipe>0&&<div style={{position:"absolute",right:0,top:0,bottom:0,width:70,background:"rgba(248,113,113,0.12)",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"0 12px 12px 0",opacity:swipe/70}}><button onClick={()=>onDelete(entry.id)} style={{padding:8}}><Icon name="trash" size={18} color={T.red}/></button></div>}
-  <div onTouchStart={onTS} onTouchMove={onTM} onTouchEnd={onTE} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",background:"rgba(22,28,60,0.95)",borderRadius:12,borderLeft:`3px solid ${cfg.color}`,transform:`translateX(${-swipe}px)`,transition:swiping?"none":"transform .3s ease"}}>
-  <button onClick={()=>onEdit&&onEdit(entry)} style={{width:34,height:34,borderRadius:10,background:cfg.bg,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name={cfg.icon} size={16} color={cfg.color}/></button>
-  <button onClick={()=>onEdit&&onEdit(entry)} style={{flex:1,textAlign:"left"}}><div style={{fontSize:13,fontWeight:600,display:"flex",alignItems:"center",gap:6}}>{napLabel&&<span style={{display:"inline-block",padding:"1px 6px",borderRadius:5,background:`${cfg.color}20`,color:cfg.color,fontSize:9,fontWeight:700}}>{napLabel}</span>}<span>{cfg.label[_lang]||cfg.label.en}</span>{nightBadge&&<span title={_lang==="en"?"During bedtime":"Durante bedtime"} style={{display:"inline-flex",alignItems:"center",gap:3,padding:"1px 6px 1px 5px",borderRadius:6,background:"rgba(96,165,250,0.12)",border:"1px solid rgba(96,165,250,0.28)",fontSize:9,fontWeight:700,color:"#60a5fa",letterSpacing:0.3}}><Icon name="moon" size={9} color="#60a5fa"/>{_lang==="en"?"night":"noite"}</span>}</div>{detail&&<div style={{fontSize:11,color:T.sub}}>{detail}</div>}</button>
-  <div style={{textAlign:"right",flexShrink:0}}>{(entry.type==="sleep"||entry.type==="nap")&&entry.durationMin?(()=>{const endMs=new Date(`${entry.date}T${entry.time}`).getTime()+entry.durationMin*60000;const endD=new Date(endMs);const endT=`${String(endD.getHours()).padStart(2,"0")}:${String(endD.getMinutes()).padStart(2,"0")}`;const endDt=`${endD.getFullYear()}-${String(endD.getMonth()+1).padStart(2,"0")}-${String(endD.getDate()).padStart(2,"0")}`;return<><div style={{fontSize:13,fontWeight:600}}>{entry.time}–{endT}</div><div style={{fontSize:11,color:T.sub,fontWeight:500}}>{timeSince(endDt,endT)}</div></>})():<><div style={{fontSize:13,fontWeight:600}}>{entry.time}</div><div style={{fontSize:11,color:T.sub,fontWeight:500}}>{timeSince(entry.date,entry.time)}</div></>}</div>
+  return(<div style={{position:"relative",marginBottom:6,overflow:"hidden",borderRadius:16}}>
+  {swipe>0&&<div style={{position:"absolute",right:0,top:0,bottom:0,width:70,background:"rgba(248,113,113,0.12)",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"0 16px 16px 0",opacity:swipe/70}}><button onClick={()=>onDelete(entry.id)} style={{padding:8}}><Icon name="trash" size={18} color={T.red}/></button></div>}
+  <div onTouchStart={onTS} onTouchMove={onTM} onTouchEnd={onTE} style={{display:"flex",alignItems:"center",gap:12,padding:"14px 16px",background:"rgba(22,28,60,0.55)",borderRadius:16,border:`1px solid ${T.gBSoft}`,borderLeft:`3px solid ${cfg.color}`,boxShadow:T.insetTop,transform:`translateX(${-swipe}px)`,transition:swiping?"none":"transform .3s ease"}}>
+  <button onClick={()=>onEdit&&onEdit(entry)} style={{width:38,height:38,borderRadius:12,background:cfg.bg,border:`1px solid ${cfg.color}25`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,boxShadow:T.insetTop}}><Icon name={cfg.icon} size={17} color={cfg.color}/></button>
+  <button onClick={()=>onEdit&&onEdit(entry)} style={{flex:1,textAlign:"left",minWidth:0}}><div style={{fontSize:14,fontWeight:600,letterSpacing:-0.1,display:"flex",alignItems:"center",gap:6}}>{napLabel&&<span style={{display:"inline-block",padding:"1px 6px",borderRadius:5,background:`${cfg.color}20`,color:cfg.color,fontSize:9,fontWeight:700}}>{napLabel}</span>}<span>{cfg.label[_lang]||cfg.label.en}</span>{nightBadge&&<span title={_lang==="en"?"During bedtime":"Durante bedtime"} style={{display:"inline-flex",alignItems:"center",gap:3,padding:"1px 6px 1px 5px",borderRadius:6,background:"rgba(96,165,250,0.12)",border:"1px solid rgba(96,165,250,0.28)",fontSize:9,fontWeight:700,color:"#60a5fa",letterSpacing:0.3}}><Icon name="moon" size={9} color="#60a5fa"/>{_lang==="en"?"night":"noite"}</span>}</div>{detail&&<div style={{fontSize:12,color:T.sub,marginTop:2}}>{detail}</div>}</button>
+  <div style={{textAlign:"right",flexShrink:0}}>{(entry.type==="sleep"||entry.type==="nap")&&entry.durationMin?(()=>{const endMs=new Date(`${entry.date}T${entry.time}`).getTime()+entry.durationMin*60000;const endD=new Date(endMs);const endT=`${String(endD.getHours()).padStart(2,"0")}:${String(endD.getMinutes()).padStart(2,"0")}`;const endDt=`${endD.getFullYear()}-${String(endD.getMonth()+1).padStart(2,"0")}-${String(endD.getDate()).padStart(2,"0")}`;return<><div style={{fontSize:14,fontWeight:600,fontVariantNumeric:"tabular-nums",letterSpacing:-0.2}}>{entry.time}–{endT}</div><div style={{fontSize:11,color:T.sub,fontWeight:500,marginTop:2}}>{timeSince(endDt,endT)}</div></>})():<><div style={{fontSize:14,fontWeight:600,fontVariantNumeric:"tabular-nums",letterSpacing:-0.2}}>{entry.time}</div><div style={{fontSize:11,color:T.sub,fontWeight:500,marginTop:2}}>{timeSince(entry.date,entry.time)}</div></>}</div>
 </div></div>)}
 
 function AddForm({type,onSave,savedMeds,onSaveMeds,editEntry,lastBottleMl,topMl}){const cfg=TYPES[type];const ed=editEntry||{};
@@ -1670,7 +1697,7 @@ function AddForm({type,onSave,savedMeds,onSaveMeds,editEntry,lastBottleMl,topMl}
     else if(type==="temperature"){if(!tempV)return;onSave({...b,value:parseFloat(tempV)})}
     else if(type==="growth"){onSave({...b,weightKg:weightKg?parseFloat(weightKg):undefined,lengthCm:lengthCm?parseFloat(lengthCm):undefined,headCm:headCm?parseFloat(headCm):undefined})}
   };
-  const inp={width:"100%",maxWidth:"100%",boxSizing:"border-box",WebkitAppearance:"none",appearance:"none",padding:"13px 16px",background:"rgba(14,18,48,0.8)",border:`1px solid ${T.gB}`,borderRadius:12,color:T.text,fontSize:15,outline:"none"};
+  const inp={width:"100%",maxWidth:"100%",boxSizing:"border-box",WebkitAppearance:"none",appearance:"none",padding:"17px 18px",background:"rgba(20,26,60,0.55)",border:`1px solid ${T.gBSoft}`,borderRadius:16,color:T.text,fontSize:17,fontWeight:600,letterSpacing:-0.2,outline:"none",boxShadow:T.insetTop};
   const isToday=date===todayStr();
   const dateLbl=isToday?L("today"):new Date(date+"T12:00").toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{weekday:"short",day:"numeric",month:"short"});
   return(<div style={{paddingBottom:20}}>
@@ -1680,7 +1707,7 @@ function AddForm({type,onSave,savedMeds,onSaveMeds,editEntry,lastBottleMl,topMl}
     </div>
     <div style={{padding:"0 20px"}}>
       {/* Date + Time row */}
-      <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr)",gap:8,marginBottom:18}}>
+      <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr)",gap:10,marginBottom:20}}>
         <Fld label={(_lang==="en"?"Day · ":"Dia · ")+dateLbl}><input type="date" value={date} onChange={e=>setDate(e.target.value)} style={{...inp,colorScheme:"dark"}}/></Fld>
         <Fld label={L("time")}><input type="time" value={time} onChange={e=>setTime(e.target.value)} style={{...inp,colorScheme:"dark"}}/></Fld>
       </div>
@@ -1713,7 +1740,7 @@ function AddForm({type,onSave,savedMeds,onSaveMeds,editEntry,lastBottleMl,topMl}
       {type==="temperature"&&<Fld label={`${_lang==="en"?"Temperature":"Temperatura"} (°C)`}><input type="number" inputMode="decimal" step="0.1" placeholder="36.5" value={tempV} onChange={e=>setTempV(e.target.value)} style={{...inp,fontSize:36,fontWeight:800,textAlign:"center"}}/></Fld>}
       {type==="growth"&&<><Fld label={`${L("weight")} (kg)`}><input type="number" inputMode="decimal" step="0.01" placeholder="Ex: 4.5" value={weightKg} onChange={e=>setWeightKg(e.target.value)} style={{...inp,fontSize:28,fontWeight:800,textAlign:"center"}}/></Fld><Fld label={`${_lang==="en"?"Length":"Comprimento"} (cm)`}><input type="number" inputMode="decimal" step="0.1" placeholder="Ex: 55.0" value={lengthCm} onChange={e=>setLengthCm(e.target.value)} style={{...inp,fontSize:28,fontWeight:800,textAlign:"center"}}/></Fld><Fld label={`${L("head")} (cm)`}><input type="number" inputMode="decimal" step="0.1" placeholder="Ex: 37.0" value={headCm} onChange={e=>setHeadCm(e.target.value)} style={{...inp,fontSize:28,fontWeight:800,textAlign:"center"}}/></Fld></>}
       <Fld label={L("notes")}><textarea placeholder={_lang==="en"?"Note...":"Anotação..."} value={notes} onChange={e=>setNotes(e.target.value)} rows={2} style={{...inp,resize:"vertical"}}/></Fld>
-      <button onClick={doSave} style={{width:"100%",padding:14,borderRadius:12,background:cfg.color,color:T.bg1,fontSize:15,fontWeight:700}}>{isEdit?L("update"):L("save")}</button>
+      <button onClick={doSave} style={{width:"100%",padding:18,borderRadius:18,background:`linear-gradient(180deg,${cfg.color},${cfg.color}dd)`,color:T.bg1,fontSize:17,fontWeight:700,letterSpacing:-0.3,border:"none",boxShadow:`0 1px 0 0 rgba(255,255,255,0.25) inset, 0 0 0 1px rgba(255,255,255,0.06), 0 12px 32px -8px ${cfg.color}55, 0 4px 8px -4px ${cfg.color}33`,transition:"transform 0.2s cubic-bezier(0.22,1,0.36,1)",cursor:"pointer"}}>{isEdit?L("update"):L("save")}</button>
     </div>
   </div>);
 }
@@ -1864,7 +1891,7 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
   const fr=useRef(null);
   const handlePhoto=e=>{const f=e.target.files?.[0];if(!f)return;const rd=new FileReader();rd.onload=ev=>{const img=new Image();img.onload=()=>{const c=document.createElement("canvas"),mx=200;let w=img.width,h=img.height;if(w>h){h=(h/w)*mx;w=mx}else{w=(w/h)*mx;h=mx}c.width=w;c.height=h;c.getContext("2d").drawImage(img,0,0,w,h);setPhoto(c.toDataURL("image/jpeg",0.8))};img.src=ev.target.result};rd.readAsDataURL(f)};
   const doSave=()=>{onSave({name:name.trim(),birthDate:birth,photo,mlGoal:parseInt(mlGoal)||0,birthWeight:parseFloat(birthWeight)||0,birthLength:parseFloat(birthLength)||0,birthHead:parseFloat(birthHead)||0,lang:langSel,keepScreenOn,hapticEnabled,pushEnabled});onBack()};
-  const inp={width:"100%",maxWidth:"100%",boxSizing:"border-box",WebkitAppearance:"none",appearance:"none",padding:"14px 16px",background:"rgba(14,18,48,0.8)",border:`1px solid ${T.gB}`,borderRadius:12,color:T.text,fontSize:15,outline:"none"};
+  const inp={width:"100%",maxWidth:"100%",boxSizing:"border-box",WebkitAppearance:"none",appearance:"none",padding:"17px 18px",background:"rgba(20,26,60,0.55)",border:`1px solid ${T.gBSoft}`,borderRadius:16,color:T.text,fontSize:17,fontWeight:600,letterSpacing:-0.2,outline:"none",boxShadow:T.insetTop};
   return(<div style={{position:"fixed",inset:0,zIndex:200,maxWidth:480,margin:"0 auto",background:`radial-gradient(ellipse at 50% 0%,#10153d,${T.bg1} 65%)`,overflowY:"auto",overflowX:"hidden",overscrollBehavior:"contain",WebkitOverflowScrolling:"touch",paddingTop:"env(safe-area-inset-top)",paddingBottom:"calc(40px + env(safe-area-inset-bottom))"}}>
     <div style={{display:"flex",alignItems:"center",gap:14,padding:"16px 20px"}}><button onClick={onBack} style={{width:36,height:36,borderRadius:10,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="back" size={18} color={T.sub}/></button><span style={{fontSize:17,fontWeight:700}}>{L("profile")}</span></div>
     <div style={{padding:"0 20px"}}>
@@ -1992,7 +2019,7 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
       <button onClick={()=>{doSave();onGrowth()}} style={{width:"100%",padding:14,borderRadius:12,marginBottom:10,background:"rgba(163,230,53,0.08)",border:"1px solid rgba(163,230,53,0.15)",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
         <Icon name="ruler" size={16} color="#a3e635"/><span style={{fontSize:14,fontWeight:700,color:"#a3e635"}}>{L("viewGrowth")}</span>
       </button>
-      <button onClick={doSave} style={{width:"100%",padding:14,borderRadius:12,background:`linear-gradient(135deg,#7c3aed,${T.accent})`,color:"#fff",fontSize:15,fontWeight:700,boxShadow:`0 4px 16px ${T.accent}33`}}>{L("save")}</button>
+      <button onClick={doSave} style={{width:"100%",padding:18,borderRadius:18,background:`linear-gradient(180deg,#9b8df8,#7c3aed)`,color:"#fff",fontSize:17,fontWeight:700,letterSpacing:-0.3,border:"none",boxShadow:`0 1px 0 0 rgba(255,255,255,0.25) inset, 0 0 0 1px rgba(255,255,255,0.06), 0 12px 32px -8px ${T.accent}55, 0 4px 8px -4px ${T.accent}33`,transition:"transform 0.2s cubic-bezier(0.22,1,0.36,1)",cursor:"pointer"}}>{L("save")}</button>
       <div style={{marginTop:20}}>
         <button onClick={onShowChangelog} style={{width:"100%",padding:"14px 16px",borderRadius:14,background:"rgba(22,28,60,0.4)",border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",gap:12,textAlign:"left",cursor:"pointer"}}>
           <div style={{width:36,height:36,borderRadius:10,background:"linear-gradient(135deg,rgba(139,124,246,0.18),rgba(124,58,237,0.10))",border:"1px solid rgba(139,124,246,0.22)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
@@ -2199,7 +2226,7 @@ function StatsPage({entries,onGrowth}){
       <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
       <span>{avgSubtitle}</span>
     </div>
-    <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr)",gap:8,marginBottom:12}}>
+    <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr)",gap:10,marginBottom:12}}>
       <div style={{background:`${T.green}08`,borderRadius:14,border:`1px solid ${T.green}0a`,padding:12}}><div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}><Icon name="bottle" size={14} color={T.green}/><span style={{fontSize:9,color:T.sub}}>{_lang==="en"?"Avg milk/day":"Média leite/dia"}</span></div><div style={{fontSize:22,fontWeight:800,color:T.green}}>{avgMl} <span style={{fontSize:12,opacity:0.6}}>ml</span></div><TrendBadge val={trendMl}/></div>
       <div style={{background:`${T.purple}08`,borderRadius:14,border:`1px solid ${T.purple}0a`,padding:12}}>
         <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}><Icon name="moon" size={14} color={T.purple}/><span style={{fontSize:9,color:T.sub}}>{_lang==="en"?"Real sleep/day":"Sono real/dia"}</span></div>
@@ -2211,10 +2238,10 @@ function StatsPage({entries,onGrowth}){
         </div>}
       </div>
     </div>
-    <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)",gap:8,marginBottom:16}}>
-      <div style={{background:"rgba(22,28,60,0.4)",borderRadius:12,border:`1px solid ${T.gB}`,padding:"10px 8px",textAlign:"center"}}><div style={{fontSize:8,color:T.dim,textTransform:"uppercase",letterSpacing:0.5,marginBottom:4}}>{_lang==="en"?"Diapers/day":"Fraldas/dia"}</div><div style={{fontSize:18,fontWeight:800,color:T.pink}}>{avgDiapers}</div></div>
-      <div style={{background:"rgba(22,28,60,0.4)",borderRadius:12,border:`1px solid ${T.gB}`,padding:"10px 8px",textAlign:"center"}}><div style={{fontSize:8,color:T.dim,textTransform:"uppercase",letterSpacing:0.5,marginBottom:4}}>{_lang==="en"?"Feedings/day":"Mamadas/dia"}</div><div style={{fontSize:18,fontWeight:800,color:T.blue}}>{avgFeedings}</div></div>
-      <div style={{background:"rgba(22,28,60,0.4)",borderRadius:12,border:`1px solid ${T.gB}`,padding:"10px 8px",textAlign:"center"}}><div style={{fontSize:8,color:T.dim,textTransform:"uppercase",letterSpacing:0.5,marginBottom:4}}>{_lang==="en"?"Naps/day":"Sonecas/dia"}</div><div style={{fontSize:18,fontWeight:800,color:T.accent}}>{avgNaps}</div></div>
+    <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)",gap:10,marginBottom:16}}>
+      <div style={{background:"rgba(20,26,60,0.5)",borderRadius:20,border:`1px solid ${T.gBSoft}`,padding:"16px 12px 14px",textAlign:"center",boxShadow:T.insetTop}}><div style={{fontSize:10,color:"#7a80a8",letterSpacing:-0.05,marginBottom:8,fontWeight:600}}>{_lang==="en"?"Diapers/day":"Fraldas/dia"}</div><div style={{fontSize:26,fontWeight:800,color:T.pink,letterSpacing:-0.8,fontVariantNumeric:"tabular-nums"}}>{avgDiapers}</div></div>
+      <div style={{background:"rgba(20,26,60,0.5)",borderRadius:20,border:`1px solid ${T.gBSoft}`,padding:"16px 12px 14px",textAlign:"center",boxShadow:T.insetTop}}><div style={{fontSize:10,color:"#7a80a8",letterSpacing:-0.05,marginBottom:8,fontWeight:600}}>{_lang==="en"?"Feedings/day":"Mamadas/dia"}</div><div style={{fontSize:26,fontWeight:800,color:T.blue,letterSpacing:-0.8,fontVariantNumeric:"tabular-nums"}}>{avgFeedings}</div></div>
+      <div style={{background:"rgba(20,26,60,0.5)",borderRadius:20,border:`1px solid ${T.gBSoft}`,padding:"16px 12px 14px",textAlign:"center",boxShadow:T.insetTop}}><div style={{fontSize:10,color:"#7a80a8",letterSpacing:-0.05,marginBottom:8,fontWeight:600}}>{_lang==="en"?"Naps/day":"Sonecas/dia"}</div><div style={{fontSize:26,fontWeight:800,color:T.accent,letterSpacing:-0.8,fontVariantNumeric:"tabular-nums"}}>{avgNaps}</div></div>
     </div>
     {[{t:_lang==="en"?"Milk (ml)":"Leite (ml)",f:"ml",max:mxMl,c:T.green,stacked:false},{t:_lang==="en"?"Sleep · real + awake":"Sono · real + acordada",f:"sl",max:mxSl,c:T.purple,stacked:true}].map(ch=>(
       <div key={ch.f} style={{marginBottom:22}}>
@@ -2466,7 +2493,7 @@ function GrowthPage({entries,birthDate,profile,onBack,onAddEntry}){
     </div>);
   }
 
-  const inp={width:"100%",maxWidth:"100%",boxSizing:"border-box",WebkitAppearance:"none",appearance:"none",padding:"12px",background:"rgba(14,18,48,0.8)",border:`1px solid ${T.gB}`,borderRadius:10,color:T.text,fontSize:15,outline:"none",textAlign:"center"};
+  const inp={width:"100%",maxWidth:"100%",boxSizing:"border-box",WebkitAppearance:"none",appearance:"none",padding:"15px 12px",background:"rgba(20,26,60,0.55)",border:`1px solid ${T.gBSoft}`,borderRadius:14,color:T.text,fontSize:17,fontWeight:600,letterSpacing:-0.2,outline:"none",textAlign:"center",boxShadow:T.insetTop};
 
   return(<div style={{padding:"calc(16px + env(safe-area-inset-top)) 20px 0"}}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
