@@ -5,9 +5,9 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v8.5.10 Fix inputs colidindo no AddForm (Dia/Hora lado a lado)
+  v8.5.9  Fix bug bilingue no AddForm (Dia · Today misturado)
   v8.5.8  Filtros especificos mostram tudo + badge noite
-  v8.5.7  Diaper wet/dirty no card Today da History
-  v8.5.6  Fix: "Sleeping through the night" falso positivo
 
   Stack: HTML puro + React 18 CDN + Babel + Firebase 10.x compat
   Repo: https://github.com/williamscchulz-was/louise-pro
@@ -227,8 +227,48 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "8.5.8";
+const APP_VERSION = "8.5.10";
 const CHANGELOG = [
+  {
+    v: "8.5.10", date: "2026-04-08",
+    pt: {
+      title: "Fix de inputs colidindo no AddForm + bug bilíngue do GrowthPage",
+      bullets: [
+        '★ **Bug visual no AddForm corrigido.** O retângulo do campo "Dia" estava encostando/sobrepondo o retângulo do campo "Hora" quando eles ficavam lado a lado num grid 2 colunas. Causa: inputs nativos do iOS (date/time) ignoram parcialmente o `width:100%` do contêiner e transbordam o gap.',
+        'Fix em 3 camadas: **(1)** componente `Fld` agora tem `min-width:0` (força grid items a respeitar o `1fr` em vez do conteúdo), **(2)** todos os inputs ganharam `box-sizing:border-box` (padding/borda dentro do width), **(3)** todos ganharam `max-width:100%` como segunda guarda contra o iOS.',
+        'O fix se propaga **automaticamente** pra todos os formulários do app: AddForm, ProfilePage (data de nascimento), GrowthPage (nova medição) — porque todos usam o `Fld` e o `inp` compartilhados.',
+        '**Bonus:** corrigido bug bilíngue no botão "Save measurement" do GrowthPage — em modo EN ele mostrava "Save medição" (mistura PT+EN). Agora respeita o idioma corretamente.'
+      ]
+    },
+    en: {
+      title: "Fix for colliding inputs in AddForm + bilingual bug in GrowthPage",
+      bullets: [
+        '★ **Visual bug in AddForm fixed.** The "Day" field rectangle was touching/overlapping the "Time" field rectangle when they sat side by side in a 2-column grid. Cause: iOS native inputs (date/time) partially ignore the container `width:100%` and overflow the gap.',
+        '3-layer fix: **(1)** the `Fld` component now has `min-width:0` (forces grid items to respect `1fr` instead of content), **(2)** all inputs got `box-sizing:border-box` (padding/border inside the width), **(3)** all got `max-width:100%` as a second guard against iOS.',
+        'The fix propagates **automatically** to every form in the app: AddForm, ProfilePage (birth date), GrowthPage (new measurement) — because they all use the shared `Fld` and `inp`.',
+        '**Bonus:** fixed bilingual bug in the "Save measurement" button of GrowthPage — in EN mode it was showing "Save medição" (PT+EN mix). Now respects the language correctly.'
+      ]
+    }
+  },
+  {
+    v: "8.5.9", date: "2026-04-08",
+    pt: {
+      title: "Bug bilíngue no formulário de adicionar evento",
+      bullets: [
+        '★ **Labels do AddForm misturavam idiomas.** O label "Dia · Today" aparecia com português + inglês juntos quando o app estava em inglês. Causa: o "Dia · " estava hard-coded em PT mas concatenava com o `dateLbl` que respeitava o idioma — gerando o mix.',
+        'Corrigidos também os labels do formulário de Amamentação ("Lado" e "Duração (min)") que estavam fixos em português, e o resumo "Duração: Xh Ym (próximo dia)" no modo end-time do sleep.',
+        'Agora todos os labels do AddForm respeitam o toggle PT/EN do Profile.'
+      ]
+    },
+    en: {
+      title: "Bilingual bug in the add-event form",
+      bullets: [
+        '★ **AddForm labels were mixing languages.** The label "Dia · Today" appeared with Portuguese + English together when the app was in English. Cause: "Dia · " was hard-coded in PT but concatenated with `dateLbl` which respected the language — generating the mix.',
+        'Also fixed the Nursing form labels ("Lado" and "Duração (min)") that were fixed in Portuguese, and the "Duração: Xh Ym (próximo dia)" summary in the sleep end-time mode.',
+        'All AddForm labels now respect the PT/EN toggle in Profile.'
+      ]
+    }
+  },
   {
     v: "8.5.8", date: "2026-04-06",
     pt: {
@@ -1386,7 +1426,7 @@ function Sheet({open,onClose,children}){const[vis,setVis]=useState(false),[show,
 
 function Modal({open,onClose,children}){const[vis,setVis]=useState(false),[show,setShow]=useState(false);useEffect(()=>{if(open){setVis(true);requestAnimationFrame(()=>requestAnimationFrame(()=>setShow(true)))}else{setShow(false);const t=setTimeout(()=>setVis(false),300);return()=>clearTimeout(t)}},[open]);if(!vis)return null;return(<div style={{position:"fixed",inset:0,zIndex:150,display:"flex",alignItems:"center",justifyContent:"center",padding:24}} onClick={onClose}><div style={{position:"absolute",inset:0,background:"rgba(2,3,10,0.55)",backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",opacity:show?1:0,transition:"opacity .35s"}}/><div onClick={e=>e.stopPropagation()} style={{position:"relative",width:"100%",maxWidth:340,background:"rgba(14,18,52,0.85)",backdropFilter:"blur(40px)",WebkitBackdropFilter:"blur(40px)",borderRadius:24,border:"1px solid rgba(100,115,220,0.12)",boxShadow:"0 16px 48px rgba(0,0,0,0.5), inset 0 1px 0 rgba(140,150,255,0.06)",padding:28,transform:show?"scale(1)":"scale(0.92)",opacity:show?1:0,transition:"all .35s cubic-bezier(0.22,1,0.36,1)"}}><button onClick={onClose} style={{position:"absolute",top:16,right:16,padding:4,color:T.dim}}><Icon name="x" size={16} color={T.dim}/></button>{children}</div></div>)}
 
-function Fld({label,children}){return<div style={{marginBottom:18}}><label style={{fontSize:10,color:T.dim,fontWeight:600,marginBottom:6,display:"block",textTransform:"uppercase",letterSpacing:1.2}}>{label}</label>{children}</div>}
+function Fld({label,children}){return<div style={{marginBottom:18,minWidth:0}}><label style={{fontSize:10,color:T.dim,fontWeight:600,marginBottom:6,display:"block",textTransform:"uppercase",letterSpacing:1.2}}>{label}</label>{children}</div>}
 function Seg({opts,val,set,color}){return<div style={{display:"flex",gap:6}}>{opts.map(o=><button key={o.v} onClick={()=>set(o.v)} style={{flex:1,padding:"12px 4px",borderRadius:10,fontSize:13,fontWeight:600,background:val===o.v?color:T.glass,color:val===o.v?T.bg1:T.text,border:`1px solid ${val===o.v?color:T.gB}`}}>{o.l}</button>)}</div>}
 
 function SleepBlock({entry,onDelete,onEdit,entries,isLive}){
@@ -1609,7 +1649,7 @@ function AddForm({type,onSave,savedMeds,onSaveMeds,editEntry,lastBottleMl,topMl}
     else if(type==="temperature"){if(!tempV)return;onSave({...b,value:parseFloat(tempV)})}
     else if(type==="growth"){onSave({...b,weightKg:weightKg?parseFloat(weightKg):undefined,lengthCm:lengthCm?parseFloat(lengthCm):undefined,headCm:headCm?parseFloat(headCm):undefined})}
   };
-  const inp={width:"100%",padding:"13px 16px",background:"rgba(14,18,48,0.8)",border:`1px solid ${T.gB}`,borderRadius:12,color:T.text,fontSize:15,outline:"none"};
+  const inp={width:"100%",maxWidth:"100%",boxSizing:"border-box",padding:"13px 16px",background:"rgba(14,18,48,0.8)",border:`1px solid ${T.gB}`,borderRadius:12,color:T.text,fontSize:15,outline:"none"};
   const isToday=date===todayStr();
   const dateLbl=isToday?L("today"):new Date(date+"T12:00").toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{weekday:"short",day:"numeric",month:"short"});
   return(<div style={{paddingBottom:20}}>
@@ -1620,12 +1660,12 @@ function AddForm({type,onSave,savedMeds,onSaveMeds,editEntry,lastBottleMl,topMl}
     <div style={{padding:"0 20px"}}>
       {/* Date + Time row */}
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:18}}>
-        <Fld label={"Dia · "+dateLbl}><input type="date" value={date} onChange={e=>setDate(e.target.value)} style={{...inp,colorScheme:"dark"}}/></Fld>
+        <Fld label={(_lang==="en"?"Day · ":"Dia · ")+dateLbl}><input type="date" value={date} onChange={e=>setDate(e.target.value)} style={{...inp,colorScheme:"dark"}}/></Fld>
         <Fld label={L("time")}><input type="time" value={time} onChange={e=>setTime(e.target.value)} style={{...inp,colorScheme:"dark"}}/></Fld>
       </div>
       {type==="bottle"&&<><Fld label={_lang==="en"?"Amount (ml)":"Quantidade (ml)"}><input ref={mRef} type="number" inputMode="numeric" placeholder="0" value={ml} onChange={e=>setMl(e.target.value)} style={{...inp,fontSize:36,fontWeight:800,textAlign:"center",padding:"16px"}}/></Fld>
         <div style={{display:"flex",gap:8,marginBottom:20}}>{(topMl&&topMl.length>0?[...new Set([...topMl,lastBottleMl].filter(Boolean))].slice(0,4):[60,90,120]).map((v,i)=><button key={v} onClick={()=>setMl(String(v))} style={{flex:1,padding:"10px 0",borderRadius:10,background:ml===String(v)?T.green:T.glass,color:ml===String(v)?T.bg1:T.text,border:`1px solid ${ml===String(v)?T.green:T.gB}`,textAlign:"center"}}><div style={{fontSize:16,fontWeight:800}}>{v}</div>{i===0&&topMl?.length>0&&<div style={{fontSize:8,color:ml===String(v)?T.bg1:T.dim,marginTop:1}}>{_lang==="en"?"top":"mais"}</div>}</button>)}</div></>}
-      {type==="nursing"&&<><Fld label="Lado"><Seg opts={[{v:"left",l:L("left")},{v:"right",l:L("right")},{v:"both",l:L("both")}]} val={side} set={setSide} color={cfg.color}/></Fld><Fld label="Duração (min)"><input type="number" inputMode="numeric" placeholder="15" value={nurseM} onChange={e=>setNurseM(e.target.value)} style={inp}/></Fld></>}
+      {type==="nursing"&&<><Fld label={L("side")}><Seg opts={[{v:"left",l:L("left")},{v:"right",l:L("right")},{v:"both",l:L("both")}]} val={side} set={setSide} color={cfg.color}/></Fld><Fld label={`${L("duration")} (min)`}><input type="number" inputMode="numeric" placeholder="15" value={nurseM} onChange={e=>setNurseM(e.target.value)} style={inp}/></Fld></>}
       {(type==="sleep"||type==="nap")&&<>
         <div style={{display:"flex",gap:4,marginBottom:14,background:T.glass,borderRadius:10,padding:3,border:`1px solid ${T.gB}`}}>
           <button onClick={()=>setDurMode("dur")} style={{flex:1,padding:"8px 0",borderRadius:8,fontSize:12,fontWeight:700,background:durMode==="dur"?T.purple:"transparent",color:durMode==="dur"?"#fff":T.sub}}>{L("duration")}</button>
@@ -1633,7 +1673,7 @@ function AddForm({type,onSave,savedMeds,onSaveMeds,editEntry,lastBottleMl,topMl}
         </div>
         {durMode==="dur"?<Fld label={L("duration")}><div style={{display:"flex",gap:10,alignItems:"center"}}><input type="number" inputMode="numeric" placeholder="0" value={durH} onChange={e=>setDurH(e.target.value)} style={{...inp,flex:1,textAlign:"center",fontSize:28,fontWeight:800}}/><span style={{color:T.dim,fontWeight:700}}>h</span><input type="number" inputMode="numeric" placeholder="0" value={durM} onChange={e=>setDurM(e.target.value)} style={{...inp,flex:1,textAlign:"center",fontSize:28,fontWeight:800}}/><span style={{color:T.dim,fontWeight:700}}>m</span></div></Fld>
         :<Fld label={L("wokeAt")}><input type="time" value={endTime} onChange={e=>setEndTime(e.target.value)} style={{...inp,colorScheme:"dark",fontSize:28,fontWeight:800,textAlign:"center",padding:"14px 16px"}}/></Fld>}
-        {durMode==="end"&&endTime&&time&&<div style={{fontSize:11,color:T.sub,marginBottom:12,textAlign:"center"}}>{(()=>{const[sh,sm]=time.split(":").map(Number);const[eh,em]=endTime.split(":").map(Number);let d=(eh*60+em)-(sh*60+sm);if(d<=0)d+=1440;return`Duração: ${fmtDur(d)}${d>720?" (próximo dia)":""}`})()}</div>}
+        {durMode==="end"&&endTime&&time&&<div style={{fontSize:11,color:T.sub,marginBottom:12,textAlign:"center"}}>{(()=>{const[sh,sm]=time.split(":").map(Number);const[eh,em]=endTime.split(":").map(Number);let d=(eh*60+em)-(sh*60+sm);if(d<=0)d+=1440;const lbl=_lang==="en"?"Duration":"Duração";const nextDay=_lang==="en"?" (next day)":" (próximo dia)";return`${lbl}: ${fmtDur(d)}${d>720?nextDay:""}`})()}</div>}
       </>}
       {type==="diaper"&&<Fld label={_lang==="en"?"Type":"Tipo"}><Seg opts={[{v:"wet",l:L("wet")},{v:"dirty",l:L("dirty")},{v:"both",l:L("both")}]} val={diaperT} set={setDiaperT} color={cfg.color}/></Fld>}
       {type==="medicine"&&<>
@@ -1803,7 +1843,7 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
   const fr=useRef(null);
   const handlePhoto=e=>{const f=e.target.files?.[0];if(!f)return;const rd=new FileReader();rd.onload=ev=>{const img=new Image();img.onload=()=>{const c=document.createElement("canvas"),mx=200;let w=img.width,h=img.height;if(w>h){h=(h/w)*mx;w=mx}else{w=(w/h)*mx;h=mx}c.width=w;c.height=h;c.getContext("2d").drawImage(img,0,0,w,h);setPhoto(c.toDataURL("image/jpeg",0.8))};img.src=ev.target.result};rd.readAsDataURL(f)};
   const doSave=()=>{onSave({name:name.trim(),birthDate:birth,photo,mlGoal:parseInt(mlGoal)||0,birthWeight:parseFloat(birthWeight)||0,birthLength:parseFloat(birthLength)||0,birthHead:parseFloat(birthHead)||0,lang:langSel,keepScreenOn,hapticEnabled,pushEnabled});onBack()};
-  const inp={width:"100%",padding:"14px 16px",background:"rgba(14,18,48,0.8)",border:`1px solid ${T.gB}`,borderRadius:12,color:T.text,fontSize:15,outline:"none"};
+  const inp={width:"100%",maxWidth:"100%",boxSizing:"border-box",padding:"14px 16px",background:"rgba(14,18,48,0.8)",border:`1px solid ${T.gB}`,borderRadius:12,color:T.text,fontSize:15,outline:"none"};
   return(<div style={{position:"fixed",inset:0,zIndex:200,maxWidth:480,margin:"0 auto",background:`radial-gradient(ellipse at 50% 0%,#10153d,${T.bg1} 65%)`,overflowY:"auto",overflowX:"hidden",overscrollBehavior:"contain",WebkitOverflowScrolling:"touch",paddingTop:"env(safe-area-inset-top)",paddingBottom:"calc(40px + env(safe-area-inset-bottom))"}}>
     <div style={{display:"flex",alignItems:"center",gap:14,padding:"16px 20px"}}><button onClick={onBack} style={{width:36,height:36,borderRadius:10,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="back" size={18} color={T.sub}/></button><span style={{fontSize:17,fontWeight:700}}>{L("profile")}</span></div>
     <div style={{padding:"0 20px"}}>
@@ -2405,7 +2445,7 @@ function GrowthPage({entries,birthDate,profile,onBack,onAddEntry}){
     </div>);
   }
 
-  const inp={width:"100%",padding:"12px",background:"rgba(14,18,48,0.8)",border:`1px solid ${T.gB}`,borderRadius:10,color:T.text,fontSize:15,outline:"none",textAlign:"center"};
+  const inp={width:"100%",maxWidth:"100%",boxSizing:"border-box",padding:"12px",background:"rgba(14,18,48,0.8)",border:`1px solid ${T.gB}`,borderRadius:10,color:T.text,fontSize:15,outline:"none",textAlign:"center"};
 
   return(<div style={{padding:"calc(16px + env(safe-area-inset-top)) 20px 0"}}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
@@ -2420,7 +2460,7 @@ function GrowthPage({entries,birthDate,profile,onBack,onAddEntry}){
         <Fld label={`${_lang==="en"?"Length":"Comp."} (cm)`}><input type="number" inputMode="decimal" step="0.1" placeholder="55" value={lC} onChange={e=>setLC(e.target.value)} style={inp}/></Fld>
         <Fld label={`${L("head")} (cm)`}><input type="number" inputMode="decimal" step="0.1" placeholder="37" value={hC} onChange={e=>setHC(e.target.value)} style={inp}/></Fld>
       </div>
-      <button onClick={doAdd} style={{width:"100%",padding:12,borderRadius:10,background:"#a3e635",color:T.bg1,fontSize:14,fontWeight:700}}>{_lang==="en"?"Save measurement":L("save")+" medição"}</button>
+      <button onClick={doAdd} style={{width:"100%",padding:12,borderRadius:10,background:"#a3e635",color:T.bg1,fontSize:14,fontWeight:700}}>{_lang==="en"?"Save measurement":"Salvar medição"}</button>
     </div>}
 
     {/* Percentile cards */}
