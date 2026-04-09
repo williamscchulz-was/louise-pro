@@ -5,9 +5,9 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v9.3.0  Tummy time + editar inicio de bedtime ao vivo
   v9.2.0  Fase 3: Apple Polish completo + Heartbeat Glow no splash
   v9.1.0  Apple Polish Full Sweep + fix do grafico Simeticona
-  v9.0.0  MAJOR: Apple Polish · redesign sutil em todo o app
 
   Stack: HTML puro + React 18 CDN + Babel + Firebase 10.x compat
   Repo: https://github.com/williamscchulz-was/louise-pro
@@ -211,15 +211,10 @@ dbg('Firebase ready');
 </script>
 
 <script src="splash-icon.js"></script>
-
 <script src="who-growth.js"></script>
-
 <script src="curiosities.js"></script>
-
 <script src="wake-lock.js"></script>
-
 <script src="device-features.js"></script>
-
 <script src="routine-engine.js"></script>
 
 <script type="text/babel">
@@ -229,8 +224,35 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "9.2.0";
+const APP_VERSION = "9.3.0";
 const CHANGELOG = [
+  {
+    v: "9.3.0", date: "2026-04-09",
+    pt: {
+      title: "Tummy time + editar início de bedtime ao vivo",
+      bullets: [
+        '★ **Novo tipo: Tummy time.** Adicionado como 10º item no Sheet "+ Adicionar", cor âmbar. Form simples com data, hora e duração em minutos+segundos (formato diferente do sleep porque sessões são curtas).',
+        '★ **Timer ao vivo de tummy time** com botão "Iniciar timer" no AddForm. Formato `mm:ss` no TimerBar ativo, mesmo vocabulário visual dos outros active timers (gradient duplo + radial highlight + sombra colorida). Wake lock ativa durante o timer pra tela não apagar enquanto você acompanha.',
+        '★ **Ícone profissional de bebê** da biblioteca **Lucide** (open-source, licença ISC) — carinha com sorriso. Depois de várias tentativas desenhando do zero que ficavam parecendo inseto, fui buscar numa lib profissional e adaptei pro sistema de gradients do app.',
+        '★ **Editar início de bedtime/soneca/tummy time ao vivo.** Novo botão de lápis no TimerBar ativo. Toca → abre modal com campos de data e hora pra mudar o início. Mostra preview da nova duração em tempo real. Se tiver despertares registrados (night wakings), eles **permanecem no horário real** em que aconteceram — non-destructive.',
+        '**Proteção contra dados inválidos:** não permite mover o início pra depois do primeiro waking, nem pro futuro, nem pra mais de 30h atrás. Botão "Salvar" fica desabilitado em caso inválido, com mensagem de erro clara.',
+        '**Novo indicador "desde HH:MM"** no TimerBar ativo — mostra o horário real de início ao lado do tempo decorrido. Facilita conferir se o bedtime começou na hora certa antes de precisar editar.',
+        'EntryRow do tummy time mostra a duração formatada como "3min 42s" ou "5min" (sem segundos quando é zero).'
+      ]
+    },
+    en: {
+      title: "Tummy time + edit live bedtime start",
+      bullets: [
+        '★ **New type: Tummy time.** Added as the 10th item in the "+ Add" Sheet, amber color. Simple form with date, time and duration in minutes+seconds (different format from sleep because sessions are short).',
+        '★ **Live tummy time timer** with "Start timer" button in AddForm. `mm:ss` format in the active TimerBar, same visual vocabulary as other active timers (double gradient + radial highlight + colored shadow). Wake lock activates during the timer so the screen stays on while you watch.',
+        '★ **Professional baby icon** from the **Lucide** library (open-source, ISC license) — smiling face. After multiple from-scratch attempts that looked like insects, I went and grabbed it from a professional lib and adapted it to the app\'s gradient system.',
+        '★ **Edit live bedtime/nap/tummy time start.** New pencil button on the active TimerBar. Tap → opens a modal with date and time fields to change the start. Shows new duration preview in real time. If night wakings are registered, they **stay at their actual time** — non-destructive.',
+        '**Protection against invalid data:** doesn\'t allow moving the start after the first waking, into the future, or more than 30h back. "Save" button is disabled on invalid input, with clear error message.',
+        '**New "since HH:MM" indicator** on the active TimerBar — shows the actual start time next to the elapsed time. Makes it easy to check if bedtime started at the right time before needing to edit.',
+        'Tummy time EntryRow shows duration formatted as "3min 42s" or "5min" (no seconds when it\'s zero).'
+      ]
+    }
+  },
   {
     v: "9.2.0", date: "2026-04-08",
     pt: {
@@ -1213,6 +1235,8 @@ function Icon({name,size=20,color="currentColor",fill="none"}){
     gift:<svg {...p}>{grad}<path d="M20 12v6a2 2 0 01-2 2H6a2 2 0 01-2-2v-6" fill={gFill}/><rect x="2" y="7" width="20" height="5" rx="2" fill={gFill}/><line x1="12" y1="7" x2="12" y2="22"/><path d="M12 7c-1.5-2-4-2.5-4-1s2 3.5 4 3.5c2 0 4-2 4-3.5s-2.5-1-4 1z" fill={gFill}/></svg>,
     trash:<svg {...p}><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>,
     poop:<svg {...p}>{grad}<ellipse cx="12" cy="19" rx="8" ry="3" fill={gFill}/><ellipse cx="11" cy="14" rx="6" ry="2.5" fill={gFill}/><ellipse cx="12" cy="10" rx="4.5" ry="2.2" fill={gFill}/><ellipse cx="11" cy="6" rx="2.8" ry="1.8" fill={gFill}/></svg>,
+    baby:<svg {...p}>{grad}<path d="M19.38 6.813A9 9 0 0 1 20.8 10.2a2 2 0 0 1 0 3.6a9 9 0 0 1-17.6 0a2 2 0 0 1 0-3.6A9 9 0 0 1 12 3c2 0 3.5 1.1 3.5 2.5s-.9 2.5-2 2.5c-.8 0-1.5-.4-1.5-1m-3 5h.01" fill={gFill}/><path d="M10 16c.5.3 1.2.5 2 .5s1.5-.2 2-.5m1-4h.01" strokeWidth="2"/></svg>,
+    pencil:<svg {...pu}><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>,
   };
   return icons[name]||<svg {...p}><circle cx="12" cy="12" r="8"/></svg>;
 }
@@ -1220,7 +1244,7 @@ function Icon({name,size=20,color="currentColor",fill="none"}){
 
 // ── THEME ──
 const T={bg1:"#070b1e",bg2:"#0d1133",bg3:"#141a42",glass:"rgba(22,28,60,0.6)",gB:"rgba(90,100,180,0.12)",gBSoft:"rgba(255,255,255,0.06)",insetTop:"0 1px 0 0 rgba(255,255,255,0.04) inset",insetTopStrong:"0 1px 0 0 rgba(255,255,255,0.08) inset",text:"#e4e6f5",sub:"#8b90b8",dim:"#555a80",accent:"#8b7cf6",green:"#34d399",greenS:"rgba(52,211,153,0.1)",purple:"#a78bfa",purpleS:"rgba(167,139,250,0.1)",pink:"#f472b6",pinkS:"rgba(244,114,182,0.1)",amber:"#fbbf24",amberS:"rgba(251,191,36,0.1)",orange:"#fb923c",orangeS:"rgba(251,146,60,0.1)",blue:"#38bdf8",blueS:"rgba(56,189,248,0.12)",red:"#f87171",redS:"rgba(248,113,113,0.1)",cyan:"#22d3ee",cyanS:"rgba(34,211,238,0.1)"};
-const TYPES={bottle:{label:{pt:"Mamadeira",en:"Bottle"},icon:"bottle",color:T.green,bg:T.greenS},nursing:{label:{pt:"Amamentação",en:"Nursing"},icon:"breast",color:T.blue,bg:T.blueS},sleep:{label:{pt:"Sono",en:"Bedtime"},icon:"moon",color:T.purple,bg:T.purpleS},wakeup:{label:{pt:"Acordou",en:"Woke up"},icon:"sun",color:T.amber,bg:T.amberS},nap:{label:{pt:"Soneca",en:"Nap"},icon:"cloud",color:T.purple,bg:T.purpleS},nightwaking:{label:{pt:"Acordou à noite",en:"Night waking"},icon:"zap",color:T.orange,bg:T.orangeS},diaper:{label:{pt:"Fralda",en:"Diaper"},icon:"diaper",color:T.pink,bg:T.pinkS},medicine:{label:{pt:"Medicamento",en:"Medicine"},icon:"pill",color:T.amber,bg:T.amberS},temperature:{label:{pt:"Temperatura",en:"Temperature"},icon:"thermo",color:T.red,bg:T.redS},bath:{label:{pt:"Banho",en:"Bath"},icon:"bath",color:T.cyan,bg:T.cyanS},growth:{label:{pt:"Crescimento",en:"Growth"},icon:"ruler",color:"#a3e635",bg:"rgba(163,230,53,0.1)"}};
+const TYPES={bottle:{label:{pt:"Mamadeira",en:"Bottle"},icon:"bottle",color:T.green,bg:T.greenS},nursing:{label:{pt:"Amamentação",en:"Nursing"},icon:"breast",color:T.blue,bg:T.blueS},sleep:{label:{pt:"Sono",en:"Bedtime"},icon:"moon",color:T.purple,bg:T.purpleS},wakeup:{label:{pt:"Acordou",en:"Woke up"},icon:"sun",color:T.amber,bg:T.amberS},nap:{label:{pt:"Soneca",en:"Nap"},icon:"cloud",color:T.purple,bg:T.purpleS},nightwaking:{label:{pt:"Acordou à noite",en:"Night waking"},icon:"zap",color:T.orange,bg:T.orangeS},diaper:{label:{pt:"Fralda",en:"Diaper"},icon:"diaper",color:T.pink,bg:T.pinkS},medicine:{label:{pt:"Medicamento",en:"Medicine"},icon:"pill",color:T.amber,bg:T.amberS},temperature:{label:{pt:"Temperatura",en:"Temperature"},icon:"thermo",color:T.red,bg:T.redS},bath:{label:{pt:"Banho",en:"Bath"},icon:"bath",color:T.cyan,bg:T.cyanS},tummytime:{label:{pt:"Tummy time",en:"Tummy time"},icon:"baby",color:T.amber,bg:T.amberS},growth:{label:{pt:"Crescimento",en:"Growth"},icon:"ruler",color:"#a3e635",bg:"rgba(163,230,53,0.1)"}};
 
 // ── i18n ──
 const I={
@@ -1441,7 +1465,95 @@ function LastFeedCard({entries}){
 
 function WeeklyCard({entries}){const tw=[],lw=[];for(let i=0;i<7;i++){const d1=dateOffset(todayStr(),-i),d2=dateOffset(todayStr(),-7-i);tw.push(...entries.filter(e=>e.date===d1));lw.push(...entries.filter(e=>e.date===d2))}const tMl=tw.filter(e=>e.type==="bottle").reduce((s,e)=>s+(e.ml||0),0);const lMl=lw.filter(e=>e.type==="bottle").reduce((s,e)=>s+(e.ml||0),0);const tSl=sumRealSleep(tw);const lSl=sumRealSleep(lw);if(!lMl&&!lSl)return null;const md=lMl>0?Math.round(((tMl-lMl)/lMl)*100):0;const sd=lSl>0?Math.round(((tSl-lSl)/lSl)*100):0;if(!md&&!sd)return null;return(<div style={{padding:"0 20px",marginBottom:16}}><div style={{padding:"16px 18px",borderRadius:18,background:"linear-gradient(180deg,rgba(22,28,60,0.55),rgba(20,26,60,0.4))",border:`1px solid ${T.gBSoft}`,display:"flex",gap:18,boxShadow:T.insetTop}}>{md!==0&&<div style={{display:"flex",alignItems:"center",gap:8,flex:1}}><div style={{width:30,height:30,borderRadius:10,background:`linear-gradient(135deg,${md>0?T.green:T.orange}30,${md>0?T.green:T.orange}10)`,border:`1px solid ${md>0?T.green:T.orange}45`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset"}}><Icon name={md>0?"arrowUp":"arrowDown"} size={14} color={md>0?"#6ee7b7":"#fdba74"}/></div><span style={{fontSize:12,color:"#9099c3",lineHeight:1.4}}><span style={{fontWeight:800,color:md>0?"#6ee7b7":"#fdba74",fontVariantNumeric:"tabular-nums",letterSpacing:-0.2}}>{Math.abs(md)}%</span> {L("milkVsWeek")}</span></div>}{sd!==0&&<div style={{display:"flex",alignItems:"center",gap:8,flex:1}}><div style={{width:30,height:30,borderRadius:10,background:`linear-gradient(135deg,${sd>0?T.green:T.orange}30,${sd>0?T.green:T.orange}10)`,border:`1px solid ${sd>0?T.green:T.orange}45`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset"}}><Icon name={sd>0?"arrowUp":"arrowDown"} size={14} color={sd>0?"#6ee7b7":"#fdba74"}/></div><span style={{fontSize:12,color:"#9099c3",lineHeight:1.4}}><span style={{fontWeight:800,color:sd>0?"#6ee7b7":"#fdba74",fontVariantNumeric:"tabular-nums",letterSpacing:-0.2}}>{Math.abs(sd)}%</span> {_lang==="en"?"sleep":"sono"}</span></div>}</div></div>)}
 
-function TimerBar({activeTimer,onStop,onSwitch,onPause}){const[tick,setTick]=useState(0);useEffect(()=>{if(!activeTimer)return;const iv=setInterval(()=>setTick(k=>k+1),1000);return()=>clearInterval(iv)},[activeTimer]);if(!activeTimer)return null;
+function EditStartModal({open,onClose,activeTimer,onSave}){
+  const [dateStr,setDateStr]=useState("");
+  const [timeStr,setTimeStr]=useState("");
+  const [tick,setTick]=useState(0);
+  // Init fields when opening
+  useEffect(()=>{
+    if(!open||!activeTimer)return;
+    const st=new Date(activeTimer.startTime);
+    setDateStr(`${st.getFullYear()}-${String(st.getMonth()+1).padStart(2,"0")}-${String(st.getDate()).padStart(2,"0")}`);
+    setTimeStr(`${String(st.getHours()).padStart(2,"0")}:${String(st.getMinutes()).padStart(2,"0")}`);
+  },[open,activeTimer]);
+  // Live tick to keep "new duration" fresh
+  useEffect(()=>{
+    if(!open)return;
+    const iv=setInterval(()=>setTick(k=>k+1),1000);
+    return()=>clearInterval(iv);
+  },[open]);
+  if(!activeTimer)return null;
+  const typeLabel=activeTimer.type==="sleep"?(_lang==="en"?"Bedtime":"Bedtime"):activeTimer.type==="nap"?(_lang==="en"?"Nap":"Soneca"):(_lang==="en"?"Tummy time":"Tummy time");
+  const typeColor=activeTimer.type==="tummytime"?T.amber:T.purple;
+  const typeColorLight=activeTimer.type==="tummytime"?"#fde68a":"#c4b5fd";
+  const typeIcon=activeTimer.type==="sleep"?"moon":activeTimer.type==="nap"?"cloud":"baby";
+  // Parse proposed new start
+  let newStartMs=null,valid=false,errMsg="";
+  try{
+    if(dateStr&&timeStr){
+      const d=new Date(`${dateStr}T${timeStr}`);
+      if(!isNaN(d.getTime())){
+        newStartMs=d.getTime();
+        const nowMs=Date.now();
+        if(newStartMs>nowMs){
+          errMsg=_lang==="en"?"Start cannot be in the future":"Início não pode ser no futuro";
+        }else if(nowMs-newStartMs>30*60*60*1000){
+          errMsg=_lang==="en"?"Too far in the past (max 30h)":"Muito longe no passado (máx 30h)";
+        }else{
+          // If wakings exist, new start can't be after the first waking
+          const wakings=activeTimer.wakings||[];
+          if(wakings.length>0){
+            const origStart=new Date(activeTimer.startTime);
+            // Compute first waking absolute timestamp
+            const fw=wakings[0];
+            const[fwh,fwm]=(fw.time||"00:00").split(":").map(Number);
+            const startMinOfDay=origStart.getHours()*60+origStart.getMinutes();
+            const wakeMinOfDay=fwh*60+fwm;
+            let dayOffset=0;
+            if(wakeMinOfDay<startMinOfDay)dayOffset=1;
+            const fwMs=new Date(origStart.getFullYear(),origStart.getMonth(),origStart.getDate()+dayOffset,fwh,fwm).getTime();
+            if(newStartMs>=fwMs){
+              errMsg=_lang==="en"?"First waking is before this time":"Primeiro despertar é antes desse horário";
+            }else{valid=true}
+          }else{valid=true}
+        }
+      }
+    }
+  }catch(e){errMsg=_lang==="en"?"Invalid date/time":"Data/hora inválidos"}
+  // Current duration and new duration
+  const newMins=newStartMs?Math.max(0,Math.floor((Date.now()-newStartMs)/60000)):0;
+  const oldMins=Math.max(0,Math.floor((Date.now()-new Date(activeTimer.startTime).getTime())/60000));
+  const fmtM=m=>{const h=Math.floor(m/60),r=m%60;return h>0?`${h}h ${r}min`:`${r}min`};
+  const doSave=async()=>{
+    if(!valid||!newStartMs)return;
+    Haptic.medium();
+    await onSave(new Date(newStartMs).toISOString());
+    onClose();
+  };
+  const wakingsCount=(activeTimer.wakings||[]).length;
+  return(<Modal open={open} onClose={onClose}>
+    <div style={{width:64,height:64,margin:"0 auto 16px",borderRadius:20,background:`linear-gradient(135deg,${typeColor}38,${typeColor}10)`,border:`1px solid ${typeColor}50`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset",position:"relative"}}><Icon name={typeIcon} size={28} color={typeColorLight}/></div>
+    <div style={{textAlign:"center",fontSize:22,fontWeight:800,letterSpacing:-0.5,color:"#f0f2ff",marginBottom:6}}>{_lang==="en"?"Edit start":"Editar início"}</div>
+    <div style={{textAlign:"center",fontSize:12,color:"#9099c3",lineHeight:1.55,marginBottom:20}}>{_lang==="en"?`Change the start time of this ${typeLabel.toLowerCase()}. Wakings stay at their actual time.`:`Mude o horário de início deste ${typeLabel.toLowerCase()}. Despertares permanecem no horário real.`}</div>
+    <div style={{fontSize:11,color:"#7a80a8",fontWeight:600,marginBottom:10,letterSpacing:-0.05}}>{_lang==="en"?"Day":"Data"}</div>
+    <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr)",gap:10,marginBottom:16}}>
+      <input type="date" value={dateStr} onChange={e=>setDateStr(e.target.value)} style={{width:"100%",maxWidth:"100%",boxSizing:"border-box",WebkitAppearance:"none",appearance:"none",padding:"14px 14px",background:"rgba(20,26,60,0.55)",border:`1px solid ${T.gBSoft}`,borderRadius:14,color:T.text,fontSize:16,fontWeight:600,letterSpacing:-0.2,outline:"none",colorScheme:"dark",textAlign:"center",boxShadow:T.insetTop}}/>
+      <input type="time" value={timeStr} onChange={e=>setTimeStr(e.target.value)} style={{width:"100%",maxWidth:"100%",boxSizing:"border-box",WebkitAppearance:"none",appearance:"none",padding:"14px 14px",background:"rgba(20,26,60,0.55)",border:`1px solid ${T.gBSoft}`,borderRadius:14,color:T.text,fontSize:16,fontWeight:600,letterSpacing:-0.2,outline:"none",colorScheme:"dark",textAlign:"center",fontVariantNumeric:"tabular-nums",boxShadow:T.insetTop}}/>
+    </div>
+    {errMsg?(
+      <div style={{padding:"12px 14px",borderRadius:12,background:"rgba(248,113,113,0.10)",border:"1px solid rgba(248,113,113,0.28)",marginBottom:16,fontSize:12,color:"#fca5a5",textAlign:"center",lineHeight:1.5}}>{errMsg}</div>
+    ):valid&&(
+      <div style={{padding:"12px 14px",borderRadius:12,background:`${typeColor}10`,border:`1px solid ${typeColor}28`,marginBottom:16,fontSize:12,color:typeColorLight,textAlign:"center",lineHeight:1.6}}>
+        {_lang==="en"?"New duration: ":"Nova duração: "}<strong style={{color:"#f0f2ff",fontWeight:800}}>{fmtM(newMins)}</strong>
+        <span style={{color:"#7a80a8",fontWeight:500}}> ({_lang==="en"?"was ":"era "}{fmtM(oldMins)})</span>
+        {wakingsCount>0&&<div style={{fontSize:10,color:"#9099c3",marginTop:4}}>{wakingsCount} {_lang==="en"?`waking${wakingsCount>1?"s":""} preserved`:`despertar${wakingsCount>1?"es":""} preservado${wakingsCount>1?"s":""}`}</div>}
+      </div>
+    )}
+    <button onClick={doSave} disabled={!valid} style={{width:"100%",padding:16,borderRadius:16,background:valid?`linear-gradient(180deg,${typeColor},${typeColor}cc)`:"rgba(14,18,48,0.6)",color:valid?"#1a0f00":T.dim,fontSize:16,fontWeight:800,letterSpacing:-0.2,border:`1px solid ${valid?`${typeColor}70`:T.gBSoft}`,boxShadow:valid?`0 1px 0 0 rgba(255,255,255,0.25) inset, 0 0 0 1px rgba(255,255,255,0.06), 0 8px 24px -8px ${typeColor}55`:"none",cursor:valid?"pointer":"not-allowed",opacity:valid?1:0.5}}>{_lang==="en"?"Save changes":"Salvar alterações"}</button>
+  </Modal>);
+}
+
+function TimerBar({activeTimer,onStop,onSwitch,onPause,onEditStart}){const[tick,setTick]=useState(0);useEffect(()=>{if(!activeTimer)return;const iv=setInterval(()=>setTick(k=>k+1),1000);return()=>clearInterval(iv)},[activeTimer]);if(!activeTimer)return null;
   if(activeTimer.type==="nursing"){
     const now=Date.now();const paused=!!activeTimer.paused;
     const elapsed=paused?0:(now-new Date(activeTimer.sideStart||activeTimer.startTime).getTime());
@@ -1471,14 +1583,29 @@ function TimerBar({activeTimer,onStop,onSwitch,onPause}){const[tick,setTick]=use
     </div>)
   }
   const secs=Math.max(0,Math.floor((Date.now()-new Date(activeTimer.startTime).getTime())/1000));
-  return(<div style={{position:"fixed",bottom:"calc(60px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 32px)",maxWidth:448,padding:"16px 18px",borderRadius:20,background:"linear-gradient(180deg,rgba(139,124,246,0.18),rgba(139,124,246,0.06))",border:`1px solid ${T.purple}55`,backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",display:"flex",alignItems:"center",gap:14,zIndex:60,boxShadow:`0 1px 0 0 rgba(255,255,255,0.08) inset, 0 0 0 1px ${T.purple}15, 0 12px 30px -10px ${T.purple}40`,overflow:"hidden",position:"fixed"}}>
+  const isTum=activeTimer.type==="tummytime";
+  const tCol=isTum?T.amber:T.purple;
+  const tColLight=isTum?"#fde68a":"#c4b5fd";
+  const tColLightRgba=isTum?"rgba(253,230,138,0.9)":"rgba(196,181,253,0.85)";
+  const tLabel=isTum?(_lang==="en"?"Tummy time":"Tummy time"):(activeTimer.type==="nap"?TL("nap"):TL("sleep"));
+  const tIconName=isTum?"baby":(activeTimer.type==="nap"?"cloud":"moon");
+  // Format time: tummytime uses mm:ss, sleep/nap uses h:mm:ss via fmtTimer
+  const timeDisplay=isTum?`${String(Math.floor(secs/60)).padStart(2,"0")}:${String(secs%60).padStart(2,"0")}`:fmtTimer(secs);
+  // Since label: "desde HH:MM" showing the start time
+  const stDate=new Date(activeTimer.startTime);
+  const stTimeStr=`${String(stDate.getHours()).padStart(2,"0")}:${String(stDate.getMinutes()).padStart(2,"0")}`;
+  return(<div style={{position:"fixed",bottom:"calc(60px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 32px)",maxWidth:448,padding:"16px 14px 16px 18px",borderRadius:20,background:`linear-gradient(180deg,${tCol}2e,${tCol}0f)`,border:`1px solid ${tCol}55`,backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",display:"flex",alignItems:"center",gap:12,zIndex:60,boxShadow:`0 1px 0 0 rgba(255,255,255,0.08) inset, 0 0 0 1px ${tCol}15, 0 12px 30px -10px ${tCol}40`,overflow:"hidden"}}>
     <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse at 50% 0%,rgba(255,255,255,0.06),transparent 60%)",pointerEvents:"none"}}/>
-    <div style={{width:50,height:50,borderRadius:15,background:`linear-gradient(135deg,${T.purple}45,${T.purple}15)`,border:`1px solid ${T.purple}55`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,boxShadow:"0 1px 0 0 rgba(255,255,255,0.1) inset",position:"relative"}}><Icon name={activeTimer.type==="nap"?"cloud":"moon"} size={22} color="#c4b5fd"/></div>
-    <div style={{flex:1,position:"relative"}}>
-      <div style={{fontSize:11,fontWeight:600,color:"rgba(196,181,253,0.85)",letterSpacing:-0.05,marginBottom:3,textTransform:"uppercase"}}>{activeTimer.type==="nap"?TL("nap"):TL("sleep")}</div>
-      <div style={{fontSize:26,fontWeight:800,fontVariantNumeric:"tabular-nums",color:"#f0f2ff",letterSpacing:-1}}>{fmtTimer(secs)}</div>
+    <div style={{width:50,height:50,borderRadius:15,background:`linear-gradient(135deg,${tCol}45,${tCol}15)`,border:`1px solid ${tCol}55`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,boxShadow:"0 1px 0 0 rgba(255,255,255,0.1) inset",position:"relative"}}><Icon name={tIconName} size={22} color={tColLight}/></div>
+    <div style={{flex:1,position:"relative",minWidth:0}}>
+      <div style={{fontSize:11,fontWeight:600,color:tColLightRgba,letterSpacing:-0.05,marginBottom:3,textTransform:"uppercase"}}>{tLabel}</div>
+      <div style={{display:"flex",alignItems:"baseline",gap:8,flexWrap:"wrap"}}>
+        <div style={{fontSize:26,fontWeight:800,fontVariantNumeric:"tabular-nums",color:"#f0f2ff",letterSpacing:-1}}>{timeDisplay}</div>
+        <div style={{fontSize:11,color:"#9099c3",fontWeight:600,fontVariantNumeric:"tabular-nums"}}>{_lang==="en"?"since ":"desde "}{stTimeStr}</div>
+      </div>
     </div>
-    <button onClick={onStop} style={{width:50,height:50,borderRadius:15,background:`linear-gradient(180deg,${T.purple}55,${T.purple}30)`,border:`1px solid ${T.purple}70`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 1px 0 0 rgba(255,255,255,0.15) inset, 0 6px 16px -6px ${T.purple}55`,position:"relative",flexShrink:0}}><Icon name="stop" size={16} color="#fff"/></button>
+    <button onClick={()=>onEditStart&&onEditStart()} style={{width:40,height:40,borderRadius:12,background:`${tCol}20`,border:`1px solid ${tCol}40`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset",flexShrink:0}}><Icon name="pencil" size={15} color={tColLight}/></button>
+    <button onClick={onStop} style={{width:50,height:50,borderRadius:15,background:`linear-gradient(180deg,${tCol}60,${tCol}35)`,border:`1px solid ${tCol}70`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 1px 0 0 rgba(255,255,255,0.15) inset, 0 6px 16px -6px ${tCol}55`,position:"relative",flexShrink:0}}><Icon name="stop" size={16} color="#fff"/></button>
   </div>)}
 
 function CuriosityCard({age,lang,tick}){
@@ -1755,7 +1882,7 @@ function SleepBlock({entry,onDelete,onEdit,entries,isLive}){
   </div>);
 }
 
-function EntryRow({entry,onDelete,onEdit,napNum,nightBadge}){const[swipe,setSwipe]=useState(0);const[swiping,setSwiping]=useState(false);const startX=useRef(0);const cfg=TYPES[entry.type]||{label:entry.type,icon:"star",color:T.text,bg:T.glass};let detail="";if(entry.type==="wakeup"&&entry.nightSleepMin)detail=`${fmtDur(entry.nightSleepMin)} ${_lang==="en"?"of sleep":"de sono"}`;else if(entry.ml)detail=`${entry.ml} ml`;else if(entry.durationMin)detail=fmtDur(entry.durationMin);else if(entry.subtype)detail=L(entry.subtype)||entry.subtype;else if(entry.name)detail=entry.name+(entry.dose?` · ${entry.dose}`:"");else if(entry.value)detail=`${entry.value}°C`;else if(entry.weightKg||entry.lengthCm||entry.headCm){const parts=[];if(entry.weightKg)parts.push(`${entry.weightKg}kg`);if(entry.lengthCm)parts.push(`${entry.lengthCm}cm`);if(entry.headCm)parts.push(`${_lang==="en"?"Head":"Cab."} ${entry.headCm}cm`);detail=parts.join(" · ")}if(entry.type==="nursing"&&entry.side){if(entry.leftMin||entry.rightMin){detail=(detail?detail+" · ":"")+"L:"+String(entry.leftMin||0)+"m R:"+String(entry.rightMin||0)+"m"}else{detail=(detail?detail+" · ":"")+(L(entry.side)||entry.side)}};const napLabel=napNum?(_lang==="en"?["","1st","2nd","3rd","4th","5th","6th","7th","8th"][napNum]||napNum+"th":[""," 1a"," 2a"," 3a"," 4a"," 5a"," 6a"," 7a"," 8a"][napNum]||napNum+"a"):null;
+function EntryRow({entry,onDelete,onEdit,napNum,nightBadge}){const[swipe,setSwipe]=useState(0);const[swiping,setSwiping]=useState(false);const startX=useRef(0);const cfg=TYPES[entry.type]||{label:entry.type,icon:"star",color:T.text,bg:T.glass};let detail="";if(entry.type==="wakeup"&&entry.nightSleepMin)detail=`${fmtDur(entry.nightSleepMin)} ${_lang==="en"?"of sleep":"de sono"}`;else if(entry.ml)detail=`${entry.ml} ml`;else if(entry.type==="tummytime"&&entry.durationMin){const m=Math.floor(entry.durationMin);const s=Math.round((entry.durationMin-m)*60);detail=s>0?`${m}min ${s}s`:`${m}min`}else if(entry.durationMin)detail=fmtDur(entry.durationMin);else if(entry.subtype)detail=L(entry.subtype)||entry.subtype;else if(entry.name)detail=entry.name+(entry.dose?` · ${entry.dose}`:"");else if(entry.value)detail=`${entry.value}°C`;else if(entry.weightKg||entry.lengthCm||entry.headCm){const parts=[];if(entry.weightKg)parts.push(`${entry.weightKg}kg`);if(entry.lengthCm)parts.push(`${entry.lengthCm}cm`);if(entry.headCm)parts.push(`${_lang==="en"?"Head":"Cab."} ${entry.headCm}cm`);detail=parts.join(" · ")}if(entry.type==="nursing"&&entry.side){if(entry.leftMin||entry.rightMin){detail=(detail?detail+" · ":"")+"L:"+String(entry.leftMin||0)+"m R:"+String(entry.rightMin||0)+"m"}else{detail=(detail?detail+" · ":"")+(L(entry.side)||entry.side)}};const napLabel=napNum?(_lang==="en"?["","1st","2nd","3rd","4th","5th","6th","7th","8th"][napNum]||napNum+"th":[""," 1a"," 2a"," 3a"," 4a"," 5a"," 6a"," 7a"," 8a"][napNum]||napNum+"a"):null;
   const onTS=e=>{startX.current=e.touches[0].clientX;setSwiping(true)};
   const onTM=e=>{if(!swiping)return;const dx=startX.current-e.touches[0].clientX;setSwipe(Math.max(0,Math.min(70,dx)))};
   const onTE=()=>{setSwiping(false);if(swipe>40)setSwipe(70);else setSwipe(0)};
@@ -1769,12 +1896,14 @@ function EntryRow({entry,onDelete,onEdit,napNum,nightBadge}){const[swipe,setSwip
   <div style={{textAlign:"right",flexShrink:0}}>{(entry.type==="sleep"||entry.type==="nap")&&entry.durationMin?(()=>{const endMs=new Date(`${entry.date}T${entry.time}`).getTime()+entry.durationMin*60000;const endD=new Date(endMs);const endT=`${String(endD.getHours()).padStart(2,"0")}:${String(endD.getMinutes()).padStart(2,"0")}`;const endDt=`${endD.getFullYear()}-${String(endD.getMonth()+1).padStart(2,"0")}-${String(endD.getDate()).padStart(2,"0")}`;return<><div style={{fontSize:16,fontWeight:700,color:"#f0f2ff",fontVariantNumeric:"tabular-nums",letterSpacing:-0.4}}>{entry.time}–{endT}</div><div style={{fontSize:12,color:T.sub,fontWeight:500,marginTop:3}}>{timeSince(endDt,endT)}</div></>})():<><div style={{fontSize:16,fontWeight:700,color:"#f0f2ff",fontVariantNumeric:"tabular-nums",letterSpacing:-0.4}}>{entry.time}</div><div style={{fontSize:12,color:T.sub,fontWeight:500,marginTop:3}}>{timeSince(entry.date,entry.time)}</div></>}</div>
 </div></div>)}
 
-function AddForm({type,onSave,savedMeds,onSaveMeds,editEntry,lastBottleMl,topMl}){const cfg=TYPES[type];const ed=editEntry||{};
+function AddForm({type,onSave,savedMeds,onSaveMeds,editEntry,lastBottleMl,topMl,onStartTimer}){const cfg=TYPES[type];const ed=editEntry||{};
   const[date,setDate]=useState(ed.date||todayStr());
   const[time,setTime]=useState(ed.time||nowTime());
   const[ml,setMl]=useState(ed.ml?String(ed.ml):(type==="bottle"&&lastBottleMl&&!editEntry?String(lastBottleMl):""));const[durH,setDurH]=useState(ed.durationMin?String(Math.floor(ed.durationMin/60)):"");const[durM,setDurM]=useState(ed.durationMin?String(ed.durationMin%60):"");
   const[diaperT,setDiaperT]=useState(ed.subtype||"wet");const[medN,setMedN]=useState(ed.name||"");const[medD,setMedD]=useState(ed.dose||"");
   const[tempV,setTempV]=useState(ed.value?String(ed.value):"");const[side,setSide]=useState(ed.side||"left");const[nurseM,setNurseM]=useState(ed.durationMin&&type==="nursing"?String(ed.durationMin):"");
+  const[tumM,setTumM]=useState(ed.durationMin&&type==="tummytime"?String(Math.floor(ed.durationMin)):"");
+  const[tumS,setTumS]=useState(ed.durationMin&&type==="tummytime"?String(Math.round((ed.durationMin-Math.floor(ed.durationMin))*60)):"");
   const[weightKg,setWeightKg]=useState(ed.weightKg?String(ed.weightKg):"");const[lengthCm,setLengthCm]=useState(ed.lengthCm?String(ed.lengthCm):"");
   const[headCm,setHeadCm]=useState(ed.headCm?String(ed.headCm):"");const[notes,setNotes]=useState(ed.notes||"");const[showML,setShowML]=useState(false);
   const[endTime,setEndTime]=useState("");const[durMode,setDurMode]=useState("dur");
@@ -1792,6 +1921,7 @@ function AddForm({type,onSave,savedMeds,onSaveMeds,editEntry,lastBottleMl,topMl}
       }else{t2=(parseInt(durH)||0)*60+(parseInt(durM)||0)}
       if(!t2)return;onSave({...b,durationMin:t2})}
     else if(type==="wakeup"||type==="nightwaking"||type==="bath")onSave(b);
+    else if(type==="tummytime"){const m=parseInt(tumM)||0;const s=parseInt(tumS)||0;const total=m+s/60;if(total<=0)return;onSave({...b,durationMin:total})}
     else if(type==="diaper")onSave({...b,subtype:diaperT});
     else if(type==="medicine"){if(!medN.trim())return;onSave({...b,name:medN.trim(),dose:medD.trim()||undefined})}
     else if(type==="temperature"){if(!tempV)return;onSave({...b,value:parseFloat(tempV)})}
@@ -1814,6 +1944,7 @@ function AddForm({type,onSave,savedMeds,onSaveMeds,editEntry,lastBottleMl,topMl}
       {type==="bottle"&&<><Fld label={_lang==="en"?"Amount (ml)":"Quantidade (ml)"}><input ref={mRef} type="number" inputMode="numeric" placeholder="0" value={ml} onChange={e=>setMl(e.target.value)} style={{...inp,fontSize:36,fontWeight:800,textAlign:"center",padding:"16px"}}/></Fld>
         <div style={{display:"flex",gap:8,marginBottom:20}}>{(topMl&&topMl.length>0?[...new Set([...topMl,lastBottleMl].filter(Boolean))].slice(0,4):[60,90,120]).map((v,i)=><button key={v} onClick={()=>setMl(String(v))} style={{flex:1,padding:"10px 0",borderRadius:10,background:ml===String(v)?T.green:T.glass,color:ml===String(v)?T.bg1:T.text,border:`1px solid ${ml===String(v)?T.green:T.gB}`,textAlign:"center"}}><div style={{fontSize:16,fontWeight:800}}>{v}</div>{i===0&&topMl?.length>0&&<div style={{fontSize:8,color:ml===String(v)?T.bg1:T.dim,marginTop:1}}>{_lang==="en"?"top":"mais"}</div>}</button>)}</div></>}
       {type==="nursing"&&<><Fld label={L("side")}><Seg opts={[{v:"left",l:L("left")},{v:"right",l:L("right")},{v:"both",l:L("both")}]} val={side} set={setSide} color={cfg.color}/></Fld><Fld label={`${L("duration")} (min)`}><input type="number" inputMode="numeric" placeholder="15" value={nurseM} onChange={e=>setNurseM(e.target.value)} style={inp}/></Fld></>}
+      {type==="tummytime"&&<Fld label={L("duration")}><div style={{display:"flex",gap:10,alignItems:"center"}}><input type="number" inputMode="numeric" placeholder="0" value={tumM} onChange={e=>setTumM(e.target.value)} style={{...inp,flex:1,textAlign:"center",fontSize:28,fontWeight:800}}/><span style={{color:T.dim,fontWeight:700}}>min</span><input type="number" inputMode="numeric" placeholder="0" value={tumS} onChange={e=>setTumS(e.target.value)} style={{...inp,flex:1,textAlign:"center",fontSize:28,fontWeight:800}}/><span style={{color:T.dim,fontWeight:700}}>s</span></div></Fld>}
       {(type==="sleep"||type==="nap")&&<>
         <div style={{display:"flex",gap:4,marginBottom:14,background:T.glass,borderRadius:10,padding:3,border:`1px solid ${T.gB}`}}>
           <button onClick={()=>setDurMode("dur")} style={{flex:1,padding:"8px 0",borderRadius:8,fontSize:12,fontWeight:700,background:durMode==="dur"?T.purple:"transparent",color:durMode==="dur"?"#fff":T.sub}}>{L("duration")}</button>
@@ -1840,6 +1971,7 @@ function AddForm({type,onSave,savedMeds,onSaveMeds,editEntry,lastBottleMl,topMl}
       {type==="temperature"&&<Fld label={`${_lang==="en"?"Temperature":"Temperatura"} (°C)`}><input type="number" inputMode="decimal" step="0.1" placeholder="36.5" value={tempV} onChange={e=>setTempV(e.target.value)} style={{...inp,fontSize:36,fontWeight:800,textAlign:"center"}}/></Fld>}
       {type==="growth"&&<><Fld label={`${L("weight")} (kg)`}><input type="number" inputMode="decimal" step="0.01" placeholder="Ex: 4.5" value={weightKg} onChange={e=>setWeightKg(e.target.value)} style={{...inp,fontSize:28,fontWeight:800,textAlign:"center"}}/></Fld><Fld label={`${_lang==="en"?"Length":"Comprimento"} (cm)`}><input type="number" inputMode="decimal" step="0.1" placeholder="Ex: 55.0" value={lengthCm} onChange={e=>setLengthCm(e.target.value)} style={{...inp,fontSize:28,fontWeight:800,textAlign:"center"}}/></Fld><Fld label={`${L("head")} (cm)`}><input type="number" inputMode="decimal" step="0.1" placeholder="Ex: 37.0" value={headCm} onChange={e=>setHeadCm(e.target.value)} style={{...inp,fontSize:28,fontWeight:800,textAlign:"center"}}/></Fld></>}
       <Fld label={L("notes")}><textarea placeholder={_lang==="en"?"Note...":"Anotação..."} value={notes} onChange={e=>setNotes(e.target.value)} rows={2} style={{...inp,resize:"vertical"}}/></Fld>
+      {type==="tummytime"&&!isEdit&&onStartTimer&&<button onClick={()=>onStartTimer("tummytime")} style={{width:"100%",padding:16,borderRadius:16,background:`linear-gradient(180deg,${cfg.color}28,${cfg.color}10)`,color:"#fde68a",fontSize:15,fontWeight:700,letterSpacing:-0.2,border:`1px solid ${cfg.color}55`,boxShadow:`0 1px 0 0 rgba(255,255,255,0.1) inset, 0 4px 12px -4px ${cfg.color}35`,marginBottom:10,display:"flex",alignItems:"center",justifyContent:"center",gap:10,cursor:"pointer"}}><Icon name="play" size={14} color="#fde68a"/>{_lang==="en"?"Start timer":"Iniciar timer"}</button>}
       <button onClick={doSave} style={{width:"100%",padding:18,borderRadius:18,background:`linear-gradient(180deg,${cfg.color},${cfg.color}dd)`,color:T.bg1,fontSize:17,fontWeight:700,letterSpacing:-0.3,border:"none",boxShadow:`0 1px 0 0 rgba(255,255,255,0.25) inset, 0 0 0 1px rgba(255,255,255,0.06), 0 12px 32px -8px ${cfg.color}55, 0 4px 8px -4px ${cfg.color}33`,transition:"transform 0.2s cubic-bezier(0.22,1,0.36,1)",cursor:"pointer"}}>{isEdit?L("update"):L("save")}</button>
     </div>
   </div>);
@@ -2658,6 +2790,7 @@ function App(){
   const[inbox,setInbox]=useState({items:[],lastReset:""});const[showInbox,setShowInbox]=useState(false);
   const[reminders,setReminders]=useState([]);
   const[showChangelog,setShowChangelog]=useState(false);const[showUpdateToast,setShowUpdateToast]=useState(false);
+  const[showEditStart,setShowEditStart]=useState(false);
   const lang=profile.lang||"en";_lang=lang;
   const[toast,setToast]=useState(null);const[tick,setTick]=useState(0);const undoRef=useRef(null);
   const[splash,setSplash]=useState(true);
@@ -2692,7 +2825,7 @@ function App(){
 
   // Wake Lock: keep screen on during night wake or nursing
   const wakeLockEnabled=profile.keepScreenOn!==false;
-  const shouldLock=wakeLockEnabled&&activeTimer&&(activeTimer.type==="nursing"||(activeTimer.type==="sleep"&&activeTimer.nightWake));
+  const shouldLock=wakeLockEnabled&&activeTimer&&(activeTimer.type==="nursing"||activeTimer.type==="tummytime"||(activeTimer.type==="sleep"&&activeTimer.nightWake));
   useEffect(()=>{
     if(shouldLock){WakeLock.request()}else{WakeLock.release()}
     const onVis=()=>{if(document.visibilityState==="visible"&&shouldLock)WakeLock.request()};
@@ -2844,11 +2977,12 @@ function App(){
         events:nw.events||[]
       }];
     }
-    const mins=Math.max(1,Math.round((Date.now()-s.getTime())/6e4));
-    const entry={type:activeTimer.type,date:`${s.getFullYear()}-${String(s.getMonth()+1).padStart(2,"0")}-${String(s.getDate()).padStart(2,"0")}`,time:`${String(s.getHours()).padStart(2,"0")}:${String(s.getMinutes()).padStart(2,"0")}`,durationMin:mins,id:uid()};
+    const elapsedMs=Date.now()-s.getTime();
+    const mins=activeTimer.type==="tummytime"?Math.max(1/60,elapsedMs/60000):Math.max(1,Math.round(elapsedMs/6e4));
+    const entry={type:activeTimer.type,date:`${s.getFullYear()}-${String(s.getMonth()+1).padStart(2,"0")}-${String(s.getDate()).padStart(2,"0")}`,time:`${String(s.getHours()).padStart(2,"0")}:${String(s.getMinutes()).padStart(2,"0")}`,durationMin:activeTimer.type==="tummytime"?Math.round(mins*60)/60:mins,id:uid()};
     if(activeTimer.type==="sleep"&&wakings.length>0)entry.wakings=wakings;
     const parts=splitMidnight(entry);for(const p of parts) await FB.addEntry(p);await FB.saveTimer(null);
-    // Auto-create wakeup event when bedtime ends (not for naps).
+    // Auto-create wakeup event when bedtime ends (not for naps, not for tummytime).
     // Includes total night sleep so the timeline shows it as "9h57m de sono".
     if(activeTimer.type==="sleep"){
       const totalAwake=wakings.reduce((s,w)=>s+(w.durationMin||0),0);
@@ -2856,9 +2990,20 @@ function App(){
       const wakeup={type:"wakeup",date:todayStr(),time:nowTime(),id:uid(),nightSleepMin:realSleep,_autoFromBedtime:true};
       await FB.addEntry(wakeup);
     }
-    const wakingNote=wakings.length>0?` (${wakings.length} ${_lang==="en"?"wake"+(wakings.length>1?"s":""):"despertar"+(wakings.length>1?"es":"")})`:"";
-    showToast(`${mins}min ${_lang==="en"?"logged":"registrado"}${wakingNote}`,null)
+    // Toast: tummytime uses mm:ss format, sleep/nap uses min
+    if(activeTimer.type==="tummytime"){
+      const m=Math.floor(mins);const sec=Math.round((mins-m)*60);
+      showToast(`Tummy time · ${m}min${sec>0?` ${sec}s`:""}`,null);
+    }else{
+      const wakingNote=wakings.length>0?` (${wakings.length} ${_lang==="en"?"wake"+(wakings.length>1?"s":""):"despertar"+(wakings.length>1?"es":"")})`:"";
+      showToast(`${mins}min ${_lang==="en"?"logged":"registrado"}${wakingNote}`,null)
+    }
   }},[activeTimer]);
+
+  const handleEditStart=useCallback(async(newStartISO)=>{
+    if(!activeTimer)return;
+    await FB.saveTimer({...activeTimer,startTime:newStartISO});
+  },[activeTimer]);
 
   const today=todayStr();
   const cycleStart=useMemo(()=>{
@@ -3147,7 +3292,7 @@ function App(){
     </Modal>
 
     <Sheet open={showAdd&&!formType} onClose={()=>setShowAdd(false)}>
-      <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)",gap:"10px 0",padding:"0 16px"}}>{["wakeup","bottle","nursing","sleep","nap","diaper","bath","medicine","temperature"].map((type,i)=>{const cfg=TYPES[type];const last=entries.find(e=>e.type===type);const agoRaw=last?timeSince(last.date,last.time):null;const ago=agoRaw==="now"?"Just now":agoRaw;return(<button key={type} onClick={()=>setFormType(type)} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:10,padding:"12px 4px 8px",animation:`slideUp .3s ease ${i*0.035}s both`}}>
+      <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)",gap:"10px 0",padding:"0 16px"}}>{["wakeup","bottle","nursing","sleep","nap","diaper","bath","medicine","temperature","tummytime"].map((type,i)=>{const cfg=TYPES[type];const last=entries.find(e=>e.type===type);const agoRaw=last?timeSince(last.date,last.time):null;const ago=agoRaw==="now"?"Just now":agoRaw;return(<button key={type} onClick={()=>setFormType(type)} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:10,padding:"12px 4px 8px",animation:`slideUp .3s ease ${i*0.035}s both`}}>
         <div style={{width:70,height:70,borderRadius:"50%",background:`radial-gradient(circle at 35% 30%, rgba(50,60,120,0.95), rgba(18,22,55,0.98))`,border:`1.5px solid ${cfg.color}25`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 4px 20px rgba(0,0,0,0.4), 0 0 24px ${cfg.color}18, 0 0 48px ${cfg.color}08, inset 0 1px 0 rgba(200,210,255,0.08), inset 0 -2px 4px rgba(0,0,0,0.2)`,position:"relative",overflow:"hidden",filter:`drop-shadow(0 0 5px ${cfg.color}44)`}}>
           {/* Inner glow spot */}
           <div style={{position:"absolute",top:"15%",left:"25%",width:"40%",height:"30%",background:`radial-gradient(ellipse,${cfg.color}12,transparent)`,borderRadius:"50%",filter:"blur(6px)"}}/>
@@ -3158,14 +3303,15 @@ function App(){
     </Sheet>
 
     <Sheet open={!!formType} onClose={()=>{setFormType(null);setEditEntry(null)}}>
-      {formType&&<AddForm type={formType} onSave={addEntry} savedMeds={savedMeds} onSaveMeds={async m=>await FB.saveMeds(m)} editEntry={editEntry} lastBottleMl={lastBottleMl} topMl={topMl}/>}
+      {formType&&<AddForm type={formType} onSave={addEntry} savedMeds={savedMeds} onSaveMeds={async m=>await FB.saveMeds(m)} editEntry={editEntry} lastBottleMl={lastBottleMl} topMl={topMl} onStartTimer={type=>{startTimer(type);setFormType(null);setShowAdd(false)}}/>}
     </Sheet>
 
     {showProfile&&<ProfilePage profile={profile} onSave={async p=>await FB.saveProfile(p)} onBack={()=>setShowProfile(false)} onGrowth={()=>{setShowProfile(false);goTo("growth")}} onShowChangelog={()=>setShowChangelog(true)} hasUnreadChangelog={hasUnreadChangelog} reminders={reminders} onAddReminder={async r=>await FB.addReminder(r)} onDelReminder={async id=>await FB.delReminder(id)}/>}
     {showInbox&&<InboxPanel inbox={inbox} onClose={()=>setShowInbox(false)} onMarkRead={markInboxRead} onMarkAllRead={markAllInboxRead} lang={lang}/>}
     {showChangelog&&<ChangelogModal onClose={closeChangelog} lang={lang}/>}
     {showUpdateToast&&!showChangelog&&<UpdateToast fromVersion={profile.lastSeenVersion} toVersion={APP_VERSION} onView={openChangelog} onDismiss={dismissUpdateToast} lang={lang}/>}
-    <TimerBar activeTimer={activeTimer} onStop={stopTimer} onSwitch={switchSide} onPause={pauseNursing}/>
+    <TimerBar activeTimer={activeTimer} onStop={stopTimer} onSwitch={switchSide} onPause={pauseNursing} onEditStart={()=>setShowEditStart(true)}/>
+    <EditStartModal open={showEditStart} onClose={()=>setShowEditStart(false)} activeTimer={activeTimer} onSave={handleEditStart}/>
 
     <nav style={{position:"fixed",bottom:"6px",left:"50%",transform:"translateX(-50%)",display:"flex",alignItems:"center",gap:4,padding:"9px 14px",background:"linear-gradient(180deg,rgba(14,18,48,0.94),rgba(8,10,28,0.96))",backdropFilter:"blur(30px)",WebkitBackdropFilter:"blur(30px)",borderRadius:44,border:"1px solid rgba(255,255,255,0.06)",boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset, 0 0 0 1px rgba(255,255,255,0.02), 0 8px 32px -4px rgba(0,0,0,0.7), 0 0 60px -20px rgba(139,124,246,0.25)",zIndex:50}}>
       {[{icon:"home",label:"HOME",active:page==="home"&&!showAdd,action:()=>goTo("home")},{icon:"clock",label:_lang==="en"?"HISTORY":"HIST.",active:page==="history",action:()=>goTo("history")}].map(n=><button key={n.icon} onClick={n.action} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3,padding:"9px 16px",borderRadius:18,background:n.active?"linear-gradient(180deg,rgba(139,124,246,0.22),rgba(139,124,246,0.08))":"transparent",border:n.active?"1px solid rgba(139,124,246,0.28)":"1px solid transparent",boxShadow:n.active?"0 1px 0 0 rgba(255,255,255,0.1) inset, 0 0 0 1px rgba(139,124,246,0.1), 0 4px 12px -4px rgba(139,124,246,0.4)":"none",transition:"all .2s"}}><Icon name={n.icon} size={20} color={n.active?"#c4b5fd":T.dim}/>{n.active&&<span style={{fontSize:9,fontWeight:700,color:"#c4b5fd",letterSpacing:0.3}}>{n.label}</span>}</button>)}
