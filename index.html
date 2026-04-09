@@ -5,9 +5,9 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v9.5.0  Nursing side picker (escolha de lado L/R ao iniciar amamentacao)
   v9.4.0  Quick buttons 2x3 + icones Lucide + tummy time no Ring
   v9.3.0  Tummy time + editar inicio de bedtime ao vivo
-  v9.2.0  Fase 3: Apple Polish completo + Heartbeat Glow no splash
 
   Stack: HTML puro + React 18 CDN + Babel + Firebase 10.x compat
   Repo: https://github.com/williamscchulz-was/louise-pro
@@ -224,8 +224,47 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "9.4.0";
+const APP_VERSION = "9.5.0";
 const CHANGELOG = [
+  {
+    v: "9.5.0", date: "2026-04-09",
+    pt: {
+      title: "Escolha de lado na amamentação (nursing side picker)",
+      bullets: [
+        '★ **Novo fluxo pra iniciar amamentação.** Tocar no quick button de Amam. agora abre um **mini-sheet minimalista** pra escolher o lado manualmente — Esquerdo ou Direito — em vez de iniciar direto no lado que o sistema achava que era o próximo. O sistema errava às vezes (a Louise nem sempre alterna direitinho, um peito pode estar mais cheio, etc), então agora é a mãe que decide na hora.',
+        '★ **Design bem enxuto:** ícone de amamentação no topo (círculo 58px com gradient azul) + 2 botões gigantes com "L" e "R" em 52px + mini-label "Esquerdo" / "Direito". Sem título extra, sem badge "sugerido", sem metadados da última mamada — só o essencial.',
+        '★ **Animação em cascata (~800ms)** com easings profissionais:',
+        '• Backdrop escurece com blur (400ms)',
+        '• Sheet sobe de baixo com leve overshoot (500ms, `cubic-bezier(0.22,1.1,0.36,1)`)',
+        '• Grab handle aparece (scaleX 0.5→1, delay 50ms)',
+        '• Ícone entra com scale 0.6→1 elástico (delay 120ms, `cubic-bezier(0.34,1.4,0.5,1)`)',
+        '• Botão L: scale 0.88→1 + slide up 18px (delay 220ms)',
+        '• Botão R: mesmo movimento 80ms depois (delay 300ms)',
+        'Nada aparece brusco — cada elemento entra em sequência construindo a sheet por partes.',
+        'Tap fora da sheet ou no backdrop fecha sem iniciar. Tap em L ou R dispara haptic medium, fecha a sheet com animação reversa, e inicia o timer de nursing no lado escolhido.',
+        'Removido o indicador "L→" / "R→" que ficava no canto do quick button (era a dica do lado sugerido — não precisa mais já que é a mãe quem escolhe toda vez).',
+        'O `nextNursingSide` e `lastNursingSide` continuam sendo computados no estado global, mas não são mais usados pela quick button. Podem voltar a ser úteis no futuro se a gente quiser mostrar o último lado no próprio sheet.'
+      ]
+    },
+    en: {
+      title: "Nursing side picker (choose L/R when starting)",
+      bullets: [
+        '★ **New flow to start nursing.** Tapping the Nurse quick button now opens a **minimalist mini-sheet** to manually choose the side — Left or Right — instead of starting directly on the side the system thought was next. The system was sometimes wrong (Louise doesn\'t always alternate cleanly, one breast may be fuller, etc), so now mom decides in the moment.',
+        '★ **Very lean design:** nursing icon on top (58px circle with blue gradient) + 2 giant buttons with "L" and "R" in 52px + mini-label "Left" / "Right". No extra title, no "suggested" badge, no last-feed metadata — just the essential.',
+        '★ **Staged animation (~800ms)** with professional easings:',
+        '• Backdrop darkens with blur (400ms)',
+        '• Sheet slides up with slight overshoot (500ms, `cubic-bezier(0.22,1.1,0.36,1)`)',
+        '• Grab handle appears (scaleX 0.5→1, 50ms delay)',
+        '• Icon enters with elastic scale 0.6→1 (120ms delay, `cubic-bezier(0.34,1.4,0.5,1)`)',
+        '• Left button: scale 0.88→1 + slide up 18px (220ms delay)',
+        '• Right button: same motion 80ms later (300ms delay)',
+        'Nothing appears abruptly — each element enters in sequence, constructing the sheet in layers.',
+        'Tap outside the sheet or on the backdrop closes without starting. Tap on L or R fires medium haptic, closes the sheet with reverse animation, and starts the nursing timer on the chosen side.',
+        'Removed the "L→" / "R→" indicator that used to sit in the corner of the quick button (it was the hint for the suggested side — not needed anymore since mom chooses every time).',
+        'The `nextNursingSide` and `lastNursingSide` are still computed in global state but no longer used by the quick button. They may become useful again in the future if we want to show the last side inside the sheet itself.'
+      ]
+    }
+  },
   {
     v: "9.4.0", date: "2026-04-09",
     pt: {
@@ -1582,6 +1621,33 @@ function EditStartModal({open,onClose,activeTimer,onSave}){
   </Modal>);
 }
 
+function NursingSidePicker({open,onClose,onSelect}){
+  const[vis,setVis]=useState(false),[show,setShow]=useState(false);
+  useEffect(()=>{
+    if(open){setVis(true);requestAnimationFrame(()=>requestAnimationFrame(()=>setShow(true)))}
+    else{setShow(false);const t=setTimeout(()=>setVis(false),500);return()=>clearTimeout(t)}
+  },[open]);
+  if(!vis)return null;
+  const handleSelect=(side)=>{Haptic.medium();onSelect(side);onClose()};
+  return(<div style={{position:"fixed",inset:0,zIndex:90}} onClick={onClose}>
+    <div style={{position:"absolute",inset:0,background:"rgba(3,6,20,0.6)",backdropFilter:"blur(6px)",WebkitBackdropFilter:"blur(6px)",opacity:show?1:0,transition:"opacity .4s cubic-bezier(0.22,1,0.36,1)"}}/>
+    <div onClick={e=>e.stopPropagation()} style={{position:"absolute",left:"50%",bottom:0,transform:show?"translate(-50%,0)":"translate(-50%,100%)",width:"calc(100% - 24px)",maxWidth:440,padding:"24px 22px calc(28px + env(safe-area-inset-bottom))",borderRadius:"28px 28px 0 0",background:"linear-gradient(180deg,rgba(22,28,60,0.96),rgba(14,18,48,0.98))",backdropFilter:"blur(30px)",WebkitBackdropFilter:"blur(30px)",border:`1px solid ${T.blue}33`,borderBottom:"none",boxShadow:`0 1px 0 0 rgba(255,255,255,0.08) inset, 0 -24px 70px -12px ${T.blue}40, 0 -8px 30px -8px rgba(0,0,0,0.6)`,transition:"transform .5s cubic-bezier(0.22,1.1,0.36,1)",willChange:"transform"}}>
+      <div style={{width:40,height:4,borderRadius:2,background:"rgba(255,255,255,0.18)",margin:"-10px auto 20px",opacity:show?1:0,transform:show?"scaleX(1)":"scaleX(0.5)",transition:"opacity .3s ease .05s, transform .4s cubic-bezier(0.22,1,0.36,1) .05s"}}/>
+      <div style={{display:"flex",justifyContent:"center",marginBottom:22}}>
+        <div style={{width:58,height:58,borderRadius:18,background:`linear-gradient(135deg,${T.blue}5c,${T.blue}14)`,border:`1px solid ${T.blue}70`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 1px 0 0 rgba(255,255,255,0.12) inset, 0 8px 24px -8px ${T.blue}80`,opacity:show?1:0,transform:show?"scale(1) translateY(0)":"scale(0.6) translateY(14px)",transition:"opacity .5s cubic-bezier(0.22,1,0.36,1) .12s, transform .55s cubic-bezier(0.34,1.4,0.5,1) .12s"}}>
+          <Icon name="breast" size={28} color="#7dd3fc"/>
+        </div>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+        {[{k:"left",L:"L",pt:"Esquerdo",en:"Left"},{k:"right",L:"R",pt:"Direito",en:"Right"}].map((s,i)=><button key={s.k} onClick={()=>handleSelect(s.k)} style={{padding:"32px 0 26px",borderRadius:22,background:`linear-gradient(180deg,${T.blue}26,${T.blue}0a)`,border:`1px solid ${T.blue}52`,display:"flex",flexDirection:"column",alignItems:"center",gap:6,boxShadow:`0 1px 0 0 rgba(255,255,255,0.08) inset, 0 0 0 1px ${T.blue}10, 0 10px 26px -12px ${T.blue}66`,opacity:show?1:0,transform:show?"scale(1) translateY(0)":"scale(0.88) translateY(18px)",transition:`opacity .45s cubic-bezier(0.22,1,0.36,1) ${0.22+i*0.08}s, transform .55s cubic-bezier(0.34,1.35,0.5,1) ${0.22+i*0.08}s`,cursor:"pointer"}}>
+          <div style={{fontSize:52,fontWeight:800,letterSpacing:-3,lineHeight:0.95,background:"linear-gradient(135deg,#ffffff,#7dd3fc)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>{s.L}</div>
+          <div style={{fontSize:11,fontWeight:600,color:"#7dd3fc",letterSpacing:-0.1,marginTop:4,opacity:0.75}}>{_lang==="en"?s.en:s.pt}</div>
+        </button>)}
+      </div>
+    </div>
+  </div>);
+}
+
 function TimerBar({activeTimer,onStop,onSwitch,onPause,onEditStart}){const[tick,setTick]=useState(0);useEffect(()=>{if(!activeTimer)return;const iv=setInterval(()=>setTick(k=>k+1),1000);return()=>clearInterval(iv)},[activeTimer]);if(!activeTimer)return null;
   if(activeTimer.type==="nursing"){
     const now=Date.now();const paused=!!activeTimer.paused;
@@ -2820,6 +2886,7 @@ function App(){
   const[reminders,setReminders]=useState([]);
   const[showChangelog,setShowChangelog]=useState(false);const[showUpdateToast,setShowUpdateToast]=useState(false);
   const[showEditStart,setShowEditStart]=useState(false);
+  const[showNursingPicker,setShowNursingPicker]=useState(false);
   const lang=profile.lang||"en";_lang=lang;
   const[toast,setToast]=useState(null);const[tick,setTick]=useState(0);const undoRef=useRef(null);
   const[splash,setSplash]=useState(true);
@@ -3267,7 +3334,7 @@ function App(){
         <CuriosityCard age={age} lang={lang} tick={tick}/>
         <div style={{padding:"4px 0 0"}}><Ring activeTimer={activeTimer} napSug={napSug} tick={tick} recentEvents={cycleE} lang={lang} showOrbit={showOrbit} screenLockActive={shouldLock}/></div>
         {activeTimer&&activeTimer.type==="sleep"&&<div style={{padding:"0 20px",marginBottom:10}}><button onClick={toggleNightWake} style={{width:"100%",padding:"12px 16px",borderRadius:14,background:activeTimer.nightWake?"linear-gradient(135deg,rgba(96,165,250,0.2),rgba(167,139,250,0.15))":"linear-gradient(135deg,rgba(251,146,60,0.18),rgba(251,191,36,0.12))",border:`1px solid ${activeTimer.nightWake?"rgba(96,165,250,0.6)":"rgba(251,146,60,0.55)"}`,display:"flex",alignItems:"center",gap:12,boxShadow:activeTimer.nightWake?"0 0 20px rgba(96,165,250,0.2)":"0 0 20px rgba(251,146,60,0.15), 0 4px 16px rgba(0,0,0,0.3)",transition:"all 0.3s",animation:activeTimer.nightWake?"none":"nwPulseAmber 2.4s ease-in-out infinite"}}><div style={{width:36,height:36,borderRadius:12,background:activeTimer.nightWake?"rgba(96,165,250,0.3)":"rgba(251,146,60,0.25)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:activeTimer.nightWake?"none":"0 0 14px rgba(251,146,60,0.3)",animation:activeTimer.nightWake?"pulse 2s ease-in-out infinite":"nwIconPulseAmber 2.4s ease-in-out infinite"}}><Icon name="sun" size={18} color={activeTimer.nightWake?"#60a5fa":"#fbbf24"}/></div><div style={{flex:1,textAlign:"left"}}><div style={{fontSize:13,fontWeight:700,color:activeTimer.nightWake?"#60a5fa":"#fbbf24"}}>{_lang==="en"?"Night Wake":"Despertar"}{activeTimer.nightWake&&` · ${fmtDur(Math.max(1,Math.floor((Date.now()-new Date(activeTimer.nightWake.startTime).getTime())/60000)))}`}</div><div style={{fontSize:9,color:activeTimer.nightWake?T.sub:"rgba(251,191,36,0.75)",marginTop:1}}>{activeTimer.nightWake?(_lang==="en"?"Tap to go back to sleep":"Toque para voltar a dormir"):(_lang==="en"?"Tap if Louise woke up":"Toque se Louise acordou")}</div></div>{activeTimer.nightWake&&<div style={{width:10,height:10,borderRadius:"50%",background:"#60a5fa",boxShadow:"0 0 8px #60a5fa",animation:"pulse 1.5s ease-in-out infinite"}}/>}</button></div>}
-        {!activeTimer&&<div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)",gap:6,padding:"0 20px",marginBottom:12}}><button onClick={()=>{setFormType("bottle");setShowAdd(false)}} style={{padding:"12px 0 8px",borderRadius:14,background:`${T.green}08`,border:`1px solid ${T.green}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="bottle" size={18} color={T.green}/><span style={{fontSize:9,fontWeight:700,color:T.green}}>{_lang==="en"?"Bottle":"Mamad."}</span></button><button onClick={()=>startTimer("nursing",nextNursingSide)} style={{padding:"12px 0 8px",borderRadius:14,background:`${T.blue}08`,border:`1px solid ${T.blue}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:5,position:"relative"}}><Icon name="breast" size={18} color={T.blue}/><span style={{fontSize:9,fontWeight:700,color:T.blue}}>{_lang==="en"?"Nurse":"Amam."}</span>{lastNursingSide&&<span style={{position:"absolute",top:4,right:6,fontSize:7,fontWeight:800,color:T.blue,opacity:0.5}}>{nextNursingSide==="left"?"L→":"R→"}</span>}</button><button onClick={()=>{setFormType("diaper");setShowAdd(false)}} style={{padding:"12px 0 8px",borderRadius:14,background:`${T.pink}08`,border:`1px solid ${T.pink}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="diaper" size={18} color={T.pink}/><span style={{fontSize:9,fontWeight:700,color:T.pink}}>{_lang==="en"?"Diaper":"Fralda"}</span></button><button onClick={()=>startTimer("sleep")} style={{padding:"12px 0 8px",borderRadius:14,background:`${T.purple}08`,border:`1px solid ${T.purple}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="moon" size={18} color={T.purple}/><span style={{fontSize:9,fontWeight:700,color:T.purple}}>{_lang==="en"?"Sleep":"Sono"}</span></button><button onClick={()=>startTimer("nap")} style={{padding:"12px 0 8px",borderRadius:14,background:`${T.accent}08`,border:`1px solid ${T.accent}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="cloud" size={18} color={T.accent}/><span style={{fontSize:9,fontWeight:700,color:T.accent}}>{_lang==="en"?"Nap":"Soneca"}</span></button><button onClick={()=>startTimer("tummytime")} style={{padding:"12px 0 8px",borderRadius:14,background:`${T.amber}08`,border:`1px solid ${T.amber}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="baby" size={18} color={T.amber}/><span style={{fontSize:9,fontWeight:700,color:T.amber}}>Tummy</span></button></div>}
+        {!activeTimer&&<div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)",gap:6,padding:"0 20px",marginBottom:12}}><button onClick={()=>{setFormType("bottle");setShowAdd(false)}} style={{padding:"12px 0 8px",borderRadius:14,background:`${T.green}08`,border:`1px solid ${T.green}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="bottle" size={18} color={T.green}/><span style={{fontSize:9,fontWeight:700,color:T.green}}>{_lang==="en"?"Bottle":"Mamad."}</span></button><button onClick={()=>setShowNursingPicker(true)} style={{padding:"12px 0 8px",borderRadius:14,background:`${T.blue}08`,border:`1px solid ${T.blue}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="breast" size={18} color={T.blue}/><span style={{fontSize:9,fontWeight:700,color:T.blue}}>{_lang==="en"?"Nurse":"Amam."}</span></button><button onClick={()=>{setFormType("diaper");setShowAdd(false)}} style={{padding:"12px 0 8px",borderRadius:14,background:`${T.pink}08`,border:`1px solid ${T.pink}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="diaper" size={18} color={T.pink}/><span style={{fontSize:9,fontWeight:700,color:T.pink}}>{_lang==="en"?"Diaper":"Fralda"}</span></button><button onClick={()=>startTimer("sleep")} style={{padding:"12px 0 8px",borderRadius:14,background:`${T.purple}08`,border:`1px solid ${T.purple}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="moon" size={18} color={T.purple}/><span style={{fontSize:9,fontWeight:700,color:T.purple}}>{_lang==="en"?"Sleep":"Sono"}</span></button><button onClick={()=>startTimer("nap")} style={{padding:"12px 0 8px",borderRadius:14,background:`${T.accent}08`,border:`1px solid ${T.accent}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="cloud" size={18} color={T.accent}/><span style={{fontSize:9,fontWeight:700,color:T.accent}}>{_lang==="en"?"Nap":"Soneca"}</span></button><button onClick={()=>startTimer("tummytime")} style={{padding:"12px 0 8px",borderRadius:14,background:`${T.amber}08`,border:`1px solid ${T.amber}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="baby" size={18} color={T.amber}/><span style={{fontSize:9,fontWeight:700,color:T.amber}}>Tummy</span></button></div>}
         {activeTimer&&activeTimer.type==="sleep"&&activeTimer.nightWake&&<div style={{display:"flex",gap:6,padding:"0 20px",marginBottom:12}}><button onClick={()=>{setFormType("bottle");setShowAdd(false)}} style={{flex:1,padding:"12px 0 8px",borderRadius:14,background:`${T.green}16`,border:`1px solid ${T.green}40`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="bottle" size={18} color={T.green}/><span style={{fontSize:9,fontWeight:700,color:T.green}}>{_lang==="en"?"Bottle":"Mamad."}</span></button><button onClick={()=>{setFormType("diaper");setShowAdd(false)}} style={{flex:1,padding:"12px 0 8px",borderRadius:14,background:`${T.pink}16`,border:`1px solid ${T.pink}40`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="diaper" size={18} color={T.pink}/><span style={{fontSize:9,fontWeight:700,color:T.pink}}>{_lang==="en"?"Diaper":"Fralda"}</span></button></div>}
         {napSug&&napSug.state==="opening"&&<div style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:T.amberS,border:`1px solid ${T.amber}22`,display:"flex",alignItems:"center",gap:10,animation:"pulse 2s infinite"}}><Icon name="bell" size={18} color={T.amber}/><div><div style={{fontSize:12,fontWeight:700,color:T.amber}}>{_lang==="en"?"Sleep window opening":"Janela abrindo"}</div><div style={{fontSize:10,color:T.sub}}>{_lang==="en"?"Watch for sleepy cues":"Observe sinais de sono"}{napSug.predictedTime?` · ~${napSug.predictedTime}`:""}</div></div></div>}
         {napSug&&napSug.state==="sweet"&&<div style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:T.greenS,border:`1px solid ${T.green}22`,display:"flex",alignItems:"center",gap:10,animation:"pulse 1.5s infinite",boxShadow:`0 0 12px ${T.green}15`}}><Icon name="check" size={18} color={T.green}/><div><div style={{fontSize:12,fontWeight:700,color:T.green}}>{_lang==="en"?"Ideal time":"Hora ideal"}</div><div style={{fontSize:10,color:T.sub}}>{_lang==="en"?"Best moment for nap":"Melhor momento pra soneca"}{napSug.dataPoints>=3?(_lang==="en"?` · ${napSug.dataPoints} days`:` · ${napSug.dataPoints} dias`):""}</div></div></div>}
@@ -3342,6 +3409,7 @@ function App(){
     {showUpdateToast&&!showChangelog&&<UpdateToast fromVersion={profile.lastSeenVersion} toVersion={APP_VERSION} onView={openChangelog} onDismiss={dismissUpdateToast} lang={lang}/>}
     <TimerBar activeTimer={activeTimer} onStop={stopTimer} onSwitch={switchSide} onPause={pauseNursing} onEditStart={()=>setShowEditStart(true)}/>
     <EditStartModal open={showEditStart} onClose={()=>setShowEditStart(false)} activeTimer={activeTimer} onSave={handleEditStart}/>
+    <NursingSidePicker open={showNursingPicker} onClose={()=>setShowNursingPicker(false)} onSelect={side=>startTimer("nursing",side)}/>
 
     <nav style={{position:"fixed",bottom:"6px",left:"50%",transform:"translateX(-50%)",display:"flex",alignItems:"center",gap:4,padding:"9px 14px",background:"linear-gradient(180deg,rgba(14,18,48,0.94),rgba(8,10,28,0.96))",backdropFilter:"blur(30px)",WebkitBackdropFilter:"blur(30px)",borderRadius:44,border:"1px solid rgba(255,255,255,0.06)",boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset, 0 0 0 1px rgba(255,255,255,0.02), 0 8px 32px -4px rgba(0,0,0,0.7), 0 0 60px -20px rgba(139,124,246,0.25)",zIndex:50}}>
       {[{icon:"home",label:"HOME",active:page==="home"&&!showAdd,action:()=>goTo("home")},{icon:"clock",label:_lang==="en"?"HISTORY":"HIST.",active:page==="history",action:()=>goTo("history")}].map(n=><button key={n.icon} onClick={n.action} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3,padding:"9px 16px",borderRadius:18,background:n.active?"linear-gradient(180deg,rgba(139,124,246,0.22),rgba(139,124,246,0.08))":"transparent",border:n.active?"1px solid rgba(139,124,246,0.28)":"1px solid transparent",boxShadow:n.active?"0 1px 0 0 rgba(255,255,255,0.1) inset, 0 0 0 1px rgba(139,124,246,0.1), 0 4px 12px -4px rgba(139,124,246,0.4)":"none",transition:"all .2s"}}><Icon name={n.icon} size={20} color={n.active?"#c4b5fd":T.dim}/>{n.active&&<span style={{fontSize:9,fontWeight:700,color:"#c4b5fd",letterSpacing:0.3}}>{n.label}</span>}</button>)}
