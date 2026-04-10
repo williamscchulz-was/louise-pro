@@ -5,6 +5,8 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v9.6.5  Icone bed pra sleep + ancoras do Ring reforcadas
+  v9.6.4  Tummy time no Stats (card 4x1 + gráfico próprio)
   v9.6.3  Fix tummy time no Ring vira dot + fmtDur robusto
   v9.6.2  Swipe bidirecional no histórico (deletar e editar)
   v9.6.1  Fix tummy time no Ring + label do timer
@@ -234,8 +236,94 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "9.6.3";
+const APP_VERSION = "9.6.5";
 const CHANGELOG = [
+  {
+    v: "9.6.5", date: "2026-04-10",
+    pt: {
+      title: "Ícone bed pra sleep + âncoras do Ring reforçadas",
+      bullets: [
+        '★ **Novo ícone `bed` do Lucide** (licença ISC, a mesma do `bottle-baby`, `bath` e `ruler`). Path: `M2 4v16 M2 8h18a2 2 0 0 1 2 2v10 M2 17h20 M6 8v9`. Cabeceira à esquerda, colchão horizontal, travesseiro à esquerda. Adicionado ao componente `Icon` seguindo o padrão stroke do Feather/Lucide.',
+        '★ **Sono/bedtime agora usa `bed` em 8 contextos de registro** (onde o ícone representa a ação concreta de registrar sono):',
+        '• Quick button "Sono" na Home',
+        '• EntryRow do histórico (via `TYPES.sleep.icon`)',
+        '• Sheet orb do "+ Adicionar" (via `TYPES.sleep.icon`)',
+        '• SleepBlock header (o card grande de bedtime expandido)',
+        '• Centro do Ring durante timer de bedtime (ícone ao lado de "Boa noite")',
+        '• TimerBar ativa de bedtime',
+        '• Ícone sobre o arco ativo no Ring (live timer)',
+        '• Card "Sono real/dia" no Stats + resumo do dia no Histórico',
+        '★ **Moon é mantido** em 2 contextos de "marco temporal" onde o vocabulário visual de noite funciona melhor:',
+        '• Âncora lua do Ring (marco do fim do dia — sol/lua é o par natural de ciclo diário)',
+        '• Badge "noite" de eventos dentro do SleepBlock',
+        '★ **Âncoras sol e lua do Ring reforçadas (Opção B do mockup).** Bug do print: a âncora lua ficava em `zIndex:1` e sumia atrás do dot de mamadeira quando os horários coincidiam. Fixes aplicados nas duas âncoras (simetria sol + lua):',
+        '• `zIndex` de 1 → 5 (agora fica acima dos dots de evento)',
+        '• Disco de 40px → 44px',
+        '• Ícone de 18px → 20px',
+        '• Borda de `rgba(cor,0.35)` → `rgba(cor,0.72)` (mais do que o dobro de presença)',
+        '• Fundo radial de 18% → 42% (lua) e 18% → 40% (sol)',
+        '• Glow duplo novo: `0 0 24px 45-50%` + `0 0 48px 20-22%` (antes era só `0 0 16px 15%`)',
+        '• `0 1px 0 rgba(255,255,255,0.18) inset` pro highlight de cima',
+        '• Label de 9px peso 700 → 10px peso 800, cor mais clara (`#c4b5fd` pra lua, `#fde68a` pro sol)',
+        '**Nenhuma mudança de conteúdo, layout ou estrutura.** Só o ícone do sleep em contextos de registro e o reforço visual das duas âncoras.'
+      ]
+    },
+    en: {
+      title: "Bed icon for sleep + reinforced Ring anchors",
+      bullets: [
+        '★ **New `bed` icon from Lucide** (ISC license, same as `bottle-baby`, `bath` and `ruler`). Path: `M2 4v16 M2 8h18a2 2 0 0 1 2 2v10 M2 17h20 M6 8v9`. Headboard on the left, horizontal mattress, pillow on the left. Added to the `Icon` component following the Feather/Lucide stroke pattern.',
+        '★ **Sleep/bedtime now uses `bed` in 8 registration contexts** (where the icon represents the concrete act of logging sleep):',
+        '• "Sleep" quick button on Home',
+        '• History EntryRow (via `TYPES.sleep.icon`)',
+        '• "+ Add" sheet orb (via `TYPES.sleep.icon`)',
+        '• SleepBlock header (the big expanded bedtime card)',
+        '• Ring center during bedtime timer (icon next to "Goodnight")',
+        '• Active bedtime TimerBar',
+        '• Icon on top of the active arc in the Ring (live timer)',
+        '• "Real sleep/day" card in Stats + day summary in History',
+        '★ **Moon is kept** in 2 "temporal marker" contexts where the visual vocabulary of night works better:',
+        '• Ring moon anchor (end-of-day marker — sun/moon is the natural pair for daily cycle)',
+        '• "Night" badge on events inside the SleepBlock',
+        '★ **Sun and moon Ring anchors reinforced (Option B from mockup).** Print bug: moon anchor was at `zIndex:1` and hid behind the bottle dot when times coincided. Fixes applied to both anchors (sun + moon symmetry):',
+        '• `zIndex` from 1 → 5 (now sits above event dots)',
+        '• Disc from 40px → 44px',
+        '• Icon from 18px → 20px',
+        '• Border from `rgba(color,0.35)` → `rgba(color,0.72)` (more than double presence)',
+        '• Radial background from 18% → 42% (moon) and 18% → 40% (sun)',
+        '• New double glow: `0 0 24px 45-50%` + `0 0 48px 20-22%` (was only `0 0 16px 15%`)',
+        '• `0 1px 0 rgba(255,255,255,0.18) inset` for top highlight',
+        '• Label from 9px weight 700 → 10px weight 800, lighter color (`#c4b5fd` for moon, `#fde68a` for sun)',
+        '**No content, layout or structure changes.** Just the sleep icon in registration contexts and visual reinforcement of the two anchors.'
+      ]
+    }
+  },
+  {
+    v: "9.6.4", date: "2026-04-10",
+    pt: {
+      title: "Tummy time no Stats (card 4x1 + gráfico próprio)",
+      bullets: [
+        '★ **Novo card pequeno "Tummy/dia"** na grid de stats do topo, ao lado de Fraldas/dia, Mamadas/dia e Sonecas/dia. Grid mudou de 3 colunas pra 4 colunas pra comportar. Mostra a média de sessões por dia (ex: `3.4`) em âmbar, com a mesma escala dos vizinhos.',
+        '**Ajuste de tipografia:** pra caber 4 cards na linha sem quebrar no iPhone, reduzi o número principal de 26px pra 22px, label de 10px pra 9px, e padding lateral de 12px pra 8px. Os outros 3 cards (Fraldas, Mamadas, Sonecas) também foram ajustados pra ficar consistente.',
+        '★ **Novo gráfico de tummy time** no final do Stats, logo depois do card da Simeticona. Mesma estrutura visual do card de Simeticona: header com ícone (`baby`) + título + média por dia no canto direito, barras âmbar (`linear-gradient(180deg,${T.amber},#d97706)`) com glow sutil, altura proporcional aos minutos/dia, labels de minutos em cima (ex: `12m`) quando o período é ≤14 dias.',
+        '**Estado vazio:** se não tiver nenhum tummy time no período selecionado, mostra "Nenhum tummy time neste período" com fonte itálica (mesma mensagem de fallback do card de Simeticona).',
+        '**Métrica escolhida:** minutos totais por dia, não número de sessões. Faz mais sentido pra tummy time porque o que importa é o tempo acumulado (diretriz AAP é 20-30min/dia até 3 meses), não quantas vezes você parou e começou. O card pequeno no topo mostra sessões/dia pra dar o outro lado da informação.',
+        '**Cálculo:** `tumMin` por dia vem de `Math.round(tumEntries.reduce((s,e)=>s+(e.durationMin||0),0))` — aplica Math.round no total pra absorver as frações de minuto que tummy time persiste (ex: duas sessões de 4.266min viram `9min` em vez de `8.533333min`).',
+        'Nenhuma outra tela tocada. Home, History, Profile, Ring, AddForm, Sheet, EntryRow — tudo igual.'
+      ]
+    },
+    en: {
+      title: "Tummy time in Stats (4x1 card + its own chart)",
+      bullets: [
+        '★ **New small "Tummy/day" card** in the top stats grid, alongside Diapers/day, Feeds/day and Naps/day. Grid changed from 3 columns to 4 columns to fit. Shows average sessions per day (e.g. `3.4`) in amber, same scale as its neighbors.',
+        '**Typography tuning:** to fit 4 cards in a row without wrapping on iPhone, I reduced the main number from 26px to 22px, label from 10px to 9px, and side padding from 12px to 8px. The other 3 cards (Diapers, Feeds, Naps) were also adjusted for consistency.',
+        '★ **New tummy time chart** at the bottom of Stats, right after the Simeticona card. Same visual structure as the Simeticona card: header with icon (`baby`) + title + average/day on the right, amber bars (`linear-gradient(180deg,${T.amber},#d97706)`) with subtle glow, height proportional to minutes/day, minute labels on top (e.g. `12m`) when the period is ≤14 days.',
+        '**Empty state:** if there is no tummy time in the selected period, shows "No tummy time in this period" in italic (same fallback message as the Simeticona card).',
+        '**Metric choice:** total minutes per day, not session count. Makes more sense for tummy time because what matters is the accumulated time (AAP guideline is 20-30min/day up to 3 months), not how many times you stopped and started. The small card on top shows sessions/day to give the other side of the info.',
+        '**Calculation:** `tumMin` per day comes from `Math.round(tumEntries.reduce((s,e)=>s+(e.durationMin||0),0))` — applies Math.round to the total to absorb the fractional minutes that tummy time persists (e.g. two sessions of 4.266min become `9min` instead of `8.533333min`).',
+        'No other screens touched. Home, History, Profile, Ring, AddForm, Sheet, EntryRow — everything else the same.'
+      ]
+    }
+  },
   {
     v: "9.6.3", date: "2026-04-10",
     pt: {
@@ -1386,6 +1474,7 @@ function Icon({name,size=20,color="currentColor",fill="none"}){
     bottle:<svg {...p}>{grad}<path d="M20 11c1.1-1.4 1.3-3.3.7-4.9l.8-.8a1.5 1.5 0 0 0-2.8-2.8l-.8.8A5.33 5.33 0 0 0 13 4"/><path d="M11.3 3.7a1 1 0 0 1 1.4 0l7.6 7.6a1 1 0 0 1 0 1.4l-1.6 1.6a1 1 0 0 1-1.4 0L9.7 6.7a1 1 0 0 1 0-1.4Z" fill={gFill}/><path d="m10 7l-7.3 7.3c-.9.9-.9 2.5 0 3.4l3.6 3.6c.9.9 2.5.9 3.4 0L17 14M4 13l2 2m1-5l2 2" strokeWidth="2"/></svg>,
     breast:<svg {...p}>{grad}<path d="M5 6Q5 2 10 2Q15 2 16 6Q17 10 16 13Q15 16 12 17Q9 16 7 13Q5 10 5 6z" fill={gFill}/><circle cx="16" cy="10" r="1.2" fill={gFill}/><path d="M16 13l1 2.5a1.5 1.5 0 01-3 0L16 13z" fill={gFill}/></svg>,
     moon:<svg {...p}>{grad}<path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z" fill={gFill}/></svg>,
+    bed:<svg {...pu}><path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/></svg>,
     sun:<svg {...p}>{grad}<circle cx="12" cy="12" r="5" fill={gFill}/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>,
     cloud:<svg {...p}>{grad}<path d="M18 10h1a4 4 0 010 8H7a5 5 0 01-.5-9.96A7 7 0 0118 10z" fill={gFill}/></svg>,
     zap:<svg {...p}>{grad}<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill={gFill}/></svg>,
@@ -1426,7 +1515,7 @@ function Icon({name,size=20,color="currentColor",fill="none"}){
 
 // ── THEME ──
 const T={bg1:"#070b1e",bg2:"#0d1133",bg3:"#141a42",glass:"rgba(22,28,60,0.6)",gB:"rgba(90,100,180,0.12)",gBSoft:"rgba(255,255,255,0.06)",insetTop:"0 1px 0 0 rgba(255,255,255,0.04) inset",insetTopStrong:"0 1px 0 0 rgba(255,255,255,0.08) inset",text:"#e4e6f5",sub:"#8b90b8",dim:"#555a80",accent:"#8b7cf6",green:"#34d399",greenS:"rgba(52,211,153,0.1)",purple:"#a78bfa",purpleS:"rgba(167,139,250,0.1)",pink:"#f472b6",pinkS:"rgba(244,114,182,0.1)",amber:"#fbbf24",amberS:"rgba(251,191,36,0.1)",orange:"#fb923c",orangeS:"rgba(251,146,60,0.1)",blue:"#38bdf8",blueS:"rgba(56,189,248,0.12)",red:"#f87171",redS:"rgba(248,113,113,0.1)",cyan:"#22d3ee",cyanS:"rgba(34,211,238,0.1)"};
-const TYPES={bottle:{label:{pt:"Mamadeira",en:"Bottle"},icon:"bottle",color:T.green,bg:T.greenS},nursing:{label:{pt:"Amamentação",en:"Nursing"},icon:"breast",color:T.blue,bg:T.blueS},sleep:{label:{pt:"Sono",en:"Bedtime"},icon:"moon",color:T.purple,bg:T.purpleS},wakeup:{label:{pt:"Acordou",en:"Woke up"},icon:"sun",color:T.amber,bg:T.amberS},nap:{label:{pt:"Soneca",en:"Nap"},icon:"cloud",color:T.purple,bg:T.purpleS},nightwaking:{label:{pt:"Acordou à noite",en:"Night waking"},icon:"zap",color:T.orange,bg:T.orangeS},diaper:{label:{pt:"Fralda",en:"Diaper"},icon:"diaper",color:T.pink,bg:T.pinkS},medicine:{label:{pt:"Medicamento",en:"Medicine"},icon:"pill",color:T.amber,bg:T.amberS},temperature:{label:{pt:"Temperatura",en:"Temperature"},icon:"thermo",color:T.red,bg:T.redS},bath:{label:{pt:"Banho",en:"Bath"},icon:"bath",color:T.cyan,bg:T.cyanS},tummytime:{label:{pt:"Tummy time",en:"Tummy time"},icon:"baby",color:T.amber,bg:T.amberS},growth:{label:{pt:"Crescimento",en:"Growth"},icon:"ruler",color:"#a3e635",bg:"rgba(163,230,53,0.1)"}};
+const TYPES={bottle:{label:{pt:"Mamadeira",en:"Bottle"},icon:"bottle",color:T.green,bg:T.greenS},nursing:{label:{pt:"Amamentação",en:"Nursing"},icon:"breast",color:T.blue,bg:T.blueS},sleep:{label:{pt:"Sono",en:"Bedtime"},icon:"bed",color:T.purple,bg:T.purpleS},wakeup:{label:{pt:"Acordou",en:"Woke up"},icon:"sun",color:T.amber,bg:T.amberS},nap:{label:{pt:"Soneca",en:"Nap"},icon:"cloud",color:T.purple,bg:T.purpleS},nightwaking:{label:{pt:"Acordou à noite",en:"Night waking"},icon:"zap",color:T.orange,bg:T.orangeS},diaper:{label:{pt:"Fralda",en:"Diaper"},icon:"diaper",color:T.pink,bg:T.pinkS},medicine:{label:{pt:"Medicamento",en:"Medicine"},icon:"pill",color:T.amber,bg:T.amberS},temperature:{label:{pt:"Temperatura",en:"Temperature"},icon:"thermo",color:T.red,bg:T.redS},bath:{label:{pt:"Banho",en:"Bath"},icon:"bath",color:T.cyan,bg:T.cyanS},tummytime:{label:{pt:"Tummy time",en:"Tummy time"},icon:"baby",color:T.amber,bg:T.amberS},growth:{label:{pt:"Crescimento",en:"Growth"},icon:"ruler",color:"#a3e635",bg:"rgba(163,230,53,0.1)"}};
 
 // ── i18n ──
 const I={
@@ -1591,7 +1680,7 @@ function Ring({activeTimer,napSug,tick,recentEvents,lang,showOrbit,screenLockAct
       {sleepArcs.map((sa,i)=>{const isLastSleep=i===lastSleepArcIdx&&!activeTimer;return<div key={"si"+i} style={{position:"absolute",left:sa.mx-sleepSz/2,top:sa.my-sleepSz/2,width:sleepSz,height:sleepSz,borderRadius:"50%",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",zIndex:3,filter:`drop-shadow(0 0 ${isLastSleep?14:6}px ${sa.col}${isLastSleep?"aa":"55"})`,animation:isLastSleep?"glowBreathe 2s ease-in-out infinite":"none"}}><Icon name={sa.ev.type==="nap"?"cloud":"moon"} size={isLastSleep?22:20} color={sa.col}/><span style={{fontSize:9,fontWeight:700,color:`${sa.col}88`,marginTop:1}}>{fmtDur(sa.ev.durationMin)}</span></div>})}
       {/* Live timer icon — strong glow breathing */}
       {timerArc&&<>
-        <div style={{position:"absolute",left:timerArc.mx-sleepSz/2,top:timerArc.my-sleepSz/2,width:sleepSz,height:sleepSz,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",zIndex:4,filter:`drop-shadow(0 0 14px ${timerArc.col}aa)`,animation:"glowBreathe 2s ease-in-out infinite"}}><Icon name={activeTimer.type==="nap"?"cloud":activeTimer.type==="tummytime"?"baby":"moon"} size={22} color={timerArc.col}/></div>
+        <div style={{position:"absolute",left:timerArc.mx-sleepSz/2,top:timerArc.my-sleepSz/2,width:sleepSz,height:sleepSz,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",zIndex:4,filter:`drop-shadow(0 0 14px ${timerArc.col}aa)`,animation:"glowBreathe 2s ease-in-out infinite"}}><Icon name={activeTimer.type==="nap"?"cloud":activeTimer.type==="tummytime"?"baby":"bed"} size={22} color={timerArc.col}/></div>
         <div style={{position:"absolute",left:timerArc.tipX-7,top:timerArc.tipY-7,width:14,height:14,borderRadius:"50%",background:timerArc.col,boxShadow:`0 0 10px ${timerArc.col}aa, 0 0 24px ${timerArc.col}55`,animation:"cometTip 1.5s ease-in-out infinite",zIndex:5}}/>
       </>}
       {dots.map((gr,i)=>{const d=gr.primary,c=d.cfg.color,isGrp=gr.items.length>1,active=tip===i;const isLast=i===lastDotIdx&&!activeTimer;const lines=gr.items.map(it=>{let l=TL(it.ev.type);if(it.ev.ml)l+=` \u00b7 ${it.ev.ml}ml`;else if(it.ev.subtype)l+=` \u00b7 ${({wet:L("wet"),dirty:L("dirty"),both:L("both")})[it.ev.subtype]||""}`;return`${l} \u00b7 ${it.ev.time}`});return(<div key={d.ev.id||i} style={{position:"absolute",left:d.x-dotSz/2,top:d.y-dotSz/2}}>
@@ -1607,9 +1696,9 @@ function Ring({activeTimer,napSug,tick,recentEvents,lang,showOrbit,screenLockAct
           <div style={{position:"absolute",bottom:-4,left:"50%",transform:"translateX(-50%) rotate(45deg)",width:7,height:7,background:"rgba(8,12,35,0.96)",borderRight:`1px solid ${c}25`,borderBottom:`1px solid ${c}25`}}/>
         </div>}
       </div>)})}
-      {anchorSun&&<div style={{position:"absolute",left:anchorSun.x-20,top:anchorSun.y-20,display:"flex",flexDirection:"column",alignItems:"center",zIndex:1,pointerEvents:"none"}}><div style={{width:40,height:40,borderRadius:"50%",background:"radial-gradient(circle at 40% 30%,rgba(251,191,36,0.18),rgba(251,146,60,0.06))",border:"2px solid rgba(251,191,36,0.35)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 16px rgba(251,191,36,0.15)"}}><Icon name="sun" size={18} color="#fbbf24"/></div><span style={{fontSize:9,fontWeight:700,color:"#fbbf24",marginTop:2,textShadow:"0 1px 4px rgba(0,0,0,0.8)"}}>{anchorSun.time}</span></div>}
-      {anchorMoon&&<div style={{position:"absolute",left:anchorMoon.x-20,top:anchorMoon.y-20,display:"flex",flexDirection:"column",alignItems:"center",zIndex:1,pointerEvents:"none"}}><div style={{width:40,height:40,borderRadius:"50%",background:"radial-gradient(circle at 40% 30%,rgba(167,139,250,0.18),rgba(139,124,246,0.06))",border:"2px solid rgba(167,139,250,0.35)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 16px rgba(167,139,250,0.15)"}}><Icon name="moon" size={18} color="#a78bfa"/></div><span style={{fontSize:9,fontWeight:700,color:"#a78bfa",marginTop:2,textShadow:"0 1px 4px rgba(0,0,0,0.8)"}}>{anchorMoon.time}</span></div>}
-      <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}><span style={{fontSize:14,color:isBedtime?"#c084fc":T.sub,fontWeight:500,letterSpacing:1.5,display:"flex",alignItems:"center",gap:5}}>{isBedtime&&<Icon name="moon" size={14} color="#c084fc"/>}{sub}{screenLockActive&&<span title={lang==="en"?"Screen on":"Tela ligada"} style={{display:"inline-flex",alignItems:"center",gap:3,marginLeft:4,padding:"2px 6px",borderRadius:8,background:"rgba(251,191,36,0.12)",border:"1px solid rgba(251,191,36,0.3)"}}><span style={{width:5,height:5,borderRadius:"50%",background:"#fbbf24",boxShadow:"0 0 6px #fbbf24",animation:"pulse 1.5s ease-in-out infinite"}}/><span style={{fontSize:8,fontWeight:700,color:"#fbbf24",letterSpacing:0.5,textTransform:"uppercase"}}>{lang==="en"?"On":"On"}</span></span>}</span><span style={{fontSize:52,fontWeight:800,letterSpacing:-2,marginTop:4,background:hasProgress?`linear-gradient(135deg,${col2},${col1})`:`linear-gradient(135deg,${T.text},${T.sub})`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>{lbl}</span>{napSug&&napSug.predictedTime&&!activeTimer&&<span style={{fontSize:10,fontWeight:600,color:col1,opacity:0.7,marginTop:2}}>{lang==="en"?"Nap":"Nap"} {napSug.napPos||""} ~{napSug.predictedTime}</span>}</div>
+      {anchorSun&&<div style={{position:"absolute",left:anchorSun.x-22,top:anchorSun.y-22,display:"flex",flexDirection:"column",alignItems:"center",zIndex:5,pointerEvents:"none"}}><div style={{width:44,height:44,borderRadius:"50%",background:"radial-gradient(circle at 40% 30%,rgba(251,191,36,0.4),rgba(251,146,60,0.14))",border:"2px solid rgba(251,191,36,0.72)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 24px rgba(251,191,36,0.45), 0 0 48px rgba(251,191,36,0.2), 0 1px 0 0 rgba(255,255,255,0.18) inset"}}><Icon name="sun" size={20} color="#fbbf24"/></div><span style={{fontSize:10,fontWeight:800,color:"#fde68a",marginTop:2,textShadow:"0 1px 4px rgba(0,0,0,0.8)"}}>{anchorSun.time}</span></div>}
+      {anchorMoon&&<div style={{position:"absolute",left:anchorMoon.x-22,top:anchorMoon.y-22,display:"flex",flexDirection:"column",alignItems:"center",zIndex:5,pointerEvents:"none"}}><div style={{width:44,height:44,borderRadius:"50%",background:"radial-gradient(circle at 40% 30%,rgba(167,139,250,0.42),rgba(139,124,246,0.14))",border:"2px solid rgba(167,139,250,0.72)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 24px rgba(167,139,250,0.5), 0 0 48px rgba(167,139,250,0.22), 0 1px 0 0 rgba(255,255,255,0.18) inset"}}><Icon name="moon" size={20} color="#a78bfa"/></div><span style={{fontSize:10,fontWeight:800,color:"#c4b5fd",marginTop:2,textShadow:"0 1px 4px rgba(0,0,0,0.8)"}}>{anchorMoon.time}</span></div>}
+      <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}><span style={{fontSize:14,color:isBedtime?"#c084fc":T.sub,fontWeight:500,letterSpacing:1.5,display:"flex",alignItems:"center",gap:5}}>{isBedtime&&<Icon name="bed" size={14} color="#c084fc"/>}{sub}{screenLockActive&&<span title={lang==="en"?"Screen on":"Tela ligada"} style={{display:"inline-flex",alignItems:"center",gap:3,marginLeft:4,padding:"2px 6px",borderRadius:8,background:"rgba(251,191,36,0.12)",border:"1px solid rgba(251,191,36,0.3)"}}><span style={{width:5,height:5,borderRadius:"50%",background:"#fbbf24",boxShadow:"0 0 6px #fbbf24",animation:"pulse 1.5s ease-in-out infinite"}}/><span style={{fontSize:8,fontWeight:700,color:"#fbbf24",letterSpacing:0.5,textTransform:"uppercase"}}>{lang==="en"?"On":"On"}</span></span>}</span><span style={{fontSize:52,fontWeight:800,letterSpacing:-2,marginTop:4,background:hasProgress?`linear-gradient(135deg,${col2},${col1})`:`linear-gradient(135deg,${T.text},${T.sub})`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>{lbl}</span>{napSug&&napSug.predictedTime&&!activeTimer&&<span style={{fontSize:10,fontWeight:600,color:col1,opacity:0.7,marginTop:2}}>{lang==="en"?"Nap":"Nap"} {napSug.napPos||""} ~{napSug.predictedTime}</span>}</div>
       {tip!==null&&<div onClick={()=>setTip(null)} style={{position:"absolute",inset:0,zIndex:1}}/>}
       {showOrbit&&<div key={Date.now()} style={{position:"absolute",left:167,top:167,width:6,height:6,zIndex:10,pointerEvents:"none",animation:"orbitComet 1.2s cubic-bezier(0.25,0.1,0.25,1) forwards"}}><div style={{width:6,height:6,borderRadius:"50%",background:"#fff",boxShadow:"0 0 8px #fff, 0 0 20px rgba(139,124,246,0.6), -8px 0 12px rgba(139,124,246,0.3), -16px 0 8px rgba(139,124,246,0.15)",transform:"translateY(-148px)"}}/></div>}
     </div>
@@ -1798,7 +1887,7 @@ function TimerBar({activeTimer,onStop,onSwitch,onPause,onEditStart}){const[tick,
   const tColLight=isTum?"#fde68a":"#c4b5fd";
   const tColLightRgba=isTum?"rgba(253,230,138,0.9)":"rgba(196,181,253,0.85)";
   const tLabel=isTum?(_lang==="en"?"Tummy time":"Tummy time"):(activeTimer.type==="nap"?TL("nap"):TL("sleep"));
-  const tIconName=isTum?"baby":(activeTimer.type==="nap"?"cloud":"moon");
+  const tIconName=isTum?"baby":(activeTimer.type==="nap"?"cloud":"bed");
   // Format time: tummytime uses mm:ss, sleep/nap uses h:mm:ss via fmtTimer
   const timeDisplay=isTum?`${String(Math.floor(secs/60)).padStart(2,"0")}:${String(secs%60).padStart(2,"0")}`:fmtTimer(secs);
   // Since label: "desde HH:MM" showing the start time
@@ -2051,7 +2140,7 @@ function SleepBlock({entry,onDelete,onEdit,entries,isLive}){
     {/* Header */}
     <button onClick={()=>setExpanded(!expanded)} style={{width:"100%",padding:"18px 20px 18px 24px",display:"flex",alignItems:"center",gap:14,textAlign:"left",background:"transparent",position:"relative"}}>
       <div style={{width:50,height:50,borderRadius:15,background:"linear-gradient(135deg,rgba(167,139,250,0.28),rgba(167,139,250,0.08))",border:"1px solid rgba(167,139,250,0.4)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset"}}>
-        <Icon name="moon" size={24} color="#c4b5fd"/>
+        <Icon name="bed" size={24} color="#c4b5fd"/>
       </div>
       <div style={{flex:1,minWidth:0}}>
         <div style={{fontSize:10,fontWeight:700,color:"rgba(196,181,253,0.85)",textTransform:"uppercase",letterSpacing:0.5,marginBottom:3}}>{_lang==="en"?"Bedtime":"Sono noturno"}{isLive&&<span style={{marginLeft:6,opacity:0.7}}>{_lang==="en"?"· live":"· ao vivo"}</span>}</div>
@@ -2735,6 +2824,8 @@ function StatsPage({entries,onGrowth}){
     const slReal=sumRealSleep(sleeps);
     const slAwake=sumAwakeInSleep(sleeps);
     const simetCount=de.filter(e=>e.type==="medicine"&&e.name&&/simet/i.test(e.name)).length;
+    const tumEntries=de.filter(e=>e.type==="tummytime"&&e.durationMin);
+    const tumMin=Math.round(tumEntries.reduce((s,e)=>s+(e.durationMin||0),0));
     return{
       date:dt,isToday:dt===today,
       label:numDays<=14?new Date(dt+"T12:00").toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{weekday:"short"}).replace(".",""):new Date(dt+"T12:00").toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{day:"numeric",month:"numeric"}).replace(/\/\d{4}/,""),
@@ -2742,7 +2833,9 @@ function StatsPage({entries,onGrowth}){
       sl:slReal,        // real sleep (was: total bedtime including wakings)
       slAwake:slAwake,  // night-waking time
       slBed:slReal+slAwake, // total time in bed
-      simet:simetCount
+      simet:simetCount,
+      tum:tumEntries.length,
+      tumMin:tumMin
     }
   });
   // ─────────────────────────────────────────────────
@@ -2777,6 +2870,9 @@ function StatsPage({entries,onGrowth}){
   const avgDiapers=Math.round(avgDays.reduce((s,dt)=>s+entries.filter(e=>e.date===dt&&e.type==="diaper").length,0)/numComplete*10)/10;
   const avgFeedings=Math.round(avgDays.reduce((s,dt)=>s+entries.filter(e=>e.date===dt&&(e.type==="bottle"||e.type==="nursing")).length,0)/numComplete*10)/10;
   const avgNaps=Math.round(avgDays.reduce((s,dt)=>s+entries.filter(e=>e.date===dt&&e.type==="nap").length,0)/numComplete*10)/10;
+  const avgTum=Math.round(avgData.reduce((s,d)=>s+d.tum,0)/numComplete*10)/10;
+  const mxTumMin=Math.max(...data.map(d=>d.tumMin),1);
+  const totalTumInPeriod=data.reduce((s,d)=>s+d.tum,0);
   // Simeticona stats: doses per day chart + last dose info
   const mxSimet=Math.max(...data.map(d=>d.simet),1);
   const avgSimet=Math.round((avgData.reduce((s,d)=>s+d.simet,0)/numComplete)*10)/10;
@@ -2810,7 +2906,7 @@ function StatsPage({entries,onGrowth}){
     <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr)",gap:10,marginBottom:12}}>
       <div style={{background:`${T.green}08`,borderRadius:14,border:`1px solid ${T.green}0a`,padding:12}}><div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}><Icon name="bottle" size={14} color={T.green}/><span style={{fontSize:9,color:T.sub}}>{_lang==="en"?"Avg milk/day":"Média leite/dia"}</span></div><div style={{fontSize:22,fontWeight:800,color:T.green}}>{avgMl} <span style={{fontSize:12,opacity:0.6}}>ml</span></div><TrendBadge val={trendMl}/></div>
       <div style={{background:`${T.purple}08`,borderRadius:14,border:`1px solid ${T.purple}0a`,padding:12}}>
-        <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}><Icon name="moon" size={14} color={T.purple}/><span style={{fontSize:9,color:T.sub}}>{_lang==="en"?"Real sleep/day":"Sono real/dia"}</span></div>
+        <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}><Icon name="bed" size={14} color={T.purple}/><span style={{fontSize:9,color:T.sub}}>{_lang==="en"?"Real sleep/day":"Sono real/dia"}</span></div>
         <div style={{fontSize:22,fontWeight:800,color:T.purple}}>{fmtDur(avgSl)}</div>
         <TrendBadge val={trendSl}/>
         {avgAwake>0&&<div style={{marginTop:8,paddingTop:6,borderTop:`1px solid ${T.purple}15`,display:"flex",flexDirection:"column",gap:3}}>
@@ -2819,10 +2915,11 @@ function StatsPage({entries,onGrowth}){
         </div>}
       </div>
     </div>
-    <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)",gap:10,marginBottom:16}}>
-      <div style={{background:"rgba(20,26,60,0.5)",borderRadius:20,border:`1px solid ${T.gBSoft}`,padding:"16px 12px 14px",textAlign:"center",boxShadow:T.insetTop}}><div style={{fontSize:10,color:"#7a80a8",letterSpacing:-0.05,marginBottom:8,fontWeight:600}}>{_lang==="en"?"Diapers/day":"Fraldas/dia"}</div><div style={{fontSize:26,fontWeight:800,color:T.pink,letterSpacing:-0.8,fontVariantNumeric:"tabular-nums"}}>{avgDiapers}</div></div>
-      <div style={{background:"rgba(20,26,60,0.5)",borderRadius:20,border:`1px solid ${T.gBSoft}`,padding:"16px 12px 14px",textAlign:"center",boxShadow:T.insetTop}}><div style={{fontSize:10,color:"#7a80a8",letterSpacing:-0.05,marginBottom:8,fontWeight:600}}>{_lang==="en"?"Feedings/day":"Mamadas/dia"}</div><div style={{fontSize:26,fontWeight:800,color:T.blue,letterSpacing:-0.8,fontVariantNumeric:"tabular-nums"}}>{avgFeedings}</div></div>
-      <div style={{background:"rgba(20,26,60,0.5)",borderRadius:20,border:`1px solid ${T.gBSoft}`,padding:"16px 12px 14px",textAlign:"center",boxShadow:T.insetTop}}><div style={{fontSize:10,color:"#7a80a8",letterSpacing:-0.05,marginBottom:8,fontWeight:600}}>{_lang==="en"?"Naps/day":"Sonecas/dia"}</div><div style={{fontSize:26,fontWeight:800,color:T.accent,letterSpacing:-0.8,fontVariantNumeric:"tabular-nums"}}>{avgNaps}</div></div>
+    <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)",gap:8,marginBottom:16}}>
+      <div style={{background:"rgba(20,26,60,0.5)",borderRadius:20,border:`1px solid ${T.gBSoft}`,padding:"16px 8px 14px",textAlign:"center",boxShadow:T.insetTop}}><div style={{fontSize:9,color:"#7a80a8",letterSpacing:-0.05,marginBottom:8,fontWeight:600}}>{_lang==="en"?"Diapers/day":"Fraldas/dia"}</div><div style={{fontSize:22,fontWeight:800,color:T.pink,letterSpacing:-0.8,fontVariantNumeric:"tabular-nums"}}>{avgDiapers}</div></div>
+      <div style={{background:"rgba(20,26,60,0.5)",borderRadius:20,border:`1px solid ${T.gBSoft}`,padding:"16px 8px 14px",textAlign:"center",boxShadow:T.insetTop}}><div style={{fontSize:9,color:"#7a80a8",letterSpacing:-0.05,marginBottom:8,fontWeight:600}}>{_lang==="en"?"Feeds/day":"Mamadas/dia"}</div><div style={{fontSize:22,fontWeight:800,color:T.blue,letterSpacing:-0.8,fontVariantNumeric:"tabular-nums"}}>{avgFeedings}</div></div>
+      <div style={{background:"rgba(20,26,60,0.5)",borderRadius:20,border:`1px solid ${T.gBSoft}`,padding:"16px 8px 14px",textAlign:"center",boxShadow:T.insetTop}}><div style={{fontSize:9,color:"#7a80a8",letterSpacing:-0.05,marginBottom:8,fontWeight:600}}>{_lang==="en"?"Naps/day":"Sonecas/dia"}</div><div style={{fontSize:22,fontWeight:800,color:T.accent,letterSpacing:-0.8,fontVariantNumeric:"tabular-nums"}}>{avgNaps}</div></div>
+      <div style={{background:"rgba(20,26,60,0.5)",borderRadius:20,border:`1px solid ${T.gBSoft}`,padding:"16px 8px 14px",textAlign:"center",boxShadow:T.insetTop}}><div style={{fontSize:9,color:"#7a80a8",letterSpacing:-0.05,marginBottom:8,fontWeight:600}}>{_lang==="en"?"Tummy/day":"Tummy/dia"}</div><div style={{fontSize:22,fontWeight:800,color:T.amber,letterSpacing:-0.8,fontVariantNumeric:"tabular-nums"}}>{avgTum}</div></div>
     </div>
     {[{t:_lang==="en"?"Milk (ml)":"Leite (ml)",f:"ml",max:mxMl,c:T.green,stacked:false},{t:_lang==="en"?"Sleep · real + awake":"Sono · real + acordada",f:"sl",max:mxSl,c:T.purple,stacked:true}].map(ch=>(
       <div key={ch.f} style={{marginBottom:22}}>
@@ -2905,6 +3002,46 @@ function StatsPage({entries,onGrowth}){
         </>
       )}
     </div>
+
+    {/* ── TUMMY TIME CARD ── minutes/day bar chart */}
+    <div style={{marginBottom:22,padding:"14px 14px 12px",background:"rgba(22,28,60,0.4)",borderRadius:14,border:`1px solid ${T.gB}`}}>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <div style={{width:28,height:28,borderRadius:9,background:`${T.amber}1a`,border:`1px solid ${T.amber}33`,display:"flex",alignItems:"center",justifyContent:"center"}}>
+            <Icon name="baby" size={14} color={T.amber}/>
+          </div>
+          <div>
+            <div style={{fontSize:12,fontWeight:700,color:T.text}}>Tummy time</div>
+            <div style={{fontSize:9,color:T.dim,marginTop:1}}>{_lang==="en"?"Minutes per day":"Minutos por dia"}</div>
+          </div>
+        </div>
+        <div style={{display:"flex",gap:14,alignItems:"center"}}>
+          <div style={{textAlign:"right"}}>
+            <div style={{fontSize:9,color:T.dim,textTransform:"uppercase",letterSpacing:0.5}}>{_lang==="en"?"Avg/day":"Méd/dia"}</div>
+            <div style={{fontSize:18,fontWeight:800,color:T.amber,fontVariantNumeric:"tabular-nums"}}>{avgTum}<span style={{fontSize:10,opacity:0.6,marginLeft:2}}>{_lang==="en"?"sess":"sess"}</span></div>
+          </div>
+        </div>
+      </div>
+      {totalTumInPeriod===0?(
+        <div style={{padding:"24px 12px",textAlign:"center",fontSize:11,color:T.dim,fontStyle:"italic"}}>
+          {_lang==="en"?"No tummy time in this period":"Nenhum tummy time neste período"}
+        </div>
+      ):(
+        <>
+          <div style={{display:"flex",gap:numDays>20?1:numDays>14?2:5,alignItems:"flex-end",height:100,background:"rgba(14,18,48,0.5)",borderRadius:10,padding:"14px 4px 6px",border:`1px solid ${T.gB}`,position:"relative"}}>
+            {data.map(d=>{
+              const v=d.tumMin;
+              return<div key={d.date} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2,minWidth:0}}>
+                {numDays<=14&&<span style={{fontSize:9,color:T.sub,fontWeight:600}}>{v>0?`${v}m`:""}</span>}
+                <div style={{width:"85%",maxWidth:numDays>20?8:18,height:Math.max((v/mxTumMin)*50,2),borderRadius:numDays>20?2:5,background:v>0?`linear-gradient(180deg,${T.amber},#d97706)`:T.bg3,transition:"height .5s",opacity:d.isToday?1:0.75,boxShadow:v>0?`0 0 8px ${T.amber}33`:"none"}}/>
+                {numDays<=14&&<span style={{fontSize:8,color:d.isToday?T.accent:T.dim,fontWeight:d.isToday?700:400}}>{d.isToday?(_lang==="en"?"Today":"Hoje"):d.label}</span>}
+              </div>
+            })}
+          </div>
+          {numDays>14&&<div style={{display:"flex",justifyContent:"space-between",padding:"4px 4px 0",fontSize:8,color:T.dim}}><span>{data[0]?.label}</span><span>{data[Math.floor(data.length/2)]?.label}</span><span>{data[data.length-1]?.label}</span></div>}
+        </>
+      )}
+    </div>
   </div>);
 }
 
@@ -2953,7 +3090,7 @@ function HistoryPage({entries,onDelete,onEdit}){
           <div style={{fontSize:17,fontWeight:800,color:isToday?T.accent:T.text,letterSpacing:-0.3}}>{isToday?L("today"):dLbl}</div>
           <div style={{display:"flex",justifyContent:"center",gap:10,fontSize:11,color:T.sub,marginTop:7,flexWrap:"wrap",alignItems:"center"}}>
             {dMl>0&&<span style={{display:"inline-flex",alignItems:"center",gap:4,fontWeight:600,fontVariantNumeric:"tabular-nums"}}><Icon name="bottle" size={11} color={T.green}/>{dMl}ml</span>}
-            {dSl>0&&<><span style={{width:3,height:3,borderRadius:"50%",background:T.dim}}/><span style={{display:"inline-flex",alignItems:"center",gap:4,fontWeight:600,fontVariantNumeric:"tabular-nums"}}><Icon name="moon" size={11} color={T.purple}/>{fmtDur(dSl)}</span></>}
+            {dSl>0&&<><span style={{width:3,height:3,borderRadius:"50%",background:T.dim}}/><span style={{display:"inline-flex",alignItems:"center",gap:4,fontWeight:600,fontVariantNumeric:"tabular-nums"}}><Icon name="bed" size={11} color={T.purple}/>{fmtDur(dSl)}</span></>}
             {(dWet>0||dDirty>0)&&<><span style={{width:3,height:3,borderRadius:"50%",background:T.dim}}/><span style={{display:"inline-flex",alignItems:"center",gap:4,color:"#93c5fd",fontWeight:600,fontVariantNumeric:"tabular-nums"}}><Icon name="droplet" size={11} color="#93c5fd"/>{dWet}</span><span style={{display:"inline-flex",alignItems:"center",gap:4,color:"#a16b4a",fontWeight:600,fontVariantNumeric:"tabular-nums"}}><Icon name="poop" size={11} color="#a16b4a"/>{dDirty}</span></>}
             <span style={{width:3,height:3,borderRadius:"50%",background:T.dim}}/>
             <span style={{fontWeight:600,fontVariantNumeric:"tabular-nums"}}>{dayE.length} {L("reg")}</span>
@@ -3585,7 +3722,7 @@ function App(){
         <CuriosityCard age={age} lang={lang} tick={tick}/>
         <div style={{padding:"4px 0 0"}}><Ring activeTimer={activeTimer} napSug={napSug} tick={tick} recentEvents={cycleE} lang={lang} showOrbit={showOrbit} screenLockActive={shouldLock}/></div>
         {activeTimer&&activeTimer.type==="sleep"&&<div style={{padding:"0 20px",marginBottom:10}}><button onClick={toggleNightWake} style={{width:"100%",padding:"12px 16px",borderRadius:14,background:activeTimer.nightWake?"linear-gradient(135deg,rgba(96,165,250,0.2),rgba(167,139,250,0.15))":"linear-gradient(135deg,rgba(251,146,60,0.18),rgba(251,191,36,0.12))",border:`1px solid ${activeTimer.nightWake?"rgba(96,165,250,0.6)":"rgba(251,146,60,0.55)"}`,display:"flex",alignItems:"center",gap:12,boxShadow:activeTimer.nightWake?"0 0 20px rgba(96,165,250,0.2)":"0 0 20px rgba(251,146,60,0.15), 0 4px 16px rgba(0,0,0,0.3)",transition:"all 0.3s",animation:activeTimer.nightWake?"none":"nwPulseAmber 2.4s ease-in-out infinite"}}><div style={{width:36,height:36,borderRadius:12,background:activeTimer.nightWake?"rgba(96,165,250,0.3)":"rgba(251,146,60,0.25)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:activeTimer.nightWake?"none":"0 0 14px rgba(251,146,60,0.3)",animation:activeTimer.nightWake?"pulse 2s ease-in-out infinite":"nwIconPulseAmber 2.4s ease-in-out infinite"}}><Icon name="sun" size={18} color={activeTimer.nightWake?"#60a5fa":"#fbbf24"}/></div><div style={{flex:1,textAlign:"left"}}><div style={{fontSize:13,fontWeight:700,color:activeTimer.nightWake?"#60a5fa":"#fbbf24"}}>{_lang==="en"?"Night Wake":"Despertar"}{activeTimer.nightWake&&` · ${fmtDur(Math.max(1,Math.floor((Date.now()-new Date(activeTimer.nightWake.startTime).getTime())/60000)))}`}</div><div style={{fontSize:9,color:activeTimer.nightWake?T.sub:"rgba(251,191,36,0.75)",marginTop:1}}>{activeTimer.nightWake?(_lang==="en"?"Tap to go back to sleep":"Toque para voltar a dormir"):(_lang==="en"?"Tap if Louise woke up":"Toque se Louise acordou")}</div></div>{activeTimer.nightWake&&<div style={{width:10,height:10,borderRadius:"50%",background:"#60a5fa",boxShadow:"0 0 8px #60a5fa",animation:"pulse 1.5s ease-in-out infinite"}}/>}</button></div>}
-        {!activeTimer&&<div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)",gap:6,padding:"0 20px",marginBottom:12}}><button onClick={()=>{setFormType("bottle");setShowAdd(false)}} style={{padding:"12px 0 8px",borderRadius:14,background:`${T.green}08`,border:`1px solid ${T.green}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="bottle" size={18} color={T.green}/><span style={{fontSize:9,fontWeight:700,color:T.green}}>{_lang==="en"?"Bottle":"Mamad."}</span></button><button onClick={()=>setShowNursingPicker(true)} style={{padding:"12px 0 8px",borderRadius:14,background:`${T.blue}08`,border:`1px solid ${T.blue}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="breast" size={18} color={T.blue}/><span style={{fontSize:9,fontWeight:700,color:T.blue}}>{_lang==="en"?"Nurse":"Amam."}</span></button><button onClick={()=>{setFormType("diaper");setShowAdd(false)}} style={{padding:"12px 0 8px",borderRadius:14,background:`${T.pink}08`,border:`1px solid ${T.pink}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="diaper" size={18} color={T.pink}/><span style={{fontSize:9,fontWeight:700,color:T.pink}}>{_lang==="en"?"Diaper":"Fralda"}</span></button><button onClick={()=>startTimer("sleep")} style={{padding:"12px 0 8px",borderRadius:14,background:`${T.purple}08`,border:`1px solid ${T.purple}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="moon" size={18} color={T.purple}/><span style={{fontSize:9,fontWeight:700,color:T.purple}}>{_lang==="en"?"Sleep":"Sono"}</span></button><button onClick={()=>startTimer("nap")} style={{padding:"12px 0 8px",borderRadius:14,background:`${T.accent}08`,border:`1px solid ${T.accent}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="cloud" size={18} color={T.accent}/><span style={{fontSize:9,fontWeight:700,color:T.accent}}>{_lang==="en"?"Nap":"Soneca"}</span></button><button onClick={()=>startTimer("tummytime")} style={{padding:"12px 0 8px",borderRadius:14,background:`${T.amber}08`,border:`1px solid ${T.amber}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="baby" size={18} color={T.amber}/><span style={{fontSize:9,fontWeight:700,color:T.amber}}>Tummy</span></button></div>}
+        {!activeTimer&&<div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)",gap:6,padding:"0 20px",marginBottom:12}}><button onClick={()=>{setFormType("bottle");setShowAdd(false)}} style={{padding:"12px 0 8px",borderRadius:14,background:`${T.green}08`,border:`1px solid ${T.green}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="bottle" size={18} color={T.green}/><span style={{fontSize:9,fontWeight:700,color:T.green}}>{_lang==="en"?"Bottle":"Mamad."}</span></button><button onClick={()=>setShowNursingPicker(true)} style={{padding:"12px 0 8px",borderRadius:14,background:`${T.blue}08`,border:`1px solid ${T.blue}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="breast" size={18} color={T.blue}/><span style={{fontSize:9,fontWeight:700,color:T.blue}}>{_lang==="en"?"Nurse":"Amam."}</span></button><button onClick={()=>{setFormType("diaper");setShowAdd(false)}} style={{padding:"12px 0 8px",borderRadius:14,background:`${T.pink}08`,border:`1px solid ${T.pink}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="diaper" size={18} color={T.pink}/><span style={{fontSize:9,fontWeight:700,color:T.pink}}>{_lang==="en"?"Diaper":"Fralda"}</span></button><button onClick={()=>startTimer("sleep")} style={{padding:"12px 0 8px",borderRadius:14,background:`${T.purple}08`,border:`1px solid ${T.purple}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="bed" size={18} color={T.purple}/><span style={{fontSize:9,fontWeight:700,color:T.purple}}>{_lang==="en"?"Sleep":"Sono"}</span></button><button onClick={()=>startTimer("nap")} style={{padding:"12px 0 8px",borderRadius:14,background:`${T.accent}08`,border:`1px solid ${T.accent}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="cloud" size={18} color={T.accent}/><span style={{fontSize:9,fontWeight:700,color:T.accent}}>{_lang==="en"?"Nap":"Soneca"}</span></button><button onClick={()=>startTimer("tummytime")} style={{padding:"12px 0 8px",borderRadius:14,background:`${T.amber}08`,border:`1px solid ${T.amber}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="baby" size={18} color={T.amber}/><span style={{fontSize:9,fontWeight:700,color:T.amber}}>Tummy</span></button></div>}
         {activeTimer&&activeTimer.type==="sleep"&&activeTimer.nightWake&&<div style={{display:"flex",gap:6,padding:"0 20px",marginBottom:12}}><button onClick={()=>{setFormType("bottle");setShowAdd(false)}} style={{flex:1,padding:"12px 0 8px",borderRadius:14,background:`${T.green}16`,border:`1px solid ${T.green}40`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="bottle" size={18} color={T.green}/><span style={{fontSize:9,fontWeight:700,color:T.green}}>{_lang==="en"?"Bottle":"Mamad."}</span></button><button onClick={()=>{setFormType("diaper");setShowAdd(false)}} style={{flex:1,padding:"12px 0 8px",borderRadius:14,background:`${T.pink}16`,border:`1px solid ${T.pink}40`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="diaper" size={18} color={T.pink}/><span style={{fontSize:9,fontWeight:700,color:T.pink}}>{_lang==="en"?"Diaper":"Fralda"}</span></button></div>}
         {napSug&&napSug.state==="opening"&&<div style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:T.amberS,border:`1px solid ${T.amber}22`,display:"flex",alignItems:"center",gap:10,animation:"pulse 2s infinite"}}><Icon name="bell" size={18} color={T.amber}/><div><div style={{fontSize:12,fontWeight:700,color:T.amber}}>{_lang==="en"?"Sleep window opening":"Janela abrindo"}</div><div style={{fontSize:10,color:T.sub}}>{_lang==="en"?"Watch for sleepy cues":"Observe sinais de sono"}{napSug.predictedTime?` · ~${napSug.predictedTime}`:""}</div></div></div>}
         {napSug&&napSug.state==="sweet"&&<div style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:T.greenS,border:`1px solid ${T.green}22`,display:"flex",alignItems:"center",gap:10,animation:"pulse 1.5s infinite",boxShadow:`0 0 12px ${T.green}15`}}><Icon name="check" size={18} color={T.green}/><div><div style={{fontSize:12,fontWeight:700,color:T.green}}>{_lang==="en"?"Ideal time":"Hora ideal"}</div><div style={{fontSize:10,color:T.sub}}>{_lang==="en"?"Best moment for nap":"Melhor momento pra soneca"}{napSug.dataPoints>=3?(_lang==="en"?` · ${napSug.dataPoints} days`:` · ${napSug.dataPoints} dias`):""}</div></div></div>}
