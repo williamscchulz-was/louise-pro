@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v9.6.3  Fix tummy time no Ring vira dot + fmtDur robusto
   v9.6.2  Swipe bidirecional no histórico (deletar e editar)
   v9.6.1  Fix tummy time no Ring + label do timer
   v9.6.0  Cross-fade entre abas + drag-to-dismiss no sheet de "+"
@@ -233,8 +234,29 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "9.6.2";
+const APP_VERSION = "9.6.3";
 const CHANGELOG = [
+  {
+    v: "9.6.3", date: "2026-04-10",
+    pt: {
+      title: "Fix: tummy time no Ring vira dot (não arco) + fmtDur robusto",
+      bullets: [
+        '★ **Tummy time no Ring virou um dot, não mais um arco.** A v9.6.1 fez ele entrar como arco igual a soneca, mas o resultado ficou ruim: sessões de tummy time são curtíssimas (3-5 min = ~0.5% do dia), então o arco ficava microscópico enquanto o ícone e o label ficavam tamanho normal, sobrepondo os arcos vizinhos. Além disso apareceu um label bizarro `4.266666666666667min` no anel. Agora tummy time é um **ponto no tempo** (como mamadeira, fralda, amamentação), que é honesto — é um evento curto, não uma faixa temporal.',
+        '★ **`fmtDur` agora arredonda valores fracionários.** A função assumia inteiros e fazia `Math.floor(m/60)` + `m%60`. Tummy time persiste duração como `Math.round(mins*60)/60` (frações de minuto pra preservar segundos), então passava 4.2666... e saía `"4.266666666666667min"`. Agora passa por `Math.round(m)` antes de dividir, então vira `"4min"` ou `"4h16m"` como esperado. Mudança pontual — é possível que outros lugares do app que chamavam `fmtDur(durationMin)` em tummytime (Stats, History summary, etc) também tivessem números estranhos, e esse fix corrige todos de uma vez.',
+        'O EntryRow do tummy time **continua mostrando "3min 42s"** com segundos (usa lógica própria, não o `fmtDur`), isso não foi tocado.',
+        'Nenhuma outra mudança. Transições, swipe, Ring center, tudo continua igual.'
+      ]
+    },
+    en: {
+      title: "Fix: tummy time becomes a dot (not arc) in Ring + robust fmtDur",
+      bullets: [
+        '★ **Tummy time in the Ring is now a dot, no longer an arc.** v9.6.1 made it render as an arc like a nap, but the result looked bad: tummy time sessions are very short (3-5 min = ~0.5% of the day), so the arc was microscopic while the icon and label were normal-sized, overlapping neighboring arcs. Plus a weird label `4.266666666666667min` was appearing. Now tummy time is a **point in time** (like bottle, diaper, nursing), which is honest — it is a short event, not a time range.',
+        '★ **`fmtDur` now rounds fractional values.** The function assumed integers and did `Math.floor(m/60)` + `m%60`. Tummy time persists duration as `Math.round(mins*60)/60` (fractions of a minute to preserve seconds), so 4.2666... came out as `"4.266666666666667min"`. Now it goes through `Math.round(m)` before dividing, yielding `"4min"` or `"4h16m"` as expected. Pointful fix — likely other places in the app that called `fmtDur(durationMin)` on tummytime (Stats, History summary, etc) also had weird numbers, and this fix corrects all of them at once.',
+        'The tummy time EntryRow **still shows "3min 42s"** with seconds (uses its own logic, not `fmtDur`) — untouched.',
+        'No other changes. Transitions, swipe, Ring center — everything else stays the same.'
+      ]
+    }
+  },
   {
     v: "9.6.2", date: "2026-04-09",
     pt: {
@@ -1184,7 +1206,7 @@ const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const todayStr=()=>{const d=new Date();return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`};
 function nowTime(){const d=new Date();return`${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`}
 function calcAge(b){if(!b)return null;const p=b.split("-");const bi=new Date(+p[0],+p[1]-1,+p[2]);const n=new Date();const n0=new Date(n.getFullYear(),n.getMonth(),n.getDate());let m=(n0.getFullYear()-bi.getFullYear())*12+n0.getMonth()-bi.getMonth(),d=n0.getDate()-bi.getDate();if(d<0){m--;d+=new Date(n0.getFullYear(),n0.getMonth(),0).getDate()}const totalDays=Math.floor((n0-bi)/864e5);return{months:Math.max(0,m),days:Math.max(0,d),totalDays,totalWeeks:Math.floor(totalDays/7)}}
-function fmtDur(m){if(!m)return"0min";const h=Math.floor(m/60),r=m%60;return h>0?(r>0?`${h}h${r}m`:`${h}h`):`${r}min`}
+function fmtDur(m){if(!m)return"0min";const mi=Math.round(m);const h=Math.floor(mi/60),r=mi%60;return h>0?(r>0?`${h}h${r}m`:`${h}h`):`${r}min`}
 function fmtTimer(s){return`${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`}
 function timeSince(d,t){if(!d||!t)return"";const diff=Math.floor((new Date()-new Date(`${d}T${t}`))/6e4);if(diff<1)return"now";if(diff<60)return`${diff}min ago`;const h=Math.floor(diff/60),m=diff%60;if(h<24)return m>0?`${h}h${m}m ago`:`${h}h ago`;return`${Math.floor(h/24)}d ago`}
 function minSince(d,t){if(!d||!t)return null;return Math.max(0,Math.floor((new Date()-new Date(`${d}T${t}`))/6e4))}
@@ -1505,8 +1527,8 @@ function Ring({activeTimer,napSug,tick,recentEvents,lang,showOrbit,screenLockAct
   const daySpan=Math.max(1,dayEnd-dayStart);
   const toAng=mins=>{const t=Math.max(0,Math.min(1,(mins-dayStart)/daySpan));return startAng+t*totalArc};
   const descArc=(sA,eA)=>{const s=sA*Math.PI/180,e=eA*Math.PI/180;return`M ${cx+R*Math.cos(s)} ${cy+R*Math.sin(s)} A ${R} ${R} 0 ${eA-sA>180?1:0} 1 ${cx+R*Math.cos(e)} ${cy+R*Math.sin(e)}`};
-  const sleepEvs=evs.filter(e=>(e.type==="nap"||e.type==="tummytime")&&e.durationMin>0);
-  const dotEvs=evs.filter(e=>e.type==="bottle"||e.type==="nursing"||e.type==="diaper"||e.type==="medicine");
+  const sleepEvs=evs.filter(e=>e.type==="nap"&&e.durationMin>0);
+  const dotEvs=evs.filter(e=>e.type==="bottle"||e.type==="nursing"||e.type==="diaper"||e.type==="medicine"||e.type==="tummytime");
   const sleepArcs=sleepEvs.map(ev=>{
     const mins=toMin(ev.time),dur=ev.durationMin;
     if(mins+dur<dayStart||mins>dayStart+daySpan)return null;
