@@ -5,6 +5,8 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v9.6.2  Swipe bidirecional no histórico (deletar e editar)
+  v9.6.1  Fix tummy time no Ring + label do timer
   v9.6.0  Cross-fade entre abas + drag-to-dismiss no sheet de "+"
   v9.5.0  Nursing side picker (escolha de lado L/R ao iniciar amamentacao)
   v9.4.0  Quick buttons 2x3 + icones Lucide + tummy time no Ring
@@ -231,8 +233,58 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "9.6.0";
+const APP_VERSION = "9.6.2";
 const CHANGELOG = [
+  {
+    v: "9.6.2", date: "2026-04-09",
+    pt: {
+      title: "Swipe bidirecional no histórico (deletar e editar)",
+      bullets: [
+        '★ **Swipe pra esquerda agora deleta direto.** Antes você arrastava o item pra esquerda e aparecia um botão de lixo vermelho — pra deletar mesmo precisava de um segundo toque no botão. Agora não precisa mais: arrasta até **60% da largura do row**, solta, e deleta. Ou arrasta até **85%+** e ele commita sozinho sem nem precisar soltar (igual o Mail do iOS).',
+        '★ **Swipe pra direita abre o editor.** Novo: arrastar o row da esquerda pra direita revela um overlay azul com ícone de lápis. Mesma mecânica do delete — solta acima de 60% pra abrir, ou arrasta até 85%+ pra abrir sem soltar.',
+        '**Auto-commit em 85%:** quando você passa do segundo threshold, o row dispara haptic médio, desliza pro fim da tela em 180ms, e a ação acontece. Não precisa pensar em soltar.',
+        '**Snap-back em <60%:** se soltar antes do primeiro threshold, o row volta pro lugar com a curva `cubic-bezier(0.22,1,0.36,1)` (mesma das outras transições do app).',
+        '**Haptic em 3 momentos:** light quando você cruza o threshold de 60% durante o drag (avisa "se soltar agora, vai"), light de novo se voltar pra trás do threshold, e medium quando a ação efetivamente dispara.',
+        '**Lock de eixo:** os primeiros 8px de movimento decidem se é gesto horizontal (swipe) ou vertical (scroll da lista). Se vertical dominar, o drag é abortado e o scroll funciona normal. Sem conflito.',
+        '**Pointer events** em vez de touch events — funciona em iPhone, iPad, mouse de desktop, tudo no mesmo handler. Usa `setPointerCapture` pra que o dedo possa sair da área do row durante o drag sem perder o gesto.',
+        '**Click guard:** se você clicar no ícone ou no nome do evento sem ter arrastado (`Math.abs(dx)<5`), continua abrindo o editor como antes. Só bloqueia o click "fantasma" que poderia disparar logo após um swipe.',
+        'Removidos os antigos `useState` de `swipe`/`swiping` e os handlers `onTouchStart`/`onTouchMove`/`onTouchEnd` baseados em touch events. O overlay vermelho fixo de 70px com botão tappable também sumiu — agora o overlay cresce dinamicamente acompanhando o dedo.'
+      ]
+    },
+    en: {
+      title: "Bidirectional swipe in history (delete and edit)",
+      bullets: [
+        '★ **Swipe left now deletes directly.** Before, you swiped the item left and a red trash button appeared — to actually delete you needed a second tap on the button. No more: swipe past **60% of the row width**, release, and it deletes. Or swipe past **85%+** and it commits on its own without needing to release (just like Mail on iOS).',
+        '★ **Swipe right opens the editor.** New: dragging the row from left to right reveals a blue overlay with a pencil icon. Same mechanic as delete — release past 60% to open, or drag past 85%+ to open without releasing.',
+        '**Auto-commit at 85%:** when you cross the second threshold, the row fires medium haptic, slides off-screen in 180ms, and the action happens. No thinking about release.',
+        '**Snap-back below 60%:** releasing before the first threshold snaps the row back with `cubic-bezier(0.22,1,0.36,1)` (same as other app transitions).',
+        '**Haptic in 3 moments:** light when you cross the 60% threshold during drag (warns "release now and it goes"), light again if you go back below the threshold, and medium when the action actually fires.',
+        '**Axis lock:** the first 8px of movement decide whether it is a horizontal gesture (swipe) or vertical (list scroll). If vertical dominates, the drag is aborted and scroll works normally. No conflict.',
+        '**Pointer events** instead of touch events — works on iPhone, iPad, desktop mouse, all on the same handler. Uses `setPointerCapture` so your finger can leave the row area during the drag without losing the gesture.',
+        '**Click guard:** if you tap the icon or event name without dragging (`Math.abs(dx)<5`), it still opens the editor as before. Only blocks the "phantom" click that could fire right after a swipe.',
+        'Removed the old `useState` for `swipe`/`swiping` and the `onTouchStart`/`onTouchMove`/`onTouchEnd` handlers based on touch events. The fixed 70px red overlay with tappable button is also gone — the overlay now grows dynamically following your finger.'
+      ]
+    }
+  },
+  {
+    v: "9.6.1", date: "2026-04-09",
+    pt: {
+      title: "Fix: tummy time no Ring + label do timer",
+      bullets: [
+        '★ **Tummy time finalizado agora aparece como arco no Ring**, igual as sonecas. Antes ele só aparecia como arco enquanto o timer estava rodando, mas sumia depois de salvar — porque o filtro `sleepEvs` do Ring incluía só `type==="nap"`. Adicionado `||e.type==="tummytime"` no filtro. A cor sai automaticamente como âmbar (vinda do `TYPES.tummytime.color`), igual ao arco vivo.',
+        '★ **Centro do Ring durante timer de tummy time não mostra mais "Bedtime / Boa noite" em roxo.** Bug do `else` final do switch de `activeTimer.type` que capturava qualquer tipo não-tratado e caía no fallback de bedtime. Adicionado branch explícito pra `tummytime` antes do `else`, com label `"Tummy time"` e cores âmbar (`#d97706` → `#fbbf24`), matching o resto do vocabulário visual do tummy time no app.',
+        'Esses dois bugs eram pré-existentes (vieram lá da v9.3.0 quando tummy time foi adicionado), não tem nada a ver com as transições da v9.6.0 — só aproveitei a sessão pra corrigir agora que vocês reportaram.'
+      ]
+    },
+    en: {
+      title: "Fix: tummy time in Ring + timer label",
+      bullets: [
+        '★ **Finished tummy time now appears as an arc in the Ring**, just like naps. Before it only showed as an arc while the timer was running, but disappeared after saving — because the Ring `sleepEvs` filter only included `type==="nap"`. Added `||e.type==="tummytime"` to the filter. The color comes out as amber automatically (from `TYPES.tummytime.color`), matching the live arc.',
+        '★ **Ring center during tummy time timer no longer shows "Bedtime / Boa noite" in purple.** Bug in the final `else` of the `activeTimer.type` switch that caught any untreated type and fell into the bedtime fallback. Added an explicit branch for `tummytime` before the `else`, with `"Tummy time"` label and amber colors (`#d97706` → `#fbbf24`), matching the rest of the tummy time visual vocabulary in the app.',
+        'These two bugs were pre-existing (came from v9.3.0 when tummy time was added), unrelated to the v9.6.0 transitions — I just took advantage of the session to fix them now that you reported them.'
+      ]
+    }
+  },
   {
     v: "9.6.0", date: "2026-04-09",
     pt: {
@@ -1425,6 +1477,7 @@ function Ring({activeTimer,napSug,tick,recentEvents,lang,showOrbit,screenLockAct
     lbl=mins<60?`${mins} min`:`${Math.floor(mins/60)}h ${String(mins%60).padStart(2,"0")}m`;
     if(activeTimer.type==="nursing"){sub=lang==="en"?"Nursing":"Amamentando";col1="#2563eb";col2="#60a5fa"}
     else if(activeTimer.type==="nap"){sub=lang==="en"?"Napping":"Soneca";col1="#7c3aed";col2="#c084fc"}
+    else if(activeTimer.type==="tummytime"){sub=lang==="en"?"Tummy time":"Tummy time";col1="#d97706";col2="#fbbf24"}
     else{sub=lang==="en"?"Bedtime":"Boa noite";col1="#7c3aed";col2="#c084fc";isBedtime=true}
   } else if(napSug){
     lbl=fmtDur(napSug.el);sub=lang==="en"?"Awake for":"Acordado(a)";
@@ -1452,7 +1505,7 @@ function Ring({activeTimer,napSug,tick,recentEvents,lang,showOrbit,screenLockAct
   const daySpan=Math.max(1,dayEnd-dayStart);
   const toAng=mins=>{const t=Math.max(0,Math.min(1,(mins-dayStart)/daySpan));return startAng+t*totalArc};
   const descArc=(sA,eA)=>{const s=sA*Math.PI/180,e=eA*Math.PI/180;return`M ${cx+R*Math.cos(s)} ${cy+R*Math.sin(s)} A ${R} ${R} 0 ${eA-sA>180?1:0} 1 ${cx+R*Math.cos(e)} ${cy+R*Math.sin(e)}`};
-  const sleepEvs=evs.filter(e=>e.type==="nap"&&e.durationMin>0);
+  const sleepEvs=evs.filter(e=>(e.type==="nap"||e.type==="tummytime")&&e.durationMin>0);
   const dotEvs=evs.filter(e=>e.type==="bottle"||e.type==="nursing"||e.type==="diaper"||e.type==="medicine");
   const sleepArcs=sleepEvs.map(ev=>{
     const mins=toMin(ev.time),dur=ev.durationMin;
@@ -2070,17 +2123,99 @@ function SleepBlock({entry,onDelete,onEdit,entries,isLive}){
   </div>);
 }
 
-function EntryRow({entry,onDelete,onEdit,napNum,nightBadge}){const[swipe,setSwipe]=useState(0);const[swiping,setSwiping]=useState(false);const startX=useRef(0);const cfg=TYPES[entry.type]||{label:entry.type,icon:"star",color:T.text,bg:T.glass};let detail="";if(entry.type==="wakeup"&&entry.nightSleepMin)detail=`${fmtDur(entry.nightSleepMin)} ${_lang==="en"?"of sleep":"de sono"}`;else if(entry.ml)detail=`${entry.ml} ml`;else if(entry.type==="tummytime"&&entry.durationMin){const m=Math.floor(entry.durationMin);const s=Math.round((entry.durationMin-m)*60);detail=s>0?`${m}min ${s}s`:`${m}min`}else if(entry.durationMin)detail=fmtDur(entry.durationMin);else if(entry.subtype)detail=L(entry.subtype)||entry.subtype;else if(entry.name)detail=entry.name+(entry.dose?` · ${entry.dose}`:"");else if(entry.value)detail=`${entry.value}°C`;else if(entry.weightKg||entry.lengthCm||entry.headCm){const parts=[];if(entry.weightKg)parts.push(`${entry.weightKg}kg`);if(entry.lengthCm)parts.push(`${entry.lengthCm}cm`);if(entry.headCm)parts.push(`${_lang==="en"?"Head":"Cab."} ${entry.headCm}cm`);detail=parts.join(" · ")}if(entry.type==="nursing"&&entry.side){if(entry.leftMin||entry.rightMin){detail=(detail?detail+" · ":"")+"L:"+String(entry.leftMin||0)+"m R:"+String(entry.rightMin||0)+"m"}else{detail=(detail?detail+" · ":"")+(L(entry.side)||entry.side)}};const napLabel=napNum?(_lang==="en"?["","1st","2nd","3rd","4th","5th","6th","7th","8th"][napNum]||napNum+"th":[""," 1a"," 2a"," 3a"," 4a"," 5a"," 6a"," 7a"," 8a"][napNum]||napNum+"a"):null;
-  const onTS=e=>{startX.current=e.touches[0].clientX;setSwiping(true)};
-  const onTM=e=>{if(!swiping)return;const dx=startX.current-e.touches[0].clientX;setSwipe(Math.max(0,Math.min(70,dx)))};
-  const onTE=()=>{setSwiping(false);if(swipe>40)setSwipe(70);else setSwipe(0)};
-  return(<div style={{position:"relative",marginBottom:8,overflow:"hidden",borderRadius:18}}>
-  {swipe>0&&<div style={{position:"absolute",right:0,top:0,bottom:0,width:70,background:"rgba(248,113,113,0.12)",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"0 18px 18px 0",opacity:swipe/70}}><button onClick={()=>onDelete(entry.id)} style={{padding:8}}><Icon name="trash" size={18} color={T.red}/></button></div>}
-  <div onTouchStart={onTS} onTouchMove={onTM} onTouchEnd={onTE} style={{position:"relative",display:"flex",alignItems:"center",gap:14,padding:"16px 18px 16px 22px",background:"rgba(22,28,60,0.65)",borderRadius:18,border:`1px solid ${T.gBSoft}`,boxShadow:T.insetTop,transform:`translateX(${-swipe}px)`,transition:swiping?"none":"transform .3s ease",overflow:"hidden"}}>
+function EntryRow({entry,onDelete,onEdit,napNum,nightBadge}){const cfg=TYPES[entry.type]||{label:entry.type,icon:"star",color:T.text,bg:T.glass};let detail="";if(entry.type==="wakeup"&&entry.nightSleepMin)detail=`${fmtDur(entry.nightSleepMin)} ${_lang==="en"?"of sleep":"de sono"}`;else if(entry.ml)detail=`${entry.ml} ml`;else if(entry.type==="tummytime"&&entry.durationMin){const m=Math.floor(entry.durationMin);const s=Math.round((entry.durationMin-m)*60);detail=s>0?`${m}min ${s}s`:`${m}min`}else if(entry.durationMin)detail=fmtDur(entry.durationMin);else if(entry.subtype)detail=L(entry.subtype)||entry.subtype;else if(entry.name)detail=entry.name+(entry.dose?` · ${entry.dose}`:"");else if(entry.value)detail=`${entry.value}°C`;else if(entry.weightKg||entry.lengthCm||entry.headCm){const parts=[];if(entry.weightKg)parts.push(`${entry.weightKg}kg`);if(entry.lengthCm)parts.push(`${entry.lengthCm}cm`);if(entry.headCm)parts.push(`${_lang==="en"?"Head":"Cab."} ${entry.headCm}cm`);detail=parts.join(" · ")}if(entry.type==="nursing"&&entry.side){if(entry.leftMin||entry.rightMin){detail=(detail?detail+" · ":"")+"L:"+String(entry.leftMin||0)+"m R:"+String(entry.rightMin||0)+"m"}else{detail=(detail?detail+" · ":"")+(L(entry.side)||entry.side)}};const napLabel=napNum?(_lang==="en"?["","1st","2nd","3rd","4th","5th","6th","7th","8th"][napNum]||napNum+"th":[""," 1a"," 2a"," 3a"," 4a"," 5a"," 6a"," 7a"," 8a"][napNum]||napNum+"a"):null;
+  // ── Swipe state: positive = swiped left (delete), negative = swiped right (edit) ──
+  const wrapRef=useRef(null);
+  const dragRef=useRef({active:false,startX:0,startY:0,dx:0,locked:false,lockedAxis:null,committed:false});
+  const[dx,setDx]=useState(0);
+  const[dragging,setDragging]=useState(false);
+  const lastThresholdRef=useRef(0); // -1 = past edit threshold, 0 = nothing, +1 = past delete threshold
+  const DISMISS_PCT=0.60;
+  const COMMIT_PCT=0.85;
+  const onPtrDown=(e)=>{
+    dragRef.current={active:true,startX:e.clientX,startY:e.clientY,dx:0,locked:false,lockedAxis:null,committed:false};
+    lastThresholdRef.current=0;
+    try{e.currentTarget.setPointerCapture(e.pointerId)}catch(_){}
+  };
+  const onPtrMove=(e)=>{
+    const d=dragRef.current;
+    if(!d.active||d.committed)return;
+    const dxRaw=e.clientX-d.startX;
+    const dyRaw=e.clientY-d.startY;
+    // Lock axis after 8px of movement: if vertical dominates, abort drag (let scroll happen)
+    if(!d.locked){
+      if(Math.abs(dxRaw)<8&&Math.abs(dyRaw)<8)return;
+      if(Math.abs(dyRaw)>Math.abs(dxRaw)){d.active=false;return}
+      d.locked=true;d.lockedAxis="x";
+      setDragging(true);
+    }
+    d.dx=dxRaw;
+    setDx(dxRaw);
+    // Threshold haptic feedback
+    const w=wrapRef.current?.offsetWidth||320;
+    const absPct=Math.abs(dxRaw)/w;
+    const dir=dxRaw>0?-1:1; // -1 = edit (right swipe), +1 = delete (left swipe)
+    let nowThreshold=0;
+    if(absPct>=DISMISS_PCT)nowThreshold=dir;
+    if(nowThreshold!==lastThresholdRef.current){
+      lastThresholdRef.current=nowThreshold;
+      if(nowThreshold!==0)Haptic.light();
+    }
+    // Auto-commit at 85%+ without waiting for release
+    if(absPct>=COMMIT_PCT&&!d.committed){
+      d.committed=true;
+      d.active=false;
+      Haptic.medium();
+      // Slide off-screen, then fire action
+      const off=dxRaw>0?w:-w;
+      setDx(off);
+      setTimeout(()=>{
+        if(dxRaw>0){onEdit&&onEdit(entry)}
+        else{onDelete&&onDelete(entry.id)}
+        // Reset state shortly after action (parent will re-render or remove the row)
+        setDragging(false);setDx(0);
+      },180);
+    }
+  };
+  const onPtrUp=()=>{
+    const d=dragRef.current;
+    if(!d.active&&!d.committed){setDragging(false);return}
+    if(d.committed){d.active=false;return}
+    d.active=false;
+    setDragging(false);
+    const w=wrapRef.current?.offsetWidth||320;
+    const absPct=Math.abs(d.dx)/w;
+    if(absPct>=DISMISS_PCT){
+      Haptic.medium();
+      const off=d.dx>0?w:-w;
+      setDx(off);
+      setTimeout(()=>{
+        if(d.dx>0){onEdit&&onEdit(entry)}
+        else{onDelete&&onDelete(entry.id)}
+        setDx(0);
+      },220);
+    }else{
+      setDx(0);
+    }
+  };
+  // Visual: opacity of overlays scales with swipe distance
+  const w=wrapRef.current?.offsetWidth||320;
+  const absPct=Math.min(1,Math.abs(dx)/w);
+  const editVisible=dx>0;
+  const deleteVisible=dx<0;
+  const overlayOpacity=Math.min(1,absPct/DISMISS_PCT);
+  const editPastThreshold=dx>0&&absPct>=DISMISS_PCT;
+  const deletePastThreshold=dx<0&&absPct>=DISMISS_PCT;
+  return(<div ref={wrapRef} style={{position:"relative",marginBottom:8,overflow:"hidden",borderRadius:18}}>
+  {/* Edit overlay (left side, revealed when swiping right) */}
+  {editVisible&&<div style={{position:"absolute",left:0,top:0,bottom:0,width:Math.abs(dx),background:editPastThreshold?"linear-gradient(90deg,rgba(96,165,250,0.32),rgba(96,165,250,0.18))":"linear-gradient(90deg,rgba(96,165,250,0.18),rgba(96,165,250,0.08))",display:"flex",alignItems:"center",justifyContent:"flex-start",paddingLeft:24,borderRadius:"18px 0 0 18px",opacity:overlayOpacity,transition:dragging?"none":"opacity .2s ease, background .2s ease"}}><div style={{display:"flex",alignItems:"center",gap:8,color:"#7dd3fc"}}><Icon name="pencil" size={20} color="#7dd3fc"/><span style={{fontSize:13,fontWeight:700,letterSpacing:-0.2,opacity:editPastThreshold?1:0,transition:"opacity .15s ease"}}>{_lang==="en"?"Edit":"Editar"}</span></div></div>}
+  {/* Delete overlay (right side, revealed when swiping left) */}
+  {deleteVisible&&<div style={{position:"absolute",right:0,top:0,bottom:0,width:Math.abs(dx),background:deletePastThreshold?"linear-gradient(270deg,rgba(248,113,113,0.36),rgba(248,113,113,0.2))":"linear-gradient(270deg,rgba(248,113,113,0.2),rgba(248,113,113,0.08))",display:"flex",alignItems:"center",justifyContent:"flex-end",paddingRight:24,borderRadius:"0 18px 18px 0",opacity:overlayOpacity,transition:dragging?"none":"opacity .2s ease, background .2s ease"}}><div style={{display:"flex",alignItems:"center",gap:8,color:T.red}}><span style={{fontSize:13,fontWeight:700,letterSpacing:-0.2,opacity:deletePastThreshold?1:0,transition:"opacity .15s ease"}}>{_lang==="en"?"Delete":"Excluir"}</span><Icon name="trash" size={20} color={T.red}/></div></div>}
+  <div onPointerDown={onPtrDown} onPointerMove={onPtrMove} onPointerUp={onPtrUp} onPointerCancel={onPtrUp} style={{position:"relative",display:"flex",alignItems:"center",gap:14,padding:"16px 18px 16px 22px",background:"rgba(22,28,60,0.65)",borderRadius:18,border:`1px solid ${T.gBSoft}`,boxShadow:T.insetTop,transform:`translateX(${dx}px)`,transition:dragging?"none":"transform .35s cubic-bezier(0.22,1,0.36,1)",overflow:"hidden",touchAction:"pan-y"}}>
   {/* Colored stripe (replaces borderLeft for proper rendering with overflow+transform) */}
   <div style={{position:"absolute",left:0,top:0,bottom:0,width:4,background:`linear-gradient(180deg,${cfg.color},${cfg.color}50)`,borderRadius:"0 2px 2px 0",pointerEvents:"none"}}/>
-  <button onClick={()=>onEdit&&onEdit(entry)} style={{width:42,height:42,borderRadius:13,background:`linear-gradient(135deg,${cfg.color}28,${cfg.color}0a)`,border:`1px solid ${cfg.color}45`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,boxShadow:"0 1px 0 0 rgba(255,255,255,0.06) inset"}}><Icon name={cfg.icon} size={18} color={cfg.color}/></button>
-  <button onClick={()=>onEdit&&onEdit(entry)} style={{flex:1,textAlign:"left",minWidth:0}}><div style={{fontSize:15,fontWeight:600,letterSpacing:-0.2,color:"#f0f2ff",display:"flex",alignItems:"center",gap:6}}>{napLabel&&<span style={{display:"inline-block",padding:"1px 6px",borderRadius:5,background:`${cfg.color}25`,color:cfg.color,fontSize:9,fontWeight:700}}>{napLabel}</span>}<span>{cfg.label[_lang]||cfg.label.en}</span>{nightBadge&&<span title={_lang==="en"?"During bedtime":"Durante bedtime"} style={{display:"inline-flex",alignItems:"center",gap:3,padding:"1px 6px 1px 5px",borderRadius:6,background:"rgba(96,165,250,0.14)",border:"1px solid rgba(96,165,250,0.32)",fontSize:9,fontWeight:700,color:"#60a5fa",letterSpacing:0.3}}><Icon name="moon" size={9} color="#60a5fa"/>{_lang==="en"?"night":"noite"}</span>}</div>{detail&&<div style={{fontSize:13,color:"#9099c3",marginTop:3,fontWeight:500}}>{detail}</div>}</button>
+  <button onClick={()=>{if(Math.abs(dx)<5)onEdit&&onEdit(entry)}} style={{width:42,height:42,borderRadius:13,background:`linear-gradient(135deg,${cfg.color}28,${cfg.color}0a)`,border:`1px solid ${cfg.color}45`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,boxShadow:"0 1px 0 0 rgba(255,255,255,0.06) inset"}}><Icon name={cfg.icon} size={18} color={cfg.color}/></button>
+  <button onClick={()=>{if(Math.abs(dx)<5)onEdit&&onEdit(entry)}} style={{flex:1,textAlign:"left",minWidth:0}}><div style={{fontSize:15,fontWeight:600,letterSpacing:-0.2,color:"#f0f2ff",display:"flex",alignItems:"center",gap:6}}>{napLabel&&<span style={{display:"inline-block",padding:"1px 6px",borderRadius:5,background:`${cfg.color}25`,color:cfg.color,fontSize:9,fontWeight:700}}>{napLabel}</span>}<span>{cfg.label[_lang]||cfg.label.en}</span>{nightBadge&&<span title={_lang==="en"?"During bedtime":"Durante bedtime"} style={{display:"inline-flex",alignItems:"center",gap:3,padding:"1px 6px 1px 5px",borderRadius:6,background:"rgba(96,165,250,0.14)",border:"1px solid rgba(96,165,250,0.32)",fontSize:9,fontWeight:700,color:"#60a5fa",letterSpacing:0.3}}><Icon name="moon" size={9} color="#60a5fa"/>{_lang==="en"?"night":"noite"}</span>}</div>{detail&&<div style={{fontSize:13,color:"#9099c3",marginTop:3,fontWeight:500}}>{detail}</div>}</button>
   <div style={{textAlign:"right",flexShrink:0}}>{(entry.type==="sleep"||entry.type==="nap")&&entry.durationMin?(()=>{const endMs=new Date(`${entry.date}T${entry.time}`).getTime()+entry.durationMin*60000;const endD=new Date(endMs);const endT=`${String(endD.getHours()).padStart(2,"0")}:${String(endD.getMinutes()).padStart(2,"0")}`;const endDt=`${endD.getFullYear()}-${String(endD.getMonth()+1).padStart(2,"0")}-${String(endD.getDate()).padStart(2,"0")}`;return<><div style={{fontSize:16,fontWeight:700,color:"#f0f2ff",fontVariantNumeric:"tabular-nums",letterSpacing:-0.4}}>{entry.time}–{endT}</div><div style={{fontSize:12,color:T.sub,fontWeight:500,marginTop:3}}>{timeSince(endDt,endT)}</div></>})():<><div style={{fontSize:16,fontWeight:700,color:"#f0f2ff",fontVariantNumeric:"tabular-nums",letterSpacing:-0.4}}>{entry.time}</div><div style={{fontSize:12,color:T.sub,fontWeight:500,marginTop:3}}>{timeSince(entry.date,entry.time)}</div></>}</div>
 </div></div>)}
 
