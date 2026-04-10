@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v9.6.7  Lembrete de mamada (push apos intervalo, so de dia)
   v9.6.6  Calibracao das ancoras do Ring (meio-termo)
   v9.6.5  Icone bed pra sleep + ancoras do Ring reforcadas
   v9.6.4  Tummy time no Stats (card 4x1 + gráfico próprio)
@@ -219,15 +220,10 @@ dbg('Firebase ready');
 </script>
 
 <script src="splash-icon.js"></script>
-
 <script src="who-growth.js"></script>
-
 <script src="curiosities.js"></script>
-
 <script src="wake-lock.js"></script>
-
 <script src="device-features.js"></script>
-
 <script src="routine-engine.js"></script>
 
 <script type="text/babel">
@@ -237,8 +233,35 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "9.6.6";
+const APP_VERSION = "9.6.7";
 const CHANGELOG = [
+  {
+    v: "9.6.7", date: "2026-04-10",
+    pt: {
+      title: "Lembrete de mamada (push após intervalo)",
+      bullets: [
+        '★ **Novo card no Profile: "Lembrete de mamada".** Push notification dispara quando passar o intervalo configurado desde a última mamadeira registrada. Default: **290 minutos (4h50)**.',
+        '★ **Só dispara entre 07:00 e 22:00.** À noite o app fica em silêncio — vocês confiam no choro da Louise pra acordar, sem o app interferindo na rotina de sono.',
+        '**Dispara uma vez por mamada.** Quando o push é enviado, o worker marca o `entryId` da mamadeira de referência. Não dispara de novo até que uma mamadeira nova seja registrada (que reseta o contador).',
+        '**Amamentação não conta** como reset — só mamadeiras (`bottle`). Decisão proposital pra que o intervalo conte só o que é mensurável em ml.',
+        'Card no Profile fica logo abaixo do "Lembretes de medicamento", com o mesmo vocabulário visual. Toggle pra ativar/desativar + campo único de minutos com conversão ao vivo (`290 → 4h 50min`).',
+        'Schema novo no Firestore: `config/reminders/items/{id}` com `tipo:"feedingInterval"`. Os lembretes de medicamento existentes (sem campo `tipo` ou com `tipo:"scheduled"`) continuam funcionando exatamente como antes — backward compat total.',
+        '**Worker `louise-pro-fcm` atualizado.** Nova função que lê a última entry do tipo `bottle`, calcula minutos decorridos, valida janela diurna BRT, checa anti-spam via `lastFiredEntryId`, dispara FCM. Os lembretes de medicamento continuam sendo processados pela rota antiga sem alteração.'
+      ]
+    },
+    en: {
+      title: "Feeding reminder (push after interval)",
+      bullets: [
+        '★ **New card in Profile: "Feeding reminder".** Push notification fires when the configured interval since the last logged bottle is exceeded. Default: **290 minutes (4h50)**.',
+        '★ **Only fires between 07:00 and 22:00.** Silent at night — you trust Louise\'s crying to wake you up, without the app interfering with the sleep routine.',
+        '**Fires once per bottle.** When the push is sent, the worker marks the `entryId` of the reference bottle. It does not fire again until a new bottle is logged (which resets the counter).',
+        '**Nursing does NOT count** as reset — only bottles (`bottle`). Intentional decision so the interval only counts what is measurable in ml.',
+        'Card sits in Profile right below "Medication reminders", with the same visual vocabulary. Toggle to enable/disable + single minutes field with live conversion (`290 → 4h 50min`).',
+        'New Firestore schema: `config/reminders/items/{id}` with `tipo:"feedingInterval"`. Existing medication reminders (no `tipo` field or `tipo:"scheduled"`) keep working exactly as before — full backward compat.',
+        '**`louise-pro-fcm` Worker updated.** New function that reads the latest `bottle` entry, computes elapsed minutes, validates the BRT daytime window, checks anti-spam via `lastFiredEntryId`, fires FCM. Medication reminders keep being processed by the old route untouched.'
+      ]
+    }
+  },
   {
     v: "9.6.6", date: "2026-04-10",
     pt: {
@@ -2541,6 +2564,40 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
   const[remDose,setRemDose]=useState("");
   const[remHorario,setRemHorario]=useState("09:00");
   const[remBusy,setRemBusy]=useState(false);
+  // Feeding interval reminder state — single global reminder, not a list
+  // Lookup the existing one from props.reminders (if any)
+  const feedReminder=(reminders||[]).find(r=>r.tipo==="feedingInterval");
+  // Medication reminders list (everything except the feeding interval one)
+  const medList=(reminders||[]).filter(r=>r.tipo!=="feedingInterval");
+  const[fdEnabled,setFdEnabled]=useState(feedReminder?.ativo===true);
+  const[fdMinutes,setFdMinutes]=useState(feedReminder?.intervalMin||290);
+  const[fdBusy,setFdBusy]=useState(false);
+  // Human-readable conversion of fdMinutes (e.g. 290 → "4h 50min")
+  const fdConverted=(()=>{const v=fdMinutes||0;const h=Math.floor(v/60);const m=v%60;if(h===0)return`${m}min`;if(m===0)return`${h}h`;return`${h}h ${m}min`})();
+  // Sync local state when the prop changes (Firestore push from another device)
+  useEffect(()=>{
+    const r=(reminders||[]).find(x=>x.tipo==="feedingInterval");
+    if(r){setFdEnabled(r.ativo===true);setFdMinutes(r.intervalMin||290)}
+  },[reminders]);
+  // Save handler — upserts the single feedingInterval reminder
+  const saveFeedReminder=async(overrides={})=>{
+    const enabled=overrides.ativo!==undefined?overrides.ativo:fdEnabled;
+    const minutes=overrides.intervalMin!==undefined?overrides.intervalMin:fdMinutes;
+    const existing=(reminders||[]).find(r=>r.tipo==="feedingInterval");
+    setFdBusy(true);
+    Haptic.medium();
+    try{
+      await onAddReminder({
+        _id:existing?._id||"feedingInterval",
+        tipo:"feedingInterval",
+        ativo:enabled,
+        intervalMin:minutes,
+        createdAt:existing?.createdAt||new Date().toISOString()
+      });
+      Haptic.success();
+    }catch(e){Haptic.warning()}
+    setFdBusy(false);
+  };
   const pushSupported=PushNotifs.isSupported();
   // Persists a single toggle change immediately to Firestore (no need to tap Save).
   // Builds the patch from current state values plus the override.
@@ -2665,9 +2722,9 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
           {langSel==="en"?"Push notification at the scheduled time. Both devices receive.":"Notificação push no horário marcado. Ambos os dispositivos recebem."}
         </div>
 
-        {/* Existing reminders list */}
-        {reminders&&reminders.length>0&&<div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:14}}>
-          {reminders.slice().sort((a,b)=>(a.horarios?.[0]||"").localeCompare(b.horarios?.[0]||"")).map(r=>(
+        {/* Existing reminders list — exclude feeding interval (handled by its own card below) */}
+        {medList.length>0&&<div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:14}}>
+          {medList.slice().sort((a,b)=>(a.horarios?.[0]||"").localeCompare(b.horarios?.[0]||"")).map(r=>(
             <div key={r._id} style={{position:"relative",display:"flex",alignItems:"center",gap:12,padding:"14px 14px 14px 18px",borderRadius:14,background:"rgba(14,18,48,0.6)",border:`1px solid ${T.gBSoft}`,boxShadow:T.insetTop,overflow:"hidden"}}>
               <div style={{position:"absolute",left:0,top:0,bottom:0,width:4,background:`linear-gradient(180deg,${T.accent},${T.accent}40)`,borderRadius:"0 2px 2px 0",pointerEvents:"none"}}/>
               <div style={{minWidth:56,padding:"7px 10px",borderRadius:11,background:`linear-gradient(180deg,${T.accent}28,${T.accent}10)`,border:`1px solid ${T.accent}45`,textAlign:"center",boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset"}}>
@@ -2706,6 +2763,57 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
                 {langSel==="en"?"Add":"Adicionar"}
               </button>
             </div>
+          </div>
+        </div>
+
+        {(!pushEnabled||!pushSupported||pushPermission==="denied")&&<div style={{marginTop:12,padding:"8px 12px",borderRadius:9,background:"rgba(251,191,36,0.08)",border:"1px solid rgba(251,191,36,0.2)",fontSize:10,color:"#fbbf24",lineHeight:1.45}}>
+          {langSel==="en"?"Enable Notifications above to receive reminders.":"Ative Notificações acima para receber os lembretes."}
+        </div>}
+      </div>
+
+      {/* ── FEEDING REMINDER CARD ── single global push reminder based on interval since last bottle */}
+      <div style={{background:"linear-gradient(180deg,rgba(22,28,60,0.55),rgba(20,26,60,0.4))",borderRadius:18,border:`1px solid ${T.gBSoft}`,padding:18,marginBottom:14,boxShadow:T.insetTop}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
+          <div style={{width:32,height:32,borderRadius:10,background:`linear-gradient(135deg,${T.accent}38,${T.accent}10)`,border:`1px solid ${T.accent}50`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset"}}>
+            <Icon name="bottle" size={15} color="#c4b5fd"/>
+          </div>
+          <div style={{fontSize:15,fontWeight:700,color:"#f0f2ff",letterSpacing:-0.2}}>{langSel==="en"?"Feeding reminder":"Lembrete de mamada"}</div>
+        </div>
+        <div style={{fontSize:12,color:"#7a80a8",lineHeight:1.55,marginBottom:16}}>
+          {langSel==="en"?"Push notification when the interval since the last bottle is exceeded. Both devices receive.":"Notificação push quando passar do intervalo desde a última mamadeira. Ambos os dispositivos recebem."}
+        </div>
+
+        {/* Toggle row */}
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:14,padding:14,borderRadius:14,background:"rgba(14,18,48,0.5)",border:`1px solid ${T.gBSoft}`,marginBottom:14}}>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontSize:14,fontWeight:700,color:"#f0f2ff",letterSpacing:-0.2,marginBottom:3}}>{langSel==="en"?"Enable reminder":"Ativar lembrete"}</div>
+            <div style={{fontSize:11,color:"#7a80a8",lineHeight:1.45}}>{langSel==="en"?"Notify when it's feeding time":"Notificar quando estiver na hora"}</div>
+          </div>
+          <button onClick={()=>{const v=!fdEnabled;setFdEnabled(v);saveFeedReminder({ativo:v})}} disabled={fdBusy} style={{position:"relative",width:52,height:32,borderRadius:16,background:fdEnabled?`linear-gradient(180deg,${T.accent},#6d5cd4)`:"rgba(14,18,48,0.8)",border:`1px solid ${fdEnabled?"rgba(139,124,246,0.5)":T.gBSoft}`,transition:"all .2s",flexShrink:0,cursor:fdBusy?"not-allowed":"pointer",padding:0,opacity:fdBusy?0.6:1,boxShadow:fdEnabled?"0 1px 0 0 rgba(255,255,255,0.18) inset, 0 4px 12px -4px rgba(139,124,246,0.4)":T.insetTop}}>
+            <div style={{position:"absolute",top:3,left:fdEnabled?25:3,width:24,height:24,borderRadius:"50%",background:"#fff",transition:"left .2s",boxShadow:"0 2px 6px rgba(0,0,0,0.4)"}}/>
+          </button>
+        </div>
+
+        {/* Interval input */}
+        <div style={{padding:14,borderRadius:14,background:"rgba(14,18,48,0.5)",border:`1px dashed ${T.gBSoft}`,opacity:fdEnabled?1:0.5,transition:"opacity .25s",pointerEvents:fdEnabled?"auto":"none"}}>
+          <div style={{fontSize:11,fontWeight:600,color:"#7a80a8",marginBottom:10,letterSpacing:-0.05}}>{langSel==="en"?"Interval":"Intervalo"}</div>
+          <div style={{display:"flex",gap:8,alignItems:"stretch"}}>
+            <input type="number" inputMode="numeric" min="30" max="720" value={fdMinutes} onChange={e=>{const n=parseInt(e.target.value)||0;setFdMinutes(n)}} onBlur={()=>{const clamped=Math.max(30,Math.min(720,fdMinutes||290));setFdMinutes(clamped);if(clamped!==feedReminder?.intervalMin)saveFeedReminder({intervalMin:clamped})}} style={{flex:1,minWidth:0,padding:"14px 16px",background:"rgba(20,26,60,0.55)",border:`1px solid ${T.gBSoft}`,borderRadius:14,color:T.text,fontSize:17,fontWeight:700,textAlign:"center",fontVariantNumeric:"tabular-nums",letterSpacing:-0.2,outline:"none",boxShadow:T.insetTop,WebkitAppearance:"none",appearance:"none"}}/>
+            <div style={{display:"flex",alignItems:"center",padding:"0 16px",background:"rgba(20,26,60,0.55)",border:`1px solid ${T.gBSoft}`,borderRadius:14,fontSize:13,color:"#8b90b8",fontWeight:600,boxShadow:T.insetTop,whiteSpace:"nowrap"}}>{langSel==="en"?"minutes":"minutos"}</div>
+          </div>
+          <div style={{marginTop:10,textAlign:"center",fontSize:12,color:"#c4b5fd",fontWeight:600,letterSpacing:-0.1}}>
+            <strong style={{fontVariantNumeric:"tabular-nums",color:"#e0d4ff"}}>{fdConverted}</strong> {langSel==="en"?"between feedings":"entre mamadas"}
+          </div>
+        </div>
+
+        {/* Rule explanation */}
+        <div style={{marginTop:14,padding:"12px 14px",borderRadius:12,background:`linear-gradient(180deg,${T.accent}1a,${T.accent}08)`,border:`1px solid ${T.accent}33`}}>
+          <div style={{fontSize:10,fontWeight:700,color:"#c4b5fd",textTransform:"uppercase",letterSpacing:1,marginBottom:6,display:"flex",alignItems:"center",gap:6}}>
+            <Icon name="clock" size={11} color="#c4b5fd"/>
+            {langSel==="en"?"How it works":"Como funciona"}
+          </div>
+          <div style={{fontSize:11.5,color:"#a0a6cf",lineHeight:1.55}}>
+            {langSel==="en"?<span>The push fires <strong style={{color:"#d4ccff",fontWeight:700}}>once</strong>, when the interval since the last bottle is exceeded. Only between <strong style={{color:"#d4ccff",fontWeight:700}}>07:00 and 22:00</strong> — silent at night. Each new bottle resets the counter. Nursing does not count.</span>:<span>O push é enviado <strong style={{color:"#d4ccff",fontWeight:700}}>uma vez</strong>, quando passa o intervalo desde a última mamadeira. Só entre <strong style={{color:"#d4ccff",fontWeight:700}}>07:00 e 22:00</strong> — à noite o app fica em silêncio. Cada nova mamadeira reseta o contador. Amamentação não conta.</span>}
           </div>
         </div>
 
