@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v9.6.6  Calibracao das ancoras do Ring (meio-termo)
   v9.6.5  Icone bed pra sleep + ancoras do Ring reforcadas
   v9.6.4  Tummy time no Stats (card 4x1 + gráfico próprio)
   v9.6.3  Fix tummy time no Ring vira dot + fmtDur robusto
@@ -236,8 +237,43 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "9.6.5";
+const APP_VERSION = "9.6.6";
 const CHANGELOG = [
+  {
+    v: "9.6.6", date: "2026-04-10",
+    pt: {
+      title: "Calibração das âncoras do Ring (meio-termo)",
+      bullets: [
+        '★ **Ajuste fino das âncoras sol e lua do Ring.** A v9.6.5 exagerou no reforço (disco 44px, ícone 20px, borda 72%, glow duplo 24+48px) — o print mostrou que elas dominavam visualmente e a lua ficava tapando o dot de mamadeira na posição 20:30 (inverso do bug original).',
+        '**Valores aplicados (meio-termo entre v9.6.4 que sumia e v9.6.5 que dominava):**',
+        '• Disco: 44px → **40px** (volta ao original)',
+        '• Ícone: 20px → **18px** (volta ao original)',
+        '• Borda: `rgba(cor,0.72)` → **`rgba(cor,0.55)`** (entre o 0.35 original e o 0.72 da v9.6.5)',
+        '• Fundo radial: 42% → **28%** centro, 14% → **8%** borda',
+        '• Glow: duplo 24+48px → **simples 18px 30%** (entre o 16px/15% original e o duplo da v9.6.5)',
+        '• Inset highlight: **removido** (era adição da v9.6.5, dava peso a mais)',
+        '• Label: 10px peso 800 `#c4b5fd`/`#fde68a` → **9px peso 700 `#a78bfa`/`#fbbf24`** (volta ao original)',
+        '★ **`zIndex:5` mantido nas duas âncoras** — essa foi a parte **estrutural** do fix, não cosmética. Sem ela a lua some atrás do dot de mamadeira no mesmo horário, e esse era o bug original do print da v9.6.4. Só as propriedades visuais voltaram ao peso correto.',
+        'Nada mais tocado. Ícone `bed` nos contextos de registro continua igual à v9.6.5.'
+      ]
+    },
+    en: {
+      title: "Ring anchors calibration (middle ground)",
+      bullets: [
+        '★ **Fine-tuning of sun and moon Ring anchors.** v9.6.5 overdid the reinforcement (disc 44px, icon 20px, border 72%, double glow 24+48px) — the print showed them dominating visually and the moon covering the bottle dot at 20:30 (inverse of the original bug).',
+        '**Applied values (middle ground between v9.6.4 that hid and v9.6.5 that dominated):**',
+        '• Disc: 44px → **40px** (back to original)',
+        '• Icon: 20px → **18px** (back to original)',
+        '• Border: `rgba(color,0.72)` → **`rgba(color,0.55)`** (between original 0.35 and v9.6.5 0.72)',
+        '• Radial background: 42% → **28%** center, 14% → **8%** edge',
+        '• Glow: double 24+48px → **single 18px 30%** (between original 16px/15% and v9.6.5 double)',
+        '• Inset highlight: **removed** (was a v9.6.5 addition, added extra weight)',
+        '• Label: 10px weight 800 `#c4b5fd`/`#fde68a` → **9px weight 700 `#a78bfa`/`#fbbf24`** (back to original)',
+        '★ **`zIndex:5` kept on both anchors** — this was the **structural** part of the fix, not cosmetic. Without it the moon hides behind the bottle dot at the same time, and that was the original v9.6.4 print bug. Only the visual properties went back to the correct weight.',
+        'Nothing else touched. `bed` icon in registration contexts stays the same as v9.6.5.'
+      ]
+    }
+  },
   {
     v: "9.6.5", date: "2026-04-10",
     pt: {
@@ -1696,8 +1732,8 @@ function Ring({activeTimer,napSug,tick,recentEvents,lang,showOrbit,screenLockAct
           <div style={{position:"absolute",bottom:-4,left:"50%",transform:"translateX(-50%) rotate(45deg)",width:7,height:7,background:"rgba(8,12,35,0.96)",borderRight:`1px solid ${c}25`,borderBottom:`1px solid ${c}25`}}/>
         </div>}
       </div>)})}
-      {anchorSun&&<div style={{position:"absolute",left:anchorSun.x-22,top:anchorSun.y-22,display:"flex",flexDirection:"column",alignItems:"center",zIndex:5,pointerEvents:"none"}}><div style={{width:44,height:44,borderRadius:"50%",background:"radial-gradient(circle at 40% 30%,rgba(251,191,36,0.4),rgba(251,146,60,0.14))",border:"2px solid rgba(251,191,36,0.72)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 24px rgba(251,191,36,0.45), 0 0 48px rgba(251,191,36,0.2), 0 1px 0 0 rgba(255,255,255,0.18) inset"}}><Icon name="sun" size={20} color="#fbbf24"/></div><span style={{fontSize:10,fontWeight:800,color:"#fde68a",marginTop:2,textShadow:"0 1px 4px rgba(0,0,0,0.8)"}}>{anchorSun.time}</span></div>}
-      {anchorMoon&&<div style={{position:"absolute",left:anchorMoon.x-22,top:anchorMoon.y-22,display:"flex",flexDirection:"column",alignItems:"center",zIndex:5,pointerEvents:"none"}}><div style={{width:44,height:44,borderRadius:"50%",background:"radial-gradient(circle at 40% 30%,rgba(167,139,250,0.42),rgba(139,124,246,0.14))",border:"2px solid rgba(167,139,250,0.72)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 24px rgba(167,139,250,0.5), 0 0 48px rgba(167,139,250,0.22), 0 1px 0 0 rgba(255,255,255,0.18) inset"}}><Icon name="moon" size={20} color="#a78bfa"/></div><span style={{fontSize:10,fontWeight:800,color:"#c4b5fd",marginTop:2,textShadow:"0 1px 4px rgba(0,0,0,0.8)"}}>{anchorMoon.time}</span></div>}
+      {anchorSun&&<div style={{position:"absolute",left:anchorSun.x-20,top:anchorSun.y-20,display:"flex",flexDirection:"column",alignItems:"center",zIndex:5,pointerEvents:"none"}}><div style={{width:40,height:40,borderRadius:"50%",background:"radial-gradient(circle at 40% 30%,rgba(251,191,36,0.28),rgba(251,146,60,0.08))",border:"2px solid rgba(251,191,36,0.55)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 18px rgba(251,191,36,0.3)"}}><Icon name="sun" size={18} color="#fbbf24"/></div><span style={{fontSize:9,fontWeight:700,color:"#fbbf24",marginTop:2,textShadow:"0 1px 4px rgba(0,0,0,0.8)"}}>{anchorSun.time}</span></div>}
+      {anchorMoon&&<div style={{position:"absolute",left:anchorMoon.x-20,top:anchorMoon.y-20,display:"flex",flexDirection:"column",alignItems:"center",zIndex:5,pointerEvents:"none"}}><div style={{width:40,height:40,borderRadius:"50%",background:"radial-gradient(circle at 40% 30%,rgba(167,139,250,0.28),rgba(139,124,246,0.08))",border:"2px solid rgba(167,139,250,0.55)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 18px rgba(167,139,250,0.3)"}}><Icon name="moon" size={18} color="#a78bfa"/></div><span style={{fontSize:9,fontWeight:700,color:"#a78bfa",marginTop:2,textShadow:"0 1px 4px rgba(0,0,0,0.8)"}}>{anchorMoon.time}</span></div>}
       <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}><span style={{fontSize:14,color:isBedtime?"#c084fc":T.sub,fontWeight:500,letterSpacing:1.5,display:"flex",alignItems:"center",gap:5}}>{isBedtime&&<Icon name="bed" size={14} color="#c084fc"/>}{sub}{screenLockActive&&<span title={lang==="en"?"Screen on":"Tela ligada"} style={{display:"inline-flex",alignItems:"center",gap:3,marginLeft:4,padding:"2px 6px",borderRadius:8,background:"rgba(251,191,36,0.12)",border:"1px solid rgba(251,191,36,0.3)"}}><span style={{width:5,height:5,borderRadius:"50%",background:"#fbbf24",boxShadow:"0 0 6px #fbbf24",animation:"pulse 1.5s ease-in-out infinite"}}/><span style={{fontSize:8,fontWeight:700,color:"#fbbf24",letterSpacing:0.5,textTransform:"uppercase"}}>{lang==="en"?"On":"On"}</span></span>}</span><span style={{fontSize:52,fontWeight:800,letterSpacing:-2,marginTop:4,background:hasProgress?`linear-gradient(135deg,${col2},${col1})`:`linear-gradient(135deg,${T.text},${T.sub})`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>{lbl}</span>{napSug&&napSug.predictedTime&&!activeTimer&&<span style={{fontSize:10,fontWeight:600,color:col1,opacity:0.7,marginTop:2}}>{lang==="en"?"Nap":"Nap"} {napSug.napPos||""} ~{napSug.predictedTime}</span>}</div>
       {tip!==null&&<div onClick={()=>setTip(null)} style={{position:"absolute",inset:0,zIndex:1}}/>}
       {showOrbit&&<div key={Date.now()} style={{position:"absolute",left:167,top:167,width:6,height:6,zIndex:10,pointerEvents:"none",animation:"orbitComet 1.2s cubic-bezier(0.25,0.1,0.25,1) forwards"}}><div style={{width:6,height:6,borderRadius:"50%",background:"#fff",boxShadow:"0 0 8px #fff, 0 0 20px rgba(139,124,246,0.6), -8px 0 12px rgba(139,124,246,0.3), -16px 0 8px rgba(139,124,246,0.15)",transform:"translateY(-148px)"}}/></div>}
