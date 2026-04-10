@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v9.6.0  Cross-fade entre abas + drag-to-dismiss no sheet de "+"
   v9.5.0  Nursing side picker (escolha de lado L/R ao iniciar amamentacao)
   v9.4.0  Quick buttons 2x3 + icones Lucide + tummy time no Ring
   v9.3.0  Tummy time + editar inicio de bedtime ao vivo
@@ -55,6 +56,7 @@
     input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-outer-spin-button{-webkit-appearance:none}
     input[type="number"]{-moz-appearance:textfield}
     @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+    @keyframes pageSwitch{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
     @keyframes slideUp{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
     @keyframes slideDown{from{transform:translateX(-50%) translateY(-20px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
     @keyframes toastSlideDown{from{transform:translateY(-20px);opacity:0}to{transform:translateY(0);opacity:1}}
@@ -211,10 +213,15 @@ dbg('Firebase ready');
 </script>
 
 <script src="splash-icon.js"></script>
+
 <script src="who-growth.js"></script>
+
 <script src="curiosities.js"></script>
+
 <script src="wake-lock.js"></script>
+
 <script src="device-features.js"></script>
+
 <script src="routine-engine.js"></script>
 
 <script type="text/babel">
@@ -224,8 +231,41 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "9.5.0";
+const APP_VERSION = "9.6.0";
 const CHANGELOG = [
+  {
+    v: "9.6.0", date: "2026-04-09",
+    pt: {
+      title: "Cross-fade entre abas + drag-to-dismiss no sheet",
+      bullets: [
+        '★ **Troca de abas com cross-fade suave.** Antes a troca entre Home, Stats, Hist. e Config era um corte seco — o conteúdo sumia e o novo aparecia instantaneamente. Agora cada aba entra com **fade + micro-slide de 6px de baixo pra cima em 400ms**, usando a curva `cubic-bezier(0.22,1,0.36,1)`. Dá uma sensação muito mais nativa, tipo trocar de tab num app da Apple.',
+        'Implementação: wrapper `<div key={page}>` com `animation:"pageSwitch .4s both"` envolvendo as 4 condicionais de página. O `key` muda a cada troca, React remonta o wrapper e a animação toca. Removido o `animation:"fadeIn .3s"` interno da Home que antes só cobria ela (agora o wrapper cobre todas as abas de forma uniforme).',
+        '★ **Drag-to-dismiss no sheet do "+".** Agora dá pra fechar o sheet arrastando ele pra baixo pelo handle, em vez de precisar acertar o backdrop escuro. Muito mais natural no iPhone.',
+        '**Como funciona:** tocar no topo do sheet (zona do handle, ~43px de altura total) e arrastar pra baixo faz o sheet acompanhar o dedo em tempo real. O backdrop escurece proporcionalmente. Soltar acima do threshold dispara o fechamento com haptic leve; soltar antes do threshold faz o sheet voltar pro lugar com a mesma curva suave da entrada.',
+        '**Threshold de dismiss:** arrastar mais de **28% da altura do sheet** OU fazer um flick rápido pra baixo (velocidade > **0.55 px/ms**) fecha.',
+        '**Rubber-band pra cima:** se tentar arrastar pra cima (inverso do esperado), o sheet oferece resistência e para em ~20px, matching o padrão iOS.',
+        '**Respeita scroll interno:** se o sheet estiver com conteúdo rolável e o scroll não estiver no topo, o drag não engata — só começa quando `scrollTop === 0`, pra não conflitar com o scroll.',
+        '**Pointer capture:** usa `setPointerCapture` no pointerdown, então mesmo que o dedo saia da área do handle durante o drag, o gesto continua respondendo até soltar.',
+        'Aplicado ao componente `Sheet` genérico, então **cobre todos os sheets que usam esse componente**: o sheet de "+ Adicionar" do Home e o sheet do AddForm. O `NursingSidePicker` tem implementação própria e **não foi tocado** nessa versão.',
+        '**Nenhuma mudança de conteúdo, layout, ícone, cor ou estrutura.** Só transições e gestos.'
+      ]
+    },
+    en: {
+      title: "Tab cross-fade + drag-to-dismiss sheet",
+      bullets: [
+        '★ **Smooth cross-fade between tabs.** Tab switching (Home, Stats, Hist., Settings) used to be a hard cut — content would disappear and the new one would pop in instantly. Now each tab enters with a **fade + 6px micro-slide-up over 400ms**, using `cubic-bezier(0.22,1,0.36,1)` easing. Feels much more native, like switching tabs in an Apple app.',
+        'Implementation: `<div key={page}>` wrapper with `animation:"pageSwitch .4s both"` wrapping the 4 page conditionals. The `key` changes on each switch, React remounts the wrapper and the animation fires. Removed the old `animation:"fadeIn .3s"` that was only on Home (the wrapper now covers all tabs uniformly).',
+        '★ **Drag-to-dismiss on the "+" sheet.** You can now close the sheet by dragging it down by the handle, instead of having to tap the dark backdrop. Much more natural on iPhone.',
+        '**How it works:** touching the top area of the sheet (handle zone, ~43px tall total) and dragging down makes the sheet follow your finger in real time. The backdrop dims proportionally. Releasing past the threshold triggers dismissal with a light haptic; releasing before the threshold snaps the sheet back with the same smooth entrance curve.',
+        '**Dismiss threshold:** dragging past **28% of the sheet height** OR a quick downward flick (velocity > **0.55 px/ms**) closes it.',
+        '**Rubber-band upward:** if you try to drag up (the wrong direction), the sheet gives resistance and caps at ~20px, matching iOS behavior.',
+        '**Respects inner scroll:** if the sheet has scrollable content and scroll is not at the top, the drag does not engage — it only starts when `scrollTop === 0`, to avoid conflicting with scrolling.',
+        '**Pointer capture:** uses `setPointerCapture` on pointerdown, so even if your finger leaves the handle area during the drag, the gesture keeps responding until release.',
+        'Applied to the generic `Sheet` component, so it **covers every sheet that uses this component**: the "+ Add" sheet from Home and the AddForm sheet. The `NursingSidePicker` has its own implementation and was **not touched** in this version.',
+        '**No content, layout, icon, color, or structure changes.** Transitions and gestures only.'
+      ]
+    }
+  },
   {
     v: "9.5.0", date: "2026-04-09",
     pt: {
@@ -1788,7 +1828,60 @@ function InsightCards({insights,phase}){
 
 function Toast({message,onUndo,onClose}){const closeRef=useRef(onClose);closeRef.current=onClose;useEffect(()=>{const t=setTimeout(()=>closeRef.current(),2000);return()=>clearTimeout(t)},[]);return(<div style={{position:"fixed",top:"calc(20px + env(safe-area-inset-top))",left:"50%",transform:"translateX(-50%)",zIndex:300,padding:"14px 18px",borderRadius:18,background:"linear-gradient(180deg,rgba(20,26,66,0.95),rgba(14,18,52,0.95))",border:`1px solid ${T.gBSoft}`,backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",display:"flex",alignItems:"center",gap:12,boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset, 0 12px 32px -8px rgba(0,0,0,0.6)",animation:"slideDown .3s ease"}}><span style={{fontSize:14,color:"#f0f2ff",fontWeight:600,letterSpacing:-0.2}}>{message}</span>{onUndo&&<button onClick={onUndo} style={{padding:"7px 14px",borderRadius:11,background:`linear-gradient(180deg,#9b8df8,#7c3aed)`,color:"#fff",fontSize:13,fontWeight:700,letterSpacing:-0.1,border:"1px solid rgba(139,124,246,0.5)",boxShadow:`0 1px 0 0 rgba(255,255,255,0.18) inset, 0 4px 12px -4px ${T.accent}55`}}>{L("undo")}</button>}</div>)}
 
-function Sheet({open,onClose,children}){const[vis,setVis]=useState(false),[show,setShow]=useState(false);useEffect(()=>{if(open){setVis(true);requestAnimationFrame(()=>requestAnimationFrame(()=>setShow(true)))}else{setShow(false);const t=setTimeout(()=>setVis(false),350);return()=>clearTimeout(t)}},[open]);if(!vis)return null;return(<div style={{position:"fixed",inset:0,zIndex:100}} onClick={onClose}><div style={{position:"absolute",inset:0,background:"rgba(2,3,10,0.55)",backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",opacity:show?1:0,transition:"opacity .35s"}}/><div onClick={e=>e.stopPropagation()} style={{position:"absolute",bottom:0,left:0,right:0,maxWidth:480,margin:"0 auto",background:"linear-gradient(180deg,rgba(14,18,52,0.88),rgba(10,14,40,0.82))",backdropFilter:"blur(50px)",WebkitBackdropFilter:"blur(50px)",borderRadius:"32px 32px 0 0",border:"1px solid rgba(255,255,255,0.08)",borderBottom:"none",boxShadow:"0 1px 0 0 rgba(255,255,255,0.1) inset, 0 -12px 50px rgba(0,0,0,0.5), 0 0 80px -20px rgba(139,124,246,0.15)",padding:"10px 0 calc(36px + env(safe-area-inset-bottom))",transform:show?"translateY(0)":"translateY(100%)",transition:"transform .38s cubic-bezier(0.22,1,0.36,1)",maxHeight:"78vh",overflowY:"auto"}}><div style={{width:44,height:5,borderRadius:3,background:"rgba(140,150,255,0.28)",margin:"10px auto 28px"}}/>{children}</div></div>)}
+function Sheet({open,onClose,children}){
+  const[vis,setVis]=useState(false),[show,setShow]=useState(false);
+  const sheetRef=useRef(null);
+  const dragRef=useRef({active:false,startY:0,lastY:0,lastT:0,velocity:0});
+  const[dragY,setDragY]=useState(0);
+  const[isDragging,setIsDragging]=useState(false);
+  useEffect(()=>{
+    if(open){setVis(true);setDragY(0);setIsDragging(false);requestAnimationFrame(()=>requestAnimationFrame(()=>setShow(true)))}
+    else{setShow(false);const t=setTimeout(()=>{setVis(false);setDragY(0)},350);return()=>clearTimeout(t)}
+  },[open]);
+  const onPtrDown=(e)=>{
+    if(sheetRef.current&&sheetRef.current.scrollTop>0)return;
+    dragRef.current={active:true,startY:e.clientY,lastY:e.clientY,lastT:performance.now(),velocity:0};
+    setIsDragging(true);
+    try{e.currentTarget.setPointerCapture(e.pointerId)}catch(_){}
+  };
+  const onPtrMove=(e)=>{
+    if(!dragRef.current.active)return;
+    const now=performance.now();
+    const dt=now-dragRef.current.lastT;
+    const dy=e.clientY-dragRef.current.lastY;
+    if(dt>0)dragRef.current.velocity=dy/dt;
+    dragRef.current.lastY=e.clientY;
+    dragRef.current.lastT=now;
+    let diff=e.clientY-dragRef.current.startY;
+    if(diff<0)diff=Math.max(-20,diff/4);
+    setDragY(diff);
+  };
+  const onPtrUp=()=>{
+    if(!dragRef.current.active)return;
+    const distance=dragY;
+    const velocity=dragRef.current.velocity;
+    dragRef.current.active=false;
+    const h=sheetRef.current?.offsetHeight||500;
+    setIsDragging(false);
+    if(distance>h*0.28||velocity>0.55){Haptic.light();onClose()}
+    else{setDragY(0)}
+  };
+  if(!vis)return null;
+  const sheetTransform=show?(dragY>0?`translateY(${dragY}px)`:"translateY(0)"):"translateY(100%)";
+  const sheetTransition=isDragging?"none":"transform .38s cubic-bezier(0.22,1,0.36,1)";
+  const sheetH=sheetRef.current?.offsetHeight||500;
+  const backdropOpacity=show?Math.max(0,1-dragY/(sheetH*0.95)):0;
+  const backdropTransition=isDragging?"none":"opacity .35s";
+  return(<div style={{position:"fixed",inset:0,zIndex:100}} onClick={onClose}>
+    <div style={{position:"absolute",inset:0,background:"rgba(2,3,10,0.55)",backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",opacity:backdropOpacity,transition:backdropTransition}}/>
+    <div ref={sheetRef} onClick={e=>e.stopPropagation()} style={{position:"absolute",bottom:0,left:0,right:0,maxWidth:480,margin:"0 auto",background:"linear-gradient(180deg,rgba(14,18,52,0.88),rgba(10,14,40,0.82))",backdropFilter:"blur(50px)",WebkitBackdropFilter:"blur(50px)",borderRadius:"32px 32px 0 0",border:"1px solid rgba(255,255,255,0.08)",borderBottom:"none",boxShadow:"0 1px 0 0 rgba(255,255,255,0.1) inset, 0 -12px 50px rgba(0,0,0,0.5), 0 0 80px -20px rgba(139,124,246,0.15)",padding:"0 0 calc(36px + env(safe-area-inset-bottom))",transform:sheetTransform,transition:sheetTransition,maxHeight:"78vh",overflowY:"auto",willChange:"transform"}}>
+      <div onPointerDown={onPtrDown} onPointerMove={onPtrMove} onPointerUp={onPtrUp} onPointerCancel={onPtrUp} style={{padding:"10px 0 28px",touchAction:"none",cursor:"grab"}}>
+        <div style={{width:44,height:5,borderRadius:3,background:"rgba(140,150,255,0.28)",margin:"0 auto"}}/>
+      </div>
+      {children}
+    </div>
+  </div>)
+}
 
 function Modal({open,onClose,children}){const[vis,setVis]=useState(false),[show,setShow]=useState(false);useEffect(()=>{if(open){setVis(true);requestAnimationFrame(()=>requestAnimationFrame(()=>setShow(true)))}else{setShow(false);const t=setTimeout(()=>setVis(false),300);return()=>clearTimeout(t)}},[open]);if(!vis)return null;return(<div style={{position:"fixed",inset:0,zIndex:150,display:"flex",alignItems:"center",justifyContent:"center",padding:24}} onClick={onClose}><div style={{position:"absolute",inset:0,background:"rgba(2,3,10,0.55)",backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",opacity:show?1:0,transition:"opacity .35s"}}/><div onClick={e=>e.stopPropagation()} style={{position:"relative",width:"100%",maxWidth:340,background:"linear-gradient(180deg,rgba(20,26,60,0.88),rgba(14,18,52,0.85))",backdropFilter:"blur(40px)",WebkitBackdropFilter:"blur(40px)",borderRadius:26,border:"1px solid rgba(255,255,255,0.08)",boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset, 0 0 0 1px rgba(255,255,255,0.03), 0 24px 64px -12px rgba(0,0,0,0.65), 0 0 80px -20px rgba(139,124,246,0.18)",padding:"28px 24px 24px",transform:show?"scale(1)":"scale(0.92)",opacity:show?1:0,transition:"all .35s cubic-bezier(0.22,1,0.36,1)",overflow:"hidden"}}><div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse at 50% 0%,rgba(255,255,255,0.04),transparent 50%)",pointerEvents:"none",borderRadius:26}}/><button onClick={onClose} style={{position:"absolute",top:14,right:14,width:32,height:32,borderRadius:11,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"center",color:T.dim,boxShadow:T.insetTop,zIndex:1}}><Icon name="x" size={14} color={T.dim}/></button><div style={{position:"relative"}}>{children}</div></div></div>)}
 
@@ -3325,7 +3418,8 @@ function App(){
     </div>
     {toast&&<Toast message={toast} onUndo={undoRef.current?handleUndo:null} onClose={()=>setToast(null)}/>}
     <div style={{position:"relative",zIndex:1}}>
-      {page==="home"&&<div style={{animation:"fadeIn .3s"}}>
+      <div key={page} style={{animation:"pageSwitch .4s cubic-bezier(0.22,1,0.36,1) both"}}>
+      {page==="home"&&<div>
         <div style={{padding:"calc(12px + env(safe-area-inset-top)) 20px 0",display:"flex",alignItems:"center",gap:12}}>
           <div style={{position:"relative"}}><button onClick={()=>setShowProfile(true)} style={{width:52,height:52,borderRadius:16,overflow:"hidden",border:`1.5px solid ${T.accent}20`,background:T.glass,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 2px 12px rgba(0,0,0,0.3)"}}>{profile.photo?<img src={profile.photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<Icon name="sun" size={22} color={T.sub}/>}</button>{daysLeft!==null&&daysLeft>0&&<button onClick={()=>setShowSleepInfo(true)} style={{position:"absolute",top:-5,right:-8,minWidth:24,height:24,borderRadius:12,background:`linear-gradient(135deg,${T.accent},#a78bfa)`,color:"#fff",fontSize:10,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 5px",boxShadow:`0 2px 8px ${T.accent}55`,border:`2px solid ${T.bg1}`}}>{daysLeft}</button>}{sleepRec?.phase===2&&<button onClick={()=>setShowSleepInfo(true)} style={{position:"absolute",top:-2,right:-6,width:20,height:20,borderRadius:10,background:T.green,display:"flex",alignItems:"center",justifyContent:"center",border:`2px solid ${T.bg1}`}}><Icon name="check" size={10} color={T.bg1}/></button>}</div>
           <div style={{flex:1}}><h1 style={{fontSize:17,fontWeight:800,margin:0,letterSpacing:-0.3}}>{babyName}</h1><div style={{display:"flex",alignItems:"center",gap:6,marginTop:3}}><span style={{fontSize:10,color:T.accent,fontWeight:600}}>{age&&<>{age.months>0?`${age.months} ${_lang==="en"?(age.months===1?"month":"months"):(age.months===1?"mês":"meses")}${_lang==="en"?" and ":" e "}`:""}{age.days} {_lang==="en"?"days":"dias"}</>}</span><span style={{width:3,height:3,borderRadius:"50%",background:T.dim}}/><span style={{fontSize:10,color:T.dim}}>{new Date().toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{day:"numeric",month:"short"})}</span></div></div>
@@ -3351,6 +3445,7 @@ function App(){
       {page==="history"&&<HistoryPage entries={entries} onDelete={deleteEntry} onEdit={startEdit}/>}
       {page==="stats"&&<StatsPage entries={entries} onGrowth={()=>goTo("growth")}/>}
       {page==="growth"&&<GrowthPage entries={entries} birthDate={profile.birthDate} profile={profile} onBack={()=>goTo("stats")} onAddEntry={addEntry}/>}
+      </div>
       {/* Bottom spacer so content clears nav bar */}
       <div style={{height:activeTimer?160:90}}/>
     </div>
