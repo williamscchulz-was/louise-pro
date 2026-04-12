@@ -5,6 +5,8 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v9.6.13 Remove toggle Haptic (iOS nao suporta navigator.vibrate)
+  v9.6.12 Intervalo de mamada entra no dirty state do Profile
   v9.6.11 Fix: navbar do Profile sumindo + Voltar ao Home flutuante
   v9.6.10 Navbar contextual no Profile (Salvar/Cancelar flutuante)
   v9.6.9  Fix editor de wakings: salva corretamente em bedtime live
@@ -242,8 +244,48 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "9.6.11";
+const APP_VERSION = "9.6.13";
 const CHANGELOG = [
+  {
+    v: "9.6.13", date: "2026-04-12",
+    pt: {
+      title: "Toggle Haptic removido",
+      bullets: [
+        '★ **Toggle "Vibração tátil" removido do Profile.** Motivo: o iOS Safari não implementa a `navigator.vibrate()` da Web Vibration API — vibração por código de PWA/site simplesmente não existe no iPhone, é decisão da Apple. O toggle funcionava (persistia no Firestore) mas as chamadas `Haptic.medium()` viravam no-op no iOS. Melhor tirar pra não criar falsa expectativa.',
+        'As chamadas internas `Haptic.*()` espalhadas pelo app ficam como no-ops — não removi elas pra não mexer em centenas de lugares. Se um dia a Apple habilitar suporte, é só reativar globalmente.',
+        'Campo `hapticEnabled` continua indo pro Firestore como `false` pra não quebrar clientes antigos que ainda leem o campo.'
+      ]
+    },
+    en: {
+      title: "Haptic toggle removed",
+      bullets: [
+        '★ **"Haptic feedback" toggle removed from Profile.** Reason: iOS Safari doesn\'t implement `navigator.vibrate()` from the Web Vibration API — vibration from PWA/website code simply doesn\'t exist on iPhone, it\'s an Apple decision. The toggle worked (persisted to Firestore) but the `Haptic.medium()` calls became no-ops on iOS. Better to remove it than create false expectations.',
+        'Internal `Haptic.*()` calls scattered through the app become no-ops — I didn\'t remove them to avoid touching hundreds of places. If Apple ever enables support, it\'s just a matter of re-enabling globally.',
+        '`hapticEnabled` field still goes to Firestore as `false` to avoid breaking older clients that still read the field.'
+      ]
+    }
+  },
+  {
+    v: "9.6.12", date: "2026-04-12",
+    pt: {
+      title: "Intervalo de mamada no dirty state",
+      bullets: [
+        '★ **Antes**: o campo de minutos do lembrete de mamada salvava automaticamente quando você tirava o dedo do campo (onBlur). Isso tinha um problema silencioso — se você tocasse fora por acidente enquanto rolava a página, o número ficava salvo sem confirmação e a navbar nunca mostrava "Salvar".',
+        '**Agora**: mudar o intervalo entra no mesmo sistema de dirty state dos outros campos. A navbar transiciona pra "Cancelar | Salvar" e só persiste quando você tocar Salvar. Pode cancelar e voltar pro valor anterior a qualquer momento.',
+        'Toggles (ativar/desativar lembrete, Keep screen on, Haptic, Idioma, Notifications) continuam salvando automaticamente ao toque — consistência total com o resto dos toggles do app.',
+        'Salvar agora persiste perfil **e** intervalo do feeding reminder numa única ação com haptic único.'
+      ]
+    },
+    en: {
+      title: "Feeding interval in dirty state",
+      bullets: [
+        '★ **Before**: the feeding reminder minutes field autosaved when you tapped off (onBlur). This had a silent issue — if you tapped off accidentally while scrolling, the number got saved without confirmation and the navbar never showed "Save".',
+        '**Now**: changing the interval joins the same dirty state system as the other fields. The navbar transitions to "Cancel | Save" and only persists when you tap Save. You can cancel and go back to the previous value at any time.',
+        'Toggles (enable/disable reminder, Keep screen on, Haptic, Language, Notifications) keep autosaving on tap — full consistency with the rest of the app\'s toggles.',
+        'Save now persists profile **and** feeding reminder interval in a single action with a single haptic.'
+      ]
+    }
+  },
   {
     v: "9.6.11", date: "2026-04-12",
     pt: {
@@ -2721,37 +2763,19 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
   const[birthHead,setBirthHead]=useState(String(profile.birthHead||""));
   const[langSel,setLangSel]=useState(profile.lang||"en");
   const[keepScreenOn,setKeepScreenOn]=useState(profile.keepScreenOn!==false);
-  const[hapticEnabled,setHapticEnabled]=useState(profile.hapticEnabled!==false);
+  // hapticEnabled removed — iOS Safari doesn't support navigator.vibrate.
+  // Still sent to Firestore as `false` for schema compat with any older clients.
+  const hapticEnabled=false;
   const[pushEnabled,setPushEnabled]=useState(profile.pushEnabled===true);
   const[pushPermission,setPushPermission]=useState(()=>typeof Notification!=="undefined"?Notification.permission:"unsupported");
   const[pushBusy,setPushBusy]=useState(false);
   // Dirty tracking — only INPUT fields (not toggles, which autosave)
-  const isDirty=(
-    name!==(profile.name||"")||
-    birth!==(profile.birthDate||"")||
-    photo!==(profile.photo||"")||
-    mlGoal!==String(profile.mlGoal||"")||
-    birthWeight!==String(profile.birthWeight||"")||
-    birthLength!==String(profile.birthLength||"")||
-    birthHead!==String(profile.birthHead||"")
-  );
-  // Notify parent App whenever dirty state changes so navbar can swap
-  useEffect(()=>{if(onDirtyChange)onDirtyChange(isDirty)},[isDirty]);
-  // Revert-all handler, triggered by the Cancel button in the contextual navbar
-  const revertAll=()=>{
-    setName(profile.name||"");
-    setBirth(profile.birthDate||"");
-    setPhoto(profile.photo||"");
-    setMlGoal(String(profile.mlGoal||""));
-    setBirthWeight(String(profile.birthWeight||""));
-    setBirthLength(String(profile.birthLength||""));
-    setBirthHead(String(profile.birthHead||""));
-    Haptic.medium();
-  };
+  // Revert-all handler, triggered by the Cancel button in the contextual navbar.
+  // Defined early so effects below can reference it, but revertAll body is set after feeding states exist.
+  const revertAllRef=useRef(null);
   // Watch cancelSignal — increments every time parent triggers cancel
-  useEffect(()=>{if(cancelSignal)revertAll()},[cancelSignal]);
+  useEffect(()=>{if(cancelSignal&&revertAllRef.current)revertAllRef.current()},[cancelSignal]);
   // Watch saveSignal — increments every time parent triggers save via navbar.
-  // Uses a ref because doSave is declared later in this component.
   const saveRef=useRef(null);
   useEffect(()=>{if(saveSignal&&saveRef.current)saveRef.current()},[saveSignal]);
   // Local state for the new-reminder form
@@ -2794,6 +2818,32 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
     setFdBusy(false);
   };
   const pushSupported=PushNotifs.isSupported();
+
+  // ═══ UNIFIED DIRTY STATE ═══
+  // Tracks all input fields (including feeding reminder) but NOT the toggles (keepScreenOn/haptic/push/lang/feedingEnabled which autosave)
+  const isDirty=(
+    name!==(profile.name||"")||
+    birth!==(profile.birthDate||"")||
+    photo!==(profile.photo||"")||
+    mlGoal!==String(profile.mlGoal||"")||
+    birthWeight!==String(profile.birthWeight||"")||
+    birthLength!==String(profile.birthLength||"")||
+    birthHead!==String(profile.birthHead||"")||
+    fdMinutes!==(feedReminder?.intervalMin||290)
+  );
+  useEffect(()=>{if(onDirtyChange)onDirtyChange(isDirty)},[isDirty]);
+  // Populate revertAllRef with function that resets all tracked fields
+  revertAllRef.current=()=>{
+    setName(profile.name||"");
+    setBirth(profile.birthDate||"");
+    setPhoto(profile.photo||"");
+    setMlGoal(String(profile.mlGoal||""));
+    setBirthWeight(String(profile.birthWeight||""));
+    setBirthLength(String(profile.birthLength||""));
+    setBirthHead(String(profile.birthHead||""));
+    setFdMinutes(feedReminder?.intervalMin||290);
+    Haptic.medium();
+  };
   // Persists a single toggle change immediately to Firestore (no need to tap Save).
   // Builds the patch from current state values plus the override.
   const persistToggle=async(overrides)=>{
@@ -2844,7 +2894,17 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
   };
   const fr=useRef(null);
   const handlePhoto=e=>{const f=e.target.files?.[0];if(!f)return;const rd=new FileReader();rd.onload=ev=>{const img=new Image();img.onload=()=>{const c=document.createElement("canvas"),mx=200;let w=img.width,h=img.height;if(w>h){h=(h/w)*mx;w=mx}else{w=(w/h)*mx;h=mx}c.width=w;c.height=h;c.getContext("2d").drawImage(img,0,0,w,h);setPhoto(c.toDataURL("image/jpeg",0.8))};img.src=ev.target.result};rd.readAsDataURL(f)};
-  const doSave=()=>{onSave({name:name.trim(),birthDate:birth,photo,mlGoal:parseInt(mlGoal)||0,birthWeight:parseFloat(birthWeight)||0,birthLength:parseFloat(birthLength)||0,birthHead:parseFloat(birthHead)||0,lang:langSel,keepScreenOn,hapticEnabled,pushEnabled});Haptic.success()};
+  const doSave=async()=>{
+    // Save profile fields
+    await onSave({name:name.trim(),birthDate:birth,photo,mlGoal:parseInt(mlGoal)||0,birthWeight:parseFloat(birthWeight)||0,birthLength:parseFloat(birthLength)||0,birthHead:parseFloat(birthHead)||0,lang:langSel,keepScreenOn,hapticEnabled,pushEnabled});
+    // Also persist feeding reminder interval if it changed
+    if(fdMinutes!==(feedReminder?.intervalMin||290)){
+      const clamped=Math.max(30,Math.min(720,fdMinutes||290));
+      await saveFeedReminder({intervalMin:clamped});
+      if(clamped!==fdMinutes)setFdMinutes(clamped);
+    }
+    Haptic.success();
+  };
   saveRef.current=doSave;
   const inp={width:"100%",maxWidth:"100%",boxSizing:"border-box",WebkitAppearance:"none",appearance:"none",padding:"17px 18px",background:"rgba(20,26,60,0.55)",border:`1px solid ${T.gBSoft}`,borderRadius:16,color:T.text,fontSize:17,fontWeight:600,letterSpacing:-0.2,outline:"none",boxShadow:T.insetTop};
   return(<div style={{position:"fixed",inset:0,zIndex:200,maxWidth:480,margin:"0 auto",background:`radial-gradient(ellipse at 50% 0%,#10153d,${T.bg1} 65%)`,overflowY:"auto",overflowX:"hidden",overscrollBehavior:"contain",WebkitOverflowScrolling:"touch",paddingTop:"env(safe-area-inset-top)",paddingBottom:"calc(100px + env(safe-area-inset-bottom))"}}>
@@ -2873,18 +2933,6 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
           </div>
           <button onClick={()=>{const v=!keepScreenOn;setKeepScreenOn(v);persistToggle({keepScreenOn:v})}} style={{position:"relative",width:52,height:32,borderRadius:16,background:keepScreenOn?`linear-gradient(180deg,${T.accent},#6d5cd4)`:"rgba(14,18,48,0.8)",border:`1px solid ${keepScreenOn?"rgba(139,124,246,0.5)":T.gBSoft}`,transition:"all .2s",flexShrink:0,cursor:"pointer",padding:0,boxShadow:keepScreenOn?"0 1px 0 0 rgba(255,255,255,0.18) inset, 0 4px 12px -4px rgba(139,124,246,0.4)":T.insetTop}}>
             <div style={{position:"absolute",top:3,left:keepScreenOn?25:3,width:24,height:24,borderRadius:"50%",background:"#fff",transition:"left .2s",boxShadow:"0 2px 6px rgba(0,0,0,0.4)"}}/>
-          </button>
-        </div>
-        {/* Separator */}
-        <div style={{height:1,background:T.gBSoft,margin:"16px 0"}}/>
-        {/* Haptic toggle */}
-        <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:14}}>
-          <div style={{flex:1}}>
-            <div style={{fontSize:15,fontWeight:700,marginBottom:4,color:"#f0f2ff",letterSpacing:-0.2}}>{langSel==="en"?"Haptic feedback":"Vibração tátil"}</div>
-            <div style={{fontSize:12,color:"#7a80a8",lineHeight:1.5}}>{langSel==="en"?"Subtle vibration when logging events":"Vibração sutil ao registrar eventos"}</div>
-          </div>
-          <button onClick={()=>{const v=!hapticEnabled;setHapticEnabled(v);if(v){Haptic.setEnabled(true);Haptic.medium()}else{Haptic.setEnabled(false)}persistToggle({hapticEnabled:v})}} style={{position:"relative",width:52,height:32,borderRadius:16,background:hapticEnabled?`linear-gradient(180deg,${T.accent},#6d5cd4)`:"rgba(14,18,48,0.8)",border:`1px solid ${hapticEnabled?"rgba(139,124,246,0.5)":T.gBSoft}`,transition:"all .2s",flexShrink:0,cursor:"pointer",padding:0,boxShadow:hapticEnabled?"0 1px 0 0 rgba(255,255,255,0.18) inset, 0 4px 12px -4px rgba(139,124,246,0.4)":T.insetTop}}>
-            <div style={{position:"absolute",top:3,left:hapticEnabled?25:3,width:24,height:24,borderRadius:"50%",background:"#fff",transition:"left .2s",boxShadow:"0 2px 6px rgba(0,0,0,0.4)"}}/>
           </button>
         </div>
         {/* Separator */}
@@ -2994,7 +3042,7 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
         <div style={{padding:14,borderRadius:14,background:"rgba(14,18,48,0.5)",border:`1px dashed ${T.gBSoft}`,opacity:fdEnabled?1:0.5,transition:"opacity .25s",pointerEvents:fdEnabled?"auto":"none"}}>
           <div style={{fontSize:11,fontWeight:600,color:"#7a80a8",marginBottom:10,letterSpacing:-0.05}}>{langSel==="en"?"Interval":"Intervalo"}</div>
           <div style={{display:"flex",gap:8,alignItems:"stretch"}}>
-            <input type="number" inputMode="numeric" min="30" max="720" value={fdMinutes} onChange={e=>{const n=parseInt(e.target.value)||0;setFdMinutes(n)}} onBlur={()=>{const clamped=Math.max(30,Math.min(720,fdMinutes||290));setFdMinutes(clamped);if(clamped!==feedReminder?.intervalMin)saveFeedReminder({intervalMin:clamped})}} style={{flex:1,minWidth:0,padding:"14px 16px",background:"rgba(20,26,60,0.55)",border:`1px solid ${T.gBSoft}`,borderRadius:14,color:T.text,fontSize:17,fontWeight:700,textAlign:"center",fontVariantNumeric:"tabular-nums",letterSpacing:-0.2,outline:"none",boxShadow:T.insetTop,WebkitAppearance:"none",appearance:"none"}}/>
+            <input type="number" inputMode="numeric" min="30" max="720" value={fdMinutes} onChange={e=>{const n=parseInt(e.target.value)||0;setFdMinutes(n)}} onBlur={()=>{const clamped=Math.max(30,Math.min(720,fdMinutes||290));if(clamped!==fdMinutes)setFdMinutes(clamped)}} style={{flex:1,minWidth:0,padding:"14px 16px",background:"rgba(20,26,60,0.55)",border:`1px solid ${T.gBSoft}`,borderRadius:14,color:T.text,fontSize:17,fontWeight:700,textAlign:"center",fontVariantNumeric:"tabular-nums",letterSpacing:-0.2,outline:"none",boxShadow:T.insetTop,WebkitAppearance:"none",appearance:"none"}}/>
             <div style={{display:"flex",alignItems:"center",padding:"0 16px",background:"rgba(20,26,60,0.55)",border:`1px solid ${T.gBSoft}`,borderRadius:14,fontSize:13,color:"#8b90b8",fontWeight:600,boxShadow:T.insetTop,whiteSpace:"nowrap"}}>{langSel==="en"?"minutes":"minutos"}</div>
           </div>
           <div style={{marginTop:10,textAlign:"center",fontSize:12,color:"#c4b5fd",fontWeight:600,letterSpacing:-0.1}}>
@@ -3661,10 +3709,10 @@ function App(){
   },[shouldLock]);
   useEffect(()=>()=>{WakeLock.release()},[]);
 
-  // Haptic feedback: sync enabled state from profile
-  useEffect(()=>{
-    Haptic.setEnabled(profile.hapticEnabled!==false);
-  },[profile.hapticEnabled]);
+  // Haptic feedback permanently disabled — iOS Safari doesn't implement
+  // navigator.vibrate(). The existing Haptic.* calls throughout the app
+  // become no-ops. Keeps code paths intact in case iOS support lands someday.
+  useEffect(()=>{Haptic.setEnabled(false)},[]);
 
   // Push Notifications: register Service Worker on mount (if supported)
   // Does NOT request permission — that requires user gesture from Profile toggle
