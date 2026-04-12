@@ -5,6 +5,8 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v9.7.1  Toggle Light/Auto/Dark no Profile (Aparencia)
+  v9.7.0  Light/Dark mode automatico atrelado ao bedtime (start=dark, stop=light)
   v9.6.18 Fade do bottom removido (estava parecendo bug, não efeito)
   v9.6.17 Fix: mercurio congelado + fade top tapando titulo
   v9.6.16 Fix: Home vazando atrás do Profile (fade via overlay)
@@ -64,8 +66,47 @@
   </script>
 
   <style>
+    /* ═══════════ THEME TOKENS (light / dark) ═══════════ */
+    /* Dark is the default (applied when data-theme is absent or "dark") */
+    :root,:root[data-theme="dark"]{
+      --bg1:#070b1e; --bg2:#0d1133; --bg3:#141a42;
+      --glass:rgba(22,28,60,0.6);
+      --gB:rgba(90,100,180,0.12); --gBSoft:rgba(255,255,255,0.06);
+      --text:#e4e6f5; --sub:#8b90b8; --dim:#555a80;
+      --body-grad:radial-gradient(ellipse at 50% 0%,#10153d 0%,#070b1e 65%);
+      --starfield-opacity:1;
+    }
+    :root[data-theme="light"]{
+      --bg1:#ece0f5; --bg2:#f5ebff; --bg3:#ffffff;
+      --glass:rgba(255,255,255,0.75);
+      --gB:rgba(124,92,255,0.10); --gBSoft:rgba(124,92,255,0.08);
+      --text:#1a0f2e; --sub:#7a5fa8; --dim:#9083a8;
+      --body-grad:radial-gradient(ellipse at 50% 0%,#f5ebff 0%,#e8dcf5 65%);
+      --starfield-opacity:0;
+    }
+    /* Global smooth theme transition (~800ms) */
+    html,body,*{transition:background-color .8s ease, color .8s ease, border-color .8s ease, box-shadow .8s ease}
+    /* Prevent transition on transforms/animations (messes up rings) */
+    button,svg,svg *,[style*="transform"]{transition:background-color .8s ease, color .8s ease, border-color .8s ease}
+
+    /* ═══════════ LIGHT MODE specific overrides ═══════════ */
+    /* Handle inline hardcoded dark backgrounds that would look ugly on light bg.
+       These use attribute selectors to only apply in light mode. */
+    :root[data-theme="light"] body{background:var(--bg1)}
+    /* Ring dots — replace dark radial with clean white */
+    :root[data-theme="light"] [style*="radial-gradient(circle at 35% 30%,rgba(30,38,80"],
+    :root[data-theme="light"] [style*="radial-gradient(circle at 35% 30%,rgba(24,30,65"]{
+      background:radial-gradient(circle at 35% 30%,#ffffff,#f5ebff) !important;
+      box-shadow:0 2px 8px rgba(124,92,255,0.18), 0 0 0 1px rgba(124,92,255,0.06) !important;
+    }
+    /* Row backgrounds hardcoded as rgba(22,28,60,0.65) */
+    :root[data-theme="light"] [style*="rgba(22,28,60,0.65)"]{
+      background:rgba(255,255,255,0.88) !important;
+    }
+    /* Ring background track (inline SVG dark purple) stays fine, but the radial halo of "10153d" needs softening — already handled via var(--body-grad) */
+
     *{margin:0;padding:0;box-sizing:border-box}
-    html,body{height:100%;overflow:hidden;overscroll-behavior:none;background:#070b1e}
+    html,body{height:100%;overflow:hidden;overscroll-behavior:none;background:var(--bg1)}
     body{font-family:'Outfit',sans-serif;
       -webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
     #root{height:100%;overflow:hidden}
@@ -250,8 +291,68 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "9.6.18";
+const APP_VERSION = "9.7.1";
 const CHANGELOG = [
+  {
+    v: "9.7.1", date: "2026-04-12",
+    pt: {
+      title: "Toggle Light/Auto/Dark no Profile",
+      bullets: [
+        '★ **Novo card "Aparência" no Profile** com segmented control de 3 opções: **Claro · Auto · Escuro**.',
+        '**Auto** (default) = o comportamento da v9.7.0: dark ao iniciar bedtime, light ao parar.',
+        '**Claro** ou **Escuro** = modo fixo. O app NÃO muda mais automaticamente — fica travado no modo que você escolheu, mesmo iniciando/parando bedtime.',
+        '**Volta pra Auto a qualquer momento** e o comportamento automático volta a valer. Perfeito pra quem quer testar os dois modos sem precisar rodar um bedtime inteiro.',
+        '**Salva no Firestore** (`profile.themeMode`) — preferência sincroniza entre os 2 iPhones.',
+        '**Arquitetura:** no modo Auto, um flag interno `_themeAutoDark` guarda se tá atualmente em dark ou light, alternado pelos gatilhos do bedtime. No modo Claro/Escuro esse flag é ignorado — o modo escolhido tem prioridade absoluta.',
+        'Haptic leve ao trocar de modo. Transição de 800ms continua igual.'
+      ]
+    },
+    en: {
+      title: "Light/Auto/Dark toggle in Profile",
+      bullets: [
+        '★ **New "Appearance" card in Profile** with a 3-option segmented control: **Light · Auto · Dark**.',
+        '**Auto** (default) = v9.7.0 behavior: dark when starting bedtime, light when stopping.',
+        '**Light** or **Dark** = fixed mode. The app NO LONGER changes automatically — it stays locked in your chosen mode, even when starting/stopping bedtime.',
+        '**Switch back to Auto anytime** and the automatic behavior resumes. Perfect for testing both modes without having to run a full bedtime.',
+        '**Saved to Firestore** (`profile.themeMode`) — preference syncs across both iPhones.',
+        '**Architecture:** in Auto mode, an internal `_themeAutoDark` flag stores whether it\'s currently dark or light, toggled by bedtime triggers. In Light/Dark mode that flag is ignored — the chosen mode takes absolute priority.',
+        'Light haptic when switching modes. 800ms transition stays the same.'
+      ]
+    }
+  },
+  {
+    v: "9.7.0", date: "2026-04-12",
+    pt: {
+      title: "Light/Dark mode automático (atrelado ao bedtime)",
+      bullets: [
+        '★ **Modo claro e escuro agora alternam sozinhos conforme a rotina da Louise.** Nada de toggle manual, nada de horário fixo — o app segue o ritmo real do dia.',
+        '**Regra única:** iniciar o timer de **Bedtime** (Sono) → vira dark mode. Parar o timer de manhã → vira light mode. Só isso. Soneca, tummy time, mamadeira, fralda — nada disso mexe no tema.',
+        '**Light mode novo:** paleta lilás clara (`#e8dcf5`) com cards brancos puros, sombras roxas sutis e texto escuro `#1a0f2e`. Inspirado na identidade do Alchemy Markets.',
+        '**Dark mode mantido** exatamente como estava — a cor accent `#8b7cf6` (roxo) é a **mesma nos dois modos**, então a identidade visual do Louise Pro não muda ao trocar de tema.',
+        '**Transição suave de 800ms** em todas as cores quando o modo muda. O app "amanhece" e "anoitece" visualmente junto com o ciclo da Louise.',
+        '**Persistência no Firestore** (`config/profile.themeMode`): se você e sua esposa usam os dois iPhones, ao você iniciar/parar o bedtime o tema muda nos dois aparelhos ao mesmo tempo.',
+        '**Default inicial = light.** Primeiro uso do app abre em light; só vira dark quando o primeiro bedtime rodar.',
+        '**Starfield some no light mode** (fade suave junto com a transição de tema) — starfield é vocabulário visual de noite, não faz sentido de dia.',
+        '**Arquitetura**: usei CSS custom properties (`--bg1`, `--glass`, `--text` etc) no `:root[data-theme]`. O objeto `T` no JS aponta pra essas variáveis. Mudar de tema é **1 atributo** no `<html>` — toda a UI reage via CSS sem re-render do React. Zero risco de regressão em componentes que já funcionavam.',
+        '**Edge case:** se você iniciar um bedtime e esquecer de parar, o app fica dark até você parar. Faz sentido — se o timer ainda tá rodando, tecnicamente a Louise ainda tá dormindo.'
+      ]
+    },
+    en: {
+      title: "Automatic Light/Dark mode (tied to bedtime)",
+      bullets: [
+        '★ **Light and dark modes now switch automatically based on Louise\'s routine.** No manual toggle, no fixed hours — the app follows the real rhythm of the day.',
+        '**Single rule:** starting the **Bedtime** timer (Sleep) → switches to dark mode. Stopping it in the morning → switches to light. That\'s it. Nap, tummy time, bottle, diaper — none of them affect the theme.',
+        '**New light mode:** pale lilac palette (`#e8dcf5`) with pure white cards, subtle purple shadows and dark text `#1a0f2e`. Inspired by Alchemy Markets\' visual identity.',
+        '**Dark mode kept** exactly as it was — the accent color `#8b7cf6` (purple) is the **same in both modes**, so Louise Pro\'s visual identity doesn\'t change when switching themes.',
+        '**Smooth 800ms transition** on all colors when the mode changes. The app visually "dawns" and "dusks" along with Louise\'s cycle.',
+        '**Firestore persistence** (`config/profile.themeMode`): if you and your partner use both iPhones, starting/stopping the bedtime switches the theme on both devices at once.',
+        '**Initial default = light.** First use opens in light; only switches to dark when the first bedtime runs.',
+        '**Starfield fades out in light mode** (smooth fade along with the theme transition) — starfield is nighttime visual vocabulary, doesn\'t fit during the day.',
+        '**Architecture**: used CSS custom properties (`--bg1`, `--glass`, `--text` etc) on `:root[data-theme]`. The `T` JS object points to those variables. Changing the theme is **1 attribute** on `<html>` — the entire UI reacts via CSS with no React re-render. Zero regression risk in components that were already working.',
+        '**Edge case:** if you start a bedtime and forget to stop it, the app stays dark until you do. That makes sense — if the timer is still running, Louise is technically still sleeping.'
+      ]
+    }
+  },
   {
     v: "9.6.18", date: "2026-04-12",
     pt: {
@@ -1821,7 +1922,7 @@ function Icon({name,size=20,color="currentColor",fill="none"}){
 
 
 // ── THEME ──
-const T={bg1:"#070b1e",bg2:"#0d1133",bg3:"#141a42",glass:"rgba(22,28,60,0.6)",gB:"rgba(90,100,180,0.12)",gBSoft:"rgba(255,255,255,0.06)",insetTop:"0 1px 0 0 rgba(255,255,255,0.04) inset",insetTopStrong:"0 1px 0 0 rgba(255,255,255,0.08) inset",text:"#e4e6f5",sub:"#8b90b8",dim:"#555a80",accent:"#8b7cf6",green:"#34d399",greenS:"rgba(52,211,153,0.1)",purple:"#a78bfa",purpleS:"rgba(167,139,250,0.1)",pink:"#f472b6",pinkS:"rgba(244,114,182,0.1)",amber:"#fbbf24",amberS:"rgba(251,191,36,0.1)",orange:"#fb923c",orangeS:"rgba(251,146,60,0.1)",blue:"#38bdf8",blueS:"rgba(56,189,248,0.12)",red:"#f87171",redS:"rgba(248,113,113,0.1)",cyan:"#22d3ee",cyanS:"rgba(34,211,238,0.1)"};
+const T={bg1:"var(--bg1)",bg2:"var(--bg2)",bg3:"var(--bg3)",glass:"var(--glass)",gB:"var(--gB)",gBSoft:"var(--gBSoft)",insetTop:"0 1px 0 0 rgba(255,255,255,0.04) inset",insetTopStrong:"0 1px 0 0 rgba(255,255,255,0.08) inset",text:"var(--text)",sub:"var(--sub)",dim:"var(--dim)",accent:"#8b7cf6",green:"#34d399",greenS:"rgba(52,211,153,0.1)",purple:"#a78bfa",purpleS:"rgba(167,139,250,0.1)",pink:"#f472b6",pinkS:"rgba(244,114,182,0.1)",amber:"#fbbf24",amberS:"rgba(251,191,36,0.1)",orange:"#fb923c",orangeS:"rgba(251,146,60,0.1)",blue:"#38bdf8",blueS:"rgba(56,189,248,0.12)",red:"#f87171",redS:"rgba(248,113,113,0.1)",cyan:"#22d3ee",cyanS:"rgba(34,211,238,0.1)"};
 const TYPES={bottle:{label:{pt:"Mamadeira",en:"Bottle"},icon:"bottle",color:T.green,bg:T.greenS},nursing:{label:{pt:"Amamentação",en:"Nursing"},icon:"breast",color:T.blue,bg:T.blueS},sleep:{label:{pt:"Sono",en:"Bedtime"},icon:"bed",color:T.purple,bg:T.purpleS},wakeup:{label:{pt:"Acordou",en:"Woke up"},icon:"sun",color:T.amber,bg:T.amberS},nap:{label:{pt:"Soneca",en:"Nap"},icon:"cloud",color:T.purple,bg:T.purpleS},nightwaking:{label:{pt:"Acordou à noite",en:"Night waking"},icon:"zap",color:T.orange,bg:T.orangeS},diaper:{label:{pt:"Fralda",en:"Diaper"},icon:"diaper",color:T.pink,bg:T.pinkS},medicine:{label:{pt:"Medicamento",en:"Medicine"},icon:"pill",color:T.amber,bg:T.amberS},temperature:{label:{pt:"Temperatura",en:"Temperature"},icon:"thermo",color:T.red,bg:T.redS},bath:{label:{pt:"Banho",en:"Bath"},icon:"bath",color:T.cyan,bg:T.cyanS},tummytime:{label:{pt:"Tummy time",en:"Tummy time"},icon:"baby",color:T.amber,bg:T.amberS},growth:{label:{pt:"Crescimento",en:"Growth"},icon:"ruler",color:"#a3e635",bg:"rgba(163,230,53,0.1)"}};
 
 // ── i18n ──
@@ -3014,7 +3115,7 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
   };
   saveRef.current=doSave;
   const inp={width:"100%",maxWidth:"100%",boxSizing:"border-box",WebkitAppearance:"none",appearance:"none",padding:"17px 18px",background:"rgba(20,26,60,0.55)",border:`1px solid ${T.gBSoft}`,borderRadius:16,color:T.text,fontSize:17,fontWeight:600,letterSpacing:-0.2,outline:"none",boxShadow:T.insetTop};
-  return(<div onScroll={onScroll} style={{position:"fixed",inset:0,zIndex:200,maxWidth:480,margin:"0 auto",background:`radial-gradient(ellipse at 50% 0%,#10153d,${T.bg1} 65%)`,overflowY:"auto",overflowX:"hidden",overscrollBehavior:"contain",WebkitOverflowScrolling:"touch",paddingTop:"env(safe-area-inset-top)",paddingBottom:"calc(100px + env(safe-area-inset-bottom))"}}>
+  return(<div onScroll={onScroll} style={{position:"fixed",inset:0,zIndex:200,maxWidth:480,margin:"0 auto",background:"var(--body-grad)",overflowY:"auto",overflowX:"hidden",overscrollBehavior:"contain",WebkitOverflowScrolling:"touch",paddingTop:"env(safe-area-inset-top)",paddingBottom:"calc(100px + env(safe-area-inset-bottom))"}}>
     {/* Fade overlays removed — both top and bottom gradient strips were visually distracting,
         making content look dimmed/buggy rather than giving a clean melt effect. Simple solid scroll. */}
     <div style={{display:"flex",alignItems:"center",gap:14,padding:"16px 20px"}}><button onClick={onBack} style={{width:36,height:36,borderRadius:10,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="back" size={18} color={T.sub}/></button><span style={{fontSize:17,fontWeight:700}}>{L("profile")}</span></div>
@@ -3032,6 +3133,26 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
             <button onClick={()=>setLangSel("pt")} style={{flex:1,padding:"10px 0",borderRadius:8,fontSize:13,fontWeight:700,background:langSel==="pt"?T.accent:"transparent",color:langSel==="pt"?"#fff":T.sub}}>Português</button>
           </div>
         </Fld>
+      </div>
+      <div style={{background:"linear-gradient(180deg,rgba(22,28,60,0.55),rgba(20,26,60,0.4))",borderRadius:18,border:`1px solid ${T.gBSoft}`,padding:18,marginBottom:14,boxShadow:T.insetTop}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
+          <div style={{width:32,height:32,borderRadius:10,background:`linear-gradient(135deg,${T.accent}38,${T.accent}10)`,border:`1px solid ${T.accent}50`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset"}}>
+            <Icon name="moon" size={15} color="#c4b5fd"/>
+          </div>
+          <div style={{flex:1}}>
+            <div style={{fontSize:15,fontWeight:700,color:T.text,letterSpacing:-0.2}}>{langSel==="en"?"Appearance":"Aparência"}</div>
+            <div style={{fontSize:11,color:T.sub,marginTop:2}}>{langSel==="en"?"Auto switches with bedtime":"Auto muda com o bedtime"}</div>
+          </div>
+        </div>
+        <div style={{display:"flex",gap:4,background:"rgba(14,18,48,0.6)",borderRadius:12,padding:3,border:`1px solid ${T.gBSoft}`}}>
+          {[{v:"light",l:langSel==="en"?"Light":"Claro",ic:"sun"},{v:"auto",l:"Auto",ic:"star"},{v:"dark",l:langSel==="en"?"Dark":"Escuro",ic:"moon"}].map(opt=>{
+            const current=profile.themeMode||"auto";
+            const isActive=current===opt.v;
+            return<button key={opt.v} onClick={()=>{Haptic.light();FB.saveProfile({...profile,themeMode:opt.v}).catch(()=>{})}} style={{flex:1,padding:"10px 4px",borderRadius:9,fontSize:12,fontWeight:700,background:isActive?`linear-gradient(180deg,${T.accent},#7c3aed)`:"transparent",color:isActive?"#fff":T.sub,border:"none",display:"flex",alignItems:"center",justifyContent:"center",gap:6,boxShadow:isActive?`0 1px 0 0 rgba(255,255,255,0.2) inset, 0 4px 12px -4px ${T.accent}55`:"none",letterSpacing:-0.1,cursor:"pointer"}}>
+              <Icon name={opt.ic} size={13} color={isActive?"#fff":T.sub}/>{opt.l}
+            </button>
+          })}
+        </div>
       </div>
       <div style={{background:"linear-gradient(180deg,rgba(22,28,60,0.55),rgba(20,26,60,0.4))",borderRadius:18,border:`1px solid ${T.gBSoft}`,padding:18,marginBottom:14,boxShadow:T.insetTop}}>
         {/* Wake Lock toggle */}
@@ -3823,6 +3944,21 @@ function App(){
   },[shouldLock]);
   useEffect(()=>()=>{WakeLock.release()},[]);
 
+  // ── THEME: apply light/dark to <html> based on profile.themeMode ──
+  // Três modos: "light" (fixo claro), "dark" (fixo escuro), "auto" (muda com bedtime).
+  // No modo "auto", o flag _themeAutoDark controla o estado corrente:
+  //   - startTimer("sleep") seta _themeAutoDark:true → dark
+  //   - stopTimer de sleep seta _themeAutoDark:false → light
+  // Default (primeiro uso, sem themeMode salvo) = auto/light.
+  useEffect(()=>{
+    const m=profile.themeMode||"auto";
+    let resolved="light";
+    if(m==="dark")resolved="dark";
+    else if(m==="light")resolved="light";
+    else if(m==="auto")resolved=profile._themeAutoDark?"dark":"light";
+    document.documentElement.setAttribute("data-theme",resolved);
+  },[profile.themeMode,profile._themeAutoDark]);
+
   // Haptic feedback permanently disabled — iOS Safari doesn't implement
   // navigator.vibrate(). The existing Haptic.* calls throughout the app
   // become no-ops. Keeps code paths intact in case iOS support lands someday.
@@ -3929,7 +4065,7 @@ function App(){
     addEntry(wakeup);
   },[addEntry,entries]);
   const duplicateLast=useCallback(()=>{if(!entries.length)return;const l=entries[0];addEntry({...l,id:uid(),date:todayStr(),time:nowTime(),_docId:undefined})},[entries,addEntry]);
-  const startTimer=useCallback(async(type,side)=>{Haptic.heavy();const data={type,startTime:new Date().toISOString()};if(type==="nursing"){data.side=side||"left";data.leftMs=0;data.rightMs=0;data.sideStart=new Date().toISOString()}await FB.saveTimer(data);setShowAdd(false);setFormType(null)},[]);
+  const startTimer=useCallback(async(type,side)=>{Haptic.heavy();const data={type,startTime:new Date().toISOString()};if(type==="nursing"){data.side=side||"left";data.leftMs=0;data.rightMs=0;data.sideStart=new Date().toISOString()}await FB.saveTimer(data);if(type==="sleep"){const m=profile.themeMode||"auto";if(m==="auto"){try{await FB.saveProfile({...profile,themeMode:"auto",_themeAutoDark:true})}catch(e){}}}setShowAdd(false);setFormType(null)},[profile]);
   const switchSide=useCallback(async(newSide)=>{if(!activeTimer||activeTimer.type!=="nursing")return;const now=Date.now();const elapsed=activeTimer.paused?0:(now-new Date(activeTimer.sideStart).getTime());const updated={...activeTimer,side:newSide,sideStart:new Date().toISOString(),paused:false};if(activeTimer.side==="left")updated.leftMs=(activeTimer.leftMs||0)+elapsed;else updated.rightMs=(activeTimer.rightMs||0)+elapsed;await FB.saveTimer(updated)},[activeTimer]);
   const pauseNursing=useCallback(async()=>{if(!activeTimer||activeTimer.type!=="nursing")return;if(activeTimer.paused){await FB.saveTimer({...activeTimer,paused:false,sideStart:new Date().toISOString()})}else{const now=Date.now();const elapsed=now-new Date(activeTimer.sideStart).getTime();const updated={...activeTimer,paused:true};if(activeTimer.side==="left")updated.leftMs=(activeTimer.leftMs||0)+elapsed;else updated.rightMs=(activeTimer.rightMs||0)+elapsed;await FB.saveTimer(updated)}},[activeTimer]);
   const toggleNightWake=useCallback(async()=>{
@@ -3978,6 +4114,9 @@ function App(){
       const realSleep=Math.max(0,mins-totalAwake);
       const wakeup={type:"wakeup",date:todayStr(),time:nowTime(),id:uid(),nightSleepMin:realSleep,_autoFromBedtime:true};
       await FB.addEntry(wakeup);
+      // Auto theme: bedtime stopped → morning → switch to light (only in auto mode)
+      const m=profile.themeMode||"auto";
+      if(m==="auto"){try{await FB.saveProfile({...profile,themeMode:"auto",_themeAutoDark:false})}catch(e){}}
     }
     // Toast: tummytime uses mm:ss format, sleep/nap uses min
     if(activeTimer.type==="tummytime"){
@@ -3987,7 +4126,7 @@ function App(){
       const wakingNote=wakings.length>0?` (${wakings.length} ${_lang==="en"?"wake"+(wakings.length>1?"s":""):"despertar"+(wakings.length>1?"es":"")})`:"";
       showToast(`${mins}min ${_lang==="en"?"logged":"registrado"}${wakingNote}`,null)
     }
-  }},[activeTimer]);
+  }},[activeTimer,profile]);
 
   const handleEditStart=useCallback(async(newStartISO)=>{
     if(!activeTimer)return;
@@ -4205,9 +4344,9 @@ function App(){
   );
   const goTo=p=>{setPage(p);setShowAdd(false);setFormType(null)};
 
-  return(<div style={{background:`radial-gradient(ellipse at 50% 0%,#10153d 0%,${T.bg1} 65%)`,height:"100%",overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch",overscrollBehavior:"none",color:T.text,maxWidth:480,margin:"0 auto",position:"relative"}}>
+  return(<div style={{background:"var(--body-grad)",height:"100%",overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch",overscrollBehavior:"none",color:T.text,maxWidth:480,margin:"0 auto",position:"relative"}}>
     {/* Starfield */}
-    <div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:0}}>
+    <div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:0,opacity:"var(--starfield-opacity)",transition:"opacity .8s ease"}}>
       {/* Nebula patches */}
       <div style={{position:"absolute",width:"60%",height:"40%",top:"5%",right:"-10%",background:"radial-gradient(ellipse,rgba(120,80,200,0.06) 0%,transparent 70%)",filter:"blur(40px)"}}/>
       <div style={{position:"absolute",width:"50%",height:"30%",bottom:"20%",left:"-5%",background:"radial-gradient(ellipse,rgba(60,100,180,0.05) 0%,transparent 70%)",filter:"blur(30px)"}}/>
