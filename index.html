@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v10.4.0 Lou com 7 poses contextuais (napping, nursing, happy...)
   v10.3.0 Fase 4+5: Icones PWA com Lou + Toast comemorativo
   v10.2.0 Fase 3: Lou fala insights + Lou no empty state da historia
   v10.1.0 Splash com Lou + aurora blobs + Lou sticker no header
@@ -82,6 +83,16 @@
     @keyframes slideUp{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
     @keyframes mercurySpin{to{transform:rotate(360deg)}}
     @keyframes auroraFloat{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(40px,30px) scale(1.15)}}
+    @keyframes louBreathe{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+    @keyframes louJump{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-10px) rotate(2deg)}}
+    @keyframes louHug{0%,100%{transform:translateX(0)}50%{transform:translateX(-3px)}}
+    @keyframes louWiggle{0%,100%{transform:translateX(0) rotate(0deg)}25%{transform:translateX(-3px) rotate(-2deg)}75%{transform:translateX(3px) rotate(2deg)}}
+    @keyframes zFloat{0%,100%{transform:translateY(0) rotate(14deg);opacity:1}50%{transform:translateY(-6px) rotate(18deg);opacity:0.5}}
+    @keyframes heartFloat{0%,100%{transform:translateY(0) scale(1);opacity:1}50%{transform:translateY(-8px) scale(1.15);opacity:0.6}}
+    @keyframes sparkle{0%,100%{transform:rotate(0) scale(1);opacity:1}50%{transform:rotate(20deg) scale(1.2);opacity:0.5}}
+    @keyframes bubble{0%{transform:translateY(0) scale(0.8);opacity:0}30%{opacity:1}70%{opacity:1}100%{transform:translateY(-30px) scale(1.2);opacity:0}}
+    @keyframes sweatDrop{0%,100%{transform:rotate(35deg) translateY(0)}50%{transform:rotate(35deg) translateY(3px)}}
+    @keyframes markBounce{0%,100%{transform:translateX(-50%) translateY(0) scale(1)}50%{transform:translateX(-50%) translateY(-6px) scale(1.15)}}
     @keyframes slideDown{from{transform:translateX(-50%) translateY(-20px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
     @keyframes toastSlideDown{from{transform:translateY(-20px);opacity:0}to{transform:translateY(0);opacity:1}}
     @keyframes curiosityIn{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
@@ -255,8 +266,31 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "10.3.0";
+const APP_VERSION = "10.4.0";
 const CHANGELOG = [
+  {
+    v: "10.4.0", date: "2026-04-12",
+    pt: {
+      title: "Lou com 7 poses contextuais",
+      bullets: [
+        '★ **Lou agora reage ao que tá acontecendo.** Componente `<Lou>` ganhou prop `pose` com 7 variações: `sleeping` (padrão), `napping` (dormindo com 3 Z\'s em cascata + respiração), `nursing` (olhinhos abertos + mamadeira + corações flutuantes), `happy` (pulando + olhos em arco + sorrisão + sparkles), `bathing` (banheira + bolhas subindo), `surprised` (olhos arregalados + gota de suor), `excited` ("!" amarelo pulando + wiggle).',
+        '★ **Lou muda de pose no header da Home automaticamente:** timer de sono ativo → `napping`, nursing → `nursing`, tummy time → `excited`. Sem timer → `sleeping` padrão. Vale tanto pro sticker (quando tem foto) quanto pro avatar principal (quando não tem).',
+        '★ **Toast detecta tipo de evento e muda pose da Lou:** registro de fralda → surprised, banho → bathing, tummy → excited, mamada → nursing, sono/soneca → napping, meta batida → happy. Toasts sem match continuam no estilo neutro.',
+        'Todos os keyframes adicionados ao CSS global (`louBreathe`, `louJump`, `louHug`, `louWiggle`, `zFloat`, `heartFloat`, `sparkle`, `bubble`, `sweatDrop`, `markBounce`). Lou agora é uma personagem com expressão — não mais decoração estática.',
+        '**Lou está em 9 contextos com reatividade visual:** splash, avatar header (com pose dinâmica), sticker header (com pose dinâmica), insights, empty state, Profile fallback, Toast contextual (6 poses diferentes dependendo do evento), e ícone PWA.'
+      ]
+    },
+    en: {
+      title: "Lou with 7 contextual poses",
+      bullets: [
+        '★ **Lou now reacts to what\'s happening.** The `<Lou>` component gained a `pose` prop with 7 variations: `sleeping` (default), `napping` (sleeping with 3 cascading Z\'s + breathing), `nursing` (open eyes + bottle + floating hearts), `happy` (jumping + arched eyes + big smile + sparkles), `bathing` (bathtub + rising bubbles), `surprised` (wide eyes + sweat drop), `excited` (bouncing yellow "!" + wiggle).',
+        '★ **Lou changes pose automatically in the Home header:** sleep timer active → `napping`, nursing → `nursing`, tummy time → `excited`. No timer → default `sleeping`. Works for both the sticker (when you have a photo) and main avatar (when you don\'t).',
+        '★ **Toast detects event type and changes Lou\'s pose:** diaper registration → surprised, bath → bathing, tummy → excited, nursing → nursing, sleep/nap → napping, goal met → happy. Toasts without a match keep the neutral style.',
+        'All keyframes added to global CSS (`louBreathe`, `louJump`, `louHug`, `louWiggle`, `zFloat`, `heartFloat`, `sparkle`, `bubble`, `sweatDrop`, `markBounce`). Lou is now a character with expression — no more static decoration.',
+        '**Lou is in 9 contexts with visual reactivity:** splash, header avatar (with dynamic pose), header sticker (with dynamic pose), insights, empty state, Profile fallback, contextual Toast (6 different poses depending on the event), and PWA icon.'
+      ]
+    }
+  },
   {
     v: "10.3.0", date: "2026-04-12",
     pt: {
@@ -2401,7 +2435,7 @@ function InsightCards({insights,phase}){
   </div>})}</>);
 }
 
-function Toast({message,onUndo,onClose}){const closeRef=useRef(onClose);closeRef.current=onClose;useEffect(()=>{const t=setTimeout(()=>closeRef.current(),2000);return()=>clearTimeout(t)},[]);const celebratory=message&&(/meta|goal|parab|congrat|🎉|✨/i.test(message));return(<div style={{position:"fixed",top:"calc(20px + env(safe-area-inset-top))",left:"50%",transform:"translateX(-50%)",zIndex:300,padding:"14px 18px",borderRadius:18,background:celebratory?"linear-gradient(180deg,rgba(172,95,219,0.35),rgba(227,162,238,0.2))":"linear-gradient(180deg,rgba(20,26,66,0.95),rgba(14,18,52,0.95))",border:`1px solid ${celebratory?"rgba(227,162,238,0.5)":T.gBSoft}`,backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",display:"flex",alignItems:"center",gap:10,boxShadow:celebratory?"0 1px 0 0 rgba(255,255,255,0.15) inset, 0 12px 32px -8px rgba(172,95,219,0.5)":"0 1px 0 0 rgba(255,255,255,0.08) inset, 0 12px 32px -8px rgba(0,0,0,0.6)",animation:"slideDown .3s ease"}}>{celebratory&&<div style={{animation:"splashFloat 1.6s ease-in-out infinite"}}><Lou size={30} showZ={false}/></div>}<span style={{fontSize:14,color:"#f0f2ff",fontWeight:600,letterSpacing:-0.2}}>{message}</span>{onUndo&&<button onClick={onUndo} style={{padding:"7px 14px",borderRadius:11,background:`linear-gradient(180deg,#AC5FDB,#7c3aed)`,color:"#fff",fontSize:13,fontWeight:700,letterSpacing:-0.1,border:"1px solid rgba(172,95,219,0.5)",boxShadow:`0 1px 0 0 rgba(255,255,255,0.18) inset, 0 4px 12px -4px ${T.accent}55`}}>{L("undo")}</button>}</div>)}
+function Toast({message,onUndo,onClose}){const closeRef=useRef(onClose);closeRef.current=onClose;useEffect(()=>{const t=setTimeout(()=>closeRef.current(),2000);return()=>clearTimeout(t)},[]);const m=(message||"").toLowerCase();const celebratory=/meta|goal|parab|congrat|🎉|✨/.test(m);let pose=null;if(celebratory)pose="happy";else if(/fralda|diaper/.test(m))pose="surprised";else if(/banho|bath/.test(m))pose="bathing";else if(/tummy/.test(m))pose="excited";else if(/mamada|bottle/.test(m))pose="nursing";else if(/sono|sleep|soneca|nap|bedtime/.test(m))pose="napping";return(<div style={{position:"fixed",top:"calc(20px + env(safe-area-inset-top))",left:"50%",transform:"translateX(-50%)",zIndex:300,padding:"14px 18px",borderRadius:18,background:pose?"linear-gradient(180deg,rgba(172,95,219,0.35),rgba(227,162,238,0.2))":"linear-gradient(180deg,rgba(20,26,66,0.95),rgba(14,18,52,0.95))",border:`1px solid ${pose?"rgba(227,162,238,0.5)":T.gBSoft}`,backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",display:"flex",alignItems:"center",gap:10,boxShadow:pose?"0 1px 0 0 rgba(255,255,255,0.15) inset, 0 12px 32px -8px rgba(172,95,219,0.5)":"0 1px 0 0 rgba(255,255,255,0.08) inset, 0 12px 32px -8px rgba(0,0,0,0.6)",animation:"slideDown .3s ease"}}>{pose&&<div style={{paddingTop:pose==="excited"?4:0}}><Lou size={34} showZ={false} pose={pose}/></div>}<span style={{fontSize:14,color:"#f0f2ff",fontWeight:600,letterSpacing:-0.2}}>{message}</span>{onUndo&&<button onClick={onUndo} style={{padding:"7px 14px",borderRadius:11,background:`linear-gradient(180deg,#AC5FDB,#7c3aed)`,color:"#fff",fontSize:13,fontWeight:700,letterSpacing:-0.1,border:"1px solid rgba(172,95,219,0.5)",boxShadow:`0 1px 0 0 rgba(255,255,255,0.18) inset, 0 4px 12px -4px ${T.accent}55`}}>{L("undo")}</button>}</div>)}
 
 function Sheet({open,onClose,children}){
   const[vis,setVis]=useState(false),[show,setShow]=useState(false);
@@ -3867,11 +3901,56 @@ function GrowthPage({entries,birthDate,profile,onBack,onAddEntry}){
 }
 
 // ── LOU · Mascote do app ──
-// Ursinha lilás dormindo com Z flutuando. Tamanho parametrizado.
-function Lou({size=64,showZ=true}){
+// Ursinha lilás com poses contextuais: sleeping (default), napping, nursing, happy, bathing, surprised, excited
+function Lou({size=64,showZ=true,pose="sleeping"}){
   const s=size;
-  return(<div style={{position:"relative",width:s,height:s,display:"inline-block",flexShrink:0}}>
-    {showZ&&<div style={{position:"absolute",top:`${s*-0.05}px`,right:`${s*-0.02}px`,fontSize:`${s*0.22}px`,fontWeight:900,color:"#E3A2EE",textShadow:"0 2px 4px rgba(107,46,156,0.35)",transform:"rotate(14deg)",fontFamily:"Outfit,-apple-system,sans-serif",lineHeight:1,zIndex:3}}>z</div>}
+  // Eyes style por pose
+  const eyesSleeping=(<><div style={{position:"absolute",top:"48%",left:"32%",width:"9%",height:"3%",background:"#29262B",borderRadius:"50%",transform:"rotate(-12deg)"}}/><div style={{position:"absolute",top:"48%",right:"32%",width:"9%",height:"3%",background:"#29262B",borderRadius:"50%",transform:"rotate(12deg)"}}/></>);
+  const eyesHappy=(<><div style={{position:"absolute",top:"45%",left:"30%",width:"10%",height:"7%",border:"2px solid #29262B",borderBottom:"none",borderRadius:"50% 50% 0 0",background:"transparent"}}/><div style={{position:"absolute",top:"45%",right:"30%",width:"10%",height:"7%",border:"2px solid #29262B",borderBottom:"none",borderRadius:"50% 50% 0 0",background:"transparent"}}/></>);
+  const eyesOpen=(<><div style={{position:"absolute",top:"46%",left:"32%",width:"8%",height:"10%",background:"#29262B",borderRadius:"50%"}}><div style={{position:"absolute",top:"15%",left:"22%",width:"35%",height:"35%",background:"#fff",borderRadius:"50%"}}/></div><div style={{position:"absolute",top:"46%",right:"32%",width:"8%",height:"10%",background:"#29262B",borderRadius:"50%"}}><div style={{position:"absolute",top:"15%",left:"22%",width:"35%",height:"35%",background:"#fff",borderRadius:"50%"}}/></div></>);
+  const eyesSurprised=(<><div style={{position:"absolute",top:"44%",left:"32%",width:"9%",height:"11%",background:"#29262B",borderRadius:"50%"}}><div style={{position:"absolute",top:"15%",left:"25%",width:"30%",height:"30%",background:"#fff",borderRadius:"50%"}}/></div><div style={{position:"absolute",top:"44%",right:"32%",width:"9%",height:"11%",background:"#29262B",borderRadius:"50%"}}><div style={{position:"absolute",top:"15%",left:"25%",width:"30%",height:"30%",background:"#fff",borderRadius:"50%"}}/></div></>);
+  let eyes=eyesSleeping;
+  if(pose==="happy")eyes=eyesHappy;
+  else if(pose==="nursing"||pose==="bathing"||pose==="excited")eyes=eyesOpen;
+  else if(pose==="surprised")eyes=eyesSurprised;
+  // Mouth
+  let mouth=(<div style={{position:"absolute",top:"60%",left:"50%",transform:"translateX(-50%)",width:"8%",height:"5%",border:"1.5px solid #29262B",borderTop:"none",borderRadius:"0 0 50% 50%"}}/>);
+  if(pose==="happy")mouth=(<div style={{position:"absolute",top:"56%",left:"50%",transform:"translateX(-50%)",width:"18%",height:"10%",border:"2.5px solid #29262B",borderTop:"none",borderRadius:"0 0 50% 50%",background:"rgba(244,114,182,0.3)"}}/>);
+  else if(pose==="surprised")mouth=(<div style={{position:"absolute",top:"60%",left:"50%",transform:"translateX(-50%)",width:"10%",height:"10%",background:"#29262B",borderRadius:"50%",border:"2px solid #29262B"}}/>);
+  else if(pose==="nursing")mouth=(<div style={{position:"absolute",top:"61%",left:"46%",width:"9%",height:"6%",background:"#29262B",borderRadius:"50% 50% 30% 30%",transform:"rotate(-10deg)"}}/>);
+  // Animation per pose
+  let wrapAnim="none";
+  if(pose==="napping"||pose==="sleeping")wrapAnim="louBreathe 3.2s ease-in-out infinite";
+  else if(pose==="happy")wrapAnim="louJump 1.4s ease-in-out infinite";
+  else if(pose==="nursing")wrapAnim="louHug 2.8s ease-in-out infinite";
+  else if(pose==="excited")wrapAnim="louWiggle 1.6s ease-in-out infinite";
+  return(<div style={{position:"relative",width:s,height:s,display:"inline-block",flexShrink:0,animation:wrapAnim}}>
+    {/* Decorações por pose */}
+    {(pose==="sleeping"||pose==="napping")&&showZ&&<>
+      <div style={{position:"absolute",top:`${s*-0.08}px`,right:`${s*-0.02}px`,fontSize:`${s*0.26}px`,fontWeight:900,color:"#E3A2EE",textShadow:"0 2px 4px rgba(107,46,156,0.4)",transform:"rotate(14deg)",fontFamily:"Outfit,sans-serif",lineHeight:1,zIndex:3,animation:"zFloat 2.4s ease-in-out infinite"}}>z</div>
+      {pose==="napping"&&<>
+        <div style={{position:"absolute",top:`${s*-0.02}px`,right:`${s*0.15}px`,fontSize:`${s*0.17}px`,fontWeight:900,color:"#E3A2EE",opacity:0.75,transform:"rotate(10deg)",fontFamily:"Outfit,sans-serif",lineHeight:1,zIndex:3,animation:"zFloat 2.4s ease-in-out 0.4s infinite"}}>z</div>
+        <div style={{position:"absolute",top:`${s*0.06}px`,right:`${s*0.28}px`,fontSize:`${s*0.11}px`,fontWeight:900,color:"#E3A2EE",opacity:0.5,transform:"rotate(6deg)",fontFamily:"Outfit,sans-serif",lineHeight:1,zIndex:3,animation:"zFloat 2.4s ease-in-out 0.8s infinite"}}>z</div>
+      </>}
+    </>}
+    {pose==="nursing"&&<>
+      <div style={{position:"absolute",top:`${s*0.5}px`,left:`${s*-0.05}px`,width:`${s*0.22}px`,height:`${s*0.35}px`,background:"linear-gradient(180deg,#fff 40%,#F5E4FB 40%)",borderRadius:"24% 24% 35% 35% / 10% 10% 20% 20%",transform:"rotate(-25deg)",border:"1.5px solid rgba(107,46,156,0.3)",zIndex:3,boxShadow:"0 3px 8px rgba(107,46,156,0.3)"}}><div style={{position:"absolute",top:"-25%",left:"20%",right:"20%",height:"30%",background:"#AC5FDB",borderRadius:"50% 50% 15% 15%"}}/></div>
+      <div style={{position:"absolute",top:`${s*-0.1}px`,right:`${s*0.05}px`,color:"#f472b6",fontSize:`${s*0.22}px`,animation:"heartFloat 2s ease-in-out infinite",textShadow:"0 2px 4px rgba(244,114,182,0.4)",zIndex:4}}>♥</div>
+      <div style={{position:"absolute",top:`${s*0.08}px`,right:`${s*0.22}px`,color:"#f472b6",fontSize:`${s*0.14}px`,opacity:0.7,animation:"heartFloat 2s ease-in-out 0.6s infinite",zIndex:4}}>♥</div>
+    </>}
+    {pose==="happy"&&<>
+      <div style={{position:"absolute",top:`${s*-0.12}px`,left:`${s*-0.06}px`,color:"#fbbf24",fontSize:`${s*0.22}px`,fontWeight:900,animation:"sparkle 1.6s ease-in-out infinite",textShadow:"0 0 8px rgba(251,191,36,0.6)",zIndex:4}}>✦</div>
+      <div style={{position:"absolute",top:`${s*-0.06}px`,right:`${s*0.04}px`,color:"#fbbf24",fontSize:`${s*0.16}px`,fontWeight:900,animation:"sparkle 1.6s ease-in-out 0.4s infinite",zIndex:4}}>✦</div>
+      <div style={{position:"absolute",top:`${s*0.22}px`,right:`${s*-0.08}px`,color:"#E3A2EE",fontSize:`${s*0.14}px`,fontWeight:900,animation:"sparkle 1.6s ease-in-out 0.8s infinite",zIndex:4}}>★</div>
+    </>}
+    {pose==="bathing"&&<>
+      <div style={{position:"absolute",top:`${s*-0.08}px`,left:`${s*0.15}px`,width:`${s*0.12}px`,height:`${s*0.12}px`,background:"radial-gradient(circle at 30% 30%,#fff,rgba(186,230,253,0.7))",borderRadius:"50%",animation:"bubble 3s ease-in-out infinite",zIndex:4}}/>
+      <div style={{position:"absolute",top:`${s*0.06}px`,right:`${s*0.12}px`,width:`${s*0.09}px`,height:`${s*0.09}px`,background:"radial-gradient(circle at 30% 30%,#fff,rgba(186,230,253,0.7))",borderRadius:"50%",animation:"bubble 3s ease-in-out 0.8s infinite",zIndex:4}}/>
+      <div style={{position:"absolute",top:`${s*0.22}px`,left:`${s*-0.04}px`,width:`${s*0.08}px`,height:`${s*0.08}px`,background:"radial-gradient(circle at 30% 30%,#fff,rgba(186,230,253,0.7))",borderRadius:"50%",animation:"bubble 3s ease-in-out 1.5s infinite",zIndex:4}}/>
+      <div style={{position:"absolute",bottom:0,left:`${s*-0.08}px`,right:`${s*-0.08}px`,height:`${s*0.32}px`,background:"linear-gradient(180deg,#7dd3fc,#38bdf8)",borderRadius:"50% 50% 20% 20% / 40% 40% 30% 30%",zIndex:2,boxShadow:"inset 0 4px 8px rgba(255,255,255,0.4),0 4px 12px rgba(56,189,248,0.35)"}}/>
+    </>}
+    {pose==="surprised"&&<div style={{position:"absolute",top:`${s*0.05}px`,right:`${s*0.15}px`,width:`${s*0.09}px`,height:`${s*0.14}px`,background:"linear-gradient(180deg,#7dd3fc,#38bdf8)",borderRadius:"0 50% 50% 50%",transform:"rotate(35deg)",animation:"sweatDrop 1.8s ease-in-out infinite",boxShadow:"0 2px 4px rgba(56,189,248,0.4)",zIndex:4}}/>}
+    {pose==="excited"&&<div style={{position:"absolute",top:`${s*-0.14}px`,left:"50%",transform:"translateX(-50%)",color:"#fbbf24",fontSize:`${s*0.32}px`,fontWeight:900,animation:"markBounce 1.2s ease-in-out infinite",textShadow:"0 2px 6px rgba(251,191,36,0.5)",zIndex:4,lineHeight:1}}>!</div>}
     {/* Orelhas */}
     <div style={{position:"absolute",top:0,left:`${s*0.08}px`,width:`${s*0.30}px`,height:`${s*0.30}px`,background:"linear-gradient(145deg,#E3A2EE,#AC5FDB)",borderRadius:"50%",boxShadow:"inset 0 -4px 8px rgba(107,46,156,0.35),inset 0 2px 4px rgba(255,255,255,0.5)"}}>
       <div style={{position:"absolute",inset:"28%",background:"#7B3BB5",borderRadius:"50%",opacity:0.7}}/>
@@ -3879,16 +3958,12 @@ function Lou({size=64,showZ=true}){
     <div style={{position:"absolute",top:0,right:`${s*0.08}px`,width:`${s*0.30}px`,height:`${s*0.30}px`,background:"linear-gradient(145deg,#E3A2EE,#AC5FDB)",borderRadius:"50%",boxShadow:"inset 0 -4px 8px rgba(107,46,156,0.35),inset 0 2px 4px rgba(255,255,255,0.5)"}}>
       <div style={{position:"absolute",inset:"28%",background:"#7B3BB5",borderRadius:"50%",opacity:0.7}}/>
     </div>
-    {/* Corpo com rostinho */}
+    {/* Corpo */}
     <div style={{position:"absolute",top:`${s*0.18}px`,left:`${s*0.08}px`,right:`${s*0.08}px`,bottom:0,background:"linear-gradient(160deg,#F5D9FB 0%,#E3A2EE 55%,#AC5FDB 100%)",borderRadius:"48% 48% 42% 42% / 55% 55% 45% 45%",boxShadow:"inset 0 -12px 24px rgba(107,46,156,0.25),inset 0 4px 10px rgba(255,255,255,0.55)"}}>
-      {/* Olhos fechados */}
-      <div style={{position:"absolute",top:"48%",left:"32%",width:"9%",height:"3%",background:"#29262B",borderRadius:"50%",transform:"rotate(-12deg)"}}/>
-      <div style={{position:"absolute",top:"48%",right:"32%",width:"9%",height:"3%",background:"#29262B",borderRadius:"50%",transform:"rotate(12deg)"}}/>
-      {/* Bochechas */}
-      <div style={{position:"absolute",top:"58%",left:"20%",width:"10%",height:"6%",background:"#E3A2EE",borderRadius:"50%",opacity:0.55}}/>
-      <div style={{position:"absolute",top:"58%",right:"20%",width:"10%",height:"6%",background:"#E3A2EE",borderRadius:"50%",opacity:0.55}}/>
-      {/* Boquinha */}
-      <div style={{position:"absolute",top:"60%",left:"50%",transform:"translateX(-50%)",width:"8%",height:"5%",border:"1.5px solid #29262B",borderTop:"none",borderRadius:"0 0 50% 50%"}}/>
+      {eyes}
+      <div style={{position:"absolute",top:"58%",left:"20%",width:"10%",height:"6%",background:pose==="surprised"?"#f472b6":"#E3A2EE",borderRadius:"50%",opacity:pose==="surprised"?0.75:0.55}}/>
+      <div style={{position:"absolute",top:"58%",right:"20%",width:"10%",height:"6%",background:pose==="surprised"?"#f472b6":"#E3A2EE",borderRadius:"50%",opacity:pose==="surprised"?0.75:0.55}}/>
+      {mouth}
     </div>
   </div>);
 }
@@ -4363,9 +4438,9 @@ function App(){
         <div style={{padding:"calc(12px + env(safe-area-inset-top)) 20px 0",display:"flex",alignItems:"center",gap:12}}>
           <div style={{position:"relative"}}><button onClick={()=>setShowProfile(true)} style={{width:52,height:52,borderRadius:16,overflow:"visible",border:"none",background:"transparent",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}>
             <div style={{width:52,height:52,borderRadius:16,overflow:"hidden",border:`1.5px solid ${T.accent}30`,background:T.glass,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 2px 12px rgba(0,0,0,0.3)"}}>
-              {profile.photo?<img src={profile.photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<div style={{width:44,height:44,display:"flex",alignItems:"center",justifyContent:"center"}}><Lou size={44}/></div>}
+              {profile.photo?<img src={profile.photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<div style={{width:44,height:44,display:"flex",alignItems:"center",justifyContent:"center"}}><Lou size={44} pose={activeTimer?.type==="sleep"?"napping":activeTimer?.type==="nursing"?"nursing":activeTimer?.type==="tummytime"?"excited":"sleeping"}/></div>}
             </div>
-            {profile.photo&&<div style={{position:"absolute",bottom:-6,right:-6,width:28,height:28,borderRadius:"50%",background:T.bg1,border:`2px solid ${T.bg1}`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 2px 8px rgba(172,95,219,0.4)"}}><Lou size={22} showZ={false}/></div>}
+            {profile.photo&&<div style={{position:"absolute",bottom:-6,right:-6,width:28,height:28,borderRadius:"50%",background:T.bg1,border:`2px solid ${T.bg1}`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 2px 8px rgba(172,95,219,0.4)"}}><Lou size={22} showZ={false} pose={activeTimer?.type==="sleep"?"napping":activeTimer?.type==="nursing"?"nursing":activeTimer?.type==="tummytime"?"excited":"sleeping"}/></div>}
           </button>{daysLeft!==null&&daysLeft>0&&<button onClick={()=>setShowSleepInfo(true)} style={{position:"absolute",top:-5,right:-8,minWidth:24,height:24,borderRadius:12,background:`linear-gradient(135deg,${T.accent},#a78bfa)`,color:"#fff",fontSize:10,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 5px",boxShadow:`0 2px 8px ${T.accent}55`,border:`2px solid ${T.bg1}`}}>{daysLeft}</button>}{sleepRec?.phase===2&&<button onClick={()=>setShowSleepInfo(true)} style={{position:"absolute",top:-2,right:-6,width:20,height:20,borderRadius:10,background:T.green,display:"flex",alignItems:"center",justifyContent:"center",border:`2px solid ${T.bg1}`}}><Icon name="check" size={10} color={T.bg1}/></button>}</div>
           <div style={{flex:1}}><h1 style={{fontSize:17,fontWeight:800,margin:0,letterSpacing:-0.3}}>{babyName}</h1><div style={{display:"flex",alignItems:"center",gap:6,marginTop:3}}><span style={{fontSize:10,color:T.accent,fontWeight:600}}>{age&&<>{age.months>0?`${age.months} ${_lang==="en"?(age.months===1?"month":"months"):(age.months===1?"mês":"meses")}${_lang==="en"?" and ":" e "}`:""}{age.days} {_lang==="en"?"days":"dias"}</>}</span><span style={{width:3,height:3,borderRadius:"50%",background:T.dim}}/><span style={{fontSize:10,color:T.dim}}>{new Date().toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{day:"numeric",month:"short"})}</span></div></div>
           <button onClick={()=>setShowInbox(true)} style={{position:"relative",width:34,height:34,borderRadius:11,background:inboxUnreadCount>0?"rgba(139,124,246,0.12)":"rgba(22,28,60,0.6)",border:`1px solid ${inboxUnreadCount>0?"rgba(139,124,246,0.3)":"rgba(139,124,246,0.08)"}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><div style={{animation:inboxUnreadCount>0?"bellWiggle 2.5s ease-in-out infinite":"none",transformOrigin:"top center",display:"flex"}}><Icon name="bell" size={17} color={inboxUnreadCount>0?T.accent:T.dim}/></div>{inboxUnreadCount>0&&<div style={{position:"absolute",top:-5,right:-5,minWidth:18,height:18,borderRadius:9,background:"linear-gradient(135deg,#f87171,#dc2626)",color:"#fff",fontSize:10,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 5px",border:`2px solid ${T.bg1}`,boxShadow:"0 0 10px rgba(239,68,68,0.6)"}}>{inboxUnreadCount}</div>}</button>
