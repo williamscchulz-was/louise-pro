@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v10.3.0 Fase 4+5: Icones PWA com Lou + Toast comemorativo
   v10.2.0 Fase 3: Lou fala insights + Lou no empty state da historia
   v10.1.0 Splash com Lou + aurora blobs + Lou sticker no header
   v10.0.0 MAJOR: Nova paleta + mascote Lou (fase 1 do redesign)
@@ -254,8 +255,31 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "10.2.0";
+const APP_VERSION = "10.3.0";
 const CHANGELOG = [
+  {
+    v: "10.3.0", date: "2026-04-12",
+    pt: {
+      title: "Fase 4+5: Ícones PWA com Lou + Toast comemorativo",
+      bullets: [
+        '★ **Ícones PWA redesenhados com Lou.** Três novos PNGs gerados via Pillow/Python: `icon-192.png`, `icon-512.png` e `apple-touch-icon.png`. Fundo gradient roxo `#7B3BB5 → #AC5FDB` com glow lilás no canto superior, Lou 60% do tamanho do ícone sorrindo com olhinhos fechados e bochechas rosadas, Z\'s flutuantes no canto superior direito, corner radius estilo iOS (24%).',
+        '★ **Toast comemorativo com Lou.** Quando aparece toast com palavras como "meta", "goal", "parabéns" ou emojis ✨ 🎉, Lou aparece 30px ao lado flutuando suavemente + fundo muda de azul pra gradient roxo/lilás. Toasts normais (ex: "Evento salvo") continuam no estilo atual.',
+        '**Pra os ícones aparecerem no iPhone**: você precisa substituir os 3 arquivos PNG no seu repositório GitHub pelos novos que eu gerei. Depois, **reinstale o PWA** (remove da tela inicial e adiciona de novo) — iOS cacheia icones agressivamente, não tem como forçar refresh sem reinstalar.',
+        'Paleta do botão Undo do Toast atualizada: era `#9b8df8 → #7c3aed`, agora `#AC5FDB → #7c3aed`.',
+        '**Lou está agora em 8 contextos**: splash, avatar header, sticker no header, insights, empty state, Profile fallback, Toast comemorativo e ícone do iPhone.'
+      ]
+    },
+    en: {
+      title: "Phase 4+5: PWA icons with Lou + celebratory Toast",
+      bullets: [
+        '★ **PWA icons redesigned with Lou.** Three new PNGs generated via Pillow/Python: `icon-192.png`, `icon-512.png` and `apple-touch-icon.png`. Gradient purple background `#7B3BB5 → #AC5FDB` with lilac glow on top corner, Lou 60% of icon size smiling with closed eyes and pink cheeks, floating Z\'s in top-right corner, iOS-style corner radius (24%).',
+        '★ **Celebratory Toast with Lou.** When a toast appears with words like "meta", "goal", "congrat" or emojis ✨ 🎉, Lou shows up at 30px next to it floating softly + background changes from blue to purple/lilac gradient. Normal toasts (e.g. "Event saved") keep the current style.',
+        "**For icons to show on iPhone**: you need to replace the 3 PNG files in your GitHub repo with the new ones I generated. Then, **reinstall the PWA** (remove from home screen and re-add) — iOS caches icons aggressively, no way to force refresh without reinstalling.",
+        'Toast Undo button palette updated: was `#9b8df8 → #7c3aed`, now `#AC5FDB → #7c3aed`.',
+        '**Lou is now in 8 contexts**: splash, header avatar, header sticker, insights, empty state, Profile fallback, celebratory Toast and iPhone icon.'
+      ]
+    }
+  },
   {
     v: "10.2.0", date: "2026-04-12",
     pt: {
@@ -2377,7 +2401,7 @@ function InsightCards({insights,phase}){
   </div>})}</>);
 }
 
-function Toast({message,onUndo,onClose}){const closeRef=useRef(onClose);closeRef.current=onClose;useEffect(()=>{const t=setTimeout(()=>closeRef.current(),2000);return()=>clearTimeout(t)},[]);return(<div style={{position:"fixed",top:"calc(20px + env(safe-area-inset-top))",left:"50%",transform:"translateX(-50%)",zIndex:300,padding:"14px 18px",borderRadius:18,background:"linear-gradient(180deg,rgba(20,26,66,0.95),rgba(14,18,52,0.95))",border:`1px solid ${T.gBSoft}`,backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",display:"flex",alignItems:"center",gap:12,boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset, 0 12px 32px -8px rgba(0,0,0,0.6)",animation:"slideDown .3s ease"}}><span style={{fontSize:14,color:"#f0f2ff",fontWeight:600,letterSpacing:-0.2}}>{message}</span>{onUndo&&<button onClick={onUndo} style={{padding:"7px 14px",borderRadius:11,background:`linear-gradient(180deg,#9b8df8,#7c3aed)`,color:"#fff",fontSize:13,fontWeight:700,letterSpacing:-0.1,border:"1px solid rgba(139,124,246,0.5)",boxShadow:`0 1px 0 0 rgba(255,255,255,0.18) inset, 0 4px 12px -4px ${T.accent}55`}}>{L("undo")}</button>}</div>)}
+function Toast({message,onUndo,onClose}){const closeRef=useRef(onClose);closeRef.current=onClose;useEffect(()=>{const t=setTimeout(()=>closeRef.current(),2000);return()=>clearTimeout(t)},[]);const celebratory=message&&(/meta|goal|parab|congrat|🎉|✨/i.test(message));return(<div style={{position:"fixed",top:"calc(20px + env(safe-area-inset-top))",left:"50%",transform:"translateX(-50%)",zIndex:300,padding:"14px 18px",borderRadius:18,background:celebratory?"linear-gradient(180deg,rgba(172,95,219,0.35),rgba(227,162,238,0.2))":"linear-gradient(180deg,rgba(20,26,66,0.95),rgba(14,18,52,0.95))",border:`1px solid ${celebratory?"rgba(227,162,238,0.5)":T.gBSoft}`,backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",display:"flex",alignItems:"center",gap:10,boxShadow:celebratory?"0 1px 0 0 rgba(255,255,255,0.15) inset, 0 12px 32px -8px rgba(172,95,219,0.5)":"0 1px 0 0 rgba(255,255,255,0.08) inset, 0 12px 32px -8px rgba(0,0,0,0.6)",animation:"slideDown .3s ease"}}>{celebratory&&<div style={{animation:"splashFloat 1.6s ease-in-out infinite"}}><Lou size={30} showZ={false}/></div>}<span style={{fontSize:14,color:"#f0f2ff",fontWeight:600,letterSpacing:-0.2}}>{message}</span>{onUndo&&<button onClick={onUndo} style={{padding:"7px 14px",borderRadius:11,background:`linear-gradient(180deg,#AC5FDB,#7c3aed)`,color:"#fff",fontSize:13,fontWeight:700,letterSpacing:-0.1,border:"1px solid rgba(172,95,219,0.5)",boxShadow:`0 1px 0 0 rgba(255,255,255,0.18) inset, 0 4px 12px -4px ${T.accent}55`}}>{L("undo")}</button>}</div>)}
 
 function Sheet({open,onClose,children}){
   const[vis,setVis]=useState(false),[show,setShow]=useState(false);
