@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v10.0.0 MAJOR: Nova paleta + mascote Lou (fase 1 do redesign)
   v9.6.18 Fade do bottom removido (estava parecendo bug, não efeito)
   v9.6.17 Fix: mercurio congelado + fade top tapando titulo
   v9.6.16 Fix: Home vazando atrás do Profile (fade via overlay)
@@ -250,8 +251,31 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "9.6.18";
+const APP_VERSION = "10.0.0";
 const CHANGELOG = [
+  {
+    v: "10.0.0", date: "2026-04-12",
+    pt: {
+      title: "MAJOR: Nova paleta + mascote Lou (fase 1)",
+      bullets: [
+        '★ **Louise Pro v10.0 começou.** Primeiro major bump do app — focado em identidade visual. Sem custo recorrente, sem dependências novas, arquitetura intacta.',
+        '★ **Paleta renovada.** Sai o azul-arroxeado genérico, entra: `#0A0F20` azul-noite profundo (fundo), `#0F1733` azul-noite médio (cards), `#AC5FDB` roxo primário (antes era `#8b7cf6`), `#E3A2EE` rosa-lilás accent. Base azul escura com toques roxo-lilás: mais personalidade, menos Android-genérico.',
+        '★ **Lou, a mascote.** Ursinha lilás dormindo com Z flutuando. Aparece como avatar padrão no header da Home e no Profile quando você não subiu uma foto da Louise. 100% CSS/SVG, zero peso, zero requisição externa. Se você já tem foto da Louise configurada, ela continua aparecendo normal — Lou só entra quando não tem foto.',
+        '**Fase 1 aplicada hoje.** Próximas fases (opcionais): splash screen animada com Lou, Lou em empty states, Lou narrando insights do routine engine, novo ícone do app no iPhone.',
+        'Se não gostar: é só reverter pra v9.6.18, nenhum dado é perdido (schema do Firestore intacto).'
+      ]
+    },
+    en: {
+      title: "MAJOR: New palette + Lou mascot (phase 1)",
+      bullets: [
+        '★ **Louise Pro v10.0 has started.** First major bump of the app — focused on visual identity. No recurring cost, no new dependencies, architecture intact.',
+        '★ **Refreshed palette.** Out goes the generic blue-purple, in comes: `#0A0F20` deep night blue (background), `#0F1733` mid night blue (cards), `#AC5FDB` primary purple (was `#8b7cf6`), `#E3A2EE` pink-lilac accent. Dark blue base with purple-lilac touches: more personality, less generic-Android.',
+        '★ **Lou, the mascot.** Lilac bear sleeping with a floating Z. Appears as default avatar in the Home header and Profile when you haven\'t uploaded a photo of Louise. 100% CSS/SVG, zero weight, zero external request. If you already have Louise\'s photo set, it still shows normally — Lou only kicks in when there\'s no photo.',
+        '**Phase 1 applied today.** Next phases (optional): animated splash screen with Lou, Lou in empty states, Lou narrating routine engine insights, new app icon on iPhone.',
+        "If you don't like it: just roll back to v9.6.18, no data is lost (Firestore schema intact)."
+      ]
+    }
+  },
   {
     v: "9.6.18", date: "2026-04-12",
     pt: {
@@ -1821,7 +1845,7 @@ function Icon({name,size=20,color="currentColor",fill="none"}){
 
 
 // ── THEME ──
-const T={bg1:"#070b1e",bg2:"#0d1133",bg3:"#141a42",glass:"rgba(22,28,60,0.6)",gB:"rgba(90,100,180,0.12)",gBSoft:"rgba(255,255,255,0.06)",insetTop:"0 1px 0 0 rgba(255,255,255,0.04) inset",insetTopStrong:"0 1px 0 0 rgba(255,255,255,0.08) inset",text:"#e4e6f5",sub:"#8b90b8",dim:"#555a80",accent:"#8b7cf6",green:"#34d399",greenS:"rgba(52,211,153,0.1)",purple:"#a78bfa",purpleS:"rgba(167,139,250,0.1)",pink:"#f472b6",pinkS:"rgba(244,114,182,0.1)",amber:"#fbbf24",amberS:"rgba(251,191,36,0.1)",orange:"#fb923c",orangeS:"rgba(251,146,60,0.1)",blue:"#38bdf8",blueS:"rgba(56,189,248,0.12)",red:"#f87171",redS:"rgba(248,113,113,0.1)",cyan:"#22d3ee",cyanS:"rgba(34,211,238,0.1)"};
+const T={bg1:"#0A0F20",bg2:"#0F1733",bg3:"#1A2148",glass:"rgba(172,95,219,0.08)",gB:"rgba(227,162,238,0.14)",gBSoft:"rgba(255,255,255,0.08)",insetTop:"0 1px 0 0 rgba(255,255,255,0.05) inset",insetTopStrong:"0 1px 0 0 rgba(255,255,255,0.10) inset",text:"#f5ecfb",sub:"#E3A2EE",dim:"#8b7ca4",accent:"#AC5FDB",green:"#34d399",greenS:"rgba(52,211,153,0.1)",purple:"#E3A2EE",purpleS:"rgba(227,162,238,0.12)",pink:"#f472b6",pinkS:"rgba(244,114,182,0.1)",amber:"#fbbf24",amberS:"rgba(251,191,36,0.1)",orange:"#fb923c",orangeS:"rgba(251,146,60,0.1)",blue:"#38bdf8",blueS:"rgba(56,189,248,0.12)",red:"#f87171",redS:"rgba(248,113,113,0.1)",cyan:"#22d3ee",cyanS:"rgba(34,211,238,0.1)"};
 const TYPES={bottle:{label:{pt:"Mamadeira",en:"Bottle"},icon:"bottle",color:T.green,bg:T.greenS},nursing:{label:{pt:"Amamentação",en:"Nursing"},icon:"breast",color:T.blue,bg:T.blueS},sleep:{label:{pt:"Sono",en:"Bedtime"},icon:"bed",color:T.purple,bg:T.purpleS},wakeup:{label:{pt:"Acordou",en:"Woke up"},icon:"sun",color:T.amber,bg:T.amberS},nap:{label:{pt:"Soneca",en:"Nap"},icon:"cloud",color:T.purple,bg:T.purpleS},nightwaking:{label:{pt:"Acordou à noite",en:"Night waking"},icon:"zap",color:T.orange,bg:T.orangeS},diaper:{label:{pt:"Fralda",en:"Diaper"},icon:"diaper",color:T.pink,bg:T.pinkS},medicine:{label:{pt:"Medicamento",en:"Medicine"},icon:"pill",color:T.amber,bg:T.amberS},temperature:{label:{pt:"Temperatura",en:"Temperature"},icon:"thermo",color:T.red,bg:T.redS},bath:{label:{pt:"Banho",en:"Bath"},icon:"bath",color:T.cyan,bg:T.cyanS},tummytime:{label:{pt:"Tummy time",en:"Tummy time"},icon:"baby",color:T.amber,bg:T.amberS},growth:{label:{pt:"Crescimento",en:"Growth"},icon:"ruler",color:"#a3e635",bg:"rgba(163,230,53,0.1)"}};
 
 // ── i18n ──
@@ -3019,7 +3043,7 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
         making content look dimmed/buggy rather than giving a clean melt effect. Simple solid scroll. */}
     <div style={{display:"flex",alignItems:"center",gap:14,padding:"16px 20px"}}><button onClick={onBack} style={{width:36,height:36,borderRadius:10,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="back" size={18} color={T.sub}/></button><span style={{fontSize:17,fontWeight:700}}>{L("profile")}</span></div>
     <div style={{padding:"0 20px"}}>
-      <div style={{display:"flex",flexDirection:"column",alignItems:"center",marginBottom:24}}><button onClick={()=>fr.current?.click()} style={{width:88,height:88,borderRadius:"50%",overflow:"hidden",background:T.glass,border:`2px solid ${T.accent}33`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 4px 20px rgba(0,0,0,0.3)"}}>{photo?<img src={photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<Icon name="sun" size={32} color={T.sub}/>}</button><input ref={fr} type="file" accept="image/*" style={{display:"none"}} onChange={handlePhoto}/><span style={{fontSize:11,color:T.dim,marginTop:8}}>{_lang==="en"?"Tap to change":"Toque para alterar"}</span></div>
+      <div style={{display:"flex",flexDirection:"column",alignItems:"center",marginBottom:24}}><button onClick={()=>fr.current?.click()} style={{width:88,height:88,borderRadius:"50%",overflow:"hidden",background:T.glass,border:`2px solid ${T.accent}33`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 4px 20px rgba(0,0,0,0.3)",padding:0}}>{photo?<img src={photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<div style={{width:72,height:72,display:"flex",alignItems:"center",justifyContent:"center"}}><Lou size={72}/></div>}</button><input ref={fr} type="file" accept="image/*" style={{display:"none"}} onChange={handlePhoto}/><span style={{fontSize:11,color:T.dim,marginTop:8}}>{_lang==="en"?"Tap to change":"Toque para alterar"}</span></div>
       <div style={{background:"rgba(22,28,60,0.4)",borderRadius:16,border:`1px solid ${T.gB}`,padding:16,marginBottom:12}}>
         <Fld label={L("name")}><input type="text" placeholder={_lang==="en"?"e.g. Louise":"Ex: Louise"} value={name} onChange={e=>setName(e.target.value)} style={inp}/></Fld>
         <Fld label={L("birthDate")}><input type="date" value={birth} onChange={e=>setBirth(e.target.value)} style={{...inp,colorScheme:"dark",maxWidth:"100%",WebkitAppearance:"none",textAlign:"center"}}/></Fld>
@@ -3758,6 +3782,33 @@ function GrowthPage({entries,birthDate,profile,onBack,onAddEntry}){
   </div>);
 }
 
+// ── LOU · Mascote do app ──
+// Ursinha lilás dormindo com Z flutuando. Tamanho parametrizado.
+function Lou({size=64,showZ=true}){
+  const s=size;
+  return(<div style={{position:"relative",width:s,height:s,display:"inline-block",flexShrink:0}}>
+    {showZ&&<div style={{position:"absolute",top:`${s*-0.05}px`,right:`${s*-0.02}px`,fontSize:`${s*0.22}px`,fontWeight:900,color:"#E3A2EE",textShadow:"0 2px 4px rgba(107,46,156,0.35)",transform:"rotate(14deg)",fontFamily:"Outfit,-apple-system,sans-serif",lineHeight:1,zIndex:3}}>z</div>}
+    {/* Orelhas */}
+    <div style={{position:"absolute",top:0,left:`${s*0.08}px`,width:`${s*0.30}px`,height:`${s*0.30}px`,background:"linear-gradient(145deg,#E3A2EE,#AC5FDB)",borderRadius:"50%",boxShadow:"inset 0 -4px 8px rgba(107,46,156,0.35),inset 0 2px 4px rgba(255,255,255,0.5)"}}>
+      <div style={{position:"absolute",inset:"28%",background:"#7B3BB5",borderRadius:"50%",opacity:0.7}}/>
+    </div>
+    <div style={{position:"absolute",top:0,right:`${s*0.08}px`,width:`${s*0.30}px`,height:`${s*0.30}px`,background:"linear-gradient(145deg,#E3A2EE,#AC5FDB)",borderRadius:"50%",boxShadow:"inset 0 -4px 8px rgba(107,46,156,0.35),inset 0 2px 4px rgba(255,255,255,0.5)"}}>
+      <div style={{position:"absolute",inset:"28%",background:"#7B3BB5",borderRadius:"50%",opacity:0.7}}/>
+    </div>
+    {/* Corpo com rostinho */}
+    <div style={{position:"absolute",top:`${s*0.18}px`,left:`${s*0.08}px`,right:`${s*0.08}px`,bottom:0,background:"linear-gradient(160deg,#F5D9FB 0%,#E3A2EE 55%,#AC5FDB 100%)",borderRadius:"48% 48% 42% 42% / 55% 55% 45% 45%",boxShadow:"inset 0 -12px 24px rgba(107,46,156,0.25),inset 0 4px 10px rgba(255,255,255,0.55)"}}>
+      {/* Olhos fechados */}
+      <div style={{position:"absolute",top:"48%",left:"32%",width:"9%",height:"3%",background:"#29262B",borderRadius:"50%",transform:"rotate(-12deg)"}}/>
+      <div style={{position:"absolute",top:"48%",right:"32%",width:"9%",height:"3%",background:"#29262B",borderRadius:"50%",transform:"rotate(12deg)"}}/>
+      {/* Bochechas */}
+      <div style={{position:"absolute",top:"58%",left:"20%",width:"10%",height:"6%",background:"#E3A2EE",borderRadius:"50%",opacity:0.55}}/>
+      <div style={{position:"absolute",top:"58%",right:"20%",width:"10%",height:"6%",background:"#E3A2EE",borderRadius:"50%",opacity:0.55}}/>
+      {/* Boquinha */}
+      <div style={{position:"absolute",top:"60%",left:"50%",transform:"translateX(-50%)",width:"8%",height:"5%",border:"1.5px solid #29262B",borderTop:"none",borderRadius:"0 0 50% 50%"}}/>
+    </div>
+  </div>);
+}
+
 // ── MAIN APP ──
 function App(){
   const[entries,setEntries]=useState([]);const[savedMeds,setSavedMeds]=useState([]);
@@ -4221,7 +4272,7 @@ function App(){
       <div key={page} style={{animation:"pageSwitch .4s cubic-bezier(0.22,1,0.36,1) both"}}>
       {page==="home"&&<div>
         <div style={{padding:"calc(12px + env(safe-area-inset-top)) 20px 0",display:"flex",alignItems:"center",gap:12}}>
-          <div style={{position:"relative"}}><button onClick={()=>setShowProfile(true)} style={{width:52,height:52,borderRadius:16,overflow:"hidden",border:`1.5px solid ${T.accent}20`,background:T.glass,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 2px 12px rgba(0,0,0,0.3)"}}>{profile.photo?<img src={profile.photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<Icon name="sun" size={22} color={T.sub}/>}</button>{daysLeft!==null&&daysLeft>0&&<button onClick={()=>setShowSleepInfo(true)} style={{position:"absolute",top:-5,right:-8,minWidth:24,height:24,borderRadius:12,background:`linear-gradient(135deg,${T.accent},#a78bfa)`,color:"#fff",fontSize:10,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 5px",boxShadow:`0 2px 8px ${T.accent}55`,border:`2px solid ${T.bg1}`}}>{daysLeft}</button>}{sleepRec?.phase===2&&<button onClick={()=>setShowSleepInfo(true)} style={{position:"absolute",top:-2,right:-6,width:20,height:20,borderRadius:10,background:T.green,display:"flex",alignItems:"center",justifyContent:"center",border:`2px solid ${T.bg1}`}}><Icon name="check" size={10} color={T.bg1}/></button>}</div>
+          <div style={{position:"relative"}}><button onClick={()=>setShowProfile(true)} style={{width:52,height:52,borderRadius:16,overflow:"hidden",border:`1.5px solid ${T.accent}20`,background:T.glass,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 2px 12px rgba(0,0,0,0.3)",padding:0}}>{profile.photo?<img src={profile.photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<div style={{width:44,height:44,display:"flex",alignItems:"center",justifyContent:"center"}}><Lou size={44}/></div>}</button>{daysLeft!==null&&daysLeft>0&&<button onClick={()=>setShowSleepInfo(true)} style={{position:"absolute",top:-5,right:-8,minWidth:24,height:24,borderRadius:12,background:`linear-gradient(135deg,${T.accent},#a78bfa)`,color:"#fff",fontSize:10,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 5px",boxShadow:`0 2px 8px ${T.accent}55`,border:`2px solid ${T.bg1}`}}>{daysLeft}</button>}{sleepRec?.phase===2&&<button onClick={()=>setShowSleepInfo(true)} style={{position:"absolute",top:-2,right:-6,width:20,height:20,borderRadius:10,background:T.green,display:"flex",alignItems:"center",justifyContent:"center",border:`2px solid ${T.bg1}`}}><Icon name="check" size={10} color={T.bg1}/></button>}</div>
           <div style={{flex:1}}><h1 style={{fontSize:17,fontWeight:800,margin:0,letterSpacing:-0.3}}>{babyName}</h1><div style={{display:"flex",alignItems:"center",gap:6,marginTop:3}}><span style={{fontSize:10,color:T.accent,fontWeight:600}}>{age&&<>{age.months>0?`${age.months} ${_lang==="en"?(age.months===1?"month":"months"):(age.months===1?"mês":"meses")}${_lang==="en"?" and ":" e "}`:""}{age.days} {_lang==="en"?"days":"dias"}</>}</span><span style={{width:3,height:3,borderRadius:"50%",background:T.dim}}/><span style={{fontSize:10,color:T.dim}}>{new Date().toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{day:"numeric",month:"short"})}</span></div></div>
           <button onClick={()=>setShowInbox(true)} style={{position:"relative",width:34,height:34,borderRadius:11,background:inboxUnreadCount>0?"rgba(139,124,246,0.12)":"rgba(22,28,60,0.6)",border:`1px solid ${inboxUnreadCount>0?"rgba(139,124,246,0.3)":"rgba(139,124,246,0.08)"}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><div style={{animation:inboxUnreadCount>0?"bellWiggle 2.5s ease-in-out infinite":"none",transformOrigin:"top center",display:"flex"}}><Icon name="bell" size={17} color={inboxUnreadCount>0?T.accent:T.dim}/></div>{inboxUnreadCount>0&&<div style={{position:"absolute",top:-5,right:-5,minWidth:18,height:18,borderRadius:9,background:"linear-gradient(135deg,#f87171,#dc2626)",color:"#fff",fontSize:10,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 5px",border:`2px solid ${T.bg1}`,boxShadow:"0 0 10px rgba(239,68,68,0.6)"}}>{inboxUnreadCount}</div>}</button>
         </div>
