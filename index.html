@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v9.6.15 Mercurio liquido no botao Home + fade mask no Profile
   v9.6.14 Nav do Profile: pill compacta + hide on scroll
   v9.6.13 Remove toggle Haptic (iOS nao suporta navigator.vibrate)
   v9.6.12 Intervalo de mamada entra no dirty state do Profile
@@ -72,6 +73,7 @@
     @keyframes fadeIn{from{opacity:0}to{opacity:1}}
     @keyframes pageSwitch{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
     @keyframes slideUp{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
+    @keyframes mercurySpin{to{transform:rotate(360deg)}}
     @keyframes slideDown{from{transform:translateX(-50%) translateY(-20px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
     @keyframes toastSlideDown{from{transform:translateY(-20px);opacity:0}to{transform:translateY(0);opacity:1}}
     @keyframes curiosityIn{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
@@ -245,8 +247,31 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "9.6.14";
+const APP_VERSION = "9.6.15";
 const CHANGELOG = [
+  {
+    v: "9.6.15", date: "2026-04-12",
+    pt: {
+      title: "Mercúrio líquido + fade mask no Profile",
+      bullets: [
+        '★ **Botão Home com contorno de mercúrio líquido.** Anel cromado com gradient metálico (roxo/lavanda/branco) em rotação contínua de 3s ao redor do botão, com glow difuso. Efeito de mercúrio escorrendo sem fim ao redor da casinha.',
+        '★ **Fade mask no scroll do Profile.** Conteúdo agora desvanece suavemente nas bordas superior (24px) e inferior (80px) via CSS `mask-image`, em vez de cortar chapado. Cards "derretem" ao tocar as bordas, indicando que tem mais coisa pra rolar. Padrão Apple Music / Messages.',
+        'Estrutura do botão: wrapper 60×60 com conic-gradient rotativo absoluto + disco escuro interno 2.5px menor que revela o anel como borda + button clicável transparente no topo. Três camadas, zero impacto nos handlers.',
+        'Animação `mercurySpin 3s linear infinite` (keyframe novo). Roda sempre, mesmo sem scroll. Drena pouquíssima bateria porque é transform GPU-acelerado.',
+        'Modo edição (Cancelar | Salvar) mantém o visual da v9.6.14 — sem mercúrio porque não cabe no design expandido.'
+      ]
+    },
+    en: {
+      title: "Liquid mercury + fade mask in Profile",
+      bullets: [
+        '★ **Home button with liquid mercury outline.** Chromed ring with metallic gradient (purple/lavender/white) in continuous 3s rotation around the button, with diffuse glow. Endlessly flowing mercury effect around the home icon.',
+        '★ **Fade mask on Profile scroll.** Content now fades smoothly at the top (24px) and bottom (80px) edges via CSS `mask-image`, instead of flat cutoff. Cards "melt" when touching the edges, indicating there\'s more to scroll. Apple Music / Messages pattern.',
+        'Button structure: 60×60 wrapper with absolute rotating conic-gradient + inner dark disc 2.5px smaller revealing the ring as a border + transparent clickable button on top. Three layers, zero impact on handlers.',
+        '`mercurySpin 3s linear infinite` animation (new keyframe). Always spinning, even without scrolling. Barely drains battery because it\'s a GPU-accelerated transform.',
+        'Edit mode (Cancel | Save) keeps the v9.6.14 visual — no mercury because it doesn\'t fit the expanded design.'
+      ]
+    }
+  },
   {
     v: "9.6.14", date: "2026-04-12",
     pt: {
@@ -2929,7 +2954,7 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
   };
   saveRef.current=doSave;
   const inp={width:"100%",maxWidth:"100%",boxSizing:"border-box",WebkitAppearance:"none",appearance:"none",padding:"17px 18px",background:"rgba(20,26,60,0.55)",border:`1px solid ${T.gBSoft}`,borderRadius:16,color:T.text,fontSize:17,fontWeight:600,letterSpacing:-0.2,outline:"none",boxShadow:T.insetTop};
-  return(<div onScroll={onScroll} style={{position:"fixed",inset:0,zIndex:200,maxWidth:480,margin:"0 auto",background:`radial-gradient(ellipse at 50% 0%,#10153d,${T.bg1} 65%)`,overflowY:"auto",overflowX:"hidden",overscrollBehavior:"contain",WebkitOverflowScrolling:"touch",paddingTop:"env(safe-area-inset-top)",paddingBottom:"calc(100px + env(safe-area-inset-bottom))"}}>
+  return(<div onScroll={onScroll} style={{position:"fixed",inset:0,zIndex:200,maxWidth:480,margin:"0 auto",background:`radial-gradient(ellipse at 50% 0%,#10153d,${T.bg1} 65%)`,overflowY:"auto",overflowX:"hidden",overscrollBehavior:"contain",WebkitOverflowScrolling:"touch",paddingTop:"env(safe-area-inset-top)",paddingBottom:"calc(100px + env(safe-area-inset-bottom))",WebkitMaskImage:"linear-gradient(180deg, transparent 0, #000 24px, #000 calc(100% - 80px), transparent 100%)",maskImage:"linear-gradient(180deg, transparent 0, #000 24px, #000 calc(100% - 80px), transparent 100%)"}}>
     <div style={{display:"flex",alignItems:"center",gap:14,padding:"16px 20px"}}><button onClick={onBack} style={{width:36,height:36,borderRadius:10,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="back" size={18} color={T.sub}/></button><span style={{fontSize:17,fontWeight:700}}>{L("profile")}</span></div>
     <div style={{padding:"0 20px"}}>
       <div style={{display:"flex",flexDirection:"column",alignItems:"center",marginBottom:24}}><button onClick={()=>fr.current?.click()} style={{width:88,height:88,borderRadius:"50%",overflow:"hidden",background:T.glass,border:`2px solid ${T.accent}33`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 4px 20px rgba(0,0,0,0.3)"}}>{photo?<img src={photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<Icon name="sun" size={32} color={T.sub}/>}</button><input ref={fr} type="file" accept="image/*" style={{display:"none"}} onChange={handlePhoto}/><span style={{fontSize:11,color:T.dim,marginTop:8}}>{_lang==="en"?"Tap to change":"Toque para alterar"}</span></div>
@@ -4228,9 +4253,16 @@ function App(){
           <span style={{width:6,height:6,borderRadius:"50%",background:"#fbbf24",animation:"pulse 1.4s ease-in-out infinite"}}/>
           <Icon name="check" size={14} color="#fff"/>{_lang==="en"?"Save":"Salvar"}
         </button>
-      </>:<button onClick={()=>{setShowProfile(false);setProfileIsDirty(false)}} style={{width:50,height:50,borderRadius:"50%",background:"linear-gradient(180deg,rgba(14,18,48,0.96),rgba(8,10,28,0.97))",backdropFilter:"blur(30px)",WebkitBackdropFilter:"blur(30px)",color:"#c4b5fd",border:"1px solid rgba(139,124,246,0.25)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset, 0 8px 24px -4px rgba(0,0,0,0.7), 0 0 40px -10px rgba(139,124,246,0.25)",padding:0}}>
+      </>:<div style={{position:"relative",width:60,height:60,display:"flex",alignItems:"center",justifyContent:"center"}}>
+        {/* Mercury ring — continuous spinning conic gradient */}
+        <div style={{position:"absolute",inset:0,borderRadius:"50%",background:"conic-gradient(from 0deg, #8b7cf6 0%, #e0d4ff 15%, #ffffff 22%, #c4b5fd 35%, #8b7cf6 50%, #5b4aaf 65%, #ffffff 78%, #a78bfa 92%, #8b7cf6 100%)",animation:"mercurySpin 3s linear infinite",boxShadow:"0 0 20px rgba(139,124,246,0.55)"}}/>
+        {/* Inner mask — the dark disc that reveals the ring as a border */}
+        <div style={{position:"absolute",inset:2.5,borderRadius:"50%",background:"linear-gradient(180deg,rgba(14,18,48,0.98),rgba(8,10,28,0.99))"}}/>
+        {/* Actual clickable button on top */}
+        <button onClick={()=>{setShowProfile(false);setProfileIsDirty(false)}} style={{position:"relative",zIndex:2,width:55,height:55,borderRadius:"50%",background:"transparent",color:"#c4b5fd",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}>
         <Icon name="home" size={20} color="#c4b5fd"/>
-      </button>}
+      </button>
+      </div>}
     </nav>:<nav style={{position:"fixed",bottom:"6px",left:"50%",transform:"translateX(-50%)",display:"flex",alignItems:"center",gap:4,padding:"9px 14px",background:"linear-gradient(180deg,rgba(14,18,48,0.94),rgba(8,10,28,0.96))",backdropFilter:"blur(30px)",WebkitBackdropFilter:"blur(30px)",borderRadius:44,border:"1px solid rgba(255,255,255,0.06)",boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset, 0 0 0 1px rgba(255,255,255,0.02), 0 8px 32px -4px rgba(0,0,0,0.7), 0 0 60px -20px rgba(139,124,246,0.25)",zIndex:50}}>
       {[{icon:"home",label:"HOME",active:page==="home"&&!showAdd,action:()=>goTo("home")},{icon:"clock",label:_lang==="en"?"HISTORY":"HIST.",active:page==="history",action:()=>goTo("history")}].map(n=><button key={n.icon} onClick={n.action} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3,padding:"9px 16px",borderRadius:18,background:n.active?"linear-gradient(180deg,rgba(139,124,246,0.22),rgba(139,124,246,0.08))":"transparent",border:n.active?"1px solid rgba(139,124,246,0.28)":"1px solid transparent",boxShadow:n.active?"0 1px 0 0 rgba(255,255,255,0.1) inset, 0 0 0 1px rgba(139,124,246,0.1), 0 4px 12px -4px rgba(139,124,246,0.4)":"none",transition:"all .2s"}}><Icon name={n.icon} size={20} color={n.active?"#c4b5fd":T.dim}/>{n.active&&<span style={{fontSize:9,fontWeight:700,color:"#c4b5fd",letterSpacing:0.3}}>{n.label}</span>}</button>)}
       <button onClick={()=>{setShowAdd(!showAdd);setFormType(null);setPage("home")}} style={{width:54,height:54,borderRadius:"50%",background:`linear-gradient(180deg,#9b8df8,#7c3aed)`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 1px 0 0 rgba(255,255,255,0.25) inset, 0 0 0 1px rgba(255,255,255,0.08), 0 8px 24px -4px ${T.accent}80, 0 0 0 4px rgba(139,124,246,0.08)`,transition:"transform .2s cubic-bezier(0.34,1.56,0.64,1)",transform:showAdd?"rotate(45deg) scale(1.05)":"scale(1)",margin:"-6px 4px"}}><Icon name="plus" size={26} color="#fff"/></button>
