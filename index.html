@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v10.2.0 Fase 3: Lou fala insights + Lou no empty state da historia
   v10.1.0 Splash com Lou + aurora blobs + Lou sticker no header
   v10.0.0 MAJOR: Nova paleta + mascote Lou (fase 1 do redesign)
   v9.6.18 Fade do bottom removido (estava parecendo bug, não efeito)
@@ -253,8 +254,29 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "10.1.0";
+const APP_VERSION = "10.2.0";
 const CHANGELOG = [
+  {
+    v: "10.2.0", date: "2026-04-12",
+    pt: {
+      title: "Fase 3: Lou narra insights + Lou no empty state",
+      bullets: [
+        '★ **Insights viraram speech bubbles da Lou.** Cada dica do routine engine agora aparece como balão de fala com Lou do lado esquerdo. Balão com canto arredondado quebrado (tipo WhatsApp) e pequena seta apontando pra Lou. Mantém os 3 tipos de cor: verde (good), laranja (warn), azul (info). Drop-shadow colorida na Lou combina com o tipo do insight.',
+        '★ **Empty state da História com Lou.** Quando não tem eventos registrados no dia selecionado, Lou aparece 96px flutuando suavemente (`splashFloat` 3.2s), com mensagem "Toque no + abaixo para registrar. A Lou tá tirando um cochilo." Substitui o texto cinza sem graça anterior.',
+        'Agora Lou tá em **6 contextos distintos**: splash, avatar do header (principal/sticker), insights falando, empty state, e fica também no Profile como avatar fallback. Cumpre a promessa dos mockups.',
+        'Zero impacto de performance: Lou é componente CSS puro, não tem requisição externa, nem imagem, nem SVG pesado.'
+      ]
+    },
+    en: {
+      title: "Phase 3: Lou narrates insights + Lou in empty state",
+      bullets: [
+        '★ **Insights turned into Lou speech bubbles.** Each routine engine tip now appears as a speech bubble with Lou on the left. Bubble with broken rounded corner (WhatsApp-style) and small arrow pointing to Lou. Keeps the 3 color types: green (good), orange (warn), blue (info). Colored drop-shadow on Lou matches the insight type.',
+        '★ **History empty state with Lou.** When there are no events logged on the selected day, Lou appears at 96px floating softly (`splashFloat` 3.2s), with the message "Tap + below to register. Lou is taking a nap." Replaces the dull gray text.',
+        'Lou is now in **6 distinct contexts**: splash, header avatar (main/sticker), insights speaking, empty state, and also in Profile as fallback avatar. Delivers on the mockup promise.',
+        'Zero performance impact: Lou is a pure CSS component, no external request, no image, no heavy SVG.'
+      ]
+    }
+  },
   {
     v: "10.1.0", date: "2026-04-12",
     pt: {
@@ -2336,12 +2358,21 @@ function InsightCards({insights,phase}){
     return()=>{clearTimeout(t1);clearTimeout(t2)};
   },[vis]);
   if(!vis||!insights||insights.length===0)return null;
-  return(<>{insights.map((h,i)=>{const col=h.type==="good"?T.green:h.type==="warn"?T.orange:T.blue;const colLight=h.type==="good"?"#6ee7b7":h.type==="warn"?"#fdba74":"#7dd3fc";return<div key={"hi"+i} style={{position:"relative",margin:"0 20px 12px",padding:"18px 20px",borderRadius:20,background:`linear-gradient(180deg,${col}1f,${col}08)`,border:`1px solid ${col}45`,display:"flex",alignItems:"flex-start",gap:14,boxShadow:`0 1px 0 0 rgba(255,255,255,0.08) inset, 0 0 0 1px ${col}10, 0 8px 24px -8px ${col}25`,overflow:"hidden",animation:fading?"curiosityOut .5s ease forwards":"curiosityIn .5s ease"}}>
-    <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse at 50% 0%,rgba(255,255,255,0.05),transparent 60%)",pointerEvents:"none"}}/>
-    <div style={{width:42,height:42,borderRadius:13,background:`linear-gradient(135deg,${col}45,${col}15)`,border:`1px solid ${col}55`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,boxShadow:"0 1px 0 0 rgba(255,255,255,0.1) inset",position:"relative"}}><Icon name={h.type==="good"?"check":h.type==="warn"?"zap":"star"} size={20} color={colLight}/></div>
-    <div style={{flex:1,minWidth:0,position:"relative"}}>
-      <div style={{fontSize:15,fontWeight:700,color:colLight,letterSpacing:-0.2}}>{h.title}</div>
-      <div style={{fontSize:12,color:"#9099c3",marginTop:4,lineHeight:1.55}}>{h.sub}</div>
+  return(<>{insights.map((h,i)=>{const col=h.type==="good"?T.green:h.type==="warn"?T.orange:T.blue;const colLight=h.type==="good"?"#6ee7b7":h.type==="warn"?"#fdba74":"#7dd3fc";return<div key={"hi"+i} style={{position:"relative",margin:"0 20px 12px",display:"flex",alignItems:"flex-start",gap:10,animation:fading?"curiosityOut .5s ease forwards":"curiosityIn .5s ease"}}>
+    {/* Lou character */}
+    <div style={{flexShrink:0,marginTop:4,filter:`drop-shadow(0 4px 10px ${col}35)`}}><Lou size={52}/></div>
+    {/* Speech bubble */}
+    <div style={{position:"relative",flex:1,padding:"14px 16px",borderRadius:"18px 18px 18px 4px",background:`linear-gradient(180deg,${col}1f,${col}08)`,border:`1px solid ${col}45`,boxShadow:`0 1px 0 0 rgba(255,255,255,0.08) inset, 0 0 0 1px ${col}10, 0 8px 24px -8px ${col}25`,overflow:"hidden"}}>
+      <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse at 50% 0%,rgba(255,255,255,0.06),transparent 60%)",pointerEvents:"none"}}/>
+      {/* Tail pointing to Lou */}
+      <div style={{position:"absolute",left:-7,top:14,width:12,height:12,background:`linear-gradient(135deg,${col}1f,${col}15)`,border:`1px solid ${col}45`,borderRight:"none",borderTop:"none",transform:"rotate(45deg)",borderRadius:"0 0 0 3px"}}/>
+      <div style={{position:"relative"}}>
+        <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
+          <Icon name={h.type==="good"?"check":h.type==="warn"?"zap":"star"} size={13} color={colLight}/>
+          <div style={{fontSize:14,fontWeight:700,color:colLight,letterSpacing:-0.2}}>{h.title}</div>
+        </div>
+        <div style={{fontSize:12,color:"#b0b6da",lineHeight:1.55}}>{h.sub}</div>
+      </div>
     </div>
   </div>})}</>);
 }
@@ -3648,7 +3679,11 @@ function HistoryPage({entries,onDelete,onEdit,activeTimer}){
     <div style={{display:"flex",gap:6,marginBottom:14,overflowX:"auto",paddingBottom:2}}>
       {filters.map(f=>{const isActive=filter===f.v;return<button key={f.v} onClick={()=>setFilter(f.v)} style={{padding:"9px 16px",borderRadius:12,fontSize:12,fontWeight:600,whiteSpace:"nowrap",letterSpacing:-0.1,background:isActive?`linear-gradient(180deg,${f.c}38,${f.c}12)`:"rgba(22,28,60,0.5)",color:isActive?f.c:T.sub,border:`1px solid ${isActive?f.c+"55":T.gBSoft}`,boxShadow:isActive?`0 1px 0 0 rgba(255,255,255,0.1) inset, 0 0 0 1px ${f.c}25, 0 6px 16px -8px ${f.c}50`:T.insetTop}}>{f.l}</button>})}
     </div>
-    {filtered.length===0&&<p style={{color:T.dim,textAlign:"center",padding:40,fontSize:13}}>{L("noEntries")}{filter!=="all"?(_lang==="en"?" of this type":" desse tipo"):""}</p>}
+    {filtered.length===0&&<div style={{display:"flex",flexDirection:"column",alignItems:"center",padding:"48px 20px 40px",gap:14}}>
+      <div style={{animation:"splashFloat 3.2s ease-in-out infinite",filter:"drop-shadow(0 8px 20px rgba(172,95,219,0.35))"}}><Lou size={96}/></div>
+      <div style={{fontSize:14,fontWeight:700,color:T.text,letterSpacing:-0.2,textAlign:"center"}}>{L("noEntries")}{filter!=="all"?(_lang==="en"?" of this type":" desse tipo"):""}</div>
+      <div style={{fontSize:11,color:T.sub,textAlign:"center",maxWidth:220,lineHeight:1.5}}>{_lang==="en"?"Tap + below to register an event. Lou is taking a nap.":"Toque no + abaixo para registrar. A Lou tá tirando um cochilo."}</div>
+    </div>}
     {listItems}
   </div>);
 }
