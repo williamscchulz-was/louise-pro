@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v9.6.8  Editor de wakings (live e histórico)
   v9.6.7  Lembrete de mamada (push apos intervalo, so de dia)
   v9.6.6  Calibracao das ancoras do Ring (meio-termo)
   v9.6.5  Icone bed pra sleep + ancoras do Ring reforcadas
@@ -220,10 +221,15 @@ dbg('Firebase ready');
 </script>
 
 <script src="splash-icon.js"></script>
+
 <script src="who-growth.js"></script>
+
 <script src="curiosities.js"></script>
+
 <script src="wake-lock.js"></script>
+
 <script src="device-features.js"></script>
+
 <script src="routine-engine.js"></script>
 
 <script type="text/babel">
@@ -233,8 +239,33 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "9.6.7";
+const APP_VERSION = "9.6.8";
 const CHANGELOG = [
+  {
+    v: "9.6.8", date: "2026-04-10",
+    pt: {
+      title: "Editor de wakings (live e histórico)",
+      bullets: [
+        '★ **Chips dos wakings agora são tappáveis.** Resolve o caso "esqueci de tocar em voltou a dormir" — no SleepBlock (vivo ou histórico), tap no chip "☀ 00:50 · 2h29m" abre um editor inline com campos de Início e Fim.',
+        '**Live wakings**: o campo Fim vem pré-preenchido com o horário atual (destacado em azul). Ajusta pro momento em que ela realmente voltou a dormir e toca "Encerrar" — o waking fecha retroativamente com a duração correta.',
+        '**Histórico**: qualquer waking de qualquer bedtime passado pode ser editado (ajustar início/fim/duração) ou removido via botão de lixeira.',
+        'Preview de duração ao vivo conforme você digita. Se Fim < Início, botão Salvar desabilita e mostra "inválido".',
+        'Eventos linkados (bottle/diaper dentro do waking) ficam intactos mesmo se o waking for removido — eles não somem, só perdem o link.',
+        'Sync em tempo real entre os dois iPhones, como qualquer outra edição.'
+      ]
+    },
+    en: {
+      title: "Waking editor (live and history)",
+      bullets: [
+        '★ **Waking chips are now tappable.** Solves the "forgot to tap went back to sleep" case — in SleepBlock (live or history), tapping the chip "☀ 00:50 · 2h29m" opens an inline editor with Start and End fields.',
+        '**Live wakings**: the End field is pre-filled with the current time (highlighted in blue). Adjust to when she actually went back to sleep and tap "End" — the waking closes retroactively with the correct duration.',
+        '**History**: any waking from any past bedtime can be edited (adjust start/end/duration) or removed via trash button.',
+        'Live duration preview as you type. If End < Start, the Save button disables and shows "invalid".',
+        'Linked events (bottle/diaper inside the waking) stay intact even if the waking is removed — they don\'t disappear, just lose the link.',
+        'Real-time sync between both iPhones, like any other edit.'
+      ]
+    }
+  },
   {
     v: "9.6.7", date: "2026-04-10",
     pt: {
@@ -2111,8 +2142,12 @@ function Modal({open,onClose,children}){const[vis,setVis]=useState(false),[show,
 function Fld({label,children}){return<div style={{marginBottom:18,minWidth:0}}><label style={{fontSize:11,color:"#7a80a8",fontWeight:600,marginBottom:10,display:"block",letterSpacing:-0.05}}>{label}</label>{children}</div>}
 function Seg({opts,val,set,color}){return<div style={{display:"flex",gap:6}}>{opts.map(o=><button key={o.v} onClick={()=>set(o.v)} style={{flex:1,padding:"12px 4px",borderRadius:10,fontSize:13,fontWeight:600,background:val===o.v?color:T.glass,color:val===o.v?T.bg1:T.text,border:`1px solid ${val===o.v?color:T.gB}`}}>{o.l}</button>)}</div>}
 
-function SleepBlock({entry,onDelete,onEdit,entries,isLive}){
+function SleepBlock({entry,onDelete,onEdit,entries,isLive,activeTimer,onSaveTimer,onSaveEntry}){
   const[expanded,setExpanded]=useState(true); // default OPEN
+  const[editingIdx,setEditingIdx]=useState(null); // waking index being edited
+  const[editStart,setEditStart]=useState("");
+  const[editEnd,setEditEnd]=useState("");
+  const[editBusy,setEditBusy]=useState(false);
   const wakings=entry.wakings||[];
   const totalMin=entry.durationMin||0;
   const awakeMin=awakeMinIn(entry);
@@ -2257,14 +2292,63 @@ function SleepBlock({entry,onDelete,onEdit,entries,isLive}){
             .sort((a,b)=>(a.time||"").localeCompare(b.time||""));
           const isActive=w.isActive;
           return<div key={i}>
-            {/* Waking separator with pill — amber if active, blue if closed */}
+            {/* Waking separator with pill — amber if active, blue if closed. Tap to edit. */}
             <div style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0 4px",marginTop:i>0?6:0,borderTop:i>0?`1px dashed ${isActive?"rgba(251,191,36,0.25)":"rgba(96,165,250,0.18)"}`:"none"}}>
-              <span style={{display:"inline-flex",alignItems:"center",gap:4,fontSize:10,fontWeight:700,color:isActive?"#fbbf24":"#60a5fa",padding:"3px 9px",borderRadius:8,background:isActive?"rgba(251,191,36,0.18)":"rgba(96,165,250,0.15)",border:`1px solid ${isActive?"rgba(251,191,36,0.4)":"rgba(96,165,250,0.3)"}`,fontVariantNumeric:"tabular-nums"}}>
+              <button onClick={e=>{e.stopPropagation();const didx=editingIdx===i?null:i;setEditingIdx(didx);if(didx!==null){setEditStart(w.time||"");const dur=w.durationMin||0;if(isActive){const now=new Date();setEditEnd(`${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`)}else{const[sh,sm]=(w.time||"00:00").split(":").map(Number);const endTot=sh*60+sm+dur;const eh=Math.floor(endTot/60)%24;const em=endTot%60;setEditEnd(`${String(eh).padStart(2,"0")}:${String(em).padStart(2,"0")}`)}}}} style={{display:"inline-flex",alignItems:"center",gap:6,fontSize:10,fontWeight:700,color:isActive?"#fbbf24":"#60a5fa",padding:"3px 9px",borderRadius:8,background:isActive?"rgba(251,191,36,0.18)":"rgba(96,165,250,0.15)",border:`1px solid ${editingIdx===i?"rgba(139,124,246,0.6)":(isActive?"rgba(251,191,36,0.4)":"rgba(96,165,250,0.3)")}`,fontVariantNumeric:"tabular-nums",cursor:"pointer"}}>
                 <Icon name="sun" size={9} color={isActive?"#fbbf24":"#60a5fa"}/>
                 {w.time} · {fmtDur(w.durationMin)}{isActive?` · ${_lang==="en"?"live":"ao vivo"}`:""}
-              </span>
+                <svg viewBox="0 0 24 24" style={{width:9,height:9,stroke:isActive?"#fbbf24":"#60a5fa",fill:"none",strokeWidth:2.5,opacity:0.65,marginLeft:2}}><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+              </button>
               <span style={{flex:1,height:1,background:isActive?"rgba(251,191,36,0.15)":"rgba(96,165,250,0.12)"}}/>
             </div>
+            {/* Inline waking editor */}
+            {editingIdx===i&&(()=>{
+              const[sh,sm]=(editStart||"00:00").split(":").map(Number);
+              const[eh,em]=(editEnd||"00:00").split(":").map(Number);
+              let dur=(eh*60+em)-(sh*60+sm);
+              if(dur<0)dur+=1440;
+              const valid=editStart&&editEnd&&dur>0&&dur<1440;
+              return<div style={{margin:"6px 0 10px",padding:14,borderRadius:12,background:"linear-gradient(180deg,rgba(22,28,60,0.7),rgba(20,26,60,0.55))",border:"1px solid rgba(139,124,246,0.25)",boxShadow:"0 4px 16px -6px rgba(0,0,0,0.4), 0 1px 0 0 rgba(255,255,255,0.06) inset"}} onClick={e=>e.stopPropagation()}>
+                <div style={{fontSize:9,fontWeight:700,color:"#c4b5fd",textTransform:"uppercase",letterSpacing:1.1,marginBottom:10,display:"flex",justifyContent:"space-between"}}>
+                  <span>{_lang==="en"?"Edit waking":"Editar waking"}</span>
+                  <span style={{color:isActive?"#fbbf24":"#7dd3fc"}}>{isActive?(_lang==="en"?"● Live":"● Ao vivo"):(_lang==="en"?"History":"Histórico")}</span>
+                </div>
+                <div style={{display:"flex",gap:8,marginBottom:8}}>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:9,color:"#7a80a8",fontWeight:600,textTransform:"uppercase",letterSpacing:0.6,marginBottom:4,paddingLeft:2}}>{_lang==="en"?"Start":"Início"}</div>
+                    <input type="time" value={editStart} onChange={e=>setEditStart(e.target.value)} style={{width:"100%",padding:"11px 8px",background:"rgba(14,18,48,0.7)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:10,color:"#e4e6f5",fontSize:15,fontWeight:700,textAlign:"center",fontVariantNumeric:"tabular-nums",outline:"none",colorScheme:"dark",boxSizing:"border-box"}}/>
+                  </div>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:9,color:"#7a80a8",fontWeight:600,textTransform:"uppercase",letterSpacing:0.6,marginBottom:4,paddingLeft:2}}>{_lang==="en"?"End":"Fim"}</div>
+                    <input type="time" value={editEnd} onChange={e=>setEditEnd(e.target.value)} style={{width:"100%",padding:"11px 8px",background:isActive?"linear-gradient(180deg,rgba(56,189,248,0.15),rgba(56,189,248,0.05))":"rgba(14,18,48,0.7)",border:`1px solid ${isActive?"rgba(56,189,248,0.3)":"rgba(255,255,255,0.08)"}`,borderRadius:10,color:isActive?"#7dd3fc":"#e4e6f5",fontSize:15,fontWeight:700,textAlign:"center",fontVariantNumeric:"tabular-nums",outline:"none",colorScheme:"dark",boxSizing:"border-box"}}/>
+                  </div>
+                </div>
+                <div style={{textAlign:"center",fontSize:11,color:valid?"#9099c3":"#f87171",fontWeight:600,margin:"6px 0 10px"}}>
+                  {_lang==="en"?"Duration":"Duração"}: <strong style={{color:valid?"#c4b5fd":"#f87171",fontVariantNumeric:"tabular-nums"}}>{valid?fmtDur(dur):(_lang==="en"?"invalid":"inválido")}</strong>
+                </div>
+                <div style={{display:"flex",gap:6}}>
+                  {!isActive&&<button disabled={editBusy} onClick={async e=>{e.stopPropagation();if(!confirm(_lang==="en"?"Remove this waking?":"Remover este waking?"))return;setEditBusy(true);Haptic.medium();try{const nw=(entry.wakings||[]).filter((_,k)=>k!==i);const newDur=nw.reduce((s,x)=>s+(x.durationMin||0),0);await onSaveEntry({...entry,wakings:nw,_awakeMin:newDur});setEditingIdx(null);Haptic.success()}catch(err){Haptic.warning()}setEditBusy(false)}} style={{padding:"9px 11px",borderRadius:9,background:"rgba(248,113,113,0.1)",color:"#f87171",fontSize:12,fontWeight:700,border:"1px solid rgba(248,113,113,0.25)",cursor:"pointer",flexShrink:0}}>
+                    <svg viewBox="0 0 24 24" style={{width:12,height:12,stroke:"#f87171",fill:"none",strokeWidth:2}}><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 01-2 2H9a2 2 0 01-2-2L5 6"/></svg>
+                  </button>}
+                  <button onClick={e=>{e.stopPropagation();setEditingIdx(null)}} style={{flex:1,padding:"9px 10px",borderRadius:9,background:"rgba(14,18,48,0.7)",color:"#8b90b8",fontSize:12,fontWeight:700,border:"1px solid rgba(255,255,255,0.08)",cursor:"pointer"}}>{_lang==="en"?"Cancel":"Cancelar"}</button>
+                  <button disabled={!valid||editBusy} onClick={async e=>{e.stopPropagation();if(!valid)return;setEditBusy(true);Haptic.medium();try{
+                    if(isActive){
+                      // Live waking: close it by pushing to wakings[] and clearing nightWake
+                      const startIso=new Date(`${entry.date}T${editStart}`).toISOString();
+                      const newWaking={time:editStart,durationMin:dur,events:(activeTimer?.nightWake?.events)||[]};
+                      const newWakings=[...((activeTimer?.wakings)||[]),newWaking];
+                      await onSaveTimer({...activeTimer,nightWake:null,wakings:newWakings});
+                    }else{
+                      // History: update wakings[idx] of the sleep entry
+                      const nw=[...(entry.wakings||[])];
+                      nw[i]={...nw[i],time:editStart,durationMin:dur};
+                      await onSaveEntry({...entry,wakings:nw});
+                    }
+                    setEditingIdx(null);Haptic.success()
+                  }catch(err){Haptic.warning()}setEditBusy(false)}} style={{flex:1,padding:"9px 10px",borderRadius:9,background:valid?"linear-gradient(180deg,#9b8df8,#7c3aed)":"rgba(14,18,48,0.6)",color:valid?"#fff":"#555a80",fontSize:12,fontWeight:700,border:`1px solid ${valid?"rgba(139,124,246,0.5)":"rgba(255,255,255,0.06)"}`,boxShadow:valid?"0 4px 12px -4px rgba(139,124,246,0.4)":"none",cursor:valid&&!editBusy?"pointer":"not-allowed",opacity:editBusy?0.6:1}}>{isActive?(_lang==="en"?"End waking":"Encerrar"):(_lang==="en"?"Save":"Salvar")}</button>
+                </div>
+              </div>
+            })()}
             {/* All events for this waking (explicit + retroactive merged) */}
             {allEventsForWaking.length>0?allEventsForWaking.map((le,j)=><EventMini key={le.id||j} le={le}/>):<div style={{fontSize:10,color:T.dim,fontStyle:"italic",padding:"6px 0"}}>{_lang==="en"?"No events recorded":"Nenhum evento registrado"}</div>}
           </div>
@@ -3189,7 +3273,7 @@ function StatsPage({entries,onGrowth}){
   </div>);
 }
 
-function HistoryPage({entries,onDelete,onEdit}){
+function HistoryPage({entries,onDelete,onEdit,activeTimer}){
   const[dateIdx,setDateIdx]=useState(0);
   const[filter,setFilter]=useState("all");
   const viewDate=dateOffset(todayStr(),-dateIdx);
@@ -3223,7 +3307,7 @@ function HistoryPage({entries,onDelete,onEdit}){
       if(e.nightWake)return false;
       if(findContainingBedtime(e,entries))return false;
       return true;
-    }).map(e=>(e.type==="sleep"&&e.wakings&&e.wakings.length>0)?<SleepBlock key={e.id} entry={e} onDelete={onDelete} onEdit={onEdit} entries={entries}/>:<EntryRow key={e.id} entry={e} onDelete={onDelete} onEdit={onEdit}/>);
+    }).map(e=>(e.type==="sleep"&&e.wakings&&e.wakings.length>0)?<SleepBlock key={e.id} entry={e} onDelete={onDelete} onEdit={onEdit} entries={entries} activeTimer={activeTimer} onSaveTimer={FB.saveTimer} onSaveEntry={FB.addEntry}/>:<EntryRow key={e.id} entry={e} onDelete={onDelete} onEdit={onEdit}/>);
   return(<div style={{padding:"calc(16px + env(safe-area-inset-top)) 20px 0"}}>
     <h2 style={{fontSize:17,fontWeight:700,marginBottom:12}}>{L("history")}</h2>
     {/* Date navigator card */}
@@ -3874,13 +3958,13 @@ function App(){
         {!activeTimer&&sleepRec?.phase===2&&daySchedule.length>0&&daySchedule.filter(s=>s.status==="next").map((s,i)=><div key={"ns"+i} style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:`${T.accent}10`,border:`1px solid ${T.accent}18`,display:"flex",alignItems:"center",gap:10}}><Icon name="star" size={18} color={T.accent} fill={T.accent}/><div><div style={{fontSize:12,fontWeight:700,color:T.accent}}>{s.bed?(_lang==="en"?"Bedtime ~":"Sono ~"):(_lang==="en"?"Next nap ~":"Prox. soneca ~")}{minToTime(s.startMin)}</div><div style={{fontSize:10,color:T.sub}}>{s.bed?"":`${s.pos}${_lang==="en"?["","st","nd","rd"][s.pos]||"th":"a"} · `}WW {fmtDur(s.ww)}{s.durRange?" · "+s.durRange:""}</div></div></div>)}
         <InsightCards insights={dayInsights} phase={sleepRec?.phase}/>
         <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr)",gap:6,padding:"0 20px",marginBottom:14}}>{[{i:"bottle",v:`${totalMl}`,u:"ml",c:T.green,t:["bottle"],tap:"bottle",l:_lang==="en"?"Bottle":"Mamad."},{i:"breast",v:totalNursingMin>0?fmtDur(totalNursingMin):`${totalNursing}x`,c:T.blue,t:["nursing"],tap:"nursing",l:_lang==="en"?"Nursing":"Amam."},{i:"moon",v:fmtDur(totalSleep),c:T.purple,t:["sleep","nap"],tap:"nap",l:_lang==="en"?"Sleep":"Sono"},{i:"diaper",v:`${totalDiapers}`,c:T.pink,t:["diaper"],tap:"diaper",l:_lang==="en"?"Diaper":"Fralda"}].map((p,idx)=>{const last=entries.find(e=>p.t.includes(e.type));let ago=null;if(last){if(p.t.includes("sleep")&&last.durationMin){const endMs=new Date(`${last.date}T${last.time}`).getTime()+last.durationMin*60000;const endD=new Date(endMs);const ed=`${endD.getFullYear()}-${String(endD.getMonth()+1).padStart(2,"0")}-${String(endD.getDate()).padStart(2,"0")}`;const et=`${String(endD.getHours()).padStart(2,"0")}:${String(endD.getMinutes()).padStart(2,"0")}`;ago=timeSince(ed,et)}else{ago=timeSince(last.date,last.time)}}return<button key={idx} onClick={()=>{if(p.tap==="nap"&&!activeTimer)startTimer("nap");else if(p.tap==="nursing"&&!activeTimer)startTimer("nursing",nextNursingSide);else if(!activeTimer)setFormType(p.tap)}} style={{padding:"10px",borderRadius:12,background:`${p.c}06`,border:`1px solid ${p.c}0a`,textAlign:"left"}}><div style={{display:"flex",alignItems:"center",gap:5,marginBottom:3}}><Icon name={p.i} size={12} color={p.c}/><span style={{fontSize:9,color:T.dim}}>{p.l}</span></div><div style={{fontSize:16,fontWeight:800,color:p.c}}>{p.v}{p.u?<span style={{fontSize:11,opacity:0.6}}>{p.u}</span>:null}</div>{ago&&<div style={{fontSize:12,color:`${p.c}88`,fontWeight:600,marginTop:3}}>{ago}</div>}</button>})}</div>
-        <div style={{padding:"0 20px"}}><div style={{fontSize:11,fontWeight:600,color:T.dim,marginBottom:8,textTransform:"uppercase",letterSpacing:0.8}}>{L("today")}</div>{todayE.length===0&&!liveBedtime&&<div style={{textAlign:"center",padding:"32px 20px",color:T.dim}}><Icon name="star" size={32} color={T.dim} fill={T.dim}/><div style={{fontSize:13,marginTop:8}}>{_lang==="en"?"Tap + to add":"Toque + para registrar"}</div></div>}{liveBedtime&&<SleepBlock entry={liveBedtime} entries={entries} isLive={true}/>}{todayE.filter(e=>{
+        <div style={{padding:"0 20px"}}><div style={{fontSize:11,fontWeight:600,color:T.dim,marginBottom:8,textTransform:"uppercase",letterSpacing:0.8}}>{L("today")}</div>{todayE.length===0&&!liveBedtime&&<div style={{textAlign:"center",padding:"32px 20px",color:T.dim}}><Icon name="star" size={32} color={T.dim} fill={T.dim}/><div style={{fontSize:13,marginTop:8}}>{_lang==="en"?"Tap + to add":"Toque + para registrar"}</div></div>}{liveBedtime&&<SleepBlock entry={liveBedtime} entries={entries} isLive={true} activeTimer={activeTimer} onSaveTimer={FB.saveTimer} onSaveEntry={FB.addEntry}/>}{todayE.filter(e=>{
           if(e.nightWake)return false;
           if(findContainingBedtime(e,entries))return false;
           return true;
-        }).map((e,i,arr)=>{const prev=arr[i-1];let gap=null;if(prev){const t1=new Date(`${e.date}T${e.time}`).getTime();let t2=new Date(`${prev.date}T${prev.time}`).getTime();if(prev.durationMin)t2+=prev.durationMin*60000;const diffMin=Math.abs(Math.round((t1-t2)/60000));if(diffMin>=30){const isSleep=(e.type==="nap"||e.type==="sleep")&&e.durationMin;gap=<div style={{display:"flex",alignItems:"center",gap:10,padding:"4px 16px",margin:"2px 0"}}><div style={{flex:1,height:1,background:`linear-gradient(90deg,transparent,${isSleep?T.accent:T.accent}0a,transparent)`}}/><span style={{fontSize:8,color:isSleep?T.accent:T.dim,letterSpacing:0.5}}>{isSleep?"WW ":""}{fmtDur(diffMin)}</span><div style={{flex:1,height:1,background:`linear-gradient(90deg,transparent,${isSleep?T.accent:T.accent}0a,transparent)`}}/></div>}}const useBlock=e.type==="sleep"&&e.wakings&&e.wakings.length>0;return<React.Fragment key={e.id}>{gap}{useBlock?<SleepBlock entry={e} onDelete={deleteEntry} onEdit={startEdit} entries={entries}/>:<EntryRow entry={e} onDelete={deleteEntry} onEdit={startEdit} napNum={napNums[e.id]||null}/>}</React.Fragment>})}</div>
+        }).map((e,i,arr)=>{const prev=arr[i-1];let gap=null;if(prev){const t1=new Date(`${e.date}T${e.time}`).getTime();let t2=new Date(`${prev.date}T${prev.time}`).getTime();if(prev.durationMin)t2+=prev.durationMin*60000;const diffMin=Math.abs(Math.round((t1-t2)/60000));if(diffMin>=30){const isSleep=(e.type==="nap"||e.type==="sleep")&&e.durationMin;gap=<div style={{display:"flex",alignItems:"center",gap:10,padding:"4px 16px",margin:"2px 0"}}><div style={{flex:1,height:1,background:`linear-gradient(90deg,transparent,${isSleep?T.accent:T.accent}0a,transparent)`}}/><span style={{fontSize:8,color:isSleep?T.accent:T.dim,letterSpacing:0.5}}>{isSleep?"WW ":""}{fmtDur(diffMin)}</span><div style={{flex:1,height:1,background:`linear-gradient(90deg,transparent,${isSleep?T.accent:T.accent}0a,transparent)`}}/></div>}}const useBlock=e.type==="sleep"&&e.wakings&&e.wakings.length>0;return<React.Fragment key={e.id}>{gap}{useBlock?<SleepBlock entry={e} onDelete={deleteEntry} onEdit={startEdit} entries={entries} activeTimer={activeTimer} onSaveTimer={FB.saveTimer} onSaveEntry={FB.addEntry}/>:<EntryRow entry={e} onDelete={deleteEntry} onEdit={startEdit} napNum={napNums[e.id]||null}/>}</React.Fragment>})}</div>
       </div>}
-      {page==="history"&&<HistoryPage entries={entries} onDelete={deleteEntry} onEdit={startEdit}/>}
+      {page==="history"&&<HistoryPage entries={entries} onDelete={deleteEntry} onEdit={startEdit} activeTimer={activeTimer}/>}
       {page==="stats"&&<StatsPage entries={entries} onGrowth={()=>goTo("growth")}/>}
       {page==="growth"&&<GrowthPage entries={entries} birthDate={profile.birthDate} profile={profile} onBack={()=>goTo("stats")} onAddEntry={addEntry}/>}
       </div>
