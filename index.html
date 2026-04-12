@@ -5,6 +5,8 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v9.6.18 Fade do bottom removido (estava parecendo bug, não efeito)
+  v9.6.17 Fix: mercurio congelado + fade top tapando titulo
   v9.6.16 Fix: Home vazando atrás do Profile (fade via overlay)
   v9.6.15 Mercurio liquido no botao Home + fade mask no Profile
   v9.6.14 Nav do Profile: pill compacta + hide on scroll
@@ -248,8 +250,46 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "9.6.16";
+const APP_VERSION = "9.6.18";
 const CHANGELOG = [
+  {
+    v: "9.6.18", date: "2026-04-12",
+    pt: {
+      title: "Fade do bottom removido",
+      bullets: [
+        '★ **Na v9.6.17 eu removi só o fade do topo** e mantive o do bottom achando que ficaria legal. Mas na prática ficou parecendo bug — a área logo antes da navbar ficava escurecida/transparente, dando a impressão de artefato visual, não de efeito desejado.',
+        'Removi o fade do bottom também. Transição Profile → navbar agora é simples e limpa, sem nenhum gradient overlay confundindo. Mercúrio continua girando no botão Home, tudo o resto da UI mantido.',
+        '**Lição:** efeitos de fade só funcionam bem quando têm motivo claro — tipo cortar conteúdo em lista longa. Em Profile de settings, cada card tem border e margin próprios, não precisa de "melt" artificial.'
+      ]
+    },
+    en: {
+      title: "Bottom fade removed",
+      bullets: [
+        '★ **In v9.6.17 I only removed the top fade** and kept the bottom one thinking it would look nice. But in practice it looked like a bug — the area right before the navbar was darkened/transparent, giving the impression of a visual artifact, not a desired effect.',
+        'Removed the bottom fade too. Profile → navbar transition is now simple and clean, no gradient overlay confusing things. Mercury keeps spinning on the Home button, everything else in the UI kept.',
+        '**Lesson:** fade effects only work well when they have a clear purpose — like cutting content in a long list. In a settings Profile, each card has its own border and margin, no need for artificial "melt".'
+      ]
+    }
+  },
+  {
+    v: "9.6.17", date: "2026-04-12",
+    pt: {
+      title: "Fix: mercúrio congelado + fade do topo tapando título",
+      bullets: [
+        '★ **Bug do mercúrio não girando.** No iPhone, a animação do anel cromado ficava congelada — iOS Safari às vezes suspende animações CSS quando a camada tem múltiplas propriedades pesadas (gradient + box-shadow + animation no mesmo elemento). Fix: separei o glow em um elemento dedicado (box-shadow estático) e adicionei `will-change:transform` no elemento que gira, promovendo pra camada GPU. Agora roda suave no iOS.',
+        '★ **Fade do topo tapando o título "Feeding reminder".** A barra de gradient que criava o fade superior ficava em cima do primeiro card visível, escurecendo o título. Removi completamente o fade do topo — mantive só o do bottom (que é onde realmente faz sentido, escondendo a transição com a navbar).',
+        'O fade do bottom continua funcionando igual: cards "derretem" ao tocar a área da navbar, visualmente limpo.'
+      ]
+    },
+    en: {
+      title: "Fix: frozen mercury + top fade covering title",
+      bullets: [
+        '★ **Mercury not spinning bug.** On iPhone, the chromed ring animation was frozen — iOS Safari sometimes suspends CSS animations when the layer has multiple heavy properties (gradient + box-shadow + animation on same element). Fix: separated the glow into a dedicated element (static box-shadow) and added `will-change:transform` on the spinning element, promoting it to GPU layer. Now runs smooth on iOS.',
+        '★ **Top fade covering "Feeding reminder" title.** The gradient bar creating the top fade was on top of the first visible card, darkening the title. Removed the top fade completely — kept only the bottom (which is where it actually makes sense, hiding the transition to the navbar).',
+        'The bottom fade still works the same: cards "melt" when touching the navbar area, visually clean.'
+      ]
+    }
+  },
   {
     v: "9.6.16", date: "2026-04-12",
     pt: {
@@ -2975,9 +3015,8 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
   saveRef.current=doSave;
   const inp={width:"100%",maxWidth:"100%",boxSizing:"border-box",WebkitAppearance:"none",appearance:"none",padding:"17px 18px",background:"rgba(20,26,60,0.55)",border:`1px solid ${T.gBSoft}`,borderRadius:16,color:T.text,fontSize:17,fontWeight:600,letterSpacing:-0.2,outline:"none",boxShadow:T.insetTop};
   return(<div onScroll={onScroll} style={{position:"fixed",inset:0,zIndex:200,maxWidth:480,margin:"0 auto",background:`radial-gradient(ellipse at 50% 0%,#10153d,${T.bg1} 65%)`,overflowY:"auto",overflowX:"hidden",overscrollBehavior:"contain",WebkitOverflowScrolling:"touch",paddingTop:"env(safe-area-inset-top)",paddingBottom:"calc(100px + env(safe-area-inset-bottom))"}}>
-    {/* Fade overlays — create a "melt" effect at top and bottom without masking the background */}
-    <div style={{position:"fixed",top:"env(safe-area-inset-top)",left:0,right:0,height:32,background:`linear-gradient(180deg, ${T.bg1} 0%, rgba(7,11,30,0.85) 50%, transparent 100%)`,pointerEvents:"none",zIndex:5,maxWidth:480,margin:"0 auto"}}/>
-    <div style={{position:"fixed",bottom:"calc(72px + env(safe-area-inset-bottom))",left:0,right:0,height:60,background:`linear-gradient(0deg, ${T.bg1} 0%, rgba(7,11,30,0.9) 40%, transparent 100%)`,pointerEvents:"none",zIndex:5,maxWidth:480,margin:"0 auto"}}/>
+    {/* Fade overlays removed — both top and bottom gradient strips were visually distracting,
+        making content look dimmed/buggy rather than giving a clean melt effect. Simple solid scroll. */}
     <div style={{display:"flex",alignItems:"center",gap:14,padding:"16px 20px"}}><button onClick={onBack} style={{width:36,height:36,borderRadius:10,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="back" size={18} color={T.sub}/></button><span style={{fontSize:17,fontWeight:700}}>{L("profile")}</span></div>
     <div style={{padding:"0 20px"}}>
       <div style={{display:"flex",flexDirection:"column",alignItems:"center",marginBottom:24}}><button onClick={()=>fr.current?.click()} style={{width:88,height:88,borderRadius:"50%",overflow:"hidden",background:T.glass,border:`2px solid ${T.accent}33`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 4px 20px rgba(0,0,0,0.3)"}}>{photo?<img src={photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<Icon name="sun" size={32} color={T.sub}/>}</button><input ref={fr} type="file" accept="image/*" style={{display:"none"}} onChange={handlePhoto}/><span style={{fontSize:11,color:T.dim,marginTop:8}}>{_lang==="en"?"Tap to change":"Toque para alterar"}</span></div>
@@ -4277,8 +4316,10 @@ function App(){
           <Icon name="check" size={14} color="#fff"/>{_lang==="en"?"Save":"Salvar"}
         </button>
       </>:<div style={{position:"relative",width:60,height:60,display:"flex",alignItems:"center",justifyContent:"center"}}>
-        {/* Mercury ring — continuous spinning conic gradient */}
-        <div style={{position:"absolute",inset:0,borderRadius:"50%",background:"conic-gradient(from 0deg, #8b7cf6 0%, #e0d4ff 15%, #ffffff 22%, #c4b5fd 35%, #8b7cf6 50%, #5b4aaf 65%, #ffffff 78%, #a78bfa 92%, #8b7cf6 100%)",animation:"mercurySpin 3s linear infinite",boxShadow:"0 0 20px rgba(139,124,246,0.55)"}}/>
+        {/* Mercury ring — continuous spinning conic gradient, GPU-accelerated */}
+        <div style={{position:"absolute",inset:0,borderRadius:"50%",background:"conic-gradient(from 0deg, #8b7cf6 0%, #e0d4ff 15%, #ffffff 22%, #c4b5fd 35%, #8b7cf6 50%, #5b4aaf 65%, #ffffff 78%, #a78bfa 92%, #8b7cf6 100%)",animation:"mercurySpin 3s linear infinite",willChange:"transform",transformOrigin:"center center"}}/>
+        {/* Ring glow layer — separate static element so the spinning layer isn't weighed down */}
+        <div style={{position:"absolute",inset:-4,borderRadius:"50%",boxShadow:"0 0 20px rgba(139,124,246,0.55)",pointerEvents:"none"}}/>
         {/* Inner mask — the dark disc that reveals the ring as a border */}
         <div style={{position:"absolute",inset:2.5,borderRadius:"50%",background:"linear-gradient(180deg,rgba(14,18,48,0.98),rgba(8,10,28,0.99))"}}/>
         {/* Actual clickable button on top */}
