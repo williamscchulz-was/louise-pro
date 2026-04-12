@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v9.6.14 Nav do Profile: pill compacta + hide on scroll
   v9.6.13 Remove toggle Haptic (iOS nao suporta navigator.vibrate)
   v9.6.12 Intervalo de mamada entra no dirty state do Profile
   v9.6.11 Fix: navbar do Profile sumindo + Voltar ao Home flutuante
@@ -244,8 +245,29 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "9.6.13";
+const APP_VERSION = "9.6.14";
 const CHANGELOG = [
+  {
+    v: "9.6.14", date: "2026-04-12",
+    pt: {
+      title: "Nav do Profile: pill compacta + hide on scroll",
+      bullets: [
+        '★ **Botão Voltar virou uma pill redonda pequena** (50×50px) com só o ícone da casinha, centralizada. Sem texto "Back to Home" — fica discreto, não ocupa a largura inteira da tela.',
+        '★ **Hide on scroll.** Ao rolar a página pra baixo, a pill desliza pra fora com animação suave. Ao rolar pra cima, volta. Padrão iOS nativo. No topo da página (scrollY < 40px) sempre aparece.',
+        '**Modo edição mantém o comportamento anterior:** com edições pendentes, a navbar "Cancelar | Salvar" **não esconde ao rolar** (é crítica demais pra sumir). Sempre visível até você decidir o que fazer.',
+        'Transições suaves `.28s cubic-bezier` pra não ficar tremendo. Threshold de 6px pra ignorar micro-scrolls acidentais.'
+      ]
+    },
+    en: {
+      title: "Profile nav: compact pill + hide on scroll",
+      bullets: [
+        '★ **Back button is now a small round pill** (50×50px) with just the home icon, centered. No "Back to Home" text — discreet, doesn\'t take the full screen width.',
+        '★ **Hide on scroll.** Scrolling down slides the pill out with a smooth animation. Scrolling up brings it back. Native iOS pattern. At the top of the page (scrollY < 40px) it\'s always visible.',
+        '**Edit mode keeps the previous behavior:** with pending edits, the "Cancel | Save" navbar **does not hide on scroll** (too critical to disappear). Always visible until you decide what to do.',
+        'Smooth `.28s cubic-bezier` transitions to avoid jitter. 6px threshold to ignore accidental micro-scrolls.'
+      ]
+    }
+  },
   {
     v: "9.6.13", date: "2026-04-12",
     pt: {
@@ -2753,7 +2775,7 @@ function InboxPanel({inbox,onClose,onMarkRead,onMarkAllRead,lang}){
   </div>);
 }
 
-function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadChangelog,reminders,onAddReminder,onDelReminder,onDirtyChange,cancelSignal,saveSignal}){
+function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadChangelog,reminders,onAddReminder,onDelReminder,onDirtyChange,cancelSignal,saveSignal,onScroll}){
   const[name,setName]=useState(profile.name||"");
   const[birth,setBirth]=useState(profile.birthDate||"");
   const[photo,setPhoto]=useState(profile.photo||"");
@@ -2907,7 +2929,7 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
   };
   saveRef.current=doSave;
   const inp={width:"100%",maxWidth:"100%",boxSizing:"border-box",WebkitAppearance:"none",appearance:"none",padding:"17px 18px",background:"rgba(20,26,60,0.55)",border:`1px solid ${T.gBSoft}`,borderRadius:16,color:T.text,fontSize:17,fontWeight:600,letterSpacing:-0.2,outline:"none",boxShadow:T.insetTop};
-  return(<div style={{position:"fixed",inset:0,zIndex:200,maxWidth:480,margin:"0 auto",background:`radial-gradient(ellipse at 50% 0%,#10153d,${T.bg1} 65%)`,overflowY:"auto",overflowX:"hidden",overscrollBehavior:"contain",WebkitOverflowScrolling:"touch",paddingTop:"env(safe-area-inset-top)",paddingBottom:"calc(100px + env(safe-area-inset-bottom))"}}>
+  return(<div onScroll={onScroll} style={{position:"fixed",inset:0,zIndex:200,maxWidth:480,margin:"0 auto",background:`radial-gradient(ellipse at 50% 0%,#10153d,${T.bg1} 65%)`,overflowY:"auto",overflowX:"hidden",overscrollBehavior:"contain",WebkitOverflowScrolling:"touch",paddingTop:"env(safe-area-inset-top)",paddingBottom:"calc(100px + env(safe-area-inset-bottom))"}}>
     <div style={{display:"flex",alignItems:"center",gap:14,padding:"16px 20px"}}><button onClick={onBack} style={{width:36,height:36,borderRadius:10,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="back" size={18} color={T.sub}/></button><span style={{fontSize:17,fontWeight:700}}>{L("profile")}</span></div>
     <div style={{padding:"0 20px"}}>
       <div style={{display:"flex",flexDirection:"column",alignItems:"center",marginBottom:24}}><button onClick={()=>fr.current?.click()} style={{width:88,height:88,borderRadius:"50%",overflow:"hidden",background:T.glass,border:`2px solid ${T.accent}33`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 4px 20px rgba(0,0,0,0.3)"}}>{photo?<img src={photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<Icon name="sun" size={32} color={T.sub}/>}</button><input ref={fr} type="file" accept="image/*" style={{display:"none"}} onChange={handlePhoto}/><span style={{fontSize:11,color:T.dim,marginTop:8}}>{_lang==="en"?"Tap to change":"Toque para alterar"}</span></div>
@@ -3661,6 +3683,11 @@ function App(){
   const[profileCancelSignal,setProfileCancelSignal]=useState(0);
   const[profileSaveSignal,setProfileSaveSignal]=useState(0);
   const profileSaveRef=useRef(null);
+  // Profile nav hide-on-scroll — navbar slides out on scroll down, returns on scroll up
+  const[profileNavHidden,setProfileNavHidden]=useState(false);
+  const lastScrollYRef=useRef(0);
+  // Reset nav visibility whenever Profile is opened/closed
+  useEffect(()=>{if(!showProfile){setProfileNavHidden(false);lastScrollYRef.current=0}},[showProfile]);
   const[inbox,setInbox]=useState({items:[],lastReset:""});const[showInbox,setShowInbox]=useState(false);
   const[reminders,setReminders]=useState([]);
   const[showChangelog,setShowChangelog]=useState(false);const[showUpdateToast,setShowUpdateToast]=useState(false);
@@ -4184,7 +4211,7 @@ function App(){
       {formType&&<AddForm type={formType} onSave={addEntry} savedMeds={savedMeds} onSaveMeds={async m=>await FB.saveMeds(m)} editEntry={editEntry} lastBottleMl={lastBottleMl} topMl={topMl} onStartTimer={type=>{startTimer(type);setFormType(null);setShowAdd(false)}}/>}
     </Sheet>
 
-    {showProfile&&<ProfilePage profile={profile} onSave={async p=>await FB.saveProfile(p)} onBack={()=>{setShowProfile(false);setProfileIsDirty(false)}} onGrowth={()=>{setShowProfile(false);setProfileIsDirty(false);goTo("growth")}} onShowChangelog={()=>setShowChangelog(true)} hasUnreadChangelog={hasUnreadChangelog} reminders={reminders} onAddReminder={async r=>await FB.addReminder(r)} onDelReminder={async id=>await FB.delReminder(id)} onDirtyChange={setProfileIsDirty} cancelSignal={profileCancelSignal} saveSignal={profileSaveSignal}/>}
+    {showProfile&&<ProfilePage profile={profile} onSave={async p=>await FB.saveProfile(p)} onBack={()=>{setShowProfile(false);setProfileIsDirty(false)}} onGrowth={()=>{setShowProfile(false);setProfileIsDirty(false);goTo("growth")}} onShowChangelog={()=>setShowChangelog(true)} hasUnreadChangelog={hasUnreadChangelog} reminders={reminders} onAddReminder={async r=>await FB.addReminder(r)} onDelReminder={async id=>await FB.delReminder(id)} onDirtyChange={setProfileIsDirty} cancelSignal={profileCancelSignal} saveSignal={profileSaveSignal} onScroll={e=>{const y=e.currentTarget.scrollTop;const last=lastScrollYRef.current;const delta=y-last;if(y<40){setProfileNavHidden(false)}else if(delta>6){setProfileNavHidden(true)}else if(delta<-6){setProfileNavHidden(false)}lastScrollYRef.current=y}}/>}
     {showInbox&&<InboxPanel inbox={inbox} onClose={()=>setShowInbox(false)} onMarkRead={markInboxRead} onMarkAllRead={markAllInboxRead} lang={lang}/>}
     {showChangelog&&<ChangelogModal onClose={closeChangelog} lang={lang}/>}
     {showUpdateToast&&!showChangelog&&<UpdateToast fromVersion={profile.lastSeenVersion} toVersion={APP_VERSION} onView={openChangelog} onDismiss={dismissUpdateToast} lang={lang}/>}
@@ -4192,7 +4219,7 @@ function App(){
     <EditStartModal open={showEditStart} onClose={()=>setShowEditStart(false)} activeTimer={activeTimer} onSave={handleEditStart}/>
     <NursingSidePicker open={showNursingPicker} onClose={()=>setShowNursingPicker(false)} onSelect={side=>startTimer("nursing",side)}/>
 
-    {showProfile?<nav style={{position:"fixed",bottom:"6px",left:"16px",right:"16px",display:"flex",alignItems:"center",gap:8,padding:"10px",background:profileIsDirty?"linear-gradient(180deg,rgba(28,22,60,0.95),rgba(22,18,52,0.96))":"linear-gradient(180deg,rgba(14,18,48,0.96),rgba(8,10,28,0.97))",backdropFilter:"blur(30px)",WebkitBackdropFilter:"blur(30px)",borderRadius:22,border:`1px solid ${profileIsDirty?"rgba(139,124,246,0.35)":"rgba(255,255,255,0.08)"}`,boxShadow:profileIsDirty?"0 1px 0 0 rgba(255,255,255,0.1) inset, 0 0 0 1px rgba(139,124,246,0.15), 0 12px 36px -8px rgba(139,124,246,0.4)":"0 1px 0 0 rgba(255,255,255,0.08) inset, 0 8px 32px -4px rgba(0,0,0,0.7)",zIndex:250,animation:profileIsDirty?"slideUp 0.3s cubic-bezier(0.22,1,0.36,1)":"none"}}>
+    {showProfile?<nav style={{position:"fixed",bottom:"6px",left:profileIsDirty?"16px":"50%",right:profileIsDirty?"16px":"auto",transform:profileIsDirty?(profileNavHidden?"translateY(0)":"translateY(0)"):`translateX(-50%) translateY(${profileNavHidden?"120%":"0"})`,opacity:(profileNavHidden&&!profileIsDirty)?0:1,display:"flex",alignItems:"center",gap:8,padding:profileIsDirty?"10px":"0",background:profileIsDirty?"linear-gradient(180deg,rgba(28,22,60,0.95),rgba(22,18,52,0.96))":"transparent",backdropFilter:profileIsDirty?"blur(30px)":"none",WebkitBackdropFilter:profileIsDirty?"blur(30px)":"none",borderRadius:profileIsDirty?22:999,border:profileIsDirty?"1px solid rgba(139,124,246,0.35)":"none",boxShadow:profileIsDirty?"0 1px 0 0 rgba(255,255,255,0.1) inset, 0 0 0 1px rgba(139,124,246,0.15), 0 12px 36px -8px rgba(139,124,246,0.4)":"none",zIndex:250,animation:profileIsDirty?"slideUp 0.3s cubic-bezier(0.22,1,0.36,1)":"none",transition:"transform .28s cubic-bezier(0.22,1,0.36,1), opacity .2s ease"}}>
       {profileIsDirty?<>
         <button onClick={()=>{Haptic.medium();setProfileCancelSignal(s=>s+1)}} style={{flex:"0 0 42%",padding:13,borderRadius:14,background:"rgba(14,18,48,0.7)",color:"#8b90b8",fontSize:14,fontWeight:700,border:"1px solid rgba(255,255,255,0.08)",cursor:"pointer",letterSpacing:-0.2,display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
           <Icon name="x" size={14} color="#8b90b8"/>{_lang==="en"?"Cancel":"Cancelar"}
@@ -4201,8 +4228,8 @@ function App(){
           <span style={{width:6,height:6,borderRadius:"50%",background:"#fbbf24",animation:"pulse 1.4s ease-in-out infinite"}}/>
           <Icon name="check" size={14} color="#fff"/>{_lang==="en"?"Save":"Salvar"}
         </button>
-      </>:<button onClick={()=>{setShowProfile(false);setProfileIsDirty(false)}} style={{flex:1,padding:13,borderRadius:14,background:"rgba(14,18,48,0.6)",color:"#c4b5fd",fontSize:14,fontWeight:700,border:"1px solid rgba(139,124,246,0.2)",cursor:"pointer",letterSpacing:-0.2,display:"flex",alignItems:"center",justifyContent:"center",gap:8,boxShadow:"0 1px 0 0 rgba(255,255,255,0.06) inset"}}>
-        <Icon name="home" size={16} color="#c4b5fd"/>{_lang==="en"?"Back to Home":"Voltar ao Home"}
+      </>:<button onClick={()=>{setShowProfile(false);setProfileIsDirty(false)}} style={{width:50,height:50,borderRadius:"50%",background:"linear-gradient(180deg,rgba(14,18,48,0.96),rgba(8,10,28,0.97))",backdropFilter:"blur(30px)",WebkitBackdropFilter:"blur(30px)",color:"#c4b5fd",border:"1px solid rgba(139,124,246,0.25)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset, 0 8px 24px -4px rgba(0,0,0,0.7), 0 0 40px -10px rgba(139,124,246,0.25)",padding:0}}>
+        <Icon name="home" size={20} color="#c4b5fd"/>
       </button>}
     </nav>:<nav style={{position:"fixed",bottom:"6px",left:"50%",transform:"translateX(-50%)",display:"flex",alignItems:"center",gap:4,padding:"9px 14px",background:"linear-gradient(180deg,rgba(14,18,48,0.94),rgba(8,10,28,0.96))",backdropFilter:"blur(30px)",WebkitBackdropFilter:"blur(30px)",borderRadius:44,border:"1px solid rgba(255,255,255,0.06)",boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset, 0 0 0 1px rgba(255,255,255,0.02), 0 8px 32px -4px rgba(0,0,0,0.7), 0 0 60px -20px rgba(139,124,246,0.25)",zIndex:50}}>
       {[{icon:"home",label:"HOME",active:page==="home"&&!showAdd,action:()=>goTo("home")},{icon:"clock",label:_lang==="en"?"HISTORY":"HIST.",active:page==="history",action:()=>goTo("history")}].map(n=><button key={n.icon} onClick={n.action} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3,padding:"9px 16px",borderRadius:18,background:n.active?"linear-gradient(180deg,rgba(139,124,246,0.22),rgba(139,124,246,0.08))":"transparent",border:n.active?"1px solid rgba(139,124,246,0.28)":"1px solid transparent",boxShadow:n.active?"0 1px 0 0 rgba(255,255,255,0.1) inset, 0 0 0 1px rgba(139,124,246,0.1), 0 4px 12px -4px rgba(139,124,246,0.4)":"none",transition:"all .2s"}}><Icon name={n.icon} size={20} color={n.active?"#c4b5fd":T.dim}/>{n.active&&<span style={{fontSize:9,fontWeight:700,color:"#c4b5fd",letterSpacing:0.3}}>{n.label}</span>}</button>)}
