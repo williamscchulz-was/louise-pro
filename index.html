@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v9.6.10 Navbar contextual no Profile (Salvar/Cancelar flutuante)
   v9.6.9  Fix editor de wakings: salva corretamente em bedtime live
   v9.6.8  Editor de wakings (live e histórico)
   v9.6.7  Lembrete de mamada (push apos intervalo, so de dia)
@@ -240,8 +241,33 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "9.6.9";
+const APP_VERSION = "9.6.10";
 const CHANGELOG = [
+  {
+    v: "9.6.10", date: "2026-04-12",
+    pt: {
+      title: "Navbar contextual no Profile",
+      bullets: [
+        '★ **Acabou a rolagem infinita pra salvar.** A navbar inferior (Home/Stats/+/History/Profile) agora transiciona pra modo "Salvar/Cancelar" assim que você muda qualquer campo de input no Profile — nome, data de nascimento, meta de ml, dados de nascimento.',
+        '**Dirty state automático.** O app detecta quando algum campo mudou em relação ao salvo e faz a navbar trocar sozinha. Se você volta ao valor original, navbar volta ao normal.',
+        '**Cancelar** reverte todos os campos pro valor original (com haptic). **Salvar** persiste no Firestore e volta pra navbar normal.',
+        '**Toggles continuam autosalvando.** Keep screen on, Haptic, Idioma, Notificações, feeding reminder — todos esses não disparam o modo edição, continuam salvando no toque como antes.',
+        '**Botão "Salvar alterações" antigo removido** do fim da página (redundante com a navbar nova). Atalho "View growth" continua lá e salva automaticamente se houver edições pendentes antes de navegar.',
+        'Animação `slideUp` na transição da navbar, dot âmbar pulsante no botão Salvar pra indicar edição pendente.'
+      ]
+    },
+    en: {
+      title: "Contextual navbar in Profile",
+      bullets: [
+        '★ **No more endless scrolling to save.** The bottom navbar (Home/Stats/+/History/Profile) now transitions to "Save/Cancel" mode as soon as you change any input field in Profile — name, birth date, ml goal, birth data.',
+        '**Automatic dirty state.** The app detects when any field has changed from its saved value and swaps the navbar on its own. If you revert to the original value, navbar returns to normal.',
+        '**Cancel** reverts all fields to their original values (with haptic). **Save** persists to Firestore and returns the navbar to normal mode.',
+        '**Toggles keep autosaving.** Keep screen on, Haptic, Language, Notifications, feeding reminder — none of these trigger edit mode, they still save on tap as before.',
+        '**Old "Save changes" button removed** from the bottom of the page (redundant with the new navbar). "View growth" shortcut stays there and autosaves if there are pending edits before navigating.',
+        '`slideUp` animation on navbar transition, pulsing amber dot on the Save button to indicate pending edits.'
+      ]
+    }
+  },
   {
     v: "9.6.9", date: "2026-04-10",
     pt: {
@@ -2665,7 +2691,7 @@ function InboxPanel({inbox,onClose,onMarkRead,onMarkAllRead,lang}){
   </div>);
 }
 
-function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadChangelog,reminders,onAddReminder,onDelReminder}){
+function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadChangelog,reminders,onAddReminder,onDelReminder,onDirtyChange,cancelSignal,saveSignal}){
   const[name,setName]=useState(profile.name||"");
   const[birth,setBirth]=useState(profile.birthDate||"");
   const[photo,setPhoto]=useState(profile.photo||"");
@@ -2679,6 +2705,35 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
   const[pushEnabled,setPushEnabled]=useState(profile.pushEnabled===true);
   const[pushPermission,setPushPermission]=useState(()=>typeof Notification!=="undefined"?Notification.permission:"unsupported");
   const[pushBusy,setPushBusy]=useState(false);
+  // Dirty tracking — only INPUT fields (not toggles, which autosave)
+  const isDirty=(
+    name!==(profile.name||"")||
+    birth!==(profile.birthDate||"")||
+    photo!==(profile.photo||"")||
+    mlGoal!==String(profile.mlGoal||"")||
+    birthWeight!==String(profile.birthWeight||"")||
+    birthLength!==String(profile.birthLength||"")||
+    birthHead!==String(profile.birthHead||"")
+  );
+  // Notify parent App whenever dirty state changes so navbar can swap
+  useEffect(()=>{if(onDirtyChange)onDirtyChange(isDirty)},[isDirty]);
+  // Revert-all handler, triggered by the Cancel button in the contextual navbar
+  const revertAll=()=>{
+    setName(profile.name||"");
+    setBirth(profile.birthDate||"");
+    setPhoto(profile.photo||"");
+    setMlGoal(String(profile.mlGoal||""));
+    setBirthWeight(String(profile.birthWeight||""));
+    setBirthLength(String(profile.birthLength||""));
+    setBirthHead(String(profile.birthHead||""));
+    Haptic.medium();
+  };
+  // Watch cancelSignal — increments every time parent triggers cancel
+  useEffect(()=>{if(cancelSignal)revertAll()},[cancelSignal]);
+  // Watch saveSignal — increments every time parent triggers save via navbar.
+  // Uses a ref because doSave is declared later in this component.
+  const saveRef=useRef(null);
+  useEffect(()=>{if(saveSignal&&saveRef.current)saveRef.current()},[saveSignal]);
   // Local state for the new-reminder form
   const[remNome,setRemNome]=useState("");
   const[remDose,setRemDose]=useState("");
@@ -2769,7 +2824,8 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
   };
   const fr=useRef(null);
   const handlePhoto=e=>{const f=e.target.files?.[0];if(!f)return;const rd=new FileReader();rd.onload=ev=>{const img=new Image();img.onload=()=>{const c=document.createElement("canvas"),mx=200;let w=img.width,h=img.height;if(w>h){h=(h/w)*mx;w=mx}else{w=(w/h)*mx;h=mx}c.width=w;c.height=h;c.getContext("2d").drawImage(img,0,0,w,h);setPhoto(c.toDataURL("image/jpeg",0.8))};img.src=ev.target.result};rd.readAsDataURL(f)};
-  const doSave=()=>{onSave({name:name.trim(),birthDate:birth,photo,mlGoal:parseInt(mlGoal)||0,birthWeight:parseFloat(birthWeight)||0,birthLength:parseFloat(birthLength)||0,birthHead:parseFloat(birthHead)||0,lang:langSel,keepScreenOn,hapticEnabled,pushEnabled});onBack()};
+  const doSave=()=>{onSave({name:name.trim(),birthDate:birth,photo,mlGoal:parseInt(mlGoal)||0,birthWeight:parseFloat(birthWeight)||0,birthLength:parseFloat(birthLength)||0,birthHead:parseFloat(birthHead)||0,lang:langSel,keepScreenOn,hapticEnabled,pushEnabled});Haptic.success()};
+  saveRef.current=doSave;
   const inp={width:"100%",maxWidth:"100%",boxSizing:"border-box",WebkitAppearance:"none",appearance:"none",padding:"17px 18px",background:"rgba(20,26,60,0.55)",border:`1px solid ${T.gBSoft}`,borderRadius:16,color:T.text,fontSize:17,fontWeight:600,letterSpacing:-0.2,outline:"none",boxShadow:T.insetTop};
   return(<div style={{position:"fixed",inset:0,zIndex:200,maxWidth:480,margin:"0 auto",background:`radial-gradient(ellipse at 50% 0%,#10153d,${T.bg1} 65%)`,overflowY:"auto",overflowX:"hidden",overscrollBehavior:"contain",WebkitOverflowScrolling:"touch",paddingTop:"env(safe-area-inset-top)",paddingBottom:"calc(40px + env(safe-area-inset-bottom))"}}>
     <div style={{display:"flex",alignItems:"center",gap:14,padding:"16px 20px"}}><button onClick={onBack} style={{width:36,height:36,borderRadius:10,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="back" size={18} color={T.sub}/></button><span style={{fontSize:17,fontWeight:700}}>{L("profile")}</span></div>
@@ -2949,10 +3005,9 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
           <Fld label={`${L("head")} (cm)`}><input type="number" inputMode="decimal" step="0.1" placeholder="34" value={birthHead} onChange={e=>setBirthHead(e.target.value)} style={{...inp,textAlign:"center",padding:"12px 8px"}}/></Fld>
         </div>
       </div>
-      <button onClick={()=>{doSave();onGrowth()}} style={{width:"100%",padding:14,borderRadius:12,marginBottom:10,background:"rgba(163,230,53,0.08)",border:"1px solid rgba(163,230,53,0.15)",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+      <button onClick={()=>{if(isDirty)doSave();onGrowth()}} style={{width:"100%",padding:14,borderRadius:12,marginBottom:10,background:"rgba(163,230,53,0.08)",border:"1px solid rgba(163,230,53,0.15)",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
         <Icon name="ruler" size={16} color="#a3e635"/><span style={{fontSize:14,fontWeight:700,color:"#a3e635"}}>{L("viewGrowth")}</span>
       </button>
-      <button onClick={doSave} style={{width:"100%",padding:18,borderRadius:18,background:`linear-gradient(180deg,#9b8df8,#7c3aed)`,color:"#fff",fontSize:17,fontWeight:700,letterSpacing:-0.3,border:"none",boxShadow:`0 1px 0 0 rgba(255,255,255,0.25) inset, 0 0 0 1px rgba(255,255,255,0.06), 0 12px 32px -8px ${T.accent}55, 0 4px 8px -4px ${T.accent}33`,transition:"transform 0.2s cubic-bezier(0.22,1,0.36,1)",cursor:"pointer"}}>{L("save")}</button>
       <div style={{marginTop:20}}>
         <button onClick={onShowChangelog} style={{width:"100%",padding:"14px 16px",borderRadius:14,background:"rgba(22,28,60,0.4)",border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",gap:12,textAlign:"left",cursor:"pointer"}}>
           <div style={{width:36,height:36,borderRadius:10,background:"linear-gradient(135deg,rgba(139,124,246,0.18),rgba(124,58,237,0.10))",border:"1px solid rgba(139,124,246,0.22)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
@@ -3533,6 +3588,11 @@ function App(){
   const[activeTimer,setActiveTimer]=useState(null);const[loading,setLoading]=useState(true);
   const[page,setPage]=useState("home");const[showAdd,setShowAdd]=useState(false);const[formType,setFormType]=useState(null);const[editEntry,setEditEntry]=useState(null);const[showOrbit,setShowOrbit]=useState(false);
   const[showProfile,setShowProfile]=useState(false);const[showSleepInfo,setShowSleepInfo]=useState(false);
+  // Profile contextual navbar state — when editing Profile fields, navbar swaps to Save/Cancel
+  const[profileIsDirty,setProfileIsDirty]=useState(false);
+  const[profileCancelSignal,setProfileCancelSignal]=useState(0);
+  const[profileSaveSignal,setProfileSaveSignal]=useState(0);
+  const profileSaveRef=useRef(null);
   const[inbox,setInbox]=useState({items:[],lastReset:""});const[showInbox,setShowInbox]=useState(false);
   const[reminders,setReminders]=useState([]);
   const[showChangelog,setShowChangelog]=useState(false);const[showUpdateToast,setShowUpdateToast]=useState(false);
@@ -4056,7 +4116,7 @@ function App(){
       {formType&&<AddForm type={formType} onSave={addEntry} savedMeds={savedMeds} onSaveMeds={async m=>await FB.saveMeds(m)} editEntry={editEntry} lastBottleMl={lastBottleMl} topMl={topMl} onStartTimer={type=>{startTimer(type);setFormType(null);setShowAdd(false)}}/>}
     </Sheet>
 
-    {showProfile&&<ProfilePage profile={profile} onSave={async p=>await FB.saveProfile(p)} onBack={()=>setShowProfile(false)} onGrowth={()=>{setShowProfile(false);goTo("growth")}} onShowChangelog={()=>setShowChangelog(true)} hasUnreadChangelog={hasUnreadChangelog} reminders={reminders} onAddReminder={async r=>await FB.addReminder(r)} onDelReminder={async id=>await FB.delReminder(id)}/>}
+    {showProfile&&<ProfilePage profile={profile} onSave={async p=>await FB.saveProfile(p)} onBack={()=>{setShowProfile(false);setProfileIsDirty(false)}} onGrowth={()=>{setShowProfile(false);setProfileIsDirty(false);goTo("growth")}} onShowChangelog={()=>setShowChangelog(true)} hasUnreadChangelog={hasUnreadChangelog} reminders={reminders} onAddReminder={async r=>await FB.addReminder(r)} onDelReminder={async id=>await FB.delReminder(id)} onDirtyChange={setProfileIsDirty} cancelSignal={profileCancelSignal} saveSignal={profileSaveSignal}/>}
     {showInbox&&<InboxPanel inbox={inbox} onClose={()=>setShowInbox(false)} onMarkRead={markInboxRead} onMarkAllRead={markAllInboxRead} lang={lang}/>}
     {showChangelog&&<ChangelogModal onClose={closeChangelog} lang={lang}/>}
     {showUpdateToast&&!showChangelog&&<UpdateToast fromVersion={profile.lastSeenVersion} toVersion={APP_VERSION} onView={openChangelog} onDismiss={dismissUpdateToast} lang={lang}/>}
@@ -4064,11 +4124,19 @@ function App(){
     <EditStartModal open={showEditStart} onClose={()=>setShowEditStart(false)} activeTimer={activeTimer} onSave={handleEditStart}/>
     <NursingSidePicker open={showNursingPicker} onClose={()=>setShowNursingPicker(false)} onSelect={side=>startTimer("nursing",side)}/>
 
-    <nav style={{position:"fixed",bottom:"6px",left:"50%",transform:"translateX(-50%)",display:"flex",alignItems:"center",gap:4,padding:"9px 14px",background:"linear-gradient(180deg,rgba(14,18,48,0.94),rgba(8,10,28,0.96))",backdropFilter:"blur(30px)",WebkitBackdropFilter:"blur(30px)",borderRadius:44,border:"1px solid rgba(255,255,255,0.06)",boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset, 0 0 0 1px rgba(255,255,255,0.02), 0 8px 32px -4px rgba(0,0,0,0.7), 0 0 60px -20px rgba(139,124,246,0.25)",zIndex:50}}>
+    {showProfile&&profileIsDirty?<nav style={{position:"fixed",bottom:"6px",left:"16px",right:"16px",display:"flex",alignItems:"center",gap:8,padding:"10px",background:"linear-gradient(180deg,rgba(28,22,60,0.95),rgba(22,18,52,0.96))",backdropFilter:"blur(30px)",WebkitBackdropFilter:"blur(30px)",borderRadius:22,border:"1px solid rgba(139,124,246,0.35)",boxShadow:"0 1px 0 0 rgba(255,255,255,0.1) inset, 0 0 0 1px rgba(139,124,246,0.15), 0 12px 36px -8px rgba(139,124,246,0.4)",zIndex:50,animation:"slideUp 0.3s cubic-bezier(0.22,1,0.36,1)"}}>
+      <button onClick={()=>{Haptic.medium();setProfileCancelSignal(s=>s+1)}} style={{flex:"0 0 42%",padding:13,borderRadius:14,background:"rgba(14,18,48,0.7)",color:"#8b90b8",fontSize:14,fontWeight:700,border:"1px solid rgba(255,255,255,0.08)",cursor:"pointer",letterSpacing:-0.2,display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
+        <Icon name="x" size={14} color="#8b90b8"/>{_lang==="en"?"Cancel":"Cancelar"}
+      </button>
+      <button onClick={()=>{setProfileSaveSignal(s=>s+1)}} style={{flex:1,padding:13,borderRadius:14,background:"linear-gradient(180deg,#9b8df8,#7c3aed)",color:"#fff",fontSize:14,fontWeight:700,border:"1px solid rgba(139,124,246,0.55)",boxShadow:"0 1px 0 0 rgba(255,255,255,0.2) inset, 0 6px 16px -4px rgba(139,124,246,0.5)",cursor:"pointer",letterSpacing:-0.2,display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
+        <span style={{width:6,height:6,borderRadius:"50%",background:"#fbbf24",animation:"pulse 1.4s ease-in-out infinite"}}/>
+        <Icon name="check" size={14} color="#fff"/>{_lang==="en"?"Save":"Salvar"}
+      </button>
+    </nav>:<nav style={{position:"fixed",bottom:"6px",left:"50%",transform:"translateX(-50%)",display:"flex",alignItems:"center",gap:4,padding:"9px 14px",background:"linear-gradient(180deg,rgba(14,18,48,0.94),rgba(8,10,28,0.96))",backdropFilter:"blur(30px)",WebkitBackdropFilter:"blur(30px)",borderRadius:44,border:"1px solid rgba(255,255,255,0.06)",boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset, 0 0 0 1px rgba(255,255,255,0.02), 0 8px 32px -4px rgba(0,0,0,0.7), 0 0 60px -20px rgba(139,124,246,0.25)",zIndex:50}}>
       {[{icon:"home",label:"HOME",active:page==="home"&&!showAdd,action:()=>goTo("home")},{icon:"clock",label:_lang==="en"?"HISTORY":"HIST.",active:page==="history",action:()=>goTo("history")}].map(n=><button key={n.icon} onClick={n.action} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3,padding:"9px 16px",borderRadius:18,background:n.active?"linear-gradient(180deg,rgba(139,124,246,0.22),rgba(139,124,246,0.08))":"transparent",border:n.active?"1px solid rgba(139,124,246,0.28)":"1px solid transparent",boxShadow:n.active?"0 1px 0 0 rgba(255,255,255,0.1) inset, 0 0 0 1px rgba(139,124,246,0.1), 0 4px 12px -4px rgba(139,124,246,0.4)":"none",transition:"all .2s"}}><Icon name={n.icon} size={20} color={n.active?"#c4b5fd":T.dim}/>{n.active&&<span style={{fontSize:9,fontWeight:700,color:"#c4b5fd",letterSpacing:0.3}}>{n.label}</span>}</button>)}
       <button onClick={()=>{setShowAdd(!showAdd);setFormType(null);setPage("home")}} style={{width:54,height:54,borderRadius:"50%",background:`linear-gradient(180deg,#9b8df8,#7c3aed)`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 1px 0 0 rgba(255,255,255,0.25) inset, 0 0 0 1px rgba(255,255,255,0.08), 0 8px 24px -4px ${T.accent}80, 0 0 0 4px rgba(139,124,246,0.08)`,transition:"transform .2s cubic-bezier(0.34,1.56,0.64,1)",transform:showAdd?"rotate(45deg) scale(1.05)":"scale(1)",margin:"-6px 4px"}}><Icon name="plus" size={26} color="#fff"/></button>
       {[{icon:"chart",label:"STATS",active:page==="stats"||page==="growth",action:()=>goTo("stats")},{icon:"gear",label:_lang==="en"?"SETTINGS":"CONFIG",active:false,action:()=>setShowProfile(true)}].map(n=><button key={n.icon} onClick={n.action} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3,padding:"9px 16px",borderRadius:18,background:n.active?"linear-gradient(180deg,rgba(139,124,246,0.22),rgba(139,124,246,0.08))":"transparent",border:n.active?"1px solid rgba(139,124,246,0.28)":"1px solid transparent",boxShadow:n.active?"0 1px 0 0 rgba(255,255,255,0.1) inset, 0 0 0 1px rgba(139,124,246,0.1), 0 4px 12px -4px rgba(139,124,246,0.4)":"none",transition:"all .2s"}}><Icon name={n.icon} size={20} color={n.active?"#c4b5fd":T.dim}/>{n.active&&<span style={{fontSize:9,fontWeight:700,color:"#c4b5fd",letterSpacing:0.3}}>{n.label}</span>}</button>)}
-    </nav>
+    </nav>}
   </div>);
 }
 
