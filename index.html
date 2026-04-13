@@ -5,6 +5,8 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v9.8.0  Notificações editáveis: título e corpo custom por remédio + edit de lembretes
+  v9.7.0  Crescimento: form unificado (data + 3 campos), virgula ok, merge por data, edit em antigas
   v9.6.18 Fade do bottom removido (estava parecendo bug, não efeito)
   v9.6.17 Fix: mercurio congelado + fade top tapando titulo
   v9.6.16 Fix: Home vazando atrás do Profile (fade via overlay)
@@ -250,8 +252,62 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "9.6.18";
+const APP_VERSION = "9.8.0";
 const CHANGELOG = [
+  {
+    v: "9.8.0", date: "2026-04-13",
+    pt: {
+      title: "Notificações editáveis por remédio + edit de lembretes",
+      bullets: [
+        '★ **Título e corpo customizados por notificação.** Cada lembrete de medicamento agora aceita dois campos opcionais: **título** e **corpo** da notificação que vai disparar. Assim dá pra trocar o "Lembrete" genérico por "Hora da Louisinha!" e o "Vitamina D · 2 gotas" por "Vitamina D pra nenê crescer forte. 2 gotinhas na boca".',
+        '★ **Edit de lembretes existentes.** Antes só dava pra deletar e recriar. Agora cada item da lista tem um **botão de lápis** ao lado do X. Toca pra abrir um card de edição inline (banner roxo "Editando ...") com todos os campos editáveis: nome, dose, horário, título e corpo. Cancelar volta sem salvar, Salvar persiste.',
+        '**Link "personalizar mensagem"** no form de "Adicionar novo" — colapsado por padrão pra não poluir o fluxo rápido. Quem só quer adicionar nome+horário vê a mesma UI de antes; quem quer personalizar clica e expande.',
+        '**Indicador "mensagem personalizada"** aparece discretamente abaixo da dose nos items que têm texto custom salvo, com ícone de lápis em roxo.',
+        '**Feeding reminder (mamada)** não mudou na UI — continua com toggle + intervalo. A mudança do texto da notificação (ex: "Hora da mamada · última foi 12:30, fazem 1h50") é do lado do **worker** (Cloudflare), entregue junto.',
+        'Os campos `titulo` e `corpo` só vão pro Firestore quando preenchidos — doc do reminder fica sem esses campos se você não personalizar. Backward compat total com lembretes antigos.',
+        'Itens e form de "Adicionar novo" ficam meio-opacos e não-clicáveis enquanto você estiver editando outro lembrete — pra evitar ação acidental no item errado.'
+      ]
+    },
+    en: {
+      title: "Per-reminder editable notifications + edit existing reminders",
+      bullets: [
+        '★ **Custom title and body per notification.** Each medication reminder now accepts two optional fields: notification **title** and **body**. So you can swap the generic "Reminder" for "Time for Louisinha!" and the bland "Vitamin D · 2 drops" for "Vitamin D to help our baby grow strong. 2 drops in the mouth".',
+        '★ **Edit existing reminders.** Before you could only delete and recreate. Now each item in the list has a **pencil button** next to the X. Tap to open an inline edit card (purple banner "Editing ...") with all fields editable: name, dose, time, title and body. Cancel discards, Save persists.',
+        '**"Customize message" link** on the "Add new" form — collapsed by default to keep the fast flow clean. Those who only want to add name+time see the same UI as before; those who want to personalize tap and expand.',
+        '**"Custom message" indicator** appears discreetly below the dose on items that have custom text saved, with a purple pencil icon.',
+        '**Feeding reminder** (bottle) UI is unchanged — still toggle + interval. The change in its notification text (e.g., "Time for a bottle · last was 12:30, 1h50 ago") is on the **worker** side (Cloudflare), delivered alongside.',
+        'The `titulo` and `corpo` fields only go to Firestore when filled — the reminder doc stays without those fields if you don\'t personalize. Full backward compat with old reminders.',
+        'Items and "Add new" form become semi-opaque and non-clickable while you\'re editing another reminder — to prevent accidental action on the wrong item.'
+      ]
+    }
+  },
+  {
+    v: "9.7.0", date: "2026-04-13",
+    pt: {
+      title: "Crescimento: form unificado + vírgula + edit",
+      bullets: [
+        '★ **Vírgula aceita finalmente.** Os campos de peso, comprimento e perímetro agora aceitam **vírgula ou ponto** (ex: `53,5` ou `53.5` — ambos funcionam). Antes o input numérico do iOS rejeitava vírgula silenciosamente, o que era um saco em pt-BR.',
+        '★ **Form unificado com data.** O form de nova medição agora tem **campo de data** no topo (default hoje) e os 3 campos de medição logo abaixo, todos opcionais. Fim da fragmentação: um cadastro = uma consulta, com os valores que você tiver.',
+        '★ **Merge automático por data.** Se você registrar no mesmo dia que já tem medição, o app **atualiza a entry existente** em vez de criar outra. Campos preenchidos sobrescrevem silenciosamente; campos vazios mantêm o valor anterior. Aviso amarelo aparece no form quando detecta a situação.',
+        '★ **Edit em medições antigas.** Cada linha do histórico agora é clicável (com ícone de lápis). Toca pra abrir o form no modo edit com os valores preenchidos. Pode também alterar a data da medição se registrou com data errada. Botão "Excluir" discreto no fim do form de edit.',
+        '**Botões "+ Registrar" dos percentile cards removidos** — eram a fonte da fragmentação. Agora só existe um ponto de entrada: o botão "+ Medição" no header. Se ainda não tem nenhuma medição, os cards mostram só o placeholder, sem affordance de cadastro próprio.',
+        'A linha de **Nascimento** no histórico continua read-only (editável só pelo Perfil → dados de nascimento), conforme o fluxo original.',
+        'Validação: o botão Salvar só fica ativo quando pelo menos 1 campo está preenchido (no modo edit, também considera os valores já existentes).'
+      ]
+    },
+    en: {
+      title: "Growth: unified form + comma + edit",
+      bullets: [
+        '★ **Comma finally accepted.** The weight, length and head fields now accept **comma or dot** (e.g., `53,5` or `53.5` — both work). Before, the iOS numeric input silently rejected commas, which was painful in pt-BR.',
+        '★ **Unified form with date.** The new measurement form now has a **date field** at the top (default today) and the 3 measurement fields below, all optional. No more fragmentation: one registration = one consultation, with whatever values you have.',
+        '★ **Automatic date-based merge.** If you register on a day that already has a measurement, the app **updates the existing entry** instead of creating a new one. Filled fields silently overwrite; empty fields keep the previous value. A yellow notice shows up in the form when this situation is detected.',
+        '★ **Edit on old measurements.** Each row in the history is now clickable (with a pencil icon). Tap to open the form in edit mode with values pre-filled. You can also change the date if you registered with the wrong one. Discreet "Delete" button at the bottom of the edit form.',
+        '**"+ Register" buttons on percentile cards removed** — they were the source of fragmentation. Now there\'s a single entry point: the "+ Measurement" button in the header. If there\'s no measurement yet, cards just show a placeholder, with no local registration affordance.',
+        'The **Birth** row in the history remains read-only (editable only via Profile → birth data), matching the original flow.',
+        'Validation: the Save button is only active when at least 1 field is filled (in edit mode it also considers existing values).'
+      ]
+    }
+  },
   {
     v: "9.6.18", date: "2026-04-12",
     pt: {
@@ -2889,7 +2945,42 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
   const[remNome,setRemNome]=useState("");
   const[remDose,setRemDose]=useState("");
   const[remHorario,setRemHorario]=useState("09:00");
+  const[remTitulo,setRemTitulo]=useState("");
+  const[remCorpo,setRemCorpo]=useState("");
+  const[remShowCustom,setRemShowCustom]=useState(false);
   const[remBusy,setRemBusy]=useState(false);
+  // Edit-mode state for existing reminders
+  const[editingRemId,setEditingRemId]=useState(null);
+  const[editNome,setEditNome]=useState("");
+  const[editDose,setEditDose]=useState("");
+  const[editHorario,setEditHorario]=useState("");
+  const[editTitulo,setEditTitulo]=useState("");
+  const[editCorpo,setEditCorpo]=useState("");
+  const[editBusy,setEditBusy]=useState(false);
+  const startRemEdit=(r)=>{
+    setEditingRemId(r._id);
+    setEditNome(r.nome||"");
+    setEditDose(r.dose||"");
+    setEditHorario((r.horarios&&r.horarios[0])||"09:00");
+    setEditTitulo(r.titulo||"");
+    setEditCorpo(r.corpo||"");
+  };
+  const cancelRemEdit=()=>{
+    setEditingRemId(null);setEditNome("");setEditDose("");setEditHorario("");setEditTitulo("");setEditCorpo("");
+  };
+  const saveRemEdit=async(orig)=>{
+    if(!editNome.trim()||!editHorario)return;
+    setEditBusy(true);Haptic.medium();
+    try{
+      const payload={_id:orig._id,nome:editNome.trim(),dose:editDose.trim(),horarios:[editHorario],ativo:orig.ativo!==false,createdAt:orig.createdAt||new Date().toISOString()};
+      if(editTitulo.trim())payload.titulo=editTitulo.trim();
+      if(editCorpo.trim())payload.corpo=editCorpo.trim();
+      await onAddReminder(payload);
+      cancelRemEdit();
+      Haptic.success();
+    }catch(e){Haptic.warning()}
+    setEditBusy(false);
+  };
   // Feeding interval reminder state — single global reminder, not a list
   // Lookup the existing one from props.reminders (if any)
   const feedReminder=(reminders||[]).find(r=>r.tipo==="feedingInterval");
@@ -3077,8 +3168,38 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
 
         {/* Existing reminders list — exclude feeding interval (handled by its own card below) */}
         {medList.length>0&&<div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:14}}>
-          {medList.slice().sort((a,b)=>(a.horarios?.[0]||"").localeCompare(b.horarios?.[0]||"")).map(r=>(
-            <div key={r._id} style={{position:"relative",display:"flex",alignItems:"center",gap:12,padding:"14px 14px 14px 18px",borderRadius:14,background:"rgba(14,18,48,0.6)",border:`1px solid ${T.gBSoft}`,boxShadow:T.insetTop,overflow:"hidden"}}>
+          {medList.slice().sort((a,b)=>(a.horarios?.[0]||"").localeCompare(b.horarios?.[0]||"")).map(r=>{
+            const isEditingThis=editingRemId===r._id;
+            const hasCustom=!!(r.titulo||r.corpo);
+            if(isEditingThis){
+              return(<div key={r._id} style={{padding:14,borderRadius:14,background:"rgba(139,124,246,0.07)",border:`1px solid rgba(139,124,246,0.28)`,boxShadow:T.insetTop}}>
+                <div style={{padding:"9px 11px",background:"rgba(139,124,246,0.12)",border:"1px solid rgba(139,124,246,0.28)",borderRadius:10,display:"flex",gap:8,alignItems:"center",marginBottom:12}}>
+                  <Icon name="pencil" size={13} color="#c4b5fd"/>
+                  <div style={{fontSize:11.5,color:"#c4b5fd",fontWeight:600,flex:1,lineHeight:1.4}}>{langSel==="en"?<>Editing <b>{r.nome||"—"}</b></>:<>Editando <b>{r.nome||"—"}</b></>}</div>
+                </div>
+                <div style={{fontSize:10,fontWeight:700,color:"#7a80a8",margin:"0 0 4px",letterSpacing:0.5,textTransform:"uppercase"}}>{langSel==="en"?"Name":"Nome"}</div>
+                <input type="text" value={editNome} onChange={e=>setEditNome(e.target.value)} placeholder={langSel==="en"?"Name":"Nome"} style={{...inp,padding:"13px 16px",fontSize:15,marginBottom:8}}/>
+                <div style={{fontSize:10,fontWeight:700,color:"#7a80a8",margin:"0 0 4px",letterSpacing:0.5,textTransform:"uppercase"}}>{langSel==="en"?"Dose":"Dose"}</div>
+                <input type="text" value={editDose} onChange={e=>setEditDose(e.target.value)} placeholder={langSel==="en"?"Dose":"Dose"} style={{...inp,padding:"13px 16px",fontSize:15,marginBottom:8}}/>
+                <div style={{fontSize:10,fontWeight:700,color:"#7a80a8",margin:"0 0 4px",letterSpacing:0.5,textTransform:"uppercase"}}>{langSel==="en"?"Time":"Horário"}</div>
+                <input type="time" value={editHorario} onChange={e=>setEditHorario(e.target.value)} style={{...inp,padding:"13px 16px",fontSize:16,fontWeight:700,colorScheme:"dark",textAlign:"center",marginBottom:8}}/>
+                <div style={{fontSize:10,fontWeight:700,color:"#7a80a8",margin:"6px 0 4px",letterSpacing:0.5,textTransform:"uppercase",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  <span>{langSel==="en"?"Notification title":"Título da notificação"}</span>
+                  <span style={{fontSize:9,color:"#555580",fontWeight:500,letterSpacing:0,textTransform:"none"}}>{langSel==="en"?"optional":"opcional"}</span>
+                </div>
+                <input type="text" value={editTitulo} onChange={e=>setEditTitulo(e.target.value)} placeholder={langSel==="en"?"Default: Reminder":"Padrão: Lembrete"} style={{...inp,padding:"13px 16px",fontSize:15,marginBottom:8}}/>
+                <div style={{fontSize:10,fontWeight:700,color:"#7a80a8",margin:"0 0 4px",letterSpacing:0.5,textTransform:"uppercase",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  <span>{langSel==="en"?"Notification body":"Corpo da notificação"}</span>
+                  <span style={{fontSize:9,color:"#555580",fontWeight:500,letterSpacing:0,textTransform:"none"}}>{langSel==="en"?"optional":"opcional"}</span>
+                </div>
+                <textarea value={editCorpo} onChange={e=>setEditCorpo(e.target.value)} placeholder={langSel==="en"?"Default: name + dose":"Padrão: nome + dose"} style={{...inp,padding:"13px 16px",fontSize:14,minHeight:62,resize:"vertical",fontFamily:"inherit",lineHeight:1.45,marginBottom:12}}/>
+                <div style={{display:"flex",gap:8,marginTop:4}}>
+                  <button onClick={cancelRemEdit} disabled={editBusy} style={{flex:1,padding:12,borderRadius:12,background:"rgba(139,124,246,0.05)",border:"1px solid rgba(139,124,246,0.15)",color:T.sub,fontSize:13,fontWeight:700,opacity:editBusy?0.5:1}}>{langSel==="en"?"Cancel":"Cancelar"}</button>
+                  <button onClick={()=>saveRemEdit(r)} disabled={editBusy||!editNome.trim()||!editHorario} style={{flex:2,padding:12,borderRadius:12,background:editNome.trim()&&editHorario?`linear-gradient(180deg,#9b8df8,#7c3aed)`:"rgba(14,18,48,0.8)",color:editNome.trim()&&editHorario?"#fff":T.dim,fontSize:13,fontWeight:800,letterSpacing:-0.2,border:`1px solid ${editNome.trim()&&editHorario?"rgba(139,124,246,0.5)":T.gBSoft}`,opacity:editBusy?0.6:1}}>{langSel==="en"?"Save changes":"Salvar alterações"}</button>
+                </div>
+              </div>);
+            }
+            return(<div key={r._id} style={{position:"relative",display:"flex",alignItems:"center",gap:10,padding:"14px 10px 14px 18px",borderRadius:14,background:"rgba(14,18,48,0.6)",border:`1px solid ${T.gBSoft}`,boxShadow:T.insetTop,overflow:"hidden",opacity:editingRemId?0.55:1,transition:"opacity .2s"}}>
               <div style={{position:"absolute",left:0,top:0,bottom:0,width:4,background:`linear-gradient(180deg,${T.accent},${T.accent}40)`,borderRadius:"0 2px 2px 0",pointerEvents:"none"}}/>
               <div style={{minWidth:56,padding:"7px 10px",borderRadius:11,background:`linear-gradient(180deg,${T.accent}28,${T.accent}10)`,border:`1px solid ${T.accent}45`,textAlign:"center",boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset"}}>
                 <div style={{fontSize:14,fontWeight:800,color:"#c4b5fd",fontVariantNumeric:"tabular-nums",letterSpacing:-0.3}}>{r.horarios?.[0]||"--:--"}</div>
@@ -3086,20 +3207,39 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
               <div style={{flex:1,minWidth:0}}>
                 <div style={{fontSize:14,fontWeight:700,color:"#f0f2ff",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",letterSpacing:-0.2}}>{r.nome||"—"}</div>
                 {r.dose&&<div style={{fontSize:12,color:"#9099c3",marginTop:2,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{r.dose}</div>}
+                {hasCustom&&<div style={{fontSize:10,color:"#a78bfa",marginTop:3,display:"flex",alignItems:"center",gap:4,fontWeight:600}}><Icon name="pencil" size={9} color="#a78bfa"/>{langSel==="en"?"custom message":"mensagem personalizada"}</div>}
               </div>
-              <button onClick={async()=>{if(!confirm(langSel==="en"?`Delete reminder "${r.nome}"?`:`Excluir lembrete "${r.nome}"?`))return;Haptic.medium();try{await onDelReminder(r._id)}catch(e){}}} style={{width:34,height:34,borderRadius:11,background:"rgba(22,28,60,0.6)",border:`1px solid ${T.gBSoft}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,boxShadow:T.insetTop}}>
-                <Icon name="x" size={14} color={T.dim}/>
+              <button disabled={!!editingRemId} onClick={()=>{Haptic.medium();startRemEdit(r)}} style={{width:32,height:32,borderRadius:10,background:"rgba(139,124,246,0.1)",border:"1px solid rgba(139,124,246,0.15)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,opacity:editingRemId?0.3:1}}>
+                <Icon name="pencil" size={13} color="#a78bfa"/>
               </button>
-            </div>
-          ))}
+              <button disabled={!!editingRemId} onClick={async()=>{if(!confirm(langSel==="en"?`Delete reminder "${r.nome}"?`:`Excluir lembrete "${r.nome}"?`))return;Haptic.medium();try{await onDelReminder(r._id)}catch(e){}}} style={{width:32,height:32,borderRadius:10,background:"rgba(22,28,60,0.6)",border:`1px solid ${T.gBSoft}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,boxShadow:T.insetTop,opacity:editingRemId?0.3:1}}>
+                <Icon name="x" size={13} color={T.dim}/>
+              </button>
+            </div>);
+          })}
         </div>}
 
         {/* New reminder form */}
-        <div style={{padding:14,borderRadius:14,background:"rgba(14,18,48,0.5)",border:`1px dashed ${T.gBSoft}`}}>
-          <div style={{fontSize:11,fontWeight:600,color:"#7a80a8",marginBottom:10,letterSpacing:-0.05}}>{langSel==="en"?"Add new":"Adicionar novo"}</div>
+        <div style={{padding:14,borderRadius:14,background:"rgba(14,18,48,0.5)",border:`1px dashed ${T.gBSoft}`,opacity:editingRemId?0.4:1,pointerEvents:editingRemId?"none":"auto",transition:"opacity .2s"}}>
+          <div style={{fontSize:11,fontWeight:600,color:"#7a80a8",marginBottom:10,letterSpacing:-0.05,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <span>{langSel==="en"?"Add new":"Adicionar novo"}</span>
+            <button onClick={()=>setRemShowCustom(!remShowCustom)} style={{background:"transparent",border:"none",fontSize:10,color:"#a78bfa",fontWeight:700,letterSpacing:0.3,padding:0,cursor:"pointer"}}>{remShowCustom?(langSel==="en"?"hide message ▲":"ocultar mensagem ▲"):(langSel==="en"?"customize message ▼":"personalizar mensagem ▼")}</button>
+          </div>
           <div style={{display:"flex",flexDirection:"column",gap:8}}>
             <input type="text" placeholder={langSel==="en"?"Name (e.g. Vitamin D)":"Nome (ex: Vitamina D)"} value={remNome} onChange={e=>setRemNome(e.target.value)} style={{...inp,padding:"14px 16px",fontSize:15}}/>
             <input type="text" placeholder={langSel==="en"?"Dose (e.g. 2 drops)":"Dose (ex: 2 gotas)"} value={remDose} onChange={e=>setRemDose(e.target.value)} style={{...inp,padding:"14px 16px",fontSize:15}}/>
+            {remShowCustom&&<>
+              <div style={{fontSize:10,fontWeight:700,color:"#7a80a8",margin:"4px 0 -2px",letterSpacing:0.5,textTransform:"uppercase",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <span>{langSel==="en"?"Notification title":"Título da notificação"}</span>
+                <span style={{fontSize:9,color:"#555580",fontWeight:500,letterSpacing:0,textTransform:"none"}}>{langSel==="en"?"optional":"opcional"}</span>
+              </div>
+              <input type="text" placeholder={langSel==="en"?"Default: Reminder":"Padrão: Lembrete"} value={remTitulo} onChange={e=>setRemTitulo(e.target.value)} style={{...inp,padding:"13px 16px",fontSize:15}}/>
+              <div style={{fontSize:10,fontWeight:700,color:"#7a80a8",margin:"4px 0 -2px",letterSpacing:0.5,textTransform:"uppercase",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <span>{langSel==="en"?"Notification body":"Corpo da notificação"}</span>
+                <span style={{fontSize:9,color:"#555580",fontWeight:500,letterSpacing:0,textTransform:"none"}}>{langSel==="en"?"optional":"opcional"}</span>
+              </div>
+              <textarea placeholder={langSel==="en"?"Default: name + dose":"Padrão: nome + dose"} value={remCorpo} onChange={e=>setRemCorpo(e.target.value)} style={{...inp,padding:"13px 16px",fontSize:14,minHeight:62,resize:"vertical",fontFamily:"inherit",lineHeight:1.45}}/>
+            </>}
             <div style={{display:"flex",gap:8,alignItems:"center"}}>
               <input type="time" value={remHorario} onChange={e=>setRemHorario(e.target.value)} style={{...inp,padding:"14px 16px",fontSize:16,fontWeight:700,colorScheme:"dark",textAlign:"center",flex:1}}/>
               <button disabled={remBusy||!remNome.trim()||!remHorario} onClick={async()=>{
@@ -3107,8 +3247,11 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
                 setRemBusy(true);
                 Haptic.medium();
                 try{
-                  await onAddReminder({nome:remNome.trim(),dose:remDose.trim(),horarios:[remHorario],ativo:true,createdAt:new Date().toISOString()});
-                  setRemNome("");setRemDose("");setRemHorario("09:00");
+                  const payload={nome:remNome.trim(),dose:remDose.trim(),horarios:[remHorario],ativo:true,createdAt:new Date().toISOString()};
+                  if(remTitulo.trim())payload.titulo=remTitulo.trim();
+                  if(remCorpo.trim())payload.corpo=remCorpo.trim();
+                  await onAddReminder(payload);
+                  setRemNome("");setRemDose("");setRemHorario("09:00");setRemTitulo("");setRemCorpo("");setRemShowCustom(false);
                   Haptic.success();
                 }catch(e){Haptic.warning()}
                 setRemBusy(false);
@@ -3605,37 +3748,111 @@ function HistoryPage({entries,onDelete,onEdit,activeTimer}){
 }
 
 // ── GROWTH PAGE with WHO percentiles ──
-function GrowthPage({entries,birthDate,profile,onBack,onAddEntry}){
+// Helper: parse decimal string accepting both comma and dot (pt-BR friendly)
+const parseGrowthDecimal=(s)=>{
+  if(s===undefined||s===null)return undefined;
+  const str=String(s).trim();
+  if(!str)return undefined;
+  const n=parseFloat(str.replace(",","."));
+  return isNaN(n)?undefined:n;
+};
+// Helper: format number back to display with comma in pt
+const formatGrowthVal=(v)=>{
+  if(v===undefined||v===null||v==="")return "";
+  const s=String(v);
+  return _lang==="pt"?s.replace(".",","):s;
+};
+
+function GrowthPage({entries,birthDate,profile,onBack,onAddEntry,onDeleteEntry}){
   const growthEntries=entries.filter(e=>e.type==="growth").sort((a,b)=>`${a.date}T${a.time}`.localeCompare(`${b.date}T${b.time}`));
   const age=calcAge(birthDate);
   const ageMonths=age?(age.months+(age.days/30)):0;
   const[showForm,setShowForm]=useState(false);
+  const[editingId,setEditingId]=useState(null);
+  const[fDate,setFDate]=useState(todayStr());
   const[wK,setWK]=useState("");const[lC,setLC]=useState("");const[hC,setHC]=useState("");
+
+  // Find existing growth entry on a date (excluding current edit target)
+  const findByDate=(date,excludeId)=>growthEntries.find(e=>e.date===date&&e.id!==excludeId);
+  const mergeTarget=!editingId?findByDate(fDate,null):null;
+  const isEdit=!!editingId;
 
   // Build all data points: birth + entries
   const allPoints=[];
   if(profile.birthWeight||profile.birthLength||profile.birthHead){
-    allPoints.push({ageM:0,date:birthDate,weightKg:profile.birthWeight,lengthCm:profile.birthLength,headCm:profile.birthHead,label:_lang==="en"?"Birth":"Nasc."});
+    allPoints.push({ageM:0,date:birthDate,weightKg:profile.birthWeight,lengthCm:profile.birthLength,headCm:profile.birthHead,label:_lang==="en"?"Birth":"Nasc.",isBirth:true});
   }
   growthEntries.forEach(e=>{
     const eAge=calcAge(birthDate);
     if(!eAge)return;
     const d1=new Date(birthDate),d2=new Date(e.date);
     const mths=(d2.getFullYear()-d1.getFullYear())*12+d2.getMonth()-d1.getMonth()+(d2.getDate()-d1.getDate())/30;
-    allPoints.push({ageM:Math.max(0,mths),date:e.date,weightKg:e.weightKg,lengthCm:e.lengthCm,headCm:e.headCm,label:new Date(e.date+"T12:00").toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{day:"numeric",month:"short"})});
+    allPoints.push({ageM:Math.max(0,mths),date:e.date,weightKg:e.weightKg,lengthCm:e.lengthCm,headCm:e.headCm,label:new Date(e.date+"T12:00").toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{day:"numeric",month:"short"}),entryId:e.id});
   });
   const latest=allPoints[allPoints.length-1];
 
-  const doAdd=()=>{
-    if(!wK&&!lC&&!hC)return;
-    onAddEntry({type:"growth",date:todayStr(),time:nowTime(),id:uid(),weightKg:wK?parseFloat(wK):undefined,lengthCm:lC?parseFloat(lC):undefined,headCm:hC?parseFloat(hC):undefined});
-    setWK("");setLC("");setHC("");setShowForm(false);
+  const resetForm=()=>{
+    setShowForm(false);setEditingId(null);
+    setFDate(todayStr());
+    setWK("");setLC("");setHC("");
   };
 
-  const quickAdd=(field,value)=>{
-    const entry={type:"growth",date:todayStr(),time:nowTime(),id:uid()};
-    entry[field]=value;
-    onAddEntry(entry);
+  const openNew=()=>{
+    setEditingId(null);
+    setFDate(todayStr());
+    setWK("");setLC("");setHC("");
+    setShowForm(true);
+  };
+
+  const openEdit=(entryId)=>{
+    const e=growthEntries.find(g=>g.id===entryId);
+    if(!e)return;
+    setEditingId(entryId);
+    setFDate(e.date);
+    setWK(e.weightKg!==undefined?formatGrowthVal(e.weightKg):"");
+    setLC(e.lengthCm!==undefined?formatGrowthVal(e.lengthCm):"");
+    setHC(e.headCm!==undefined?formatGrowthVal(e.headCm):"");
+    setShowForm(true);
+  };
+
+  // In edit mode, also consider existing values so empty fields don't fail validation
+  const hasAnyValue=()=>{
+    const w=parseGrowthDecimal(wK),l=parseGrowthDecimal(lC),h=parseGrowthDecimal(hC);
+    if(w!==undefined||l!==undefined||h!==undefined)return true;
+    if(isEdit){
+      const orig=growthEntries.find(g=>g.id===editingId);
+      if(orig&&(orig.weightKg!==undefined||orig.lengthCm!==undefined||orig.headCm!==undefined))return true;
+    }
+    return false;
+  };
+
+  const doSave=()=>{
+    const w=parseGrowthDecimal(wK),l=parseGrowthDecimal(lC),h=parseGrowthDecimal(hC);
+    if(!hasAnyValue())return;
+    let targetEntry;
+    if(isEdit){
+      const orig=growthEntries.find(g=>g.id===editingId);
+      if(!orig)return;
+      targetEntry={...orig,date:fDate};
+    }else if(mergeTarget){
+      targetEntry={...mergeTarget,date:fDate};
+    }else{
+      targetEntry={type:"growth",date:fDate,time:nowTime(),id:uid()};
+    }
+    // Apply provided fields (empty fields preserve existing values in merge/edit)
+    if(w!==undefined)targetEntry.weightKg=w;
+    if(l!==undefined)targetEntry.lengthCm=l;
+    if(h!==undefined)targetEntry.headCm=h;
+    onAddEntry(targetEntry);
+    resetForm();
+  };
+
+  const doDelete=()=>{
+    if(!editingId)return;
+    const msg=_lang==="en"?"Delete this measurement?":"Excluir esta medição?";
+    if(!confirm(msg))return;
+    if(onDeleteEntry)onDeleteEntry(editingId);
+    resetForm();
   };
 
   // Mini chart for a metric
@@ -3672,25 +3889,21 @@ function GrowthPage({entries,birthDate,profile,onBack,onAddEntry}){
     </div>);
   }
 
-  function PercentileCard({label,value,unit,table,icon,field,onQuickAdd}){
-    const[adding,setAdding]=useState(false);
-    const[val,setVal]=useState("");
-    if(!value&&!adding)return(<div style={{background:T.glass,borderRadius:14,padding:14,marginBottom:8,border:`1px solid ${T.gB}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+  // PercentileCard: read-only display now (no quick-add — use the unified form instead)
+  function PercentileCard({label,value,unit,table,icon}){
+    if(!value)return(<div style={{background:T.glass,borderRadius:14,padding:14,marginBottom:8,border:`1px solid ${T.gB}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
       <div style={{display:"flex",alignItems:"center",gap:8}}><Icon name={icon} size={14} color={T.dim}/><span style={{fontSize:13,fontWeight:600,color:T.dim}}>{label}</span></div>
-      <button onClick={()=>setAdding(true)} style={{padding:"6px 12px",borderRadius:8,background:"rgba(163,230,53,0.1)",border:"1px solid rgba(163,230,53,0.2)",fontSize:11,fontWeight:700,color:"#a3e635"}}>+ Registrar</button>
+      <span style={{fontSize:11,color:T.dim,fontStyle:"italic"}}>{_lang==="en"?"no data yet":"sem dados ainda"}</span>
     </div>);
-    const result=value?getPercentile(value,table,ageMonths):null;
+    const result=getPercentile(value,table,ageMonths);
     const p=result?.percentile;
     const pColor=!p?T.dim:p<3||p>97?T.red:p<15||p>85?T.orange:T.green;
     return(<div style={{background:T.glass,borderRadius:14,padding:14,marginBottom:8,border:`1px solid ${T.gB}`}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
         <div style={{display:"flex",alignItems:"center",gap:8}}><Icon name={icon} size={14} color={pColor}/><span style={{fontSize:13,fontWeight:700}}>{label}</span></div>
-        <div style={{display:"flex",alignItems:"center",gap:8}}>
-          {value&&<span style={{fontSize:18,fontWeight:800}}>{value} {unit}</span>}
-          <button onClick={()=>setAdding(!adding)} style={{width:28,height:28,borderRadius:8,background:"rgba(163,230,53,0.1)",border:"1px solid rgba(163,230,53,0.15)",display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="plus" size={12} color="#a3e635"/></button>
-        </div>
+        <span style={{fontSize:18,fontWeight:800}}>{formatGrowthVal(value)} {unit}</span>
       </div>
-      {value&&<><div style={{display:"flex",alignItems:"center",gap:10}}>
+      <div style={{display:"flex",alignItems:"center",gap:10}}>
         <div style={{flex:1,height:6,borderRadius:3,background:T.bg3,overflow:"hidden",position:"relative"}}>
           <div style={{position:"absolute",left:"3%",width:1,height:"100%",background:T.dim,opacity:0.3}}/>
           <div style={{position:"absolute",left:"50%",width:1,height:"100%",background:T.dim,opacity:0.5}}/>
@@ -3699,39 +3912,63 @@ function GrowthPage({entries,birthDate,profile,onBack,onAddEntry}){
         </div>
         <span style={{fontSize:14,fontWeight:800,color:pColor,minWidth:35,textAlign:"right"}}>P{p}</span>
       </div>
-      <div style={{fontSize:10,color:T.sub,marginTop:4}}>{_lang==="en"?"WHO Median":"Mediana OMS"}: {result.median.toFixed(1)} {unit}</div></>}
-      {adding&&<div style={{display:"flex",gap:8,marginTop:10,alignItems:"center"}}>
-        <input type="number" inputMode="decimal" step="0.01" placeholder={`${label} em ${unit}`} value={val} onChange={e=>setVal(e.target.value)} autoFocus style={{flex:1,padding:"10px 12px",background:"rgba(14,18,48,0.8)",border:`1px solid ${T.gB}`,borderRadius:10,color:T.text,fontSize:15,outline:"none",textAlign:"center"}}/>
-        <button onClick={()=>{if(!val)return;onQuickAdd(field,parseFloat(val));setVal("");setAdding(false)}} style={{padding:"10px 16px",borderRadius:10,background:"#a3e635",color:T.bg1,fontSize:13,fontWeight:700}}>{L("save")}</button>
-      </div>}
+      <div style={{fontSize:10,color:T.sub,marginTop:4}}>{_lang==="en"?"WHO Median":"Mediana OMS"}: {result.median.toFixed(1)} {unit}</div>
     </div>);
   }
 
   const inp={width:"100%",maxWidth:"100%",boxSizing:"border-box",WebkitAppearance:"none",appearance:"none",padding:"15px 12px",background:"rgba(20,26,60,0.55)",border:`1px solid ${T.gBSoft}`,borderRadius:14,color:T.text,fontSize:17,fontWeight:600,letterSpacing:-0.2,outline:"none",textAlign:"center",boxShadow:T.insetTop};
+  const dateInp={...inp,fontSize:15,padding:"13px 12px"};
+
+  // Format merge target date for notice (e.g. "13/04")
+  const mergeTargetLabel=mergeTarget?new Date(mergeTarget.date+"T12:00").toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{day:"numeric",month:"short"}):"";
+  const editTargetLabel=isEdit?(()=>{
+    const e=growthEntries.find(g=>g.id===editingId);
+    return e?new Date(e.date+"T12:00").toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{day:"numeric",month:"long"}):"";
+  })():"";
 
   return(<div style={{padding:"calc(16px + env(safe-area-inset-top)) 20px 0"}}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
       <div style={{display:"flex",alignItems:"center",gap:10}}><button onClick={onBack} style={{width:32,height:32,borderRadius:10,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="back" size={16} color={T.sub}/></button><h2 style={{fontSize:17,fontWeight:700,margin:0}}>{L("growth")}</h2></div>
-      <button onClick={()=>setShowForm(!showForm)} style={{padding:"6px 12px",borderRadius:10,background:"rgba(163,230,53,0.1)",border:"1px solid rgba(163,230,53,0.2)",fontSize:12,fontWeight:700,color:"#a3e635"}}>{showForm?L("cancel"):(_lang==="en"?"+ Measure":"+ Medição")}</button>
+      <button onClick={()=>showForm?resetForm():openNew()} style={{padding:"6px 12px",borderRadius:10,background:"rgba(163,230,53,0.1)",border:"1px solid rgba(163,230,53,0.2)",fontSize:12,fontWeight:700,color:"#a3e635"}}>{showForm?L("cancel"):(_lang==="en"?"+ Measure":"+ Medição")}</button>
     </div>
 
     {showForm&&<div style={{background:T.glass,borderRadius:14,padding:16,marginBottom:16,border:`1px solid ${T.gB}`}}>
-      <div style={{fontSize:12,fontWeight:700,color:T.sub,marginBottom:12}}>{_lang==="en"?"New measurement":"Nova medição"}</div>
-      <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)",gap:8,marginBottom:12}}>
-        <Fld label={`${L("weight")} (kg)`}><input type="number" inputMode="decimal" step="0.01" placeholder="4.5" value={wK} onChange={e=>setWK(e.target.value)} style={inp}/></Fld>
-        <Fld label={`${_lang==="en"?"Length":"Comp."} (cm)`}><input type="number" inputMode="decimal" step="0.1" placeholder="55" value={lC} onChange={e=>setLC(e.target.value)} style={inp}/></Fld>
-        <Fld label={`${L("head")} (cm)`}><input type="number" inputMode="decimal" step="0.1" placeholder="37" value={hC} onChange={e=>setHC(e.target.value)} style={inp}/></Fld>
+      <div style={{fontSize:12,fontWeight:700,color:T.sub,marginBottom:12}}>{isEdit?(_lang==="en"?"Edit measurement":"Editar medição"):(_lang==="en"?"New measurement":"Nova medição")}</div>
+
+      {isEdit&&<div style={{padding:"10px 12px",background:"rgba(139,124,246,0.1)",border:"1px solid rgba(139,124,246,0.25)",borderRadius:10,display:"flex",gap:8,alignItems:"center",marginBottom:12}}>
+        <Icon name="pencil" size={14} color="#c4b5fd"/>
+        <div style={{fontSize:11.5,color:"#c4b5fd",lineHeight:1.4,flex:1,fontWeight:600}}>{_lang==="en"?"Editing measurement from":"Editando medição de"} <b>{editTargetLabel}</b></div>
+      </div>}
+
+      <Fld label={_lang==="en"?"Date":"Data"}><input type="date" value={fDate} onChange={e=>setFDate(e.target.value)} style={dateInp}/></Fld>
+
+      {mergeTarget&&!isEdit&&<div style={{padding:"10px 12px",background:"rgba(251,191,36,0.08)",border:"1px solid rgba(251,191,36,0.2)",borderRadius:10,display:"flex",gap:8,alignItems:"center",margin:"12px 0"}}>
+        <Icon name="zap" size={14} color="#fbbf24"/>
+        <div style={{fontSize:11.5,color:"#fbbf24",lineHeight:1.4,flex:1}}>{_lang==="en"?<>Measurement already exists on <b>{mergeTargetLabel}</b> — filled fields will <b>update</b> that entry.</>:<>Já existe medição em <b>{mergeTargetLabel}</b> — campos preenchidos irão <b>atualizar</b> essa entrada.</>}</div>
+      </div>}
+
+      <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)",gap:8,marginTop:12,marginBottom:8}}>
+        <Fld label={`${L("weight")} (kg)`}><input type="text" inputMode="decimal" placeholder={_lang==="pt"?"4,5":"4.5"} value={wK} onChange={e=>setWK(e.target.value)} style={inp}/></Fld>
+        <Fld label={`${_lang==="en"?"Length":"Comp."} (cm)`}><input type="text" inputMode="decimal" placeholder="55" value={lC} onChange={e=>setLC(e.target.value)} style={inp}/></Fld>
+        <Fld label={`${L("head")} (cm)`}><input type="text" inputMode="decimal" placeholder="37" value={hC} onChange={e=>setHC(e.target.value)} style={inp}/></Fld>
       </div>
-      <button onClick={doAdd} style={{width:"100%",padding:12,borderRadius:10,background:"#a3e635",color:T.bg1,fontSize:14,fontWeight:700}}>{_lang==="en"?"Save measurement":"Salvar medição"}</button>
+
+      <div style={{fontSize:10.5,color:T.dim,margin:"6px 0 12px",textAlign:"center",lineHeight:1.5}}>
+        {_lang==="en"?"Leave blank what wasn't measured · comma or dot":"Deixe em branco os que não foram medidos · vírgula ou ponto"}
+      </div>
+
+      <button onClick={doSave} disabled={!hasAnyValue()} style={{width:"100%",padding:12,borderRadius:10,background:hasAnyValue()?"#a3e635":"rgba(139,124,246,0.1)",color:hasAnyValue()?T.bg1:T.dim,fontSize:14,fontWeight:700,opacity:hasAnyValue()?1:0.6}}>{isEdit?(_lang==="en"?"Update measurement":"Atualizar medição"):(mergeTarget?(_lang==="en"?"Update measurement":"Atualizar medição"):(_lang==="en"?"Save measurement":"Salvar medição"))}</button>
+
+      {isEdit&&<button onClick={doDelete} style={{background:"transparent",border:"none",color:T.red,fontSize:12,fontWeight:600,padding:10,marginTop:8,width:"100%"}}>{_lang==="en"?"Delete this measurement":"Excluir esta medição"}</button>}
     </div>}
 
     {/* Percentile cards */}
     {latest&&<div style={{fontSize:11,color:T.sub,marginBottom:10}}>
-      {latest.label===(_lang==="en"?"Birth":"Nasc.")?(_lang==="en"?"Birth data":L("birthData")):`${_lang==="en"?"Last":"Últ."}: ${latest.label}`} · {ageMonths.toFixed(1)} {_lang==="en"?"mo":"meses"}
+      {latest.isBirth?(_lang==="en"?"Birth data":L("birthData")):`${_lang==="en"?"Last":"Últ."}: ${latest.label}`} · {ageMonths.toFixed(1)} {_lang==="en"?"mo":"meses"}
     </div>}
-    <PercentileCard label={L("weight")} value={latest?.weightKg} unit="kg" table={WHO_GIRLS.weight} icon="target" field="weightKg" onQuickAdd={quickAdd}/>
-    <PercentileCard label={L("length")} value={latest?.lengthCm} unit="cm" table={WHO_GIRLS.length} icon="ruler" field="lengthCm" onQuickAdd={quickAdd}/>
-    <PercentileCard label={L("head")} value={latest?.headCm} unit="cm" table={WHO_GIRLS.head} icon="target" field="headCm" onQuickAdd={quickAdd}/>
+    <PercentileCard label={L("weight")} value={latest?.weightKg} unit="kg" table={WHO_GIRLS.weight} icon="target"/>
+    <PercentileCard label={L("length")} value={latest?.lengthCm} unit="cm" table={WHO_GIRLS.length} icon="ruler"/>
+    <PercentileCard label={L("head")} value={latest?.headCm} unit="cm" table={WHO_GIRLS.head} icon="target"/>
 
     {/* Growth charts */}
     {allPoints.length>0&&<>
@@ -3741,19 +3978,25 @@ function GrowthPage({entries,birthDate,profile,onBack,onAddEntry}){
       <GrowthChart label={`${L("head")} (cm)`} field="headCm" table={WHO_GIRLS.head} color={T.amber}/>
     </>}
 
-    {/* History table */}
-    {allPoints.length>0&&<><div style={{fontSize:12,fontWeight:600,color:T.dim,marginTop:8,marginBottom:10,textTransform:"uppercase",letterSpacing:0.8}}>Histórico</div>
-      {[...allPoints].reverse().map((p,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:12,padding:"8px 12px",marginBottom:4,background:T.glass,borderRadius:10,border:`1px solid ${T.gB}`}}>
-        <span style={{fontSize:11,color:T.sub,minWidth:50}}>{p.label}</span>
-        <div style={{flex:1,display:"flex",gap:10,fontSize:12}}>
-          {p.weightKg&&<span style={{color:T.green}}>{p.weightKg}kg</span>}
-          {p.lengthCm&&<span style={{color:T.blue}}>{p.lengthCm}cm</span>}
-          {p.headCm&&<span style={{color:T.amber}}>Cab. {p.headCm}</span>}
-        </div>
-      </div>)}
+    {/* History table (clickable rows, except Birth) */}
+    {allPoints.length>0&&<><div style={{fontSize:12,fontWeight:600,color:T.dim,marginTop:8,marginBottom:10,textTransform:"uppercase",letterSpacing:0.8}}>{_lang==="en"?"History":"Histórico"}</div>
+      {[...allPoints].reverse().map((p,i)=>{
+        const clickable=!p.isBirth&&p.entryId;
+        const rowStyle={display:"flex",alignItems:"center",gap:12,padding:"10px 12px",marginBottom:4,background:T.glass,borderRadius:10,border:`1px solid ${T.gB}`,width:"100%",textAlign:"left",cursor:clickable?"pointer":"default",opacity:p.isBirth?0.75:1};
+        const content=<>
+          <span style={{fontSize:11,color:T.sub,minWidth:50,fontWeight:600}}>{p.label}</span>
+          <div style={{flex:1,display:"flex",gap:10,fontSize:12,flexWrap:"wrap"}}>
+            {p.weightKg!==undefined&&<span style={{color:T.green,fontWeight:600}}>{formatGrowthVal(p.weightKg)}kg</span>}
+            {p.lengthCm!==undefined&&<span style={{color:T.blue,fontWeight:600}}>{formatGrowthVal(p.lengthCm)}cm</span>}
+            {p.headCm!==undefined&&<span style={{color:T.amber,fontWeight:600}}>{_lang==="en"?"Head":"Cab."} {formatGrowthVal(p.headCm)}</span>}
+          </div>
+          {p.isBirth?<span style={{fontSize:9,color:"#a78bfa",background:"rgba(139,124,246,0.15)",padding:"2px 6px",borderRadius:4,fontWeight:700,letterSpacing:0.5}}>{_lang==="en"?"BIRTH":"NASC."}</span>:<div style={{width:26,height:26,borderRadius:7,background:"rgba(139,124,246,0.1)",border:"1px solid rgba(139,124,246,0.15)",display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="pencil" size={11} color="#a78bfa"/></div>}
+        </>;
+        return clickable?<button key={i} onClick={()=>openEdit(p.entryId)} style={rowStyle}>{content}</button>:<div key={i} style={rowStyle}>{content}</div>;
+      })}
     </>}
     <div style={{marginTop:16,padding:12,background:T.glass,borderRadius:12,border:`1px solid ${T.gB}`,fontSize:10,color:T.dim,lineHeight:1.6}}>
-      Curvas OMS para meninas 0-24m. Linha tracejada = P50 (mediana). Faixa = P3-P97.
+      {_lang==="en"?"WHO curves for girls 0-24mo. Dashed line = P50 (median). Band = P3-P97.":"Curvas OMS para meninas 0-24m. Linha tracejada = P50 (mediana). Faixa = P3-P97."}
     </div>
   </div>);
 }
@@ -4244,7 +4487,7 @@ function App(){
       </div>}
       {page==="history"&&<HistoryPage entries={entries} onDelete={deleteEntry} onEdit={startEdit} activeTimer={activeTimer}/>}
       {page==="stats"&&<StatsPage entries={entries} onGrowth={()=>goTo("growth")}/>}
-      {page==="growth"&&<GrowthPage entries={entries} birthDate={profile.birthDate} profile={profile} onBack={()=>goTo("stats")} onAddEntry={addEntry}/>}
+      {page==="growth"&&<GrowthPage entries={entries} birthDate={profile.birthDate} profile={profile} onBack={()=>goTo("stats")} onAddEntry={addEntry} onDeleteEntry={deleteEntry}/>}
       </div>
       {/* Bottom spacer so content clears nav bar */}
       <div style={{height:activeTimer?160:90}}/>
