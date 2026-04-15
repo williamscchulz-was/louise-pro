@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v9.9.4  Nav minimalista (pill fina, sem labels) + tap feedback + fix overlay do "+"
   v9.9.3  Teste de workflow Claude Code (bump vazio)
   v9.9.2  Swipe horizontal entre Home/Stats/History (passo 1 da nav redesign)
   v9.8.2  Sheet: drag de qualquer lugar (padrão iOS), botões deixam de travar
@@ -109,6 +110,10 @@
     @keyframes liveDotPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.85)}}
     @keyframes progressShimmer{0%,100%{opacity:0.7}50%{opacity:1}}
     @keyframes nwIconPulseAmber{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+    .navbtn{transition:transform .12s ease-out, background .18s ease-out, color .18s ease-out}
+    .navbtn:active{transform:scale(0.88)}
+    .navfab{transition:transform .22s cubic-bezier(0.34,1.56,0.64,1)}
+    .navfab:active{transform:scale(0.92)}
   </style>
 
 </head>
@@ -256,8 +261,33 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "9.9.3";
+const APP_VERSION = "9.9.4";
 const CHANGELOG = [
+  {
+    v: "9.9.4", date: "2026-04-15",
+    pt: {
+      title: "Nav bar minimalista (passo 2 da nav redesign)",
+      bullets: [
+        '\u2605 **Nav mais fina e limpa, estilo Instagram.** Pill flutuante ficou ~40% menor em altura, sem labels de texto, so icones. Item ativo agora eh apenas uma bolha roxa discreta atras do icone (rgba(139,124,246,0.22)) em vez do gradient + borda + shadow que existia antes. Icone ativo cresce sutilmente (20px -> 22px) e fica branco puro em vez de lilas.',
+        '**Botao "+" no mesmo grid dos outros.** Antes era um FAB circular grande (54x54) saltando 6px pra cima do pill. Agora e um pill-button 48x44 no mesmo alinhamento visual dos outros 4 itens, mantendo o gradient roxo que identifica a acao principal. Rotaciona 45deg quando ativo (vira X) sem mais o scale(1.05) que parecia exagerado.',
+        '\u2605 **Tap feedback instantaneo.** Todos os botoes da nav agora respondem no toque com um scale(0.88) suave via CSS `:active` (antes nao tinha feedback nenhum, parecia que nao clicava). O "+" tem scale(0.92) pra nao exagerar no botao grande. Sensacao de app nativo em vez de site.',
+        '**Fix: tap passando pela parte de tras quando sheet aberta.** Z-index do componente `Sheet` subiu de 100 para 200, garantindo que ele cubra de verdade a nav (z:50) e qualquer outro elemento flutuante. Backdrop fica solido pra cliques, sem vazar pro conteudo abaixo.',
+        '**Safe area melhor.** Bottom da nav agora eh `calc(14px + env(safe-area-inset-bottom))` em vez de 6px fixo -- fica elevada o suficiente no iPhone com home indicator sem cobrir o conteudo.',
+        '**Navbar contextual do Profile (Cancelar/Salvar) NAO mudou.** Ela tem layout proprio e foi mantida intacta.',
+      ],
+    },
+    en: {
+      title: "Minimalist nav bar (nav redesign step 2)",
+      bullets: [
+        '\u2605 **Thinner, cleaner nav, Instagram style.** Floating pill is ~40% shorter, no text labels, icons only. Active item is now just a subtle purple bubble behind the icon (rgba(139,124,246,0.22)) instead of the previous gradient + border + shadow combo. Active icon grows slightly (20px -> 22px) and turns pure white instead of lilac.',
+        '**"+" button aligned with the others.** Previously a big circular FAB (54x54) popping 6px above the pill. Now a pill-button 48x44 on the same visual baseline as the other 4 items, keeping the purple gradient that marks it as the primary action. Rotates 45deg when active (becomes X), no more scale(1.05) that looked over the top.',
+        '\u2605 **Instant tap feedback.** Every nav button now reacts to touch with a soft scale(0.88) via CSS `:active` (before there was no feedback at all -- it felt like taps werent registering). "+" uses scale(0.92) to stay subtle on the larger button. Feels like a native app instead of a website.',
+        '**Fix: taps bleeding through to content behind when sheet open.** `Sheet` component z-index bumped from 100 to 200, ensuring it actually covers the nav (z:50) and any other floating element. Backdrop is solid for clicks, no more leaking through to content underneath.',
+        '**Better safe area.** Nav bottom is now `calc(14px + env(safe-area-inset-bottom))` instead of fixed 6px -- sits high enough on iPhones with home indicator without covering content.',
+        '**Profile contextual navbar (Cancel/Save) DID NOT change.** It has its own layout and was left intact.',
+      ],
+    },
+  },
   {
     v: "9.9.3", date: "2026-04-15",
     pt: {
@@ -2546,7 +2576,7 @@ function Sheet({open,onClose,children}){
   const sheetH=sheetRef.current?.offsetHeight||500;
   const backdropOpacity=show?Math.max(0,1-dragY/(sheetH*0.95)):0;
   const backdropTransition=isDragging?"none":"opacity .35s";
-  return(<div style={{position:"fixed",inset:0,zIndex:100}} onClick={onClose}>
+  return(<div style={{position:"fixed",inset:0,zIndex:200}} onClick={onClose}>
     <div style={{position:"absolute",inset:0,background:"rgba(2,3,10,0.55)",backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",opacity:backdropOpacity,transition:backdropTransition}}/>
     <div ref={sheetRef} onClick={e=>e.stopPropagation()} onPointerDown={onPtrDown} onPointerMove={onPtrMove} onPointerUp={onPtrUp} onPointerCancel={onPtrUp} style={{position:"absolute",bottom:0,left:0,right:0,maxWidth:480,margin:"0 auto",background:"linear-gradient(180deg,rgba(14,18,52,0.88),rgba(10,14,40,0.82))",backdropFilter:"blur(50px)",WebkitBackdropFilter:"blur(50px)",borderRadius:"32px 32px 0 0",border:"1px solid rgba(255,255,255,0.08)",borderBottom:"none",boxShadow:"0 1px 0 0 rgba(255,255,255,0.1) inset, 0 -12px 50px rgba(0,0,0,0.5), 0 0 80px -20px rgba(139,124,246,0.15)",padding:"0 0 calc(36px + env(safe-area-inset-bottom))",transform:sheetTransform,transition:sheetTransition,maxHeight:"78vh",overflowY:"auto",willChange:"transform",touchAction:"pan-y"}}>
       <div style={{padding:"10px 0 28px",cursor:"grab"}}>
@@ -4819,10 +4849,10 @@ function App(){
         <Icon name="home" size={20} color="#c4b5fd"/>
       </button>
       </div>}
-    </nav>:<nav style={{position:"fixed",bottom:"6px",left:"50%",transform:"translateX(-50%)",display:"flex",alignItems:"center",gap:4,padding:"9px 14px",background:"linear-gradient(180deg,rgba(14,18,48,0.94),rgba(8,10,28,0.96))",backdropFilter:"blur(30px)",WebkitBackdropFilter:"blur(30px)",borderRadius:44,border:"1px solid rgba(255,255,255,0.06)",boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset, 0 0 0 1px rgba(255,255,255,0.02), 0 8px 32px -4px rgba(0,0,0,0.7), 0 0 60px -20px rgba(139,124,246,0.25)",zIndex:50}}>
-      {[{icon:"home",label:"HOME",active:page==="home"&&!showAdd,action:()=>goTo("home")},{icon:"clock",label:_lang==="en"?"HISTORY":"HIST.",active:page==="history",action:()=>goTo("history")}].map(n=><button key={n.icon} onClick={n.action} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3,padding:"9px 16px",borderRadius:18,background:n.active?"linear-gradient(180deg,rgba(139,124,246,0.22),rgba(139,124,246,0.08))":"transparent",border:n.active?"1px solid rgba(139,124,246,0.28)":"1px solid transparent",boxShadow:n.active?"0 1px 0 0 rgba(255,255,255,0.1) inset, 0 0 0 1px rgba(139,124,246,0.1), 0 4px 12px -4px rgba(139,124,246,0.4)":"none",transition:"all .2s"}}><Icon name={n.icon} size={20} color={n.active?"#c4b5fd":T.dim}/>{n.active&&<span style={{fontSize:9,fontWeight:700,color:"#c4b5fd",letterSpacing:0.3}}>{n.label}</span>}</button>)}
-      <button onClick={()=>{setShowAdd(!showAdd);setFormType(null);setPage("home")}} style={{width:54,height:54,borderRadius:"50%",background:`linear-gradient(180deg,#9b8df8,#7c3aed)`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 1px 0 0 rgba(255,255,255,0.25) inset, 0 0 0 1px rgba(255,255,255,0.08), 0 8px 24px -4px ${T.accent}80, 0 0 0 4px rgba(139,124,246,0.08)`,transition:"transform .2s cubic-bezier(0.34,1.56,0.64,1)",transform:showAdd?"rotate(45deg) scale(1.05)":"scale(1)",margin:"-6px 4px"}}><Icon name="plus" size={26} color="#fff"/></button>
-      {[{icon:"chart",label:"STATS",active:page==="stats"||page==="growth",action:()=>goTo("stats")},{icon:"gear",label:_lang==="en"?"SETTINGS":"CONFIG",active:false,action:()=>setShowProfile(true)}].map(n=><button key={n.icon} onClick={n.action} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3,padding:"9px 16px",borderRadius:18,background:n.active?"linear-gradient(180deg,rgba(139,124,246,0.22),rgba(139,124,246,0.08))":"transparent",border:n.active?"1px solid rgba(139,124,246,0.28)":"1px solid transparent",boxShadow:n.active?"0 1px 0 0 rgba(255,255,255,0.1) inset, 0 0 0 1px rgba(139,124,246,0.1), 0 4px 12px -4px rgba(139,124,246,0.4)":"none",transition:"all .2s"}}><Icon name={n.icon} size={20} color={n.active?"#c4b5fd":T.dim}/>{n.active&&<span style={{fontSize:9,fontWeight:700,color:"#c4b5fd",letterSpacing:0.3}}>{n.label}</span>}</button>)}
+    </nav>:<nav style={{position:"fixed",bottom:"calc(14px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",display:"flex",alignItems:"center",gap:2,padding:"6px",background:"linear-gradient(180deg,rgba(14,18,48,0.92),rgba(8,10,28,0.94))",backdropFilter:"blur(40px)",WebkitBackdropFilter:"blur(40px)",borderRadius:30,border:"1px solid rgba(255,255,255,0.07)",boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset, 0 8px 28px -6px rgba(0,0,0,0.6), 0 0 40px -16px rgba(139,124,246,0.22)",zIndex:50}}>
+      {[{icon:"home",active:page==="home"&&!showAdd,action:()=>goTo("home")},{icon:"clock",active:page==="history",action:()=>goTo("history")}].map(n=><button key={n.icon} className="navbtn" onClick={n.action} style={{display:"flex",alignItems:"center",justifyContent:"center",width:48,height:44,borderRadius:22,background:n.active?"rgba(139,124,246,0.22)":"transparent",border:"none",padding:0}}><Icon name={n.icon} size={n.active?22:20} color={n.active?"#ffffff":T.dim}/></button>)}
+      <button className="navfab" onClick={()=>{setShowAdd(!showAdd);setFormType(null);setPage("home")}} style={{width:48,height:44,borderRadius:22,background:`linear-gradient(180deg,#9b8df8,#7c3aed)`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 1px 0 0 rgba(255,255,255,0.22) inset, 0 4px 14px -2px ${T.accent}70`,transform:showAdd?"rotate(45deg)":"rotate(0deg)",margin:"0 2px",border:"none",padding:0}}><Icon name="plus" size={22} color="#fff"/></button>
+      {[{icon:"chart",active:page==="stats"||page==="growth",action:()=>goTo("stats")},{icon:"gear",active:false,action:()=>setShowProfile(true)}].map(n=><button key={n.icon} className="navbtn" onClick={n.action} style={{display:"flex",alignItems:"center",justifyContent:"center",width:48,height:44,borderRadius:22,background:n.active?"rgba(139,124,246,0.22)":"transparent",border:"none",padding:0}}><Icon name={n.icon} size={n.active?22:20} color={n.active?"#ffffff":T.dim}/></button>)}
     </nav>}
   </div>);
 }
