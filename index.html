@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v9.9.8  Fixes: wakings retroativas no engine (v2.2.1) + curiosity semanal so 1x por semana
   v9.9.7  Repo reorganizado: js/ e assets/icons/ (SWs e manifest ficam no root)
   v9.9.6  Performance iPhone: reduzidos 6 backdrop-filters pesados (40-50px -> 16-22px)
   v9.9.5  Inbox: hints de despertares consolidados em 1 card (routine-engine v2.2.0)
@@ -264,8 +265,33 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "9.9.7";
+const APP_VERSION = "9.9.8";
 const CHANGELOG = [
+  {
+    v: "9.9.8", date: "2026-04-15",
+    pt: {
+      title: "Fixes: despertares retroativos no engine + curiosity semanal uma vez so",
+      bullets: [
+        '\u2605 **Engine agora conta wakings retroativas (routine-engine v2.2.0 \u2192 v2.2.1).** O `SleepBlock` do historico sempre mostrou eventos (mamadas, fraldas) que caem dentro do intervalo da bedtime como despertares -- mesmo sem voce clicar "Night Wake" explicitamente. O engine, porem, so contava as wakings explicitas. Resultado: a inbox dizia "Media 1 despertar/noite" enquanto voce via 3 na tela.',
+        '**Agora o engine espelha a logica do SleepBlock:** qualquer evento (exceto sleep/nap/wakeup/nightwaking/growth) com timestamp dentro de `[bedStart, bedStart+durationMin]`, nao linkado explicitamente a uma waking, e contado como despertar retroativo.',
+        '**Consequencias:** `avgPerNight` passa a refletir a realidade (sobe de ~1 pra ~2-3 no caso da Louise), `mostCommonTime` migra do "primeiro estiramento bem no inicio da noite" pro cluster real de madrugada, e `mostCommonType` fica mais confiavel por ter mais amostras.',
+        '**`awakeMin` intencionalmente NAO muda** -- continua somando so a duracao das wakings explicitas. Evento retroativo nao sabe duracao (nao tem `durationMin`), entao nao queremos inflar o tempo "awake in sleep" com chute.',
+        '\u2605 **Curiosity semanal agora aparece uma vez so por semana.** Antes ela repetia todo dia da semana ("Week 5 · Crying at its peak" por 7 dias seguidos, chato). Agora mostra apenas no dia em que o bebe transiciona pra nova semana (`totalDays % 7 === 0`) -- day 35 (Week 5), day 42 (Week 6), day 49 (Week 7), etc.',
+        'Curiosities **diarias** (days 1-30) seguem iguais: uma por dia, 30 dias seguidos. Mudanca eh so no bloco semanal.',
+      ],
+    },
+    en: {
+      title: "Fixes: retroactive wakings in engine + weekly curiosity shows once only",
+      bullets: [
+        '\u2605 **Engine now counts retroactive wakings (routine-engine v2.2.0 \u2192 v2.2.1).** The history `SleepBlock` has always shown events (bottles, diapers) that fall inside a bedtime window as wakings -- even when you never pressed "Night Wake" explicitly. The engine, however, only counted explicit wakings. Result: inbox said "Avg 1 waking/night" while you saw 3 on screen.',
+        '**The engine now mirrors the SleepBlock logic:** any event (except sleep/nap/wakeup/nightwaking/growth) with a timestamp inside `[bedStart, bedStart+durationMin]`, not explicitly linked to a waking, counts as a retroactive waking.',
+        '**Effects:** `avgPerNight` now reflects reality (goes from ~1 up to ~2-3 for Louise), `mostCommonTime` shifts from "first stir right at the start of the night" to the real overnight cluster, and `mostCommonType` becomes more reliable with more samples.',
+        '**`awakeMin` intentionally does NOT change** -- still only sums the duration of explicit wakings. Retroactive events have no duration (no `durationMin`), so we avoid inflating "awake in sleep" time with guesses.',
+        '\u2605 **Weekly curiosity now shows once per week.** Before, it repeated every day of the week ("Week 5 · Crying at its peak" for 7 days straight, annoying). Now it only shows on the day the baby transitions into the new week (`totalDays % 7 === 0`) -- day 35 (Week 5), day 42 (Week 6), day 49 (Week 7), etc.',
+        '**Daily** curiosities (days 1-30) unchanged: one per day, 30 days in a row. Change is only in the weekly block.',
+      ],
+    },
+  },
   {
     v: "9.9.7", date: "2026-04-15",
     pt: {
@@ -1985,8 +2011,10 @@ function getTodayCuriosity(age,lang){
       tagLabel=lang==="en"?`${monthNum} months`:`${monthNum} meses`;
     }
   }
-  // Priority 3: weekly curiosities (weeks 5-52)
-  if(!txt&&weekNum>=5&&weekNum<=52){
+  // Priority 3: weekly curiosities (weeks 5-52) — only on the first day of each new week
+  // (dayNum%7===0 ⇔ day baby transitions into weekNum). Avoids repeating the same
+  // weekly fact 7 days in a row.
+  if(!txt&&weekNum>=5&&weekNum<=52&&dayNum%7===0){
     const idx=weekNum-5;
     const wc=WEEKLY_CURIOSITIES&&WEEKLY_CURIOSITIES[idx];
     if(wc){
@@ -2524,8 +2552,9 @@ function CuriosityCard({age,lang,tick}){
       tagLabel=lang==="en"?`${monthNum} months`:`${monthNum} meses`;
     }
   }
-  // Priority 3: weekly curiosities (weeks 5-52, i.e. days 31-364)
-  if(!txt&&weekNum>=5&&weekNum<=52){
+  // Priority 3: weekly curiosities (weeks 5-52, i.e. days 35-364) — only on the first
+  // day of each new week (dayNum%7===0). Same fact shouldn't show 7 days in a row.
+  if(!txt&&weekNum>=5&&weekNum<=52&&dayNum%7===0){
     const idx=weekNum-5;
     const wc=WEEKLY_CURIOSITIES&&WEEKLY_CURIOSITIES[idx];
     if(wc){
