@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v9.9.7  Repo reorganizado: js/ e assets/icons/ (SWs e manifest ficam no root)
   v9.9.6  Performance iPhone: reduzidos 6 backdrop-filters pesados (40-50px -> 16-22px)
   v9.9.5  Inbox: hints de despertares consolidados em 1 card (routine-engine v2.2.0)
   v9.9.4  Nav minimalista (pill fina, sem labels) + tap feedback + fix overlay do "+"
@@ -54,7 +55,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Baby Tracker">
   <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
   <title>Baby Tracker</title>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
@@ -244,17 +245,17 @@ dbg('Firebase ready');
 } catch(e) { dbg('Firebase Error: '+e.message); throw e; }
 </script>
 
-<script src="splash-icon.js"></script>
+<script src="js/splash-icon.js"></script>
 
-<script src="who-growth.js"></script>
+<script src="js/who-growth.js"></script>
 
-<script src="curiosities.js"></script>
+<script src="js/curiosities.js"></script>
 
-<script src="wake-lock.js"></script>
+<script src="js/wake-lock.js"></script>
 
-<script src="device-features.js"></script>
+<script src="js/device-features.js"></script>
 
-<script src="routine-engine.js"></script>
+<script src="js/routine-engine.js"></script>
 
 <script type="text/babel">
 const {useState, useEffect, useCallback, useRef, useMemo} = React;
@@ -263,8 +264,31 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "9.9.6";
+const APP_VERSION = "9.9.7";
 const CHANGELOG = [
+  {
+    v: "9.9.7", date: "2026-04-15",
+    pt: {
+      title: "Repositorio reorganizado em estrutura profissional",
+      bullets: [
+        '\u2605 **Arquivos JS auxiliares agrupados em `js/`** e **icones em `assets/icons/`** -- antes tudo era flat na raiz do repo, dificil de navegar no GitHub. Historico preservado via `git mv`.',
+        '**Sem mudanca de comportamento.** Todos os 11 paths afetados foram atualizados na mesma commit: 6 `<script src>` no index.html, 1 apple-touch-icon, 2 icones no manifest.json, 2 no sw.js, 2 no firebase-messaging-sw.js.',
+        '**Service workers e manifest NAO foram movidos** -- continuam no root. Motivo: `sw.js` e `firebase-messaging-sw.js` tem scope/path fixo obrigatorio (mover quebraria notificacoes push); `manifest.json` fica no root por convencao PWA.',
+        'Nova arvore:\n```\nindex.html\nmanifest.json\nsw.js\nfirebase-messaging-sw.js\nREADME.md\njs/\n  curiosities.js, routine-engine.js, who-growth.js,\n  splash-icon.js, wake-lock.js, device-features.js\nassets/icons/\n  icon-192.png, icon-512.png, apple-touch-icon.png\n```',
+        '`CLAUDE.md` atualizado com a nova arvore e a regra de "nao mover SWs/manifest".',
+      ],
+    },
+    en: {
+      title: "Repository reorganized into professional structure",
+      bullets: [
+        '\u2605 **Auxiliary JS files grouped under `js/`** and **icons under `assets/icons/`** -- previously everything was flat in the repo root, hard to navigate on GitHub. History preserved via `git mv`.',
+        '**No behavior change.** All 11 affected paths were updated in the same commit: 6 `<script src>` in index.html, 1 apple-touch-icon, 2 icons in manifest.json, 2 in sw.js, 2 in firebase-messaging-sw.js.',
+        '**Service workers and manifest were NOT moved** -- they stay at root. Reason: `sw.js` and `firebase-messaging-sw.js` have mandatory fixed scope/path (moving would break push notifications); `manifest.json` stays at root per PWA convention.',
+        'New tree:\n```\nindex.html\nmanifest.json\nsw.js\nfirebase-messaging-sw.js\nREADME.md\njs/\n  curiosities.js, routine-engine.js, who-growth.js,\n  splash-icon.js, wake-lock.js, device-features.js\nassets/icons/\n  icon-192.png, icon-512.png, apple-touch-icon.png\n```',
+        '`CLAUDE.md` updated with the new tree and the rule "do not move SWs/manifest".',
+      ],
+    },
+  },
   {
     v: "9.9.6", date: "2026-04-15",
     pt: {

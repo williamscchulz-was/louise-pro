@@ -30,19 +30,28 @@ Mantenha o arquivo atualizado: se algo mudar de forma estrutural (stack, workflo
 
 ```
 louise-pro/
-├── index.html               ← app completo (~436 KB)
-├── curiosities.js           ← curiosidades bilíngues (dia 1 → mês 12)
-├── routine-engine.js        ← engine de análise de padrões (sleep + feed)
-├── who-growth.js            ← tabelas LMS OMS + funções de percentil
-├── splash-icon.js           ← base64 do ícone da splash screen
-├── wake-lock.js             ← helper de Wake Lock API
-├── device-features.js       ← helpers de device (haptics etc.)
-├── firebase-messaging-sw.js ← service worker do FCM
-├── sw.js                    ← service worker do PWA
-├── manifest.json            ← config PWA
-├── icon-192.png / icon-512.png / apple-touch-icon.png
-└── README.md
+├── index.html               ← app completo (~450 KB)
+├── manifest.json            ← config PWA (fica no root por convencao)
+├── sw.js                    ← service worker do PWA (DEVE ficar no root — scope)
+├── firebase-messaging-sw.js ← service worker do FCM (DEVE ficar no root — Firebase espera path fixo)
+├── README.md
+├── CLAUDE.md
+├── .gitignore
+├── js/                      ← libs/modulos auxiliares carregados via <script src>
+│   ├── curiosities.js       ← curiosidades bilíngues (dia 1 → mês 12)
+│   ├── routine-engine.js    ← engine de análise de padrões (sleep + feed)
+│   ├── who-growth.js        ← tabelas LMS OMS + funções de percentil
+│   ├── splash-icon.js       ← base64 do ícone da splash screen
+│   ├── wake-lock.js         ← helper de Wake Lock API
+│   └── device-features.js   ← helpers de device (haptics etc.)
+└── assets/
+    └── icons/
+        ├── icon-192.png
+        ├── icon-512.png
+        └── apple-touch-icon.png
 ```
+
+**Regra:** NAO mover `sw.js`, `firebase-messaging-sw.js`, ou `manifest.json` pra subpastas. Service workers tem scope baseado no path do arquivo; moveu, quebrou notificações. Firebase Messaging procura por `firebase-messaging-sw.js` no root do scope do app.
 
 ## Ambiente local (Windows)
 

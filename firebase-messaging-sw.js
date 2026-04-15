@@ -44,8 +44,8 @@ messaging.onBackgroundMessage(function (payload) {
 
   const options = {
     body: body,
-    icon:  '/louise-pro/icon-192.png',
-    badge: '/louise-pro/icon-192.png',
+    icon:  '/louise-pro/assets/icons/icon-192.png',
+    badge: '/louise-pro/assets/icons/icon-192.png',
     tag:   'louise-pro-reminder',
     renotify: true,
     requireInteraction: true,

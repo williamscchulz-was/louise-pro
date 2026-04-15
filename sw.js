@@ -39,8 +39,8 @@ self.addEventListener("push", function (event) {
   var title = notification.title || "Louise Pro";
   var options = {
     body: notification.body || "",
-    icon: notification.icon || "./icon-192.png",
-    badge: notification.badge || "./icon-192.png",
+    icon: notification.icon || "./assets/icons/icon-192.png",
+    badge: notification.badge || "./assets/icons/icon-192.png",
     tag: notification.tag || "louise-pro",
     data: notification.data || {},
     requireInteraction: false,
