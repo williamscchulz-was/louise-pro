@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v10.0.1 Service Worker com cache: 2o+ cold start quase instantaneo
   v10.0.0 Build step: JSX pre-compilado, Babel Standalone removido, deploy via GitHub Actions
   v9.9.8  Fixes: wakings retroativas no engine (v2.2.1) + curiosity semanal so 1x por semana
   v9.9.7  Repo reorganizado: js/ e assets/icons/ (SWs e manifest ficam no root)
@@ -266,8 +267,33 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "10.0.0";
+const APP_VERSION = "10.0.1";
 const CHANGELOG = [
+  {
+    v: "10.0.1", date: "2026-04-15",
+    pt: {
+      title: "Service Worker com cache: 2o+ cold start quase instantaneo",
+      bullets: [
+        '\u2605 **Primeiro open depois da instalacao:** baixa tudo normal (React, Firebase, Outfit font, scripts do app) e joga no cache do Service Worker. 2a vez em diante: o browser pega os scripts do cache local em **milissegundos**, sem tocar em unpkg.com, gstatic.com ou fonts.googleapis.com.',
+        '**Stale-while-revalidate:** cada fetch retorna imediatamente do cache (instantaneo) E ao mesmo tempo vai na rede em background pra atualizar o cache. Entao voce nunca espera por scripts que ja viu -- mas tambem nao fica preso numa versao antiga; o proximo open ja pega a atualizacao.',
+        '**Cache versionado por APP_VERSION:** o build step injeta o numero da versao dentro do `sw.js` (placeholder `__APP_VERSION__` vira `10.0.1`, `10.0.2`, etc.). Toda nova release muda o `CACHE_NAME`, o que faz o SW novo purgar o cache velho automaticamente no activate. Nunca fica cache entalado de versao antiga.',
+        '**Firestore NUNCA eh cacheado** -- chamadas pra `firestore.googleapis.com`, `firebaseinstallations.googleapis.com` e afins passam direto pra rede. Dado em tempo real continua em tempo real.',
+        '**Precache no install:** 11 assets locais (`index.html`, todos `js/*.js`, 3 icones, manifest) + 6 CDNs (React, ReactDOM, 3 scripts Firebase, CSS do Outfit). Total ~500 KB cacheado local.',
+        'Push notifications continuam funcionando identico. Soh foi adicionado handler de `fetch` + precache -- nao mexi no codigo de push/notificationclick.',
+      ],
+    },
+    en: {
+      title: "Service Worker with caching: 2nd+ cold start near-instant",
+      bullets: [
+        '\u2605 **First open after install:** downloads everything normally (React, Firebase, Outfit font, app scripts) and drops them into the Service Worker cache. 2nd time onward: the browser pulls scripts from the local cache in **milliseconds**, without touching unpkg.com, gstatic.com or fonts.googleapis.com.',
+        '**Stale-while-revalidate:** each fetch returns from cache immediately (instant) AND hits the network in the background to refresh the cache. So you never wait for scripts you have seen before -- but you also never get stuck on an old version; the next open already picks up the update.',
+        '**Cache versioned by APP_VERSION:** the build step injects the version number into `sw.js` (placeholder `__APP_VERSION__` becomes `10.0.1`, `10.0.2`, etc.). Every new release changes `CACHE_NAME`, which makes the new SW purge the old cache automatically on activate. Never stuck on stale version cache.',
+        '**Firestore is NEVER cached** -- calls to `firestore.googleapis.com`, `firebaseinstallations.googleapis.com` and similar pass straight through to the network. Real-time data stays real-time.',
+        '**Precache on install:** 11 local assets (`index.html`, all `js/*.js`, 3 icons, manifest) + 6 CDNs (React, ReactDOM, 3 Firebase scripts, Outfit CSS). Total ~500 KB cached locally.',
+        'Push notifications keep working identically. Only the `fetch` handler + precache was added -- push/notificationclick code untouched.',
+      ],
+    },
+  },
   {
     v: "10.0.0", date: "2026-04-15",
     pt: {

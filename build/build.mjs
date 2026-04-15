@@ -73,10 +73,24 @@ if (!BABEL_CDN_RE.test(html)) {
 writeFileSync(join(DIST, "index.html"), html);
 console.log("[build] wrote dist/index.html (" + html.length + " chars)");
 
-// Copy static files as-is. Service workers and manifest MUST be at root.
+// Extract APP_VERSION from the compiled HTML for service worker cache-busting.
+// sw.js uses __APP_VERSION__ as a placeholder that we replace here, so every
+// new release lands with a different CACHE_NAME and the browser purges old
+// caches on activate.
+const APP_VERSION_MATCH = html.match(/const\s+APP_VERSION\s*=\s*"([^"]+)"/);
+const appVersion = APP_VERSION_MATCH ? APP_VERSION_MATCH[1] : "unknown";
+console.log("[build] detected APP_VERSION = " + appVersion);
+
+// Handle sw.js specially: inject APP_VERSION into the __APP_VERSION__ placeholder.
+const swSrc = readFileSync(join(ROOT, "sw.js"), "utf8");
+const swOut = swSrc.replace(/__APP_VERSION__/g, appVersion);
+writeFileSync(join(DIST, "sw.js"), swOut);
+console.log("[build] wrote dist/sw.js with version " + appVersion);
+
+// Copy the other static files as-is. Service workers and manifest MUST be
+// at root so their scope/registration works correctly.
 const copies = [
   "manifest.json",
-  "sw.js",
   "firebase-messaging-sw.js",
   "js",
   "assets",
