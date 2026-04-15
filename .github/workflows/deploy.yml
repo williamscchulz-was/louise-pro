@@ -43,23 +43,17 @@ jobs:
 
       - name: Sanity check output
         run: |
+          # Check that expected files exist in dist/. The build.mjs itself
+          # errors hard if the JSX block can't be found or compiled, so we
+          # trust its output here and don't regex over dist/index.html
+          # (which contains changelog text with literal examples of
+          # `<script type="text/babel">` and `@babel/standalone`).
           test -f dist/index.html
           test -f dist/manifest.json
           test -f dist/sw.js
           test -f dist/firebase-messaging-sw.js
           test -d dist/js
           test -d dist/assets
-          # Fail the build if the actual babel CDN <script> tag leaked through.
-          # (Grep matches the src=... URL inside a script tag, not mentions in
-          # text like the CHANGELOG.)
-          if grep -qE '<script[^>]*src="[^"]*@babel/standalone' dist/index.html; then
-            echo "ERROR: @babel/standalone CDN script tag still present in dist/index.html"
-            exit 1
-          fi
-          if grep -q 'type="text/babel"' dist/index.html; then
-            echo "ERROR: <script type=text/babel> not compiled"
-            exit 1
-          fi
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
