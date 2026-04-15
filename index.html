@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v9.9.6  Performance iPhone: reduzidos 6 backdrop-filters pesados (40-50px -> 16-22px)
   v9.9.5  Inbox: hints de despertares consolidados em 1 card (routine-engine v2.2.0)
   v9.9.4  Nav minimalista (pill fina, sem labels) + tap feedback + fix overlay do "+"
   v9.9.3  Teste de workflow Claude Code (bump vazio)
@@ -262,8 +263,43 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "9.9.5";
+const APP_VERSION = "9.9.6";
 const CHANGELOG = [
+  {
+    v: "9.9.6", date: "2026-04-15",
+    pt: {
+      title: "Performance iPhone: app fluido de verdade em PWA",
+      bullets: [
+        '\u2605 **iOS Safari em PWA sofre muito com `backdrop-filter` de raio alto** -- especialmente em elementos sempre visiveis como a nav bar. O custo eh quadratico no raio do blur: blur(50px) nao custa 2x um blur(25px), custa ~4x. Em iPhone 16 Pro Max com PWA instalado, blurs pesados sobre conteudo animado (timer ao vivo, ring girando) travam o compositor da GPU.',
+        '**6 backdrop-filters reduzidos** pra raios dentro do que iOS compila rapido:',
+        '- Sheet do "+" (a que mais abre): **50px -> 22px**',
+        '- Main nav bar (sempre visivel): **40px -> 16px**',
+        '- Modal (confirmacoes, changelog): **40px -> 18px**',
+        '- Profile contextual nav: **30px -> 16px**',
+        '- ProfilePage full-screen: **28px -> 16px**',
+        '- NursingSidePicker: **30px -> 18px**',
+        '**Opacidade dos fundos aumentada sutilmente** (88%/92% -> 94%/97%) pra compensar visualmente o blur menor -- o glassmorphism continua la, mas o iOS nao precisa mais queimar GPU por frame pra calcular.',
+        'Nada visual foi perdido de forma perceptivel. Nenhum shadow foi tocado, nenhuma animacao foi removida, nenhuma cor mudou. Soh o filter radius.',
+        '**Medicao grosseira esperada:** scroll, abrir sheet, trocar de aba e tap feedback devem ficar visivelmente mais fluidos em PWA no iPhone.',
+      ],
+    },
+    en: {
+      title: "iPhone performance: truly fluid app in PWA mode",
+      bullets: [
+        '\u2605 **iOS Safari in PWA mode suffers badly with high-radius `backdrop-filter`** -- especially on always-visible elements like the nav bar. Cost is quadratic in blur radius: blur(50px) is not 2x a blur(25px), it is ~4x. On iPhone 16 Pro Max in installed PWA, heavy blurs over animated content (live timer, spinning ring) stall the GPU compositor.',
+        '**6 backdrop-filters reduced** to radii iOS compiles fast:',
+        '- "+" Sheet (most frequently opened): **50px -> 22px**',
+        '- Main nav bar (always visible): **40px -> 16px**',
+        '- Modal (confirmations, changelog): **40px -> 18px**',
+        '- Profile contextual nav: **30px -> 16px**',
+        '- ProfilePage full-screen: **28px -> 16px**',
+        '- NursingSidePicker: **30px -> 18px**',
+        '**Background opacity slightly increased** (88%/92% -> 94%/97%) to visually compensate for the lower blur -- glassmorphism still there, but iOS no longer needs to burn GPU per frame to compute it.',
+        'Nothing perceptibly visual was lost. No shadow was touched, no animation removed, no color changed. Just the filter radius.',
+        '**Expected rough measure:** scrolling, opening sheets, switching tabs and tap feedback should feel visibly smoother in PWA on iPhone.',
+      ],
+    },
+  },
   {
     v: "9.9.5", date: "2026-04-15",
     pt: {
@@ -2358,7 +2394,7 @@ function NursingSidePicker({open,onClose,onSelect}){
   const handleSelect=(side)=>{Haptic.medium();onSelect(side);onClose()};
   return(<div style={{position:"fixed",inset:0,zIndex:90}} onClick={onClose}>
     <div style={{position:"absolute",inset:0,background:"rgba(3,6,20,0.6)",backdropFilter:"blur(6px)",WebkitBackdropFilter:"blur(6px)",opacity:show?1:0,transition:"opacity .4s cubic-bezier(0.22,1,0.36,1)"}}/>
-    <div onClick={e=>e.stopPropagation()} style={{position:"absolute",left:"50%",bottom:0,transform:show?"translate(-50%,0)":"translate(-50%,100%)",width:"calc(100% - 24px)",maxWidth:440,padding:"24px 22px calc(28px + env(safe-area-inset-bottom))",borderRadius:"28px 28px 0 0",background:"linear-gradient(180deg,rgba(22,28,60,0.96),rgba(14,18,48,0.98))",backdropFilter:"blur(30px)",WebkitBackdropFilter:"blur(30px)",border:`1px solid ${T.blue}33`,borderBottom:"none",boxShadow:`0 1px 0 0 rgba(255,255,255,0.08) inset, 0 -24px 70px -12px ${T.blue}40, 0 -8px 30px -8px rgba(0,0,0,0.6)`,transition:"transform .5s cubic-bezier(0.22,1.1,0.36,1)",willChange:"transform"}}>
+    <div onClick={e=>e.stopPropagation()} style={{position:"absolute",left:"50%",bottom:0,transform:show?"translate(-50%,0)":"translate(-50%,100%)",width:"calc(100% - 24px)",maxWidth:440,padding:"24px 22px calc(28px + env(safe-area-inset-bottom))",borderRadius:"28px 28px 0 0",background:"linear-gradient(180deg,rgba(22,28,60,0.97),rgba(14,18,48,0.99))",backdropFilter:"blur(18px)",WebkitBackdropFilter:"blur(18px)",border:`1px solid ${T.blue}33`,borderBottom:"none",boxShadow:`0 1px 0 0 rgba(255,255,255,0.08) inset, 0 -24px 70px -12px ${T.blue}40, 0 -8px 30px -8px rgba(0,0,0,0.6)`,transition:"transform .5s cubic-bezier(0.22,1.1,0.36,1)",willChange:"transform"}}>
       <div style={{width:40,height:4,borderRadius:2,background:"rgba(255,255,255,0.18)",margin:"-10px auto 20px",opacity:show?1:0,transform:show?"scaleX(1)":"scaleX(0.5)",transition:"opacity .3s ease .05s, transform .4s cubic-bezier(0.22,1,0.36,1) .05s"}}/>
       <div style={{display:"flex",justifyContent:"center",marginBottom:22}}>
         <div style={{width:58,height:58,borderRadius:18,background:`linear-gradient(135deg,${T.blue}5c,${T.blue}14)`,border:`1px solid ${T.blue}70`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 1px 0 0 rgba(255,255,255,0.12) inset, 0 8px 24px -8px ${T.blue}80`,opacity:show?1:0,transform:show?"scale(1) translateY(0)":"scale(0.6) translateY(14px)",transition:"opacity .5s cubic-bezier(0.22,1,0.36,1) .12s, transform .55s cubic-bezier(0.34,1.4,0.5,1) .12s"}}>
@@ -2604,7 +2640,7 @@ function Sheet({open,onClose,children}){
   const backdropTransition=isDragging?"none":"opacity .35s";
   return(<div style={{position:"fixed",inset:0,zIndex:200}} onClick={onClose}>
     <div style={{position:"absolute",inset:0,background:"rgba(2,3,10,0.55)",backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",opacity:backdropOpacity,transition:backdropTransition}}/>
-    <div ref={sheetRef} onClick={e=>e.stopPropagation()} onPointerDown={onPtrDown} onPointerMove={onPtrMove} onPointerUp={onPtrUp} onPointerCancel={onPtrUp} style={{position:"absolute",bottom:0,left:0,right:0,maxWidth:480,margin:"0 auto",background:"linear-gradient(180deg,rgba(14,18,52,0.88),rgba(10,14,40,0.82))",backdropFilter:"blur(50px)",WebkitBackdropFilter:"blur(50px)",borderRadius:"32px 32px 0 0",border:"1px solid rgba(255,255,255,0.08)",borderBottom:"none",boxShadow:"0 1px 0 0 rgba(255,255,255,0.1) inset, 0 -12px 50px rgba(0,0,0,0.5), 0 0 80px -20px rgba(139,124,246,0.15)",padding:"0 0 calc(36px + env(safe-area-inset-bottom))",transform:sheetTransform,transition:sheetTransition,maxHeight:"78vh",overflowY:"auto",willChange:"transform",touchAction:"pan-y"}}>
+    <div ref={sheetRef} onClick={e=>e.stopPropagation()} onPointerDown={onPtrDown} onPointerMove={onPtrMove} onPointerUp={onPtrUp} onPointerCancel={onPtrUp} style={{position:"absolute",bottom:0,left:0,right:0,maxWidth:480,margin:"0 auto",background:"linear-gradient(180deg,rgba(14,18,52,0.94),rgba(10,14,40,0.92))",backdropFilter:"blur(22px)",WebkitBackdropFilter:"blur(22px)",borderRadius:"32px 32px 0 0",border:"1px solid rgba(255,255,255,0.08)",borderBottom:"none",boxShadow:"0 1px 0 0 rgba(255,255,255,0.1) inset, 0 -12px 50px rgba(0,0,0,0.5), 0 0 80px -20px rgba(139,124,246,0.15)",padding:"0 0 calc(36px + env(safe-area-inset-bottom))",transform:sheetTransform,transition:sheetTransition,maxHeight:"78vh",overflowY:"auto",willChange:"transform",touchAction:"pan-y"}}>
       <div style={{padding:"10px 0 28px",cursor:"grab"}}>
         <div style={{width:44,height:5,borderRadius:3,background:"rgba(140,150,255,0.28)",margin:"0 auto"}}/>
       </div>
@@ -2613,7 +2649,7 @@ function Sheet({open,onClose,children}){
   </div>)
 }
 
-function Modal({open,onClose,children}){const[vis,setVis]=useState(false),[show,setShow]=useState(false);useEffect(()=>{if(open){setVis(true);requestAnimationFrame(()=>requestAnimationFrame(()=>setShow(true)))}else{setShow(false);const t=setTimeout(()=>setVis(false),300);return()=>clearTimeout(t)}},[open]);if(!vis)return null;return(<div style={{position:"fixed",inset:0,zIndex:150,display:"flex",alignItems:"center",justifyContent:"center",padding:24}} onClick={onClose}><div style={{position:"absolute",inset:0,background:"rgba(2,3,10,0.55)",backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",opacity:show?1:0,transition:"opacity .35s"}}/><div onClick={e=>e.stopPropagation()} style={{position:"relative",width:"100%",maxWidth:340,background:"linear-gradient(180deg,rgba(20,26,60,0.88),rgba(14,18,52,0.85))",backdropFilter:"blur(40px)",WebkitBackdropFilter:"blur(40px)",borderRadius:26,border:"1px solid rgba(255,255,255,0.08)",boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset, 0 0 0 1px rgba(255,255,255,0.03), 0 24px 64px -12px rgba(0,0,0,0.65), 0 0 80px -20px rgba(139,124,246,0.18)",padding:"28px 24px 24px",transform:show?"scale(1)":"scale(0.92)",opacity:show?1:0,transition:"all .35s cubic-bezier(0.22,1,0.36,1)",overflow:"hidden"}}><div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse at 50% 0%,rgba(255,255,255,0.04),transparent 50%)",pointerEvents:"none",borderRadius:26}}/><button onClick={onClose} style={{position:"absolute",top:14,right:14,width:32,height:32,borderRadius:11,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"center",color:T.dim,boxShadow:T.insetTop,zIndex:1}}><Icon name="x" size={14} color={T.dim}/></button><div style={{position:"relative"}}>{children}</div></div></div>)}
+function Modal({open,onClose,children}){const[vis,setVis]=useState(false),[show,setShow]=useState(false);useEffect(()=>{if(open){setVis(true);requestAnimationFrame(()=>requestAnimationFrame(()=>setShow(true)))}else{setShow(false);const t=setTimeout(()=>setVis(false),300);return()=>clearTimeout(t)}},[open]);if(!vis)return null;return(<div style={{position:"fixed",inset:0,zIndex:150,display:"flex",alignItems:"center",justifyContent:"center",padding:24}} onClick={onClose}><div style={{position:"absolute",inset:0,background:"rgba(2,3,10,0.55)",backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",opacity:show?1:0,transition:"opacity .35s"}}/><div onClick={e=>e.stopPropagation()} style={{position:"relative",width:"100%",maxWidth:340,background:"linear-gradient(180deg,rgba(20,26,60,0.94),rgba(14,18,52,0.93))",backdropFilter:"blur(18px)",WebkitBackdropFilter:"blur(18px)",borderRadius:26,border:"1px solid rgba(255,255,255,0.08)",boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset, 0 0 0 1px rgba(255,255,255,0.03), 0 24px 64px -12px rgba(0,0,0,0.65), 0 0 80px -20px rgba(139,124,246,0.18)",padding:"28px 24px 24px",transform:show?"scale(1)":"scale(0.92)",opacity:show?1:0,transition:"all .35s cubic-bezier(0.22,1,0.36,1)",overflow:"hidden"}}><div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse at 50% 0%,rgba(255,255,255,0.04),transparent 50%)",pointerEvents:"none",borderRadius:26}}/><button onClick={onClose} style={{position:"absolute",top:14,right:14,width:32,height:32,borderRadius:11,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"center",color:T.dim,boxShadow:T.insetTop,zIndex:1}}><Icon name="x" size={14} color={T.dim}/></button><div style={{position:"relative"}}>{children}</div></div></div>)}
 
 function Fld({label,children}){return<div style={{marginBottom:18,minWidth:0}}><label style={{fontSize:11,color:"#7a80a8",fontWeight:600,marginBottom:10,display:"block",letterSpacing:-0.05}}>{label}</label>{children}</div>}
 function Seg({opts,val,set,color}){return<div style={{display:"flex",gap:6}}>{opts.map(o=><button key={o.v} onClick={()=>set(o.v)} style={{flex:1,padding:"12px 4px",borderRadius:10,fontSize:13,fontWeight:600,background:val===o.v?color:T.glass,color:val===o.v?T.bg1:T.text,border:`1px solid ${val===o.v?color:T.gB}`}}>{o.l}</button>)}</div>}
@@ -3068,7 +3104,7 @@ function InboxPanel({inbox,onClose,onMarkRead,onMarkAllRead,lang}){
     const h=Math.floor(diff/60),m=diff%60;
     return m>0?`${h}h${m}m`:`${h}h`;
   };
-  return(<div style={{position:"fixed",inset:0,zIndex:210,maxWidth:480,margin:"0 auto",background:"linear-gradient(180deg,rgba(7,11,30,0.98),rgba(5,8,24,0.96))",backdropFilter:"blur(28px)",WebkitBackdropFilter:"blur(28px)",display:"flex",flexDirection:"column",paddingTop:"env(safe-area-inset-top)",paddingBottom:"env(safe-area-inset-bottom)",animation:"fadeIn .25s ease"}}>
+  return(<div style={{position:"fixed",inset:0,zIndex:210,maxWidth:480,margin:"0 auto",background:"linear-gradient(180deg,rgba(7,11,30,0.99),rgba(5,8,24,0.98))",backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",display:"flex",flexDirection:"column",paddingTop:"env(safe-area-inset-top)",paddingBottom:"env(safe-area-inset-bottom)",animation:"fadeIn .25s ease"}}>
     {/* Header */}
     <div style={{display:"flex",alignItems:"center",gap:14,padding:"22px 22px 18px",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
       <div style={{width:42,height:42,borderRadius:13,background:"linear-gradient(135deg,rgba(139,124,246,0.25),rgba(139,124,246,0.08))",border:"1px solid rgba(139,124,246,0.35)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset"}}>
@@ -4854,7 +4890,7 @@ function App(){
     <EditStartModal open={showEditStart} onClose={()=>setShowEditStart(false)} activeTimer={activeTimer} onSave={handleEditStart}/>
     <NursingSidePicker open={showNursingPicker} onClose={()=>setShowNursingPicker(false)} onSelect={side=>startTimer("nursing",side)}/>
 
-    {showProfile?<nav style={{position:"fixed",bottom:"6px",left:profileIsDirty?"16px":"50%",right:profileIsDirty?"16px":"auto",transform:profileIsDirty?(profileNavHidden?"translateY(0)":"translateY(0)"):`translateX(-50%) translateY(${profileNavHidden?"120%":"0"})`,opacity:(profileNavHidden&&!profileIsDirty)?0:1,display:"flex",alignItems:"center",gap:8,padding:profileIsDirty?"10px":"0",background:profileIsDirty?"linear-gradient(180deg,rgba(28,22,60,0.95),rgba(22,18,52,0.96))":"transparent",backdropFilter:profileIsDirty?"blur(30px)":"none",WebkitBackdropFilter:profileIsDirty?"blur(30px)":"none",borderRadius:profileIsDirty?22:999,border:profileIsDirty?"1px solid rgba(139,124,246,0.35)":"none",boxShadow:profileIsDirty?"0 1px 0 0 rgba(255,255,255,0.1) inset, 0 0 0 1px rgba(139,124,246,0.15), 0 12px 36px -8px rgba(139,124,246,0.4)":"none",zIndex:250,animation:profileIsDirty?"slideUp 0.3s cubic-bezier(0.22,1,0.36,1)":"none",transition:"transform .28s cubic-bezier(0.22,1,0.36,1), opacity .2s ease"}}>
+    {showProfile?<nav style={{position:"fixed",bottom:"6px",left:profileIsDirty?"16px":"50%",right:profileIsDirty?"16px":"auto",transform:profileIsDirty?(profileNavHidden?"translateY(0)":"translateY(0)"):`translateX(-50%) translateY(${profileNavHidden?"120%":"0"})`,opacity:(profileNavHidden&&!profileIsDirty)?0:1,display:"flex",alignItems:"center",gap:8,padding:profileIsDirty?"10px":"0",background:profileIsDirty?"linear-gradient(180deg,rgba(28,22,60,0.97),rgba(22,18,52,0.98))":"transparent",backdropFilter:profileIsDirty?"blur(16px)":"none",WebkitBackdropFilter:profileIsDirty?"blur(16px)":"none",borderRadius:profileIsDirty?22:999,border:profileIsDirty?"1px solid rgba(139,124,246,0.35)":"none",boxShadow:profileIsDirty?"0 1px 0 0 rgba(255,255,255,0.1) inset, 0 0 0 1px rgba(139,124,246,0.15), 0 12px 36px -8px rgba(139,124,246,0.4)":"none",zIndex:250,animation:profileIsDirty?"slideUp 0.3s cubic-bezier(0.22,1,0.36,1)":"none",transition:"transform .28s cubic-bezier(0.22,1,0.36,1), opacity .2s ease"}}>
       {profileIsDirty?<>
         <button onClick={()=>{Haptic.medium();setProfileCancelSignal(s=>s+1)}} style={{flex:"0 0 42%",padding:13,borderRadius:14,background:"rgba(14,18,48,0.7)",color:"#8b90b8",fontSize:14,fontWeight:700,border:"1px solid rgba(255,255,255,0.08)",cursor:"pointer",letterSpacing:-0.2,display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
           <Icon name="x" size={14} color="#8b90b8"/>{_lang==="en"?"Cancel":"Cancelar"}
@@ -4875,7 +4911,7 @@ function App(){
         <Icon name="home" size={20} color="#c4b5fd"/>
       </button>
       </div>}
-    </nav>:<nav style={{position:"fixed",bottom:"calc(14px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",display:"flex",alignItems:"center",gap:2,padding:"6px",background:"linear-gradient(180deg,rgba(14,18,48,0.92),rgba(8,10,28,0.94))",backdropFilter:"blur(40px)",WebkitBackdropFilter:"blur(40px)",borderRadius:30,border:"1px solid rgba(255,255,255,0.07)",boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset, 0 8px 28px -6px rgba(0,0,0,0.6), 0 0 40px -16px rgba(139,124,246,0.22)",zIndex:50}}>
+    </nav>:<nav style={{position:"fixed",bottom:"calc(14px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",display:"flex",alignItems:"center",gap:2,padding:"6px",background:"linear-gradient(180deg,rgba(14,18,48,0.96),rgba(8,10,28,0.97))",backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",borderRadius:30,border:"1px solid rgba(255,255,255,0.07)",boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset, 0 8px 28px -6px rgba(0,0,0,0.6), 0 0 40px -16px rgba(139,124,246,0.22)",zIndex:50}}>
       {[{icon:"home",active:page==="home"&&!showAdd,action:()=>goTo("home")},{icon:"clock",active:page==="history",action:()=>goTo("history")}].map(n=><button key={n.icon} className="navbtn" onClick={n.action} style={{display:"flex",alignItems:"center",justifyContent:"center",width:48,height:44,borderRadius:22,background:n.active?"rgba(139,124,246,0.22)":"transparent",border:"none",padding:0}}><Icon name={n.icon} size={n.active?22:20} color={n.active?"#ffffff":T.dim}/></button>)}
       <button className="navfab" onClick={()=>{setShowAdd(!showAdd);setFormType(null);setPage("home")}} style={{width:48,height:44,borderRadius:22,background:`linear-gradient(180deg,#9b8df8,#7c3aed)`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 1px 0 0 rgba(255,255,255,0.22) inset, 0 4px 14px -2px ${T.accent}70`,transform:showAdd?"rotate(45deg)":"rotate(0deg)",margin:"0 2px",border:"none",padding:0}}><Icon name="plus" size={22} color="#fff"/></button>
       {[{icon:"chart",active:page==="stats"||page==="growth",action:()=>goTo("stats")},{icon:"gear",active:false,action:()=>setShowProfile(true)}].map(n=><button key={n.icon} className="navbtn" onClick={n.action} style={{display:"flex",alignItems:"center",justifyContent:"center",width:48,height:44,borderRadius:22,background:n.active?"rgba(139,124,246,0.22)":"transparent",border:"none",padding:0}}><Icon name={n.icon} size={n.active?22:20} color={n.active?"#ffffff":T.dim}/></button>)}
