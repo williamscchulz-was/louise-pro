@@ -5,7 +5,6 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
-  v9.9.1  Fixes de navegacao: Profile no swipe, nav bar colada no bottom, swipe mais responsivo, sheet fecha suave
   v9.9.0  Navegacao estilo Instagram: swipe horizontal entre abas + nav bar minimalista
   v9.8.2  Sheet: drag de qualquer lugar (padrão iOS), botões deixam de travar
   v9.8.1  Fix: delete no live bedtime + evento retroativo vazava pro bedtime errado
@@ -256,43 +255,8 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "9.9.1";
+const APP_VERSION = "9.9.0";
 const CHANGELOG = [
-  {
-    v: "9.9.1", date: "2026-04-15",
-    pt: {
-      title: "Ajustes finos de navegacao: mais responsiva, mais profissional",
-      bullets: [
-        '\u2605 **Profile agora e a 4a aba swipavel.** Antes era overlay acessado por tap na engrenagem. Agora swipe pra direita em History te leva pro Profile, e swipe pra esquerda em Profile te traz de volta. Tap no avatar do header do Home tambem vai direto pro Profile. Uma coisa a menos pra gerenciar mentalmente.',
-        '**Nav bar colada no bottom.** Antes estava com gap de ~30px por causa de calculo duplo com safe-area-inset-bottom. Agora usa `max(6px, env(safe-area-inset-bottom))` -- no iPhone 15+ que tem home indicator dentro do safe area, fica com 6px de respiro. Alinhamento perfeito.',
-        '\u2605 **Swipe reescrito do zero com touch events nativos.** Pointer events no iOS Safari ficam pouco confiaveis quando tem backdrop-filter pesado na pagina (no nosso caso, a propria nav bar causa isso). Migrei pra `onTouchStart`/`onTouchMove`/`onTouchEnd` -- esses sao os eventos que o Safari garante entrega em 60fps. **Diferenca clara: o dedo e o conteudo ficam sincronizados, sem aquele lag que voce sentiu.**',
-        '**Detecao de flick.** Agora o engine monitora velocidade em px/ms durante o drag. Um movimento rapido curto (>40px com velocidade >0.4 px/ms) ja pula pra proxima aba -- nao precisa mais arrastar ate 20% da tela. Sensacao muito mais "snappy".',
-        '**Threshold de commit reduzido**: de 20% pra **15%** da largura da tela. Movimentos medios ja passam pra proxima. E o threshold de deteccao inicial caiu de 8px pra 6px.',
-        '**Transicao 280ms em vez de 320ms** com curva mais agressiva (`cubic-bezier(0.2, 0.9, 0.3, 1)`). Resposta mais imediata quando voce solta.',
-        '**Transform em pixels em vez de porcentagem.** Usa `translate3d(calc(-25% + Npx), 0, 0)` onde N e o delta do dedo em pixels. Mais preciso matematicamente, e `translate3d` forca GPU acceleration em todos os browsers.',
-        '**idxRef pra evitar stale closure.** Tinha um bug sutil onde o handler de touch capturava o valor de `idx` da renderizacao anterior -- isso fazia swipes rapidos consecutivos as vezes falharem. Corrigido usando ref que sempre tem o valor atual.',
-        '\u2605 **Sheet do "+" fecha suavemente quando voce arrasta pra baixo.** Antes: voce arrastava o sheet ate 30% pra baixo, soltava, e ele dava um *snap* seco pra fora -- parecia cortado. Agora: a animacao **continua do ponto onde seu dedo estava** ate o fundo, numa curva continua. Sensacao identica ao Control Center do iOS.',
-        'Curva do sheet trocada pra `cubic-bezier(0.32, 0.72, 0, 1)` -- essa e a curva de easing padrao do iOS nativo (a mesma usada no Control Center, Notes, etc).',
-        '**Bonus:** o `key={page}` no container de pages -- que forcava o React a destruir e recriar tudo na troca de aba -- ja saiu na 9.9.0 mas continua removido. Tap na nav bar agora e instantaneo (0ms de processing).'
-      ]
-    },
-    en: {
-      title: "Navigation fine-tuning: more responsive, more professional",
-      bullets: [
-        '\u2605 **Profile is now the 4th swipe tab.** It used to be an overlay accessed by tapping the gear. Now swipe right from History takes you to Profile, and swipe left from Profile brings you back. Tapping the avatar in the Home header also goes straight to Profile. One less thing to mentally manage.',
-        '**Nav bar flush with the bottom.** It had a ~30px gap due to double calculation with safe-area-inset-bottom. Now uses `max(6px, env(safe-area-inset-bottom))` -- on iPhone 15+ where the home indicator is inside the safe area, you get 6px of breathing room. Perfect alignment.',
-        '\u2605 **Swipe rewritten from scratch with native touch events.** Pointer events on iOS Safari are unreliable when heavy backdrop-filter is present (the nav bar itself triggers this). Migrated to `onTouchStart`/`onTouchMove`/`onTouchEnd` -- these are the events Safari guarantees at 60fps. **Clear difference: your finger and the content stay in sync, no more of that lag you felt.**',
-        '**Flick detection.** The engine now tracks velocity in px/ms during the drag. A quick short movement (>40px with velocity >0.4 px/ms) jumps to the next tab -- no need to drag 20% of the screen. Much snappier feel.',
-        '**Lowered commit threshold**: from 20% to **15%** of screen width. Medium movements already commit. And the initial detection threshold dropped from 8px to 6px.',
-        '**Transition 280ms instead of 320ms** with more aggressive curve (`cubic-bezier(0.2, 0.9, 0.3, 1)`). More immediate response when you release.',
-        '**Transform in pixels instead of percentage.** Uses `translate3d(calc(-25% + Npx), 0, 0)` where N is the finger delta in pixels. Mathematically more precise, and `translate3d` forces GPU acceleration on all browsers.',
-        '**idxRef to avoid stale closure.** There was a subtle bug where the touch handler captured the `idx` value from the previous render -- causing rapid consecutive swipes to sometimes fail. Fixed using a ref that always has the current value.',
-        '\u2605 **The "+" sheet closes smoothly when you drag it down.** Before: you dragged the sheet 30% down, released, and it would snap abruptly out -- felt like a cut. Now: the animation **continues from where your finger was** to the bottom, in one continuous curve. Feels exactly like iOS Control Center.',
-        'Sheet curve switched to `cubic-bezier(0.32, 0.72, 0, 1)` -- the standard iOS-native easing curve (same one used in Control Center, Notes, etc).',
-        '**Bonus:** the `key={page}` on the page container -- which forced React to destroy and recreate everything on tab switch -- was already gone in 9.9.0 but stays gone. Tapping the nav bar is now instantaneous (0ms processing).'
-      ]
-    }
-  },
   {
     v: "9.9.0", date: "2026-04-15",
     pt: {
@@ -2557,30 +2521,12 @@ function Sheet({open,onClose,children}){
     }
     setIsDragging(false);
     const h=sheetRef.current?.offsetHeight||500;
-    if(distance>h*0.28||velocity>0.55){
-      Haptic.light();
-      // Smooth close: continue the drag animation off-screen instead of snapping.
-      // We keep dragY set to the sheet height so the transform continues from
-      // the current position, and call onClose() which will flip `open` to false.
-      // The useEffect will then setShow(false) — but since dragY is already at
-      // sheet height, translateY(dragY) matches translateY(100%), no jump.
-      setDragY(h);
-      onClose();
-    } else {
-      setDragY(0);
-    }
+    if(distance>h*0.28||velocity>0.55){Haptic.light();onClose()}
+    else{setDragY(0)}
   };
   if(!vis)return null;
-  // When showing: follow drag (0 if not dragging)
-  // When hiding: if user dragged to close, dragY is already at sheet height; let transition slide it off
-  //             if programmatic close, use 100% to slide out
-  let sheetTransform;
-  if(show){
-    sheetTransform=dragY>0?`translateY(${dragY}px)`:"translateY(0)";
-  }else{
-    sheetTransform=dragY>0?`translateY(${dragY}px)`:"translateY(100%)";
-  }
-  const sheetTransition=isDragging?"none":"transform .32s cubic-bezier(0.32, 0.72, 0, 1)";
+  const sheetTransform=show?(dragY>0?`translateY(${dragY}px)`:"translateY(0)"):"translateY(100%)";
+  const sheetTransition=isDragging?"none":"transform .38s cubic-bezier(0.22,1,0.36,1)";
   const sheetH=sheetRef.current?.offsetHeight||500;
   const backdropOpacity=show?Math.max(0,1-dragY/(sheetH*0.95)):0;
   const backdropTransition=isDragging?"none":"opacity .35s";
@@ -4201,15 +4147,14 @@ function App(){
   const[profile,setProfile]=useState({name:"",birthDate:"2026-03-08",photo:"",mlGoal:0});
   const[activeTimer,setActiveTimer]=useState(null);const[loading,setLoading]=useState(true);
   const[page,setPage]=useState("home");const[showAdd,setShowAdd]=useState(false);const[formType,setFormType]=useState(null);const[editEntry,setEditEntry]=useState(null);const[showOrbit,setShowOrbit]=useState(false);
-  // SWIPE NAV state (v9.9.1) — Instagram-style horizontal swipe between 4 pages
-  const SWIPE_PAGES=["home","stats","history","profile"];
+  // SWIPE NAV state (v9.9.0) — Instagram-style horizontal swipe between Home/Stats/History
+  const SWIPE_PAGES=["home","stats","history"];
   const pageToIdx=p=>{const i=SWIPE_PAGES.indexOf(p);return i<0?0:i};
   const idx=pageToIdx(page);
-  const[dragPx,setDragPx]=useState(0); // pixel offset, not percentage — more reliable
+  const[dragPct,setDragPct]=useState(0);
   const[dragging,setDragging]=useState(false);
   const swipeRef=useRef(null);
-  // All gesture state is kept in a ref so the handler never closes over stale React state.
-  const swipeState=useRef({startX:0,startY:0,lastX:0,lastT:0,velocity:0,active:false,locked:null,sw:0,tracker:0});
+  const swipeState=useRef({startX:0,startY:0,active:false,locked:null,sw:0});
   const[showProfile,setShowProfile]=useState(false);const[showSleepInfo,setShowSleepInfo]=useState(false);
   // Profile contextual navbar state — when editing Profile fields, navbar swaps to Save/Cancel
   const[profileIsDirty,setProfileIsDirty]=useState(false);
@@ -4220,7 +4165,7 @@ function App(){
   const[profileNavHidden,setProfileNavHidden]=useState(false);
   const lastScrollYRef=useRef(0);
   // Reset nav visibility whenever Profile is opened/closed
-  useEffect(()=>{if(page!=="profile"){setProfileNavHidden(false);lastScrollYRef.current=0}},[page]);
+  useEffect(()=>{if(!showProfile){setProfileNavHidden(false);lastScrollYRef.current=0}},[showProfile]);
   const[inbox,setInbox]=useState({items:[],lastReset:""});const[showInbox,setShowInbox]=useState(false);
   const[reminders,setReminders]=useState([]);
   const[showChangelog,setShowChangelog]=useState(false);const[showUpdateToast,setShowUpdateToast]=useState(false);
@@ -4662,83 +4607,53 @@ function App(){
   );
   const goTo=p=>{setPage(p);setShowAdd(false);setFormType(null)};
 
-  // SWIPE gesture handlers (v9.9.1) — rewritten for iOS Safari reliability
-  // - Uses native touch events (pointer events are unreliable on iOS under heavy backdrop-filter)
-  // - Reads current page via ref to avoid stale-closure drops
-  // - Tracks velocity for flick detection
-  // - Lower threshold for triggering, higher confidence via velocity
-  const idxRef=useRef(idx);
-  useEffect(()=>{idxRef.current=idx},[idx]);
-
-  const onSwipeTouchStart=e=>{
+  // SWIPE gesture handlers — threshold 12px, horizontal dominance required
+  const onSwipePointerDown=e=>{
     if(e.target.closest("button,input,textarea,select,a,[data-no-swipe]"))return;
-    const t=e.touches[0];
     const sw=swipeRef.current?swipeRef.current.offsetWidth:window.innerWidth;
-    swipeState.current={startX:t.clientX,startY:t.clientY,lastX:t.clientX,lastT:performance.now(),velocity:0,active:true,locked:null,sw,tracker:0};
+    swipeState.current={startX:e.clientX,startY:e.clientY,active:true,locked:null,sw};
   };
-  const onSwipeTouchMove=e=>{
+  const onSwipePointerMove=e=>{
     const st=swipeState.current;
     if(!st.active)return;
-    const t=e.touches[0];
-    const dx=t.clientX-st.startX;
-    const dy=t.clientY-st.startY;
+    const dx=e.clientX-st.startX;
+    const dy=e.clientY-st.startY;
     if(st.locked===null){
       const ax=Math.abs(dx),ay=Math.abs(dy);
-      // Need at least 6px of movement before deciding
-      if(ax<6&&ay<6)return;
-      // If vertical dominance, abandon (let scroll happen)
-      if(ay>ax*1.1){st.locked="v";st.active=false;return}
+      if(ax<8&&ay<8)return;
+      if(ay>ax){st.locked="v";st.active=false;return}
       st.locked="h";
       setDragging(true);
+      try{e.currentTarget.setPointerCapture(e.pointerId)}catch(_){}
     }
     if(st.locked==="h"){
-      // Velocity tracking (px/ms)
-      const now=performance.now();
-      const dt=now-st.lastT;
-      if(dt>0)st.velocity=(t.clientX-st.lastX)/dt;
-      st.lastX=t.clientX; st.lastT=now;
-
-      // Apply rubber-band at edges
-      let offset=dx;
-      const curIdx=idxRef.current;
-      if(curIdx===0&&offset>0)offset=offset*0.3;
-      else if(curIdx===SWIPE_PAGES.length-1&&offset<0)offset=offset*0.3;
-      setDragPx(offset);
-      if(e.cancelable)e.preventDefault();
+      let pct=(dx/st.sw)*100;
+      // Resist at edges (iOS-style rubber band)
+      if(idx===0&&pct>0)pct=pct*0.35;
+      else if(idx===SWIPE_PAGES.length-1&&pct<0)pct=pct*0.35;
+      setDragPct(pct);
+      e.preventDefault();
     }
   };
-  const onSwipeTouchEnd=e=>{
+  const onSwipePointerUp=e=>{
     const st=swipeState.current;
-    if(st.locked!=="h"){
-      swipeState.current.active=false; swipeState.current.locked=null;
-      return;
+    if(!st.active&&st.locked!=="h"){swipeState.current={startX:0,startY:0,active:false,locked:null,sw:0};return}
+    if(st.locked==="h"){
+      const dx=e.clientX-st.startX;
+      const threshold=Math.min(st.sw*0.2,80); // 20% of width or 80px, whichever smaller
+      if(dx<-threshold&&idx<SWIPE_PAGES.length-1){
+        setPage(SWIPE_PAGES[idx+1]);
+        setShowAdd(false);
+      }else if(dx>threshold&&idx>0){
+        setPage(SWIPE_PAGES[idx-1]);
+        setShowAdd(false);
+      }
+      setDragPct(0);
+      setDragging(false);
+      try{e.currentTarget.releasePointerCapture(e.pointerId)}catch(_){}
     }
-    const dx=st.lastX-st.startX;
-    const v=st.velocity;
-    const curIdx=idxRef.current;
-    // Trigger conditions (whichever is true):
-    //   - moved > 15% of width
-    //   - moved > 40px AND velocity |v| > 0.4 px/ms (flick)
-    const distThreshold=st.sw*0.15;
-    const flickMin=40;
-    const flickVel=0.4;
-    let target=curIdx;
-    if((dx<-distThreshold||(dx<-flickMin&&v<-flickVel))&&curIdx<SWIPE_PAGES.length-1){
-      target=curIdx+1;
-    }else if((dx>distThreshold||(dx>flickMin&&v>flickVel))&&curIdx>0){
-      target=curIdx-1;
-    }
-    if(target!==curIdx){
-      setPage(SWIPE_PAGES[target]);
-      setShowAdd(false);
-    }
-    setDragPx(0);
-    setDragging(false);
-    swipeState.current.active=false;
-    swipeState.current.locked=null;
+    swipeState.current={startX:0,startY:0,active:false,locked:null,sw:0};
   };
-
-
 
   return(<div style={{background:`radial-gradient(ellipse at 50% 0%,#10153d 0%,${T.bg1} 65%)`,height:"100%",overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch",overscrollBehavior:"none",color:T.text,maxWidth:480,margin:"0 auto",position:"relative"}}>
     {/* Starfield */}
@@ -4753,25 +4668,25 @@ function App(){
     </div>
     {toast&&<Toast message={toast} onUndo={undoRef.current?handleUndo:null} onClose={()=>setToast(null)}/>}
     <div style={{position:"relative",zIndex:1}}>
-      {/* SWIPE CONTAINER (v9.9.1) — 4 pages pre-mounted side-by-side, touch events for iOS reliability */}
+      {/* SWIPE CONTAINER (v9.9.0) — 3 pages pre-mounted side-by-side, translateX follows finger */}
       {page!=="growth"?<div style={{overflow:"hidden",width:"100%",touchAction:"pan-y"}}>
         <div
           ref={swipeRef}
-          onTouchStart={onSwipeTouchStart}
-          onTouchMove={onSwipeTouchMove}
-          onTouchEnd={onSwipeTouchEnd}
-          onTouchCancel={onSwipeTouchEnd}
+          onPointerDown={onSwipePointerDown}
+          onPointerMove={onSwipePointerMove}
+          onPointerUp={onSwipePointerUp}
+          onPointerCancel={onSwipePointerUp}
           style={{
             display:"flex",
-            width:"400%",
-            transform:`translate3d(calc(${-idx*25}% + ${dragPx}px), 0, 0)`,
-            transition:dragging?"none":"transform .28s cubic-bezier(0.2,0.9,0.3,1)",
+            width:"300%",
+            transform:`translateX(${(-idx*100/3)+(dragPct/3)}%)`,
+            transition:dragging?"none":"transform .32s cubic-bezier(0.22,1,0.36,1)",
             willChange:"transform"
           }}>
-          <div style={{width:"25%",flexShrink:0,minWidth:0}}>
+          <div style={{width:`${100/3}%`,flexShrink:0,minWidth:0}}>
       {<div>
         <div style={{padding:"calc(12px + env(safe-area-inset-top)) 20px 0",display:"flex",alignItems:"center",gap:12}}>
-          <div style={{position:"relative"}}><button onClick={()=>goTo("profile")} style={{width:52,height:52,borderRadius:16,overflow:"hidden",border:`1.5px solid ${T.accent}20`,background:T.glass,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 2px 12px rgba(0,0,0,0.3)"}}>{profile.photo?<img src={profile.photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<Icon name="sun" size={22} color={T.sub}/>}</button>{daysLeft!==null&&daysLeft>0&&<button onClick={()=>setShowSleepInfo(true)} style={{position:"absolute",top:-5,right:-8,minWidth:24,height:24,borderRadius:12,background:`linear-gradient(135deg,${T.accent},#a78bfa)`,color:"#fff",fontSize:10,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 5px",boxShadow:`0 2px 8px ${T.accent}55`,border:`2px solid ${T.bg1}`}}>{daysLeft}</button>}{sleepRec?.phase===2&&<button onClick={()=>setShowSleepInfo(true)} style={{position:"absolute",top:-2,right:-6,width:20,height:20,borderRadius:10,background:T.green,display:"flex",alignItems:"center",justifyContent:"center",border:`2px solid ${T.bg1}`}}><Icon name="check" size={10} color={T.bg1}/></button>}</div>
+          <div style={{position:"relative"}}><button onClick={()=>setShowProfile(true)} style={{width:52,height:52,borderRadius:16,overflow:"hidden",border:`1.5px solid ${T.accent}20`,background:T.glass,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 2px 12px rgba(0,0,0,0.3)"}}>{profile.photo?<img src={profile.photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<Icon name="sun" size={22} color={T.sub}/>}</button>{daysLeft!==null&&daysLeft>0&&<button onClick={()=>setShowSleepInfo(true)} style={{position:"absolute",top:-5,right:-8,minWidth:24,height:24,borderRadius:12,background:`linear-gradient(135deg,${T.accent},#a78bfa)`,color:"#fff",fontSize:10,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 5px",boxShadow:`0 2px 8px ${T.accent}55`,border:`2px solid ${T.bg1}`}}>{daysLeft}</button>}{sleepRec?.phase===2&&<button onClick={()=>setShowSleepInfo(true)} style={{position:"absolute",top:-2,right:-6,width:20,height:20,borderRadius:10,background:T.green,display:"flex",alignItems:"center",justifyContent:"center",border:`2px solid ${T.bg1}`}}><Icon name="check" size={10} color={T.bg1}/></button>}</div>
           <div style={{flex:1}}><h1 style={{fontSize:17,fontWeight:800,margin:0,letterSpacing:-0.3}}>{babyName}</h1><div style={{display:"flex",alignItems:"center",gap:6,marginTop:3}}><span style={{fontSize:10,color:T.accent,fontWeight:600}}>{age&&<>{age.months>0?`${age.months} ${_lang==="en"?(age.months===1?"month":"months"):(age.months===1?"mês":"meses")}${_lang==="en"?" and ":" e "}`:""}{age.days} {_lang==="en"?"days":"dias"}</>}</span><span style={{width:3,height:3,borderRadius:"50%",background:T.dim}}/><span style={{fontSize:10,color:T.dim}}>{new Date().toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{day:"numeric",month:"short"})}</span></div></div>
           <button onClick={()=>setShowInbox(true)} style={{position:"relative",width:34,height:34,borderRadius:11,background:inboxUnreadCount>0?"rgba(139,124,246,0.12)":"rgba(22,28,60,0.6)",border:`1px solid ${inboxUnreadCount>0?"rgba(139,124,246,0.3)":"rgba(139,124,246,0.08)"}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><div style={{animation:inboxUnreadCount>0?"bellWiggle 2.5s ease-in-out infinite":"none",transformOrigin:"top center",display:"flex"}}><Icon name="bell" size={17} color={inboxUnreadCount>0?T.accent:T.dim}/></div>{inboxUnreadCount>0&&<div style={{position:"absolute",top:-5,right:-5,minWidth:18,height:18,borderRadius:9,background:"linear-gradient(135deg,#f87171,#dc2626)",color:"#fff",fontSize:10,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 5px",border:`2px solid ${T.bg1}`,boxShadow:"0 0 10px rgba(239,68,68,0.6)"}}>{inboxUnreadCount}</div>}</button>
         </div>
@@ -4801,14 +4716,11 @@ function App(){
         }).map((e,i,arr)=>{const prev=arr[i-1];let gap=null;if(prev){const t1=new Date(`${e.date}T${e.time}`).getTime();let t2=new Date(`${prev.date}T${prev.time}`).getTime();if(prev.durationMin)t2+=prev.durationMin*60000;const diffMin=Math.abs(Math.round((t1-t2)/60000));if(diffMin>=30){const isSleep=(e.type==="nap"||e.type==="sleep")&&e.durationMin;gap=<div style={{display:"flex",alignItems:"center",gap:10,padding:"4px 16px",margin:"2px 0"}}><div style={{flex:1,height:1,background:`linear-gradient(90deg,transparent,${isSleep?T.accent:T.accent}0a,transparent)`}}/><span style={{fontSize:8,color:isSleep?T.accent:T.dim,letterSpacing:0.5}}>{isSleep?"WW ":""}{fmtDur(diffMin)}</span><div style={{flex:1,height:1,background:`linear-gradient(90deg,transparent,${isSleep?T.accent:T.accent}0a,transparent)`}}/></div>}}const useBlock=e.type==="sleep"&&e.wakings&&e.wakings.length>0;return<React.Fragment key={e.id}>{gap}{useBlock?<SleepBlock entry={e} onDelete={deleteEntry} onEdit={startEdit} entries={entries} activeTimer={activeTimer} onSaveTimer={FB.saveTimer} onSaveEntry={FB.addEntry}/>:<EntryRow entry={e} onDelete={deleteEntry} onEdit={startEdit} napNum={napNums[e.id]||null}/>}</React.Fragment>})}</div>
       </div>}
       </div>
-          <div style={{width:"25%",flexShrink:0,minWidth:0}}>
-            <StatsPage entries={entries} onGrowth={()=>goTo("growth")}/>
+          <div style={{width:`${100/3}%`,flexShrink:0,minWidth:0}}>
+            {idx>=0&&<StatsPage entries={entries} onGrowth={()=>goTo("growth")}/>}
           </div>
-          <div style={{width:"25%",flexShrink:0,minWidth:0}}>
-            <HistoryPage entries={entries} onDelete={deleteEntry} onEdit={startEdit} activeTimer={activeTimer}/>
-          </div>
-          <div style={{width:"25%",flexShrink:0,minWidth:0}}>
-            <ProfilePage profile={profile} onSave={async p=>await FB.saveProfile(p)} onBack={()=>goTo("home")} onGrowth={()=>goTo("growth")} onShowChangelog={()=>setShowChangelog(true)} hasUnreadChangelog={hasUnreadChangelog} reminders={reminders} onAddReminder={async r=>await FB.addReminder(r)} onDelReminder={async id=>await FB.delReminder(id)} onDirtyChange={setProfileIsDirty} cancelSignal={profileCancelSignal} saveSignal={profileSaveSignal} isInSwipe={true}/>
+          <div style={{width:`${100/3}%`,flexShrink:0,minWidth:0}}>
+            {idx>=0&&<HistoryPage entries={entries} onDelete={deleteEntry} onEdit={startEdit} activeTimer={activeTimer}/>}
           </div>
         </div>
       </div>:<div>
@@ -4866,7 +4778,7 @@ function App(){
       {formType&&<AddForm type={formType} onSave={addEntry} savedMeds={savedMeds} onSaveMeds={async m=>await FB.saveMeds(m)} editEntry={editEntry} lastBottleMl={lastBottleMl} topMl={topMl} onStartTimer={type=>{startTimer(type);setFormType(null);setShowAdd(false)}}/>}
     </Sheet>
 
-    {/* showProfile overlay removed in v9.9.1 — Profile is now a swipe page */}
+    {showProfile&&<ProfilePage profile={profile} onSave={async p=>await FB.saveProfile(p)} onBack={()=>{setShowProfile(false);setProfileIsDirty(false)}} onGrowth={()=>{setShowProfile(false);setProfileIsDirty(false);goTo("growth")}} onShowChangelog={()=>setShowChangelog(true)} hasUnreadChangelog={hasUnreadChangelog} reminders={reminders} onAddReminder={async r=>await FB.addReminder(r)} onDelReminder={async id=>await FB.delReminder(id)} onDirtyChange={setProfileIsDirty} cancelSignal={profileCancelSignal} saveSignal={profileSaveSignal} onScroll={e=>{const y=e.currentTarget.scrollTop;const last=lastScrollYRef.current;const delta=y-last;if(y<40){setProfileNavHidden(false)}else if(delta>6){setProfileNavHidden(true)}else if(delta<-6){setProfileNavHidden(false)}lastScrollYRef.current=y}}/>}
     {showInbox&&<InboxPanel inbox={inbox} onClose={()=>setShowInbox(false)} onMarkRead={markInboxRead} onMarkAllRead={markAllInboxRead} lang={lang}/>}
     {showChangelog&&<ChangelogModal onClose={closeChangelog} lang={lang}/>}
     {showUpdateToast&&!showChangelog&&<UpdateToast fromVersion={profile.lastSeenVersion} toVersion={APP_VERSION} onView={openChangelog} onDismiss={dismissUpdateToast} lang={lang}/>}
@@ -4874,7 +4786,7 @@ function App(){
     <EditStartModal open={showEditStart} onClose={()=>setShowEditStart(false)} activeTimer={activeTimer} onSave={handleEditStart}/>
     <NursingSidePicker open={showNursingPicker} onClose={()=>setShowNursingPicker(false)} onSelect={side=>startTimer("nursing",side)}/>
 
-    {(page==="profile"&&profileIsDirty)?<nav style={{position:"fixed",bottom:"6px",left:profileIsDirty?"16px":"50%",right:profileIsDirty?"16px":"auto",transform:profileIsDirty?(profileNavHidden?"translateY(0)":"translateY(0)"):`translateX(-50%) translateY(${profileNavHidden?"120%":"0"})`,opacity:(profileNavHidden&&!profileIsDirty)?0:1,display:"flex",alignItems:"center",gap:8,padding:profileIsDirty?"10px":"0",background:profileIsDirty?"linear-gradient(180deg,rgba(28,22,60,0.95),rgba(22,18,52,0.96))":"transparent",backdropFilter:profileIsDirty?"blur(30px)":"none",WebkitBackdropFilter:profileIsDirty?"blur(30px)":"none",borderRadius:profileIsDirty?22:999,border:profileIsDirty?"1px solid rgba(139,124,246,0.35)":"none",boxShadow:profileIsDirty?"0 1px 0 0 rgba(255,255,255,0.1) inset, 0 0 0 1px rgba(139,124,246,0.15), 0 12px 36px -8px rgba(139,124,246,0.4)":"none",zIndex:250,animation:profileIsDirty?"slideUp 0.3s cubic-bezier(0.22,1,0.36,1)":"none",transition:"transform .28s cubic-bezier(0.22,1,0.36,1), opacity .2s ease"}}>
+    {showProfile?<nav style={{position:"fixed",bottom:"6px",left:profileIsDirty?"16px":"50%",right:profileIsDirty?"16px":"auto",transform:profileIsDirty?(profileNavHidden?"translateY(0)":"translateY(0)"):`translateX(-50%) translateY(${profileNavHidden?"120%":"0"})`,opacity:(profileNavHidden&&!profileIsDirty)?0:1,display:"flex",alignItems:"center",gap:8,padding:profileIsDirty?"10px":"0",background:profileIsDirty?"linear-gradient(180deg,rgba(28,22,60,0.95),rgba(22,18,52,0.96))":"transparent",backdropFilter:profileIsDirty?"blur(30px)":"none",WebkitBackdropFilter:profileIsDirty?"blur(30px)":"none",borderRadius:profileIsDirty?22:999,border:profileIsDirty?"1px solid rgba(139,124,246,0.35)":"none",boxShadow:profileIsDirty?"0 1px 0 0 rgba(255,255,255,0.1) inset, 0 0 0 1px rgba(139,124,246,0.15), 0 12px 36px -8px rgba(139,124,246,0.4)":"none",zIndex:250,animation:profileIsDirty?"slideUp 0.3s cubic-bezier(0.22,1,0.36,1)":"none",transition:"transform .28s cubic-bezier(0.22,1,0.36,1), opacity .2s ease"}}>
       {profileIsDirty?<>
         <button onClick={()=>{Haptic.medium();setProfileCancelSignal(s=>s+1)}} style={{flex:"0 0 42%",padding:13,borderRadius:14,background:"rgba(14,18,48,0.7)",color:"#8b90b8",fontSize:14,fontWeight:700,border:"1px solid rgba(255,255,255,0.08)",cursor:"pointer",letterSpacing:-0.2,display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
           <Icon name="x" size={14} color="#8b90b8"/>{_lang==="en"?"Cancel":"Cancelar"}
@@ -4891,21 +4803,21 @@ function App(){
         {/* Inner mask — the dark disc that reveals the ring as a border */}
         <div style={{position:"absolute",inset:2.5,borderRadius:"50%",background:"linear-gradient(180deg,rgba(14,18,48,0.98),rgba(8,10,28,0.99))"}}/>
         {/* Actual clickable button on top */}
-        <button onClick={()=>{goTo("home");setProfileIsDirty(false)}} style={{position:"relative",zIndex:2,width:55,height:55,borderRadius:"50%",background:"transparent",color:"#c4b5fd",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}>
+        <button onClick={()=>{setShowProfile(false);setProfileIsDirty(false)}} style={{position:"relative",zIndex:2,width:55,height:55,borderRadius:"50%",background:"transparent",color:"#c4b5fd",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}>
         <Icon name="home" size={20} color="#c4b5fd"/>
       </button>
       </div>}
     </nav>:(()=>{
-      // NEW NAV BAR (v9.9.1) — minimalist, icon-only, sliding pill background
+      // NEW NAV BAR (v9.9.0) — minimalist, icon-only, sliding pill background
       // Tab layout: [Home] [Stats] [+] [History] [Profile]
-      // Now all 4 content tabs (Home/Stats/History/Profile) are in swipe container
+      // Active tab index (0-4): home=0, stats=1, plus=(never active), history=3, profile(showProfile)=4
       const TAB_W=44,TAB_H=40,PAD=6;
       let activeSlot=-1;
-      if(page==="home"&&!showAdd)activeSlot=0;
+      if(showProfile)activeSlot=4;
+      else if(page==="home"&&!showAdd)activeSlot=0;
       else if(page==="stats"||page==="growth")activeSlot=1;
       else if(page==="history")activeSlot=3;
-      else if(page==="profile")activeSlot=4;
-      return <nav style={{position:"fixed",bottom:"max(6px, env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",display:"flex",alignItems:"center",padding:PAD+"px "+PAD+"px",background:"rgba(14,18,48,0.72)",backdropFilter:"blur(30px) saturate(160%)",WebkitBackdropFilter:"blur(30px) saturate(160%)",borderRadius:26,border:"1px solid rgba(255,255,255,0.06)",boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset, 0 8px 28px -6px rgba(0,0,0,0.65), 0 0 40px -12px rgba(139,124,246,0.28)",zIndex:50}}>
+      return <nav style={{position:"fixed",bottom:"calc(8px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",display:"flex",alignItems:"center",padding:PAD+"px "+PAD+"px",background:"rgba(14,18,48,0.62)",backdropFilter:"blur(30px) saturate(160%)",WebkitBackdropFilter:"blur(30px) saturate(160%)",borderRadius:26,border:"1px solid rgba(255,255,255,0.06)",boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset, 0 8px 28px -6px rgba(0,0,0,0.65), 0 0 40px -12px rgba(139,124,246,0.28)",zIndex:50}}>
         {/* Sliding pill — hidden when no swipe page is active (e.g. during showAdd) */}
         {activeSlot>=0&&<div style={{position:"absolute",top:PAD,left:PAD+activeSlot*TAB_W,width:TAB_W,height:TAB_H,borderRadius:14,background:"linear-gradient(180deg,rgba(139,124,246,0.26),rgba(139,124,246,0.10))",boxShadow:"0 1px 0 0 rgba(255,255,255,0.12) inset",transition:"left .3s cubic-bezier(0.22,1,0.36,1)",pointerEvents:"none",zIndex:0}}/>}
 
@@ -4932,7 +4844,7 @@ function App(){
         </button>
 
         {/* Tab 4: PROFILE */}
-        <button onClick={()=>goTo("profile")} style={{width:TAB_W,height:TAB_H,display:"flex",alignItems:"center",justifyContent:"center",background:"transparent",border:"none",borderRadius:14,cursor:"pointer",padding:0,position:"relative",zIndex:1,transition:"transform .1s"}}>
+        <button onClick={()=>setShowProfile(true)} style={{width:TAB_W,height:TAB_H,display:"flex",alignItems:"center",justifyContent:"center",background:"transparent",border:"none",borderRadius:14,cursor:"pointer",padding:0,position:"relative",zIndex:1,transition:"transform .1s"}}>
           <Icon name="gear" size={20} color={activeSlot===4?"#c4b5fd":T.dim}/>
         </button>
       </nav>;
