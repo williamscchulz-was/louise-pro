@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v9.9.3  Teste de workflow Claude Code (bump vazio)
   v9.9.2  Swipe horizontal entre Home/Stats/History (passo 1 da nav redesign)
   v9.8.2  Sheet: drag de qualquer lugar (padrão iOS), botões deixam de travar
   v9.8.1  Fix: delete no live bedtime + evento retroativo vazava pro bedtime errado
@@ -255,8 +256,23 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "9.9.2";
+const APP_VERSION = "9.9.3";
 const CHANGELOG = [
+  {
+    v: "9.9.3", date: "2026-04-15",
+    pt: {
+      title: "Teste de workflow Claude Code",
+      bullets: [
+        "Bump vazio para validar o fluxo de deploy via Claude Code rodando local.",
+      ],
+    },
+    en: {
+      title: "Claude Code workflow test",
+      bullets: [
+        "Empty bump to validate the deploy flow via Claude Code running locally.",
+      ],
+    },
+  },
   {
     v: "9.9.2", date: "2026-04-15",
     pt: {
