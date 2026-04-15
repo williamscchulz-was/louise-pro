@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v9.8.3  Hints de despertares consolidados em um so (fim dos hints conflitantes na inbox)
   v9.8.2  Sheet: drag de qualquer lugar (padrão iOS), botões deixam de travar
   v9.8.1  Fix: delete no live bedtime + evento retroativo vazava pro bedtime errado
   v9.8.0  Notificações editáveis: título e corpo custom por remédio + edit de lembretes
@@ -254,8 +255,37 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "9.8.2";
+const APP_VERSION = "9.8.3";
 const CHANGELOG = [
+  {
+    v: "9.8.3", date: "2026-04-15",
+    pt: {
+      title: "Hints de despertares consolidados (fim dos conflitos na inbox)",
+      bullets: [
+        '★ **Aquela sensação de hints conflitantes na inbox acabou.** Antes, na mesma manhã podiam aparecer 4-5 hints diferentes sobre despertares: "Padrão de despertares · Média 1.3/noite", "Padrão de horário detectado", "Motivo dos despertares", "Mais despertares ultimamente". Cada um correto por si só, mas juntos davam impressão de contradição. Agora vira **um único hint composto** com todas as informações numa só leitura.',
+        '**Novo formato:** título "Padrão das noites (N noites)" — deixa explícito que é agregado histórico, não a noite passada. Sub com até 3 partes juntas numa linha: média de despertares, horário mais comum, motivo mais frequente. No fim, um sufixo discreto "↑ mais que a semana passada" ou "↓ menos que a semana passada" quando há tendência.',
+        '**Exemplo do hint novo:** "Padrão das noites (5 noites)" / "Média 1.3 despertares/noite, geralmente ~04:15, mostly mamadas (67%) · ↑ mais que a semana passada".',
+        '**"Dormindo a noite toda" continua separado** — como é um marco positivo e só dispara a partir de 16 semanas com média zero, merece o próprio destaque em vez de entrar num composto.',
+        '**Quando o hint vira "atenção":** se a média passa de 3 despertares/noite E a tendência é de aumentar, o tipo muda de `info` pra `warn` (visual mais chamativo). Fora disso, fica sempre como observação informativa.',
+        '**Bônus de clareza:** em "Média N despertares/noite", o número agora tem singular/plural correto (1 despertar vs 1.3 despertares) em PT e EN. E o título "(N noites)" resolve o mal-entendido de achar que "média 1" estava falando da noite específica de ontem.',
+        'Nenhuma mudança na lógica de **contagem** dos despertares — olhei e ela está correta. Cada ciclo start→end do botão Night Wake gera 1 entry no `wakings[]`. O "bug" percebido de "cliquei 2-3x mas conta 1" era de UX: o hint falava de média histórica, mas parecia estar se referindo à noite anterior. Agora o texto deixa isso explícito.',
+        '**Engine v2.1.0 → v2.2.0.** Sem mudança na API pública — só no `getInsights()`.'
+      ]
+    },
+    en: {
+      title: "Wakings hints consolidated (no more conflicting-hints feeling)",
+      bullets: [
+        '★ **That feeling of conflicting hints in the inbox is gone.** Before, the same morning could show 4-5 different wakings-related hints: "Night wake pattern · Avg 1.3/night", "Waking pattern detected", "Waking cause pattern", "More wakings lately". Each correct on its own, but together they felt contradictory. Now it\'s **one composite hint** with all that info in a single read.',
+        '**New format:** title "Night pattern (N nights)" — makes explicit this is a historical aggregate, not last night. Sub with up to 3 parts on one line: avg wakings, most common time, most common cause. At the end, a subtle suffix "↑ more than last week" or "↓ fewer than last week" when a trend exists.',
+        '**Example of the new hint:** "Night pattern (5 nights)" / "Avg 1.3 wakings/night, usually around 04:15, mostly feeds (67%) · ↑ more than last week".',
+        '**"Sleeping through the night" stays separate** — as a positive milestone that only fires from 16 weeks with zero average, it deserves its own spotlight instead of going into a composite.',
+        '**When the hint becomes "warn":** if avg exceeds 3 wakings/night AND the trend is worsening, the type switches from `info` to `warn` (more prominent visual). Otherwise it stays as an informational observation.',
+        '**Clarity bonus:** in "Avg N wakings/night", singular/plural is now correct (1 waking vs 1.3 wakings) in both PT and EN. And "(N nights)" in the title fixes the misunderstanding of thinking "avg 1" was referring to yesterday\'s specific night.',
+        'No change in waking **counting** logic — I checked and it is correct. Each start→end cycle of the Night Wake button produces 1 entry in `wakings[]`. The perceived bug of "tapped 2-3x but counted 1" was a UX issue: the hint spoke about historical average but seemed to refer to last night. The new wording makes this explicit.',
+        '**Engine v2.1.0 → v2.2.0.** No public API change — only `getInsights()`.'
+      ]
+    }
+  },
   {
     v: "9.8.2", date: "2026-04-15",
     pt: {
