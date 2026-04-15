@@ -1,5 +1,5 @@
 // ╔═══════════════════════════════════════════════════════════════╗
-// ║  ROUTINE ENGINE v2.1.0                                       ║
+// ║  ROUTINE ENGINE v2.2.0                                       ║
 // ║  Full-day routine intelligence for Louise Pro                ║
 // ║  Replaces Sleep Engine v1 — backward compatible              ║
 // ║                                                              ║
@@ -48,7 +48,7 @@
 (function(root) {
   "use strict";
 
-  var VERSION = "2.1.0";
+  var VERSION = "2.2.0";
 
   // ════════════════════════════════════════════════════════
   // HELPERS
@@ -1475,6 +1475,10 @@
     }
 
     // 4-7. WAKINGS INSIGHTS (morning review, 6h-10h)
+    // Consolidated into ONE composite hint to avoid the "conflicting" feeling users had
+    // when multiple wakings-related hints appeared at once (e.g. "Avg 1.3 wakings" +
+    // "More wakings lately"). Exception: "Sleeping through the night" stays separate
+    // because it's a positive milestone that deserves its own spotlight.
     if (isMorning && pattern.fullPattern && pattern.fullPattern.sleep && pattern.fullPattern.sleep.wakings) {
       var wa = pattern.fullPattern.sleep.wakings;
       // Sanity check: "sleeping through the night" only makes biological sense
@@ -1483,78 +1487,70 @@
       var ageWeeksForInsight = pattern.fullPattern.ageWeeks;
       var oldEnoughForSTTN = ageWeeksForInsight != null && ageWeeksForInsight >= 16;
 
-      // 4. Waking frequency
-      if (wa.avgPerNight != null && wa.nightsAnalyzed >= 3) {
-        if (wa.avgPerNight === 0 && oldEnoughForSTTN) {
-          hints.push({
-            type: "good",
-            title: l === "en" ? "Sleeping through the night" : "Dormindo a noite toda",
-            sub: l === "en"
-              ? "No wakings in " + wa.nightsAnalyzed + " nights — amazing!"
-              : "Sem despertares em " + wa.nightsAnalyzed + " noites — incrivel!"
-          });
-        } else if (wa.avgPerNight >= 3) {
-          hints.push({
-            type: "info",
-            title: l === "en" ? "Frequent night wakings" : "Despertares frequentes",
-            sub: l === "en"
-              ? "Avg " + wa.avgPerNight + " wakings/night. Normal at this age."
-              : "Media " + wa.avgPerNight + " despertares/noite. Normal nessa idade."
-          });
-        } else if (wa.avgPerNight >= 1) {
-          hints.push({
-            type: "info",
-            title: l === "en" ? "Night wake pattern" : "Padrao de despertares",
-            sub: l === "en"
-              ? "Avg " + wa.avgPerNight + " waking" + (wa.avgPerNight > 1 ? "s" : "") + "/night (" + wa.nightsAnalyzed + " nights)"
-              : "Media " + wa.avgPerNight + " despertar" + (wa.avgPerNight > 1 ? "es" : "") + "/noite (" + wa.nightsAnalyzed + " noites)"
-          });
-        }
-      }
-
-      // 5. Most common waking time
-      if (wa.mostCommonTime != null && wa.totalWakings >= 3) {
-        hints.push({
-          type: "info",
-          title: l === "en" ? "Waking pattern detected" : "Padrao de horario detectado",
-          sub: l === "en"
-            ? "Most wakings cluster around " + minToTime(wa.mostCommonTime) + ". Prep ahead!"
-            : "Despertares costumam ser por volta das " + minToTime(wa.mostCommonTime) + ". Se prepare!"
-        });
-      }
-
-      // 6. Most common waking type
-      if (wa.mostCommonType && wa.mostCommonTypePct >= 60 && wa.totalWakings >= 3) {
-        var typeLabel = wa.mostCommonType === "feed"
-          ? (l === "en" ? "feeds" : "mamadas")
-          : wa.mostCommonType === "diaper"
-            ? (l === "en" ? "diapers" : "fraldas")
-            : (l === "en" ? "comfort" : "conforto");
-        hints.push({
-          type: "info",
-          title: l === "en" ? "Waking cause pattern" : "Motivo dos despertares",
-          sub: l === "en"
-            ? wa.mostCommonTypePct + "% of wakings are " + typeLabel
-            : wa.mostCommonTypePct + "% dos despertares sao " + typeLabel
-        });
-      }
-
-      // 7. Waking trend (improving/worsening)
-      if (wa.trend === "improving") {
+      // 4a. SLEEPING THROUGH THE NIGHT -- stays separate (positive milestone)
+      if (wa.avgPerNight === 0 && wa.nightsAnalyzed >= 3 && oldEnoughForSTTN) {
         hints.push({
           type: "good",
-          title: l === "en" ? "Wakings decreasing!" : "Despertares diminuindo!",
+          title: l === "en" ? "Sleeping through the night" : "Dormindo a noite toda",
           sub: l === "en"
-            ? "Recent nights have fewer wakings than before. Louise is maturing."
-            : "Noites recentes tem menos despertares que antes. Louise esta amadurecendo."
+            ? "No wakings in " + wa.nightsAnalyzed + " nights -- amazing!"
+            : "Sem despertares em " + wa.nightsAnalyzed + " noites -- incrivel!"
         });
-      } else if (wa.trend === "worsening") {
+      }
+      // Composite hint -- only show if there's at least the core metric (avg per night)
+      else if (wa.avgPerNight != null && wa.nightsAnalyzed >= 3 && wa.avgPerNight >= 1) {
+        // Build the parts of the consolidated text
+        var parts = [];
+
+        // Core: average wakings per night (always first, grounds the rest as "historical average")
+        var avgStr;
+        if (l === "en") {
+          avgStr = "Avg " + wa.avgPerNight + " waking" + (wa.avgPerNight !== 1 ? "s" : "") + "/night";
+        } else {
+          avgStr = "Media " + wa.avgPerNight + " despertar" + (wa.avgPerNight !== 1 ? "es" : "") + "/noite";
+        }
+        parts.push(avgStr);
+
+        // Most common time (if clustered)
+        if (wa.mostCommonTime != null && wa.totalWakings >= 3) {
+          parts.push(l === "en"
+            ? "usually around " + minToTime(wa.mostCommonTime)
+            : "mais frequente ~" + minToTime(wa.mostCommonTime));
+        }
+
+        // Most common cause (if >=60%)
+        if (wa.mostCommonType && wa.mostCommonTypePct >= 60 && wa.totalWakings >= 3) {
+          var typeLabel = wa.mostCommonType === "feed"
+            ? (l === "en" ? "feeds" : "mamadas")
+            : wa.mostCommonType === "diaper"
+              ? (l === "en" ? "diapers" : "fraldas")
+              : (l === "en" ? "comfort" : "conforto");
+          parts.push(l === "en"
+            ? "mostly " + typeLabel + " (" + wa.mostCommonTypePct + "%)"
+            : "geralmente " + typeLabel + " (" + wa.mostCommonTypePct + "%)");
+        }
+
+        // Trend (improving/worsening) -- shown as a dedicated small suffix
+        var trendSuffix = "";
+        if (wa.trend === "improving") {
+          // U+00B7 middle dot + U+2193 down arrow -- inside string literal, safe
+          trendSuffix = l === "en" ? " \u00b7 \u2193 fewer than last week" : " \u00b7 \u2193 menos que a semana passada";
+        } else if (wa.trend === "worsening") {
+          trendSuffix = l === "en" ? " \u00b7 \u2191 more than last week" : " \u00b7 \u2191 mais que a semana passada";
+        }
+
+        // Build title -- makes clear this is an aggregate of N nights
+        var compositeTitle = l === "en"
+          ? "Night pattern (" + wa.nightsAnalyzed + " nights)"
+          : "Padrao das noites (" + wa.nightsAnalyzed + " noites)";
+
+        // Type: info by default, but bump to "warn" if frequent wakings and worsening trend
+        var compositeType = (wa.avgPerNight >= 3 && wa.trend === "worsening") ? "warn" : "info";
+
         hints.push({
-          type: "info",
-          title: l === "en" ? "More wakings lately" : "Mais despertares ultimamente",
-          sub: l === "en"
-            ? "Could be a sleep regression or growth spurt. Usually temporary."
-            : "Pode ser regressao de sono ou salto de crescimento. Geralmente temporario."
+          type: compositeType,
+          title: compositeTitle,
+          sub: parts.join(", ") + trendSuffix
         });
       }
     }
