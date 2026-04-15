@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v9.8.1  Fix: delete no live bedtime + evento retroativo vazava pro bedtime errado
   v9.8.0  Notificações editáveis: título e corpo custom por remédio + edit de lembretes
   v9.7.0  Crescimento: form unificado (data + 3 campos), virgula ok, merge por data, edit em antigas
   v9.6.18 Fade do bottom removido (estava parecendo bug, não efeito)
@@ -252,8 +253,33 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "9.8.0";
+const APP_VERSION = "9.8.1";
 const CHANGELOG = [
+  {
+    v: "9.8.1", date: "2026-04-13",
+    pt: {
+      title: "Fix: delete no live bedtime + evento retroativo no lugar errado",
+      bullets: [
+        '★ **Bug do botão de excluir no bedtime ao vivo não funcionar.** O botão de lixo dentro dos eventos aninhados (Bottle, Diaper, Medicamento) do bedtime LIVE virava no-op — nada acontecia ao clicar. Causa: a chamada do `SleepBlock` do live bedtime não estava passando os handlers `onDelete`/`onEdit` (só a do histórico passava). Fix: props passados corretamente, delete e edit dos eventos do live bedtime funcionam igual ao histórico.',
+        '★ **Bug do evento retroativo sendo linkado ao bedtime errado.** Se você registrasse um evento com horário passado (ex: simeticona das 17:30) enquanto o Night Wake estava ativo, o app linkava o evento ao bedtime atual mesmo com o horário completamente fora do range. Resultado: simeticona de 17:30 aparecia dentro do bedtime que começou 20:47 — conceitualmente errado.',
+        '**Fix do registro:** `addEntry` agora valida se o horário do evento (`date+time`) está dentro do range do bedtime atual antes de linkar. Se o horário for fora, o evento é registrado normalmente sem virar filho do bedtime. Tolerância de 1min pra variação de relógio.',
+        '**Fix retroativo (dados já salvos):** o `SleepBlock` agora filtra os eventos linkados (`wakings[i].events`) pra só renderizar os que têm horário dentro do range do bedtime. Eventos com link corrompido (pré-v9.8.1) somem do bloco e aparecem no "Today" normalmente, onde podem ser deletados.',
+        '**Filtro do Today atualizado:** eventos com `nightWake` setado só são escondidos do Today se o horário realmente cai dentro do live bedtime. Eventos órfãos (link corrompido + horário fora) passam a aparecer no Today com acesso normal a delete/edit — antes ficavam invisíveis.',
+        'Nenhuma migração necessária. Os docs corrompidos no Firestore continuam com o campo `nightWake` preenchido mas são ignorados visualmente. Se você quiser limpar, basta deletar e recriar.'
+      ]
+    },
+    en: {
+      title: "Fix: delete on live bedtime + retroactive event in wrong place",
+      bullets: [
+        '★ **Delete button on live bedtime not working bug.** The trash button inside nested events (Bottle, Diaper, Medicine) of the LIVE bedtime was a no-op — nothing happened on tap. Root cause: the `SleepBlock` call for the live bedtime wasn\'t passing `onDelete`/`onEdit` handlers (only the history one did). Fix: props passed correctly, delete and edit of live bedtime events now works just like history.',
+        '★ **Retroactive event being linked to wrong bedtime bug.** If you logged an event with a past time (e.g., simethicone from 17:30) while Night Wake was active, the app linked the event to the current bedtime even though the time was completely out of range. Result: 17:30 simethicone appearing inside a bedtime that started 20:47 — conceptually wrong.',
+        '**Logging fix:** `addEntry` now validates the event time (`date+time`) is inside the current bedtime range before linking. If the time is outside, the event is registered normally without becoming a child of the bedtime. 1-minute clock skew tolerance.',
+        '**Retroactive fix (already-saved data):** `SleepBlock` now filters linked events (`wakings[i].events`) to only render those with a time inside the bedtime range. Events with corrupted links (pre-v9.8.1) disappear from the block and show up in "Today" normally, where they can be deleted.',
+        '**Today filter updated:** events with `nightWake` set are only hidden from Today if their time actually falls inside the live bedtime. Orphan events (corrupted link + time outside) now show up in Today with normal delete/edit access — before they were invisible.',
+        'No migration needed. Corrupted docs in Firestore keep the `nightWake` field set but are visually ignored. To clean up, just delete and recreate.'
+      ]
+    }
+  },
   {
     v: "9.8.0", date: "2026-04-13",
     pt: {
@@ -2560,7 +2586,16 @@ function SleepBlock({entry,onDelete,onEdit,entries,isLive,activeTimer,onSaveTime
       </div>
       <div style={{padding:"0 16px"}}>
         {wakings.map((w,i)=>{
-          const linkedEvents=(w.events||[]).map(findEvent).filter(Boolean);
+          // Filter linked events to only those with time inside bedtime range —
+          // defense against legacy data where events got wrongly linked via addEntry
+          // before the v9.8.1 fix (e.g. retroactive events logged while night wake was active)
+          const linkedEvents=(w.events||[]).map(findEvent).filter(le=>{
+            if(!le)return false;
+            if(!le.date||!le.time)return true; // can't validate, keep it
+            const leMs=new Date(`${le.date}T${le.time}`).getTime();
+            if(isNaN(leMs))return true; // malformed, keep it
+            return leMs>=bedStartMs&&leMs<=bedEndMs;
+          });
           const allEventsForWaking=[...linkedEvents,...retroForWaking[i]]
             .sort((a,b)=>(a.time||"").localeCompare(b.time||""));
           const isActive=w.isActive;
@@ -4102,14 +4137,25 @@ function App(){
   const handleUndo=()=>{if(undoRef.current)undoRef.current();setToast(null)};
   const addEntry=useCallback(async e=>{
     Haptic.medium();
-    // If night wake is active, tag this event as part of the waking.
+    // If night wake is active, tag this event as part of the waking — BUT only if
+    // the event's time actually falls within the bedtime range. This prevents
+    // retroactive events (e.g. medicine given in the afternoon, logged at night)
+    // from being incorrectly linked to the current bedtime just because night wake
+    // happened to be active at the moment of registration.
     // Any event type can be linked EXCEPT the ones that delimit/fragment the night:
     // sleep, nap, wakeup, nightwaking (handled via wakings[]), growth.
     const NIGHT_WAKE_EXCLUDED=["sleep","nap","wakeup","nightwaking","growth"];
     if(activeTimer&&activeTimer.type==="sleep"&&activeTimer.nightWake&&!NIGHT_WAKE_EXCLUDED.includes(e.type)){
-      e.nightWake=activeTimer.startTime; // link to parent sleep via its startTime
-      const updatedNw={...activeTimer.nightWake,events:[...(activeTimer.nightWake.events||[]),e.id]};
-      await FB.saveTimer({...activeTimer,nightWake:updatedNw});
+      // Validate event time is within bedtime range [bedtimeStart, now]
+      const bedStartMs=new Date(activeTimer.startTime).getTime();
+      const evMs=(e.date&&e.time)?new Date(`${e.date}T${e.time}`).getTime():NaN;
+      const nowMs=Date.now();
+      const inRange=!isNaN(evMs)&&evMs>=bedStartMs&&evMs<=nowMs+60000; // 1min tolerance for clock skew
+      if(inRange){
+        e.nightWake=activeTimer.startTime; // link to parent sleep via its startTime
+        const updatedNw={...activeTimer.nightWake,events:[...(activeTimer.nightWake.events||[]),e.id]};
+        await FB.saveTimer({...activeTimer,nightWake:updatedNw});
+      }
     }
     const parts=splitMidnight(e);
     for(const p of parts) await FB.addEntry(p);
@@ -4479,8 +4525,16 @@ function App(){
         {!activeTimer&&sleepRec?.phase===2&&daySchedule.length>0&&daySchedule.filter(s=>s.status==="next").map((s,i)=><div key={"ns"+i} style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:`${T.accent}10`,border:`1px solid ${T.accent}18`,display:"flex",alignItems:"center",gap:10}}><Icon name="star" size={18} color={T.accent} fill={T.accent}/><div><div style={{fontSize:12,fontWeight:700,color:T.accent}}>{s.bed?(_lang==="en"?"Bedtime ~":"Sono ~"):(_lang==="en"?"Next nap ~":"Prox. soneca ~")}{minToTime(s.startMin)}</div><div style={{fontSize:10,color:T.sub}}>{s.bed?"":`${s.pos}${_lang==="en"?["","st","nd","rd"][s.pos]||"th":"a"} · `}WW {fmtDur(s.ww)}{s.durRange?" · "+s.durRange:""}</div></div></div>)}
         <InsightCards insights={dayInsights} phase={sleepRec?.phase}/>
         <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr)",gap:6,padding:"0 20px",marginBottom:14}}>{[{i:"bottle",v:`${totalMl}`,u:"ml",c:T.green,t:["bottle"],tap:"bottle",l:_lang==="en"?"Bottle":"Mamad."},{i:"breast",v:totalNursingMin>0?fmtDur(totalNursingMin):`${totalNursing}x`,c:T.blue,t:["nursing"],tap:"nursing",l:_lang==="en"?"Nursing":"Amam."},{i:"moon",v:fmtDur(totalSleep),c:T.purple,t:["sleep","nap"],tap:"nap",l:_lang==="en"?"Sleep":"Sono"},{i:"diaper",v:`${totalDiapers}`,c:T.pink,t:["diaper"],tap:"diaper",l:_lang==="en"?"Diaper":"Fralda"}].map((p,idx)=>{const last=entries.find(e=>p.t.includes(e.type));let ago=null;if(last){if(p.t.includes("sleep")&&last.durationMin){const endMs=new Date(`${last.date}T${last.time}`).getTime()+last.durationMin*60000;const endD=new Date(endMs);const ed=`${endD.getFullYear()}-${String(endD.getMonth()+1).padStart(2,"0")}-${String(endD.getDate()).padStart(2,"0")}`;const et=`${String(endD.getHours()).padStart(2,"0")}:${String(endD.getMinutes()).padStart(2,"0")}`;ago=timeSince(ed,et)}else{ago=timeSince(last.date,last.time)}}return<button key={idx} onClick={()=>{if(p.tap==="nap"&&!activeTimer)startTimer("nap");else if(p.tap==="nursing"&&!activeTimer)startTimer("nursing",nextNursingSide);else if(!activeTimer)setFormType(p.tap)}} style={{padding:"10px",borderRadius:12,background:`${p.c}06`,border:`1px solid ${p.c}0a`,textAlign:"left"}}><div style={{display:"flex",alignItems:"center",gap:5,marginBottom:3}}><Icon name={p.i} size={12} color={p.c}/><span style={{fontSize:9,color:T.dim}}>{p.l}</span></div><div style={{fontSize:16,fontWeight:800,color:p.c}}>{p.v}{p.u?<span style={{fontSize:11,opacity:0.6}}>{p.u}</span>:null}</div>{ago&&<div style={{fontSize:12,color:`${p.c}88`,fontWeight:600,marginTop:3}}>{ago}</div>}</button>})}</div>
-        <div style={{padding:"0 20px"}}><div style={{fontSize:11,fontWeight:600,color:T.dim,marginBottom:8,textTransform:"uppercase",letterSpacing:0.8}}>{L("today")}</div>{todayE.length===0&&!liveBedtime&&<div style={{textAlign:"center",padding:"32px 20px",color:T.dim}}><Icon name="star" size={32} color={T.dim} fill={T.dim}/><div style={{fontSize:13,marginTop:8}}>{_lang==="en"?"Tap + to add":"Toque + para registrar"}</div></div>}{liveBedtime&&<SleepBlock entry={liveBedtime} entries={entries} isLive={true} activeTimer={activeTimer} onSaveTimer={FB.saveTimer} onSaveEntry={FB.addEntry}/>}{todayE.filter(e=>{
-          if(e.nightWake)return false;
+        <div style={{padding:"0 20px"}}><div style={{fontSize:11,fontWeight:600,color:T.dim,marginBottom:8,textTransform:"uppercase",letterSpacing:0.8}}>{L("today")}</div>{todayE.length===0&&!liveBedtime&&<div style={{textAlign:"center",padding:"32px 20px",color:T.dim}}><Icon name="star" size={32} color={T.dim} fill={T.dim}/><div style={{fontSize:13,marginTop:8}}>{_lang==="en"?"Tap + to add":"Toque + para registrar"}</div></div>}{liveBedtime&&<SleepBlock entry={liveBedtime} entries={entries} isLive={true} activeTimer={activeTimer} onSaveTimer={FB.saveTimer} onSaveEntry={FB.addEntry} onDelete={deleteEntry} onEdit={startEdit}/>}{todayE.filter(e=>{
+          // Only hide events linked to the live bedtime if their time actually falls within it.
+          // Protects against legacy data where retroactive events got wrongly linked (pre v9.8.1).
+          if(e.nightWake&&liveBedtime){
+            const evMs=(e.date&&e.time)?new Date(`${e.date}T${e.time}`).getTime():NaN;
+            const bStart=new Date(`${liveBedtime.date}T${liveBedtime.time}`).getTime();
+            const bEnd=bStart+(liveBedtime.durationMin||0)*60000;
+            if(!isNaN(evMs)&&evMs>=bStart&&evMs<=bEnd)return false;
+            // Event has nightWake link but time is outside — orphan, show in today list
+          }
           if(findContainingBedtime(e,entries))return false;
           return true;
         }).map((e,i,arr)=>{const prev=arr[i-1];let gap=null;if(prev){const t1=new Date(`${e.date}T${e.time}`).getTime();let t2=new Date(`${prev.date}T${prev.time}`).getTime();if(prev.durationMin)t2+=prev.durationMin*60000;const diffMin=Math.abs(Math.round((t1-t2)/60000));if(diffMin>=30){const isSleep=(e.type==="nap"||e.type==="sleep")&&e.durationMin;gap=<div style={{display:"flex",alignItems:"center",gap:10,padding:"4px 16px",margin:"2px 0"}}><div style={{flex:1,height:1,background:`linear-gradient(90deg,transparent,${isSleep?T.accent:T.accent}0a,transparent)`}}/><span style={{fontSize:8,color:isSleep?T.accent:T.dim,letterSpacing:0.5}}>{isSleep?"WW ":""}{fmtDur(diffMin)}</span><div style={{flex:1,height:1,background:`linear-gradient(90deg,transparent,${isSleep?T.accent:T.accent}0a,transparent)`}}/></div>}}const useBlock=e.type==="sleep"&&e.wakings&&e.wakings.length>0;return<React.Fragment key={e.id}>{gap}{useBlock?<SleepBlock entry={e} onDelete={deleteEntry} onEdit={startEdit} entries={entries} activeTimer={activeTimer} onSaveTimer={FB.saveTimer} onSaveEntry={FB.addEntry}/>:<EntryRow entry={e} onDelete={deleteEntry} onEdit={startEdit} napNum={napNums[e.id]||null}/>}</React.Fragment>})}</div>
