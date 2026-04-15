@@ -1,43 +1,43 @@
-// ╔═══════════════════════════════════════════════════════════════╗
-// ║  ROUTINE ENGINE v2.2.0                                       ║
-// ║  Full-day routine intelligence for Louise Pro                ║
-// ║  Replaces Sleep Engine v1 — backward compatible              ║
-// ║                                                              ║
-// ║  Analyzes: sleep, feeds, bath, diapers                       ║
-// ║  Uses: WHO/AAP research + learned patterns + recency decay   ║
-// ║                                                              ║
-// ║  v2.2.0: Wakings insights consolidated into ONE composite    ║
-// ║   hint (avoids the “conflicting hints” feeling when multiple ║
-// ║   wakings-related hints appeared together). STTN milestone   ║
-// ║   stays separate as a positive highlight.                    ║
-// ║                                                              ║
-// ║  v2.1.0: Time-window gates for retrospective hints           ║
-// ║   • Morning review (06h-10h): night sleep consistency,       ║
-// ║     wakings insights (sleeping through, frequent wakings,    ║
-// ║     pattern detected, cause pattern, trend)                  ║
-// ║   • End-of-day (22h+): shorter naps, WHO total sleep,        ║
-// ║     great sleep day, below/above recommended                 ║
-// ║   • Contextual hints (feed overdue, bedtime approaching,     ║
-// ║     bath reminder, excellent nap, diaper check) unchanged    ║
-// ╚═══════════════════════════════════════════════════════════════╝
+// =================================================================
+// |  ROUTINE ENGINE v2.2.0                                       |
+// |  Full-day routine intelligence for Louise Pro                |
+// |  Replaces Sleep Engine v1 – backward compatible              |
+// |                                                              |
+// |  Analyzes: sleep, feeds, bath, diapers                       |
+// |  Uses: WHO/AAP research + learned patterns + recency decay   |
+// |                                                              |
+// |  v2.2.0: Wakings insights consolidated into ONE composite    |
+// |   hint (avoids the “conflicting hints” feeling when multiple |
+// |   wakings-related hints appeared together). STTN milestone   |
+// |   stays separate as a positive highlight.                    |
+// |                                                              |
+// |  v2.1.0: Time-window gates for retrospective hints           |
+// |   * Morning review (06h-10h): night sleep consistency,       |
+// |     wakings insights (sleeping through, frequent wakings,    |
+// |     pattern detected, cause pattern, trend)                  |
+// |   * End-of-day (22h+): shorter naps, WHO total sleep,        |
+// |     great sleep day, below/above recommended                 |
+// |   * Contextual hints (feed overdue, bedtime approaching,     |
+// |     bath reminder, excellent nap, diaper check) unchanged    |
+// =================================================================
 //
 // PUBLIC API:
 //
 //   RoutineEngine.analyze(entries, numDays, ageWeeks)
-//     → { sleep, feeds, bath, wake, daysAnalyzed, confidence }
+//     -> { sleep, feeds, bath, wake, daysAnalyzed, confidence }
 //
 //   RoutineEngine.getStatus(elapsed, pattern, napPos, ageWeeks)
-//     → { state, el, target:{min,avg,max}, rem, prog, wind, over,
+//     -> { state, el, target:{min,avg,max}, rem, prog, wind, over,
 //         predictedTime, napPos, confidence }
 //
 //   RoutineEngine.predict(todayEntries, pattern, wakeMin, ageWeeks)
-//     → [{ type, timeMin, duration, confidence, status, pos? }]
+//     -> [{ type, timeMin, duration, confidence, status, pos? }]
 //
 //   RoutineEngine.getInsights(entries, todayEntries, pattern, ageWeeks, lang)
-//     → [{ type, icon, title, desc }]
+//     -> [{ type, icon, title, desc }]
 //
 //   RoutineEngine.getGuideline(ageWeeks)
-//     → { ww, naps, totalSleep, feeds }
+//     -> { ww, naps, totalSleep, feeds }
 //
 //   – BACKWARD COMPAT (drop-in for SleepEngine) –
 //   RoutineEngine.getSleepRec(entries, age, birthDate)
@@ -46,8 +46,8 @@
 //   RoutineEngine.projectSchedule(wakeMin, pattern, todayNaps)
 //   RoutineEngine.getDayInsights(todayE, pattern, guideline)
 //
-//   RoutineEngine.toMinutes(“HH:MM”) → number
-//   RoutineEngine.minToTime(number) → “HH:MM”
+//   RoutineEngine.toMinutes(“HH:MM”) -> number
+//   RoutineEngine.minToTime(number) -> “HH:MM”
 //   RoutineEngine.VERSION
 
 (function(root) {
@@ -55,9 +55,9 @@
 
 var VERSION = “2.2.0”;
 
-// ════════════════════════════════════════════════════════
+// ========================================================
 // HELPERS
-// ════════════════════════════════════════════════════════
+// ========================================================
 
 function todayStr() {
 var d = new Date();
@@ -108,22 +108,22 @@ sumW += (weights[i] || 1);
 return sumW > 0 ? Math.round(sumV / sumW) : 0;
 }
 
-// ════════════════════════════════════════════════════════
+// ========================================================
 // RECENCY WEIGHTING
-// Days ago → weight (exponential decay)
+// Days ago -> weight (exponential decay)
 // halfLife=4: yesterday=1.0, 4 days ago=0.5, 7 days ago=0.3
-// ════════════════════════════════════════════════════════
+// ========================================================
 
 function recencyWeight(daysAgo, halfLife) {
 halfLife = halfLife || 4;
 return Math.exp(-0.693 * daysAgo / halfLife);
 }
 
-// ════════════════════════════════════════════════════════
+// ========================================================
 // BLEND: learned data vs research guideline
 // With few data points, trusts guideline more.
 // threshold=5: at 5 data points, 100% learned
-// ════════════════════════════════════════════════════════
+// ========================================================
 
 function blend(learned, guideline, dataPoints, threshold) {
 threshold = threshold || 5;
@@ -131,10 +131,10 @@ var w = Math.min(1, dataPoints / threshold);
 return Math.round(w * learned + (1 - w) * guideline);
 }
 
-// ════════════════════════════════════════════════════════
-// RESEARCH DATA — WHO / AAP / NHS baselines
+// ========================================================
+// RESEARCH DATA – WHO / AAP / NHS baselines
 // Expanded: sleep + feeds + daily totals
-// ════════════════════════════════════════════════════════
+// ========================================================
 
 var GUIDELINES = [
 {
@@ -247,16 +247,16 @@ var WW = GUIDELINES.map(function(g) {
 return { maxW: g.maxW, min: g.ww.min, max: g.ww.max, naps: g.naps.label };
 });
 
-// ════════════════════════════════════════════════════════
-// CORE ANALYSIS — analyzes ALL event types
-// ════════════════════════════════════════════════════════
+// ========================================================
+// CORE ANALYSIS – analyzes ALL event types
+// ========================================================
 
 function analyze(allEntries, numDays, ageWeeks) {
 var today = todayStr();
 var g = ageWeeks != null ? getGuideline(ageWeeks) : GUIDELINES[0];
 
 ```
-// ── Collect per-day data ──
+// -- Collect per-day data --
 var dayData = [];
 for (var d = 0; d < numDays; d++) {
   var date = dateOffset(today, -d);
@@ -337,9 +337,9 @@ for (var d = 0; d < numDays; d++) {
 
 if (dayData.length < 1) return null;
 
-// ═══════════════════════════
+// ===========================
 // SLEEP ANALYSIS
-// ═══════════════════════════
+// ===========================
 
 var sleepDays = dayData.filter(function(dd) {
   return dd.wakeMin != null && dd.napCount > 0;
@@ -437,9 +437,9 @@ for (var pi = 0; pi < positions.length; pi++) {
 }
 var overallAvgWW = allWWVals.length > 0 ? weightedAvg(allWWVals, allWWWeights) : null;
 
-// ═══════════════════════════
+// ===========================
 // NIGHT SLEEP ANALYSIS
-// ═══════════════════════════
+// ===========================
 
 var nightVals = [], nightWeights = [];
 var totalDailyVals = [], totalDailyWeights = [];
@@ -469,9 +469,9 @@ var totalDailySleep = {
   pts: totalDailyVals.length
 };
 
-// ═══════════════════════════
+// ===========================
 // WAKINGS ANALYSIS
-// ═══════════════════════════
+// ===========================
 
 var wakingCounts = [], wakingCountWeights = [];
 var allWakingTimes = []; // minutes from 0-1440 (treating post-midnight as +1440)
@@ -520,7 +520,7 @@ for (var wi2 = 0; wi2 < dayData.length; wi2++) {
   }
 }
 
-// Find most common waking time (cluster within ±30min)
+// Find most common waking time (cluster within +-30min)
 var mostCommonWakingTime = null;
 if (allWakingTimes.length >= 3) {
   var bestCluster = { center: null, count: 0 };
@@ -581,9 +581,9 @@ var wakingsAnalysis = {
   pts: wakingCounts.length
 };
 
-// ═══════════════════════════
+// ===========================
 // FEED ANALYSIS
-// ═══════════════════════════
+// ===========================
 
 var feedIntervals = [], feedIntervalWeights = [];
 var feedCounts = [], feedMlTotals = [], feedMlPer = [];
@@ -629,7 +629,7 @@ var feedAnalysis = {
   pts: feedIntervals.length
 };
 
-// ── Feed-before-nap correlation ──
+// -- Feed-before-nap correlation --
 var feedBeforeNap = 0, napTotal = 0;
 for (var cn = 0; cn < sleepDays.length; cn++) {
   var cdd = sleepDays[cn];
@@ -648,9 +648,9 @@ feedAnalysis.preNapPct = napTotal >= 3
   ? Math.round(feedBeforeNap / napTotal * 100)
   : null;
 
-// ═══════════════════════════
+// ===========================
 // BATH ANALYSIS
-// ═══════════════════════════
+// ===========================
 
 var bathBeforeBed = [], bathToBedGaps = [], bathTimes = [], bathWeights = [];
 for (var bai = 0; bai < dayData.length; bai++) {
@@ -682,9 +682,9 @@ var bathAnalysis = {
   pts: bathToBedGaps.length
 };
 
-// ═══════════════════════════
+// ===========================
 // WAKE TIME CONSISTENCY
-// ═══════════════════════════
+// ===========================
 
 var wakeTimes = [], wakeWeights = [];
 for (var wi = 0; wi < dayData.length; wi++) {
@@ -704,9 +704,9 @@ var wakeAnalysis = {
   pts: wakeTimes.length
 };
 
-// ═══════════════════════════
+// ===========================
 // BEDTIME ANALYSIS
-// ═══════════════════════════
+// ===========================
 
 var bedTimes = [], bedWeights = [];
 for (var bei = 0; bei < dayData.length; bei++) {
@@ -723,9 +723,9 @@ var bedtimeAnalysis = {
   pts: bedTimes.length
 };
 
-// ═══════════════════════════
+// ===========================
 // CONFIDENCE SCORE
-// ═══════════════════════════
+// ===========================
 // 0-100: how much the engine trusts its predictions
 // Based on: days analyzed, data completeness, consistency
 
@@ -764,16 +764,16 @@ return {
 
 }
 
-// ════════════════════════════════════════════════════════
-// STATUS — 5 states for the ring
-// ════════════════════════════════════════════════════════
+// ========================================================
+// STATUS – 5 states for the ring
+// ========================================================
 //
 // States:
-//   calm      — well within range (0-70% of target)
-//   opening   — approaching min observed WW (70-85%)
-//   sweet     — ideal window, between min and avg (85-100%)
-//   stretching — past avg, approaching max (100-115%)
-//   overdue   — beyond max observed (>115%)
+//   calm      – well within range (0-70% of target)
+//   opening   – approaching min observed WW (70-85%)
+//   sweet     – ideal window, between min and avg (85-100%)
+//   stretching – past avg, approaching max (100-115%)
+//   overdue   – beyond max observed (>115%)
 //
 // The target is position-specific when available,
 // otherwise falls back to overall avg, then guideline.
@@ -854,9 +854,9 @@ return {
 
 }
 
-// ════════════════════════════════════════════════════════
-// PREDICT — full day schedule (naps + feeds + bath + bed)
-// ════════════════════════════════════════════════════════
+// ========================================================
+// PREDICT – full day schedule (naps + feeds + bath + bed)
+// ========================================================
 
 function predict(todayEntries, pattern, wakeMin, ageWeeks) {
 if (!pattern) return [];
@@ -865,7 +865,7 @@ if (!pattern) return [];
 var g = getGuideline(ageWeeks || 0);
 var sched = [];
 
-// ── Nap schedule ──
+// -- Nap schedule --
 var doneNaps = todayEntries
   .filter(function(e) { return e.type === "nap" && e.durationMin > 0; })
   .sort(function(a, b) { return a.time.localeCompare(b.time); });
@@ -918,7 +918,7 @@ for (var i = 0; i < Math.max(napPositions.length, numPositions); i++) {
   }
 }
 
-// ── Bedtime ──
+// -- Bedtime --
 var bedWW = pattern.sleep.avgBedWW;
 if (!bedWW && g.ww) {
   bedWW = Math.round((g.ww.min + g.ww.max) / 2 * 1.15); // bedtime WW is usually ~15% longer
@@ -937,7 +937,7 @@ if (bedWW) {
   });
 }
 
-// ── Feed predictions ──
+// -- Feed predictions --
 if (pattern.feeds && pattern.feeds.avgInterval) {
   var doneFeeds = todayEntries
     .filter(function(e) { return e.type === "bottle" || e.type === "nursing"; })
@@ -976,7 +976,7 @@ if (pattern.feeds && pattern.feeds.avgInterval) {
   }
 }
 
-// ── Bath prediction ──
+// -- Bath prediction --
 if (pattern.bath && pattern.bath.avgBeforeBed && pattern.bath.pts >= 2) {
   var bedTimeEst = pattern.bedtime.avgTime || 1200;
   var bathTime = bedTimeEst - pattern.bath.avgBeforeBed;
@@ -1000,9 +1000,9 @@ return sched;
 
 }
 
-// ════════════════════════════════════════════════════════
-// INSIGHTS — intelligent observations
-// ════════════════════════════════════════════════════════
+// ========================================================
+// INSIGHTS – intelligent observations
+// ========================================================
 
 function getInsights(entries, todayEntries, pattern, ageWeeks, lang) {
 if (!pattern) return [];
@@ -1011,7 +1011,7 @@ var hints = [];
 var g = getGuideline(ageWeeks || 0);
 
 ```
-// ── 1. Wake time consistency ──
+// -- 1. Wake time consistency --
 if (pattern.wake && pattern.wake.consistency != null) {
   var spread = (pattern.wake.maxTime || 0) - (pattern.wake.minTime || 0);
   if (spread <= 45 && pattern.wake.pts >= 4) {
@@ -1035,7 +1035,7 @@ if (pattern.wake && pattern.wake.consistency != null) {
   }
 }
 
-// ── 2. Feed-before-nap correlation ──
+// -- 2. Feed-before-nap correlation --
 if (pattern.feeds && pattern.feeds.preNapPct != null && pattern.feeds.preNapPct >= 60) {
   hints.push({
     type: "good",
@@ -1047,7 +1047,7 @@ if (pattern.feeds && pattern.feeds.preNapPct != null && pattern.feeds.preNapPct 
   });
 }
 
-// ── 3. Bath-bedtime correlation ──
+// -- 3. Bath-bedtime correlation --
 if (pattern.bath && pattern.bath.avgBeforeBed && pattern.bath.pts >= 2) {
   hints.push({
     type: "good",
@@ -1059,7 +1059,7 @@ if (pattern.bath && pattern.bath.avgBeforeBed && pattern.bath.pts >= 2) {
   });
 }
 
-// ── 4. WW progression through the day ──
+// -- 4. WW progression through the day --
 if (pattern.sleep && pattern.sleep.positions.length >= 2) {
   var firstPos = pattern.sleep.positions[0];
   var lastPos = pattern.sleep.positions[pattern.sleep.positions.length - 1];
@@ -1069,13 +1069,13 @@ if (pattern.sleep && pattern.sleep.positions.length >= 2) {
       icon: "clock",
       title: l === "en" ? "WW grows through the day" : "Janela cresce ao longo do dia",
       desc: l === "en"
-        ? "WW1 (morning): " + fmtDur(firstPos.avgWW) + " vs WW" + lastPos.pos + " (afternoon): " + fmtDur(lastPos.avgWW) + ". Normal — babies handle more awake time later."
-        : "WW1 (manha): " + fmtDur(firstPos.avgWW) + " vs WW" + lastPos.pos + " (tarde): " + fmtDur(lastPos.avgWW) + ". Normal — bebes aguentam mais a tarde."
+        ? "WW1 (morning): " + fmtDur(firstPos.avgWW) + " vs WW" + lastPos.pos + " (afternoon): " + fmtDur(lastPos.avgWW) + ". Normal -- babies handle more awake time later."
+        : "WW1 (manha): " + fmtDur(firstPos.avgWW) + " vs WW" + lastPos.pos + " (tarde): " + fmtDur(lastPos.avgWW) + ". Normal -- bebes aguentam mais a tarde."
     });
   }
 }
 
-// ── 5. Today shorter naps warning ──
+// -- 5. Today shorter naps warning --
 if (todayEntries && pattern.sleep) {
   var todayNaps = todayEntries.filter(function(e) { return e.type === "nap" && e.durationMin > 0; });
   var todayNapTotal = todayNaps.reduce(function(s, e) { return s + e.durationMin; }, 0);
@@ -1109,7 +1109,7 @@ if (todayEntries && pattern.sleep) {
   }
 }
 
-// ── 6. Louise vs guideline comparison ──
+// -- 6. Louise vs guideline comparison --
 if (pattern.sleep && pattern.sleep.overallAvgWW) {
   var guideMid = (g.ww.min + g.ww.max) / 2;
   var diff = pattern.sleep.overallAvgWW - guideMid;
@@ -1121,13 +1121,13 @@ if (pattern.sleep && pattern.sleep.overallAvgWW) {
         ? "WW vs " + g.label + " guideline"
         : "Janela vs guideline " + g.label,
       desc: l === "en"
-        ? "Avg WW: " + fmtDur(pattern.sleep.overallAvgWW) + " (guideline: " + g.ww.min + "-" + g.ww.max + "min). " + (diff > 0 ? "Slightly above — every baby is different." : "Slightly below — may be a sleepy phase.")
-        : "Janela media: " + fmtDur(pattern.sleep.overallAvgWW) + " (guideline: " + g.ww.min + "-" + g.ww.max + "min). " + (diff > 0 ? "Acima — cada bebe e diferente." : "Abaixo — pode ser uma fase de mais sono.")
+        ? "Avg WW: " + fmtDur(pattern.sleep.overallAvgWW) + " (guideline: " + g.ww.min + "-" + g.ww.max + "min). " + (diff > 0 ? "Slightly above -- every baby is different." : "Slightly below -- may be a sleepy phase.")
+        : "Janela media: " + fmtDur(pattern.sleep.overallAvgWW) + " (guideline: " + g.ww.min + "-" + g.ww.max + "min). " + (diff > 0 ? "Acima -- cada bebe e diferente." : "Abaixo -- pode ser uma fase de mais sono.")
     });
   }
 }
 
-// ── 7. Feed interval vs guideline ──
+// -- 7. Feed interval vs guideline --
 if (pattern.feeds && pattern.feeds.avgInterval) {
   var feedGuideMid = (g.feeds.interval.min + g.feeds.interval.max) / 2;
   var feedDiff = pattern.feeds.avgInterval - feedGuideMid;
@@ -1150,10 +1150,10 @@ return hints;
 
 }
 
-// ════════════════════════════════════════════════════════
+// ========================================================
 // DETERMINE CURRENT NAP POSITION
 // Figures out which nap the baby is heading toward
-// ════════════════════════════════════════════════════════
+// ========================================================
 
 function getCurrentNapPos(todayEntries) {
 var doneNaps = todayEntries
@@ -1162,13 +1162,13 @@ var doneNaps = todayEntries
 return doneNaps.length + 1;
 }
 
-// ════════════════════════════════════════════════════════
+// ========================================================
 // BACKWARD COMPAT WRAPPERS
 // Drop-in replacements for SleepEngine functions
-// ════════════════════════════════════════════════════════
+// ========================================================
 
 // getSleepRec(entries, age, birthDate)
-// Returns: { phase, dl, g, a? } — same shape as before
+// Returns: { phase, dl, g, a? } – same shape as before
 // CHANGE: phase 2 activates with 3+ days of data (not 2 months)
 function getSleepRec(entries, age, birthDate) {
 if (!age) return null;
@@ -1380,7 +1380,7 @@ return sched;
 }
 
 // getDayInsights(todayE, pattern, guideline, lang)
-// Returns: [{ type, title, sub }] — backward compat shape
+// Returns: [{ type, title, sub }] – backward compat shape
 // Includes: total sleep (naps+night) vs WHO, compensation, quality
 function getDayInsights(todayE, pattern, guideline, lang) {
 if (!pattern) return [];
@@ -1388,9 +1388,9 @@ var l = lang || “en”;
 var hints = [];
 
 ```
-// ── TIME WINDOWS for retrospective hints ──
-// Night-sleep analysis hints → only show in morning review window (6h-10h)
-// Day-balance hints → only show in end-of-day window (after 22h)
+// -- TIME WINDOWS for retrospective hints --
+// Night-sleep analysis hints -> only show in morning review window (6h-10h)
+// Day-balance hints -> only show in end-of-day window (after 22h)
 var _nowD = new Date();
 var _nowMin = _nowD.getHours() * 60 + _nowD.getMinutes();
 var isMorning = _nowMin >= 6 * 60 && _nowMin < 10 * 60;   // 06:00-09:59
@@ -1517,17 +1517,17 @@ if (isMorning && pattern.fullPattern && pattern.fullPattern.sleep && pattern.ful
   var ageWeeksForInsight = pattern.fullPattern.ageWeeks;
   var oldEnoughForSTTN = ageWeeksForInsight != null && ageWeeksForInsight >= 16;
 
-  // 4a. SLEEPING THROUGH THE NIGHT — stays separate (positive milestone)
+  // 4a. SLEEPING THROUGH THE NIGHT -- stays separate (positive milestone)
   if (wa.avgPerNight === 0 && wa.nightsAnalyzed >= 3 && oldEnoughForSTTN) {
     hints.push({
       type: "good",
       title: l === "en" ? "Sleeping through the night" : "Dormindo a noite toda",
       sub: l === "en"
-        ? "No wakings in " + wa.nightsAnalyzed + " nights — amazing!"
-        : "Sem despertares em " + wa.nightsAnalyzed + " noites — incrivel!"
+        ? "No wakings in " + wa.nightsAnalyzed + " nights -- amazing!"
+        : "Sem despertares em " + wa.nightsAnalyzed + " noites -- incrivel!"
     });
   }
-  // Composite hint — only show if there's at least the core metric (avg per night)
+  // Composite hint -- only show if there's at least the core metric (avg per night)
   else if (wa.avgPerNight != null && wa.nightsAnalyzed >= 3 && wa.avgPerNight >= 1) {
     // Build the parts of the consolidated text
     var parts = [];
@@ -1548,7 +1548,7 @@ if (isMorning && pattern.fullPattern && pattern.fullPattern.sleep && pattern.ful
         : "mais frequente ~" + minToTime(wa.mostCommonTime));
     }
 
-    // Most common cause (if ≥60%)
+    // Most common cause (if >=60%)
     if (wa.mostCommonType && wa.mostCommonTypePct >= 60 && wa.totalWakings >= 3) {
       var typeLabel = wa.mostCommonType === "feed"
         ? (l === "en" ? "feeds" : "mamadas")
@@ -1560,15 +1560,16 @@ if (isMorning && pattern.fullPattern && pattern.fullPattern.sleep && pattern.ful
         : "geralmente " + typeLabel + " (" + wa.mostCommonTypePct + "%)");
     }
 
-    // Trend (improving/worsening) — shown as a dedicated small suffix
+    // Trend (improving/worsening) -- shown as a dedicated small suffix
     var trendSuffix = "";
     if (wa.trend === "improving") {
-      trendSuffix = l === "en" ? " · ↓ fewer than last week" : " · ↓ menos que a semana passada";
+      // U+00B7 middle dot + U+2193 down arrow -- inside string literal, safe
+      trendSuffix = l === "en" ? " \u00b7 \u2193 fewer than last week" : " \u00b7 \u2193 menos que a semana passada";
     } else if (wa.trend === "worsening") {
-      trendSuffix = l === "en" ? " · ↑ more than last week" : " · ↑ mais que a semana passada";
+      trendSuffix = l === "en" ? " \u00b7 \u2191 more than last week" : " \u00b7 \u2191 mais que a semana passada";
     }
 
-    // Build title — makes clear this is an aggregate of N nights
+    // Build title -- makes clear this is an aggregate of N nights
     var compositeTitle = l === "en"
       ? "Night pattern (" + wa.nightsAnalyzed + " nights)"
       : "Padrao das noites (" + wa.nightsAnalyzed + " noites)";
@@ -1584,11 +1585,11 @@ if (isMorning && pattern.fullPattern && pattern.fullPattern.sleep && pattern.ful
   }
 }
 
-// 8. PRE-FEED HINT — when a nap is approaching and history shows feed-before-nap pattern
+// 8. PRE-FEED HINT -- when a nap is approaching and history shows feed-before-nap pattern
 if (pattern.fullPattern && pattern.fullPattern.feeds &&
     pattern.fullPattern.feeds.preNapPct != null &&
     pattern.fullPattern.feeds.preNapPct >= 60) {
-  // Check if there's a recent feed (in last 30min) — if yes, skip hint
+  // Check if there's a recent feed (in last 30min) -- if yes, skip hint
   var nowMin = (function() { var d = new Date(); return d.getHours() * 60 + d.getMinutes(); })();
   var recentFeed = todayE.filter(function(e) {
     if (e.type !== "bottle" && e.type !== "nursing") return false;
@@ -1621,16 +1622,16 @@ if (pattern.fullPattern && pattern.fullPattern.feeds &&
   }
 }
 
-// ─────────────────────────────────────────────────────
+// -----------------------------------------------------
 // Shared "now" context for remaining hints
-// ─────────────────────────────────────────────────────
+// -----------------------------------------------------
 var nowM = (function() { var d = new Date(); return d.getHours() * 60 + d.getMinutes(); })();
 var fp = pattern.fullPattern || null;
 var bedDoneToday = todayE.find(function(e) { return e.type === "sleep"; });
 var nightNapping = false; // are we past bedtime / sleeping?
 if (bedDoneToday) nightNapping = true;
 
-// 9. BEDTIME APPROACHING — 30-45min before habitual bedtime
+// 9. BEDTIME APPROACHING -- 30-45min before habitual bedtime
 if (!nightNapping && fp && fp.bedtime && fp.bedtime.avgTime && fp.bedtime.pts >= 3) {
   var bedAvg = fp.bedtime.avgTime;
   var minsUntilBed = bedAvg - nowM;
@@ -1645,7 +1646,7 @@ if (!nightNapping && fp && fp.bedtime && fp.bedtime.avgTime && fp.bedtime.pts >=
   }
 }
 
-// 10. BATH REMINDER — ~30min before habitual bath time, if bath is part of routine
+// 10. BATH REMINDER -- ~30min before habitual bath time, if bath is part of routine
 if (!nightNapping && fp && fp.bath && fp.bath.avgTime != null && fp.bath.daysWithBath >= 3) {
   var bathDoneToday = todayE.find(function(e) { return e.type === "bath"; });
   if (!bathDoneToday) {
@@ -1663,7 +1664,7 @@ if (!nightNapping && fp && fp.bath && fp.bath.avgTime != null && fp.bath.daysWit
   }
 }
 
-// 11. LAST FEED BEFORE BED — if Louise usually feeds close to bedtime
+// 11. LAST FEED BEFORE BED -- if Louise usually feeds close to bedtime
 if (!nightNapping && fp && fp.bedtime && fp.bedtime.avgTime && fp.bedtime.pts >= 3 && fp.feeds) {
   var bedAvg2 = fp.bedtime.avgTime;
   var minsUntilBed2 = bedAvg2 - nowM;
@@ -1686,7 +1687,7 @@ if (!nightNapping && fp && fp.bedtime && fp.bedtime.avgTime && fp.bedtime.pts >=
   }
 }
 
-// 12. LONG NAP CELEBRATION — if most recent nap was excellent (>= 130% of avg)
+// 12. LONG NAP CELEBRATION -- if most recent nap was excellent (>= 130% of avg)
 if (pattern.avgNaps > 0 && pattern.avgTotalSleep > 0) {
   var sortedNaps = todayE
     .filter(function(e) { return e.type === "nap" && e.durationMin > 0; })
@@ -1703,15 +1704,15 @@ if (pattern.avgNaps > 0 && pattern.avgTotalSleep > 0) {
           type: "good",
           title: l === "en" ? "Excellent nap!" : "Soneca excelente!",
           sub: l === "en"
-            ? fmtDur(lastNap.durationMin) + " — " + Math.round(lastNap.durationMin / usualNapDur * 100) + "% of usual (" + fmtDur(usualNapDur) + ")"
-            : fmtDur(lastNap.durationMin) + " — " + Math.round(lastNap.durationMin / usualNapDur * 100) + "% do usual (" + fmtDur(usualNapDur) + ")"
+            ? fmtDur(lastNap.durationMin) + " -- " + Math.round(lastNap.durationMin / usualNapDur * 100) + "% of usual (" + fmtDur(usualNapDur) + ")"
+            : fmtDur(lastNap.durationMin) + " -- " + Math.round(lastNap.durationMin / usualNapDur * 100) + "% do usual (" + fmtDur(usualNapDur) + ")"
         });
       }
     }
   }
 }
 
-// 13. MISSED FEED — too long since last feed vs avg interval
+// 13. MISSED FEED -- too long since last feed vs avg interval
 if (fp && fp.feeds && fp.feeds.avgInterval && fp.feeds.pts >= 5 && !nightNapping) {
   var feedsToday = todayE
     .filter(function(e) { return e.type === "bottle" || e.type === "nursing"; })
@@ -1734,7 +1735,7 @@ if (fp && fp.feeds && fp.feeds.avgInterval && fp.feeds.pts >= 5 && !nightNapping
   }
 }
 
-// 14. CLUSTER FEEDING — 3+ feeds in a short window (under 90min total)
+// 14. CLUSTER FEEDING -- 3+ feeds in a short window (under 90min total)
 if (fp && fp.feeds && fp.feeds.avgInterval) {
   var recentFeedsToday = todayE
     .filter(function(e) { return e.type === "bottle" || e.type === "nursing"; })
@@ -1762,7 +1763,7 @@ if (fp && fp.feeds && fp.feeds.avgInterval) {
   }
 }
 
-// 15. DIAPER CONCERN — too long since last diaper change, or too few today
+// 15. DIAPER CONCERN -- too long since last diaper change, or too few today
 var diapersToday = todayE.filter(function(e) { return e.type === "diaper"; });
 if (diapersToday.length > 0 && !nightNapping) {
   var sortedDiapers = diapersToday.slice().sort(function(a, b) { return b.time.localeCompare(a.time); });
@@ -1831,9 +1832,9 @@ return hints;
 
 }
 
-// ════════════════════════════════════════════════════════
+// ========================================================
 // PUBLIC API
-// ════════════════════════════════════════════════════════
+// ========================================================
 
 root.RoutineEngine = {
 VERSION: VERSION,
