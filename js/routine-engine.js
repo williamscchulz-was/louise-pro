@@ -1,5 +1,5 @@
 // ╔═══════════════════════════════════════════════════════════════╗
-// ║  ROUTINE ENGINE v2.2.0                                       ║
+// ║  ROUTINE ENGINE v2.2.1                                       ║
 // ║  Full-day routine intelligence for Louise Pro                ║
 // ║  Replaces Sleep Engine v1 — backward compatible              ║
 // ║                                                              ║
@@ -48,7 +48,7 @@
 (function(root) {
   "use strict";
 
-  var VERSION = "2.2.0";
+  var VERSION = "2.2.1";
 
   // ════════════════════════════════════════════════════════
   // HELPERS
@@ -292,11 +292,46 @@
       var bedMin = bed ? toMinutes(bed.time) : null;
       var nightTimeInBed = bed && bed.durationMin ? bed.durationMin : null;
       // Extract wakings and compute real sleep (time in bed minus awake time).
-      // hasWakingsTracking distinguishes "no field at all" (legacy/no Night Wake usage)
-      // from "field exists but empty" (Night Wake was used and the baby actually didn't wake).
-      var hasWakingsTracking = !!(bed && Array.isArray(bed.wakings));
-      var nightWakings = hasWakingsTracking ? bed.wakings : [];
-      var awakeMin = nightWakings.reduce(function(s, w) { return s + (w.durationMin || 0); }, 0);
+      // Two sources of wakings are combined:
+      //   1. Explicit — user pressed "Night Wake" button during bedtime (bed.wakings array).
+      //   2. Retroactive — bottle/nursing/diaper/medicine events timestamped inside the
+      //      bedtime range but never explicitly linked via Night Wake. Mirrors the
+      //      display logic in SleepBlock (index.html) so the analysis matches what
+      //      the user actually sees in history.
+      var explicitWakings = (bed && Array.isArray(bed.wakings)) ? bed.wakings.slice() : [];
+      var retroWakings = [];
+      if (bed && bed.durationMin) {
+        var bedStartMs = new Date(bed.date + "T" + bed.time).getTime();
+        var bedEndMs = bedStartMs + bed.durationMin * 60000;
+        if (!isNaN(bedStartMs)) {
+          var linkedIds = {};
+          for (var ewi = 0; ewi < explicitWakings.length; ewi++) {
+            var evs = explicitWakings[ewi].events || [];
+            for (var evi = 0; evi < evs.length; evi++) linkedIds[evs[evi]] = true;
+          }
+          var EXCLUDED_RETRO = { sleep: 1, nap: 1, wakeup: 1, nightwaking: 1, growth: 1 };
+          for (var aei = 0; aei < allEntries.length; aei++) {
+            var aev = allEntries[aei];
+            if (!aev || EXCLUDED_RETRO[aev.type]) continue;
+            if (aev.id === bed.id || linkedIds[aev.id]) continue;
+            if (!aev.date || !aev.time) continue;
+            var aevMs = new Date(aev.date + "T" + aev.time).getTime();
+            if (isNaN(aevMs)) continue;
+            if (aevMs >= bedStartMs && aevMs <= bedEndMs) {
+              // Synthesize a waking-shaped object. durationMin:0 because we don't
+              // know how long the baby was awake for a retroactive event — it only
+              // affects awakeMin, which we still compute from explicit wakings only.
+              retroWakings.push({ time: aev.time, durationMin: 0, events: [aev.id] });
+            }
+          }
+        }
+      }
+      var nightWakings = explicitWakings.concat(retroWakings);
+      // Night is "tracked" if user either pressed Night Wake OR there's at least one
+      // retroactive event inside the bedtime window. Both signal real baby activity.
+      var hasWakingsTracking = !!bed && (nightWakings.length > 0 || Array.isArray(bed.wakings));
+      // awakeMin intentionally uses only explicit wakings — retro events lack duration.
+      var awakeMin = explicitWakings.reduce(function(s, w) { return s + (w.durationMin || 0); }, 0);
       var nightSleepMin = nightTimeInBed != null ? Math.max(0, nightTimeInBed - awakeMin) : null;
 
       // Diapers
