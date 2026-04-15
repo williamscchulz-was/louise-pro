@@ -14,44 +14,59 @@ Mantenha o arquivo atualizado: se algo mudar de forma estrutural (stack, workflo
 - **Localização**: Blumenau, SC, Brasil (BRT, UTC-3)
 - **Repositório**: https://github.com/williamscchulz-was/louise-pro
 - **Live**: https://williamscchulz-was.github.io/louise-pro/
-- **Versão atual**: v9.9.2
+- **Versão atual**: v10.0.0 (app) / routine-engine v2.2.1
 - **Bilíngue**: Português e Inglês (toda a interface, insights, curiosidades e changelog)
 
 ## Stack
 
-- **HTML puro** (sem npm, sem build, sem bundler — princípio inegociável)
-- **React 18** via CDN
-- **Babel Standalone** pra JSX (transpila no browser)
+- **HTML + React CDN** (ainda sem bundler, sem TypeScript, sem npm em produção)
+- **React 18** via CDN (unpkg)
+- **JSX pré-compilado em build-time** via `@babel/core` + `@babel/preset-react` — o navegador NÃO carrega mais `@babel/standalone`. Esse é o único passo de build.
 - **Firebase 10.x compat** via CDN — Firestore para persistência
 - **PWA** com manifest.json, ícones e splash screen
-- **GitHub Pages** para deploy
+- **GitHub Pages + Actions** para deploy (a partir de v10.0.0)
+
+### Regra de stack (atualizada em v10.0.0)
+
+O princípio "sem build" foi relaxado *com justificativa de performance*: a transpilação JSX saiu do runtime do navegador pro build step, porque Babel Standalone travava o cold start em iPhone PWA. Isso **não** abre precedente pra adicionar bundler (Vite/webpack), TypeScript, ou npm em produção. O build tem 1 função só: JSX → JS. Se a próxima proposta for "adicionar X ao build", questionar se o ganho justifica — a simplicidade é o ponto.
 
 ## Arquivos do repositório
 
 ```
 louise-pro/
-├── index.html               ← app completo (~450 KB)
+├── index.html               ← SOURCE (com <script type="text/babel">). NUNCA servido diretamente em prod.
 ├── manifest.json            ← config PWA (fica no root por convencao)
 ├── sw.js                    ← service worker do PWA (DEVE ficar no root — scope)
 ├── firebase-messaging-sw.js ← service worker do FCM (DEVE ficar no root — Firebase espera path fixo)
 ├── README.md
 ├── CLAUDE.md
 ├── .gitignore
-├── js/                      ← libs/modulos auxiliares carregados via <script src>
+├── js/                      ← libs auxiliares (plano JS, não passam pelo build)
 │   ├── curiosities.js       ← curiosidades bilíngues (dia 1 → mês 12)
 │   ├── routine-engine.js    ← engine de análise de padrões (sleep + feed)
 │   ├── who-growth.js        ← tabelas LMS OMS + funções de percentil
 │   ├── splash-icon.js       ← base64 do ícone da splash screen
 │   ├── wake-lock.js         ← helper de Wake Lock API
 │   └── device-features.js   ← helpers de device (haptics etc.)
-└── assets/
-    └── icons/
-        ├── icon-192.png
-        ├── icon-512.png
-        └── apple-touch-icon.png
+├── assets/
+│   └── icons/
+│       ├── icon-192.png / icon-512.png / apple-touch-icon.png
+├── build/                   ← tooling de build (só em dev/CI, não em prod)
+│   ├── build.mjs            ← ~70 linhas: JSX → JS, remove tag do Babel Standalone
+│   ├── package.json         ← deps: @babel/core + @babel/preset-react
+│   └── .gitignore           ← ignora node_modules e package-lock
+├── .github/workflows/
+│   └── deploy.yml           ← GitHub Action: build + deploy para Pages em todo push na main
+└── dist/                    ← (gitignored) output do build, gerado pelo CI em cada deploy
 ```
 
-**Regra:** NAO mover `sw.js`, `firebase-messaging-sw.js`, ou `manifest.json` pra subpastas. Service workers tem scope baseado no path do arquivo; moveu, quebrou notificações. Firebase Messaging procura por `firebase-messaging-sw.js` no root do scope do app.
+**Regra:** NÃO mover `sw.js`, `firebase-messaging-sw.js`, ou `manifest.json` pra subpastas. Service workers têm scope baseado no path do arquivo; moveu, quebrou notificações. Firebase Messaging procura por `firebase-messaging-sw.js` no root do scope do app.
+
+**Build step (resumo):**
+- Edita: `index.html` na raiz (source, com `<script type="text/babel">`)
+- Build: `cd build && npm install && cd .. && node build/build.mjs` — gera `dist/`
+- Deploy: push na `main` → GitHub Action roda o build e publica `dist/` via `actions/deploy-pages`
+- Pre-requisito **uma vez só no repo**: Settings → Pages → Source = "GitHub Actions"
 
 ## Ambiente local (Windows)
 
@@ -118,9 +133,9 @@ louise-pro/
 ```
 Pedido → Mockup HTML → Aprovação do William → Implementação no filesystem
        → Bump versão (com entrada bilíngue no CHANGELOG)
-       → Validação local (brace + babel transformSync)
+       → Validação local (node --check em js/, node build/build.mjs pra testar)
        → git add / commit com mensagem descritiva
-       → git push → GitHub Pages publica automaticamente
+       → git push → GitHub Action roda build + deploy via Pages
 ```
 
 Regras de git:
@@ -158,7 +173,7 @@ O header do `index.html` mantém a lista curta das últimas versões; o históri
 ## Coisas que NÃO devem acontecer
 
 - Mexer no `routine-engine.js` sem motivo forte (ele é estável e mudanças nele têm alto risco de regressão)
-- Adicionar dependências npm ou ferramentas de build ao app em si (npm no `.validate/` é ok, pois fica fora do deploy)
+- Adicionar dependências npm ao runtime do app (browser). npm em `build/` é ok porque roda só em CI. Não adicionar TypeScript, bundler, ou preset-env ao build sem justificativa forte de performance.
 - Mudar a estrutura de dados do Firestore sem migration plan
 - Quebrar backward compatibility com sleeps antigos (sem `wakings[]`)
 - Adicionar features que exigem login ou autenticação

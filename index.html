@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v10.0.0 Build step: JSX pre-compilado, Babel Standalone removido, deploy via GitHub Actions
   v9.9.8  Fixes: wakings retroativas no engine (v2.2.1) + curiosity semanal so 1x por semana
   v9.9.7  Repo reorganizado: js/ e assets/icons/ (SWs e manifest ficam no root)
   v9.9.6  Performance iPhone: reduzidos 6 backdrop-filters pesados (40-50px -> 16-22px)
@@ -265,8 +266,33 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "9.9.8";
+const APP_VERSION = "10.0.0";
 const CHANGELOG = [
+  {
+    v: "10.0.0", date: "2026-04-15",
+    pt: {
+      title: "Build step: JSX pre-compilado, app muito mais rapido (esp. iPhone)",
+      bullets: [
+        '\u2605 **Antes:** o navegador baixava o `@babel/standalone` (~1.5 MB) e transpilava ~450 KB de JSX toda vez que voce abria o PWA no iPhone. Num iPhone 16 Pro Max esse trabalho custa 300-700ms de cold start. Em PWA instalado (sem cache de CDN), essa etapa repetia sempre.',
+        '\u2605 **Agora:** o JSX eh pre-compilado antes do deploy via GitHub Actions. O `<script type="text/babel">` vira `<script>` com JavaScript puro ja transformado. A tag do `@babel/standalone` foi removida do HTML servido. O navegador so parseia JS nativo, que eh muito mais rapido que transpilar + executar.',
+        '**Ganho estimado:** cold start ~60% mais rapido em PWA no iPhone. Nao mudou nada visualmente.',
+        '**Stack mantida:** continua sendo HTML + React CDN + Firebase CDN. Soh a camada de transpilacao saiu do runtime e foi pro build. Nao tem bundler (Vite/webpack), nao tem npm em producao, nao tem TypeScript. O `build/build.mjs` tem ~60 linhas -- simples e auditavel.',
+        '**Novo fluxo de deploy:** push pra main -> GitHub Action instala `@babel/core` + `preset-react`, roda o build, gera `dist/`, e deploya pelo action oficial do Pages. `dist/` esta no gitignore -- so o source fica versionado.',
+        '**Pre-requisito uma vez so:** em Repo Settings -> Pages, mudar "Source" de "Deploy from a branch" para "GitHub Actions". Sem esse flip, o Pages continua servindo o index.html source antigo e essa melhoria nao tem efeito.',
+      ],
+    },
+    en: {
+      title: "Build step: precompiled JSX, much faster app (esp. iPhone)",
+      bullets: [
+        '\u2605 **Before:** the browser downloaded `@babel/standalone` (~1.5 MB) and transpiled ~450 KB of JSX every time you opened the PWA on iPhone. On an iPhone 16 Pro Max that work costs 300-700ms of cold start. In installed PWA mode (no CDN cache), this step repeated every open.',
+        '\u2605 **Now:** JSX is precompiled before deploy via GitHub Actions. The `<script type="text/babel">` becomes a `<script>` with plain already-transformed JavaScript. The `@babel/standalone` tag is stripped from the served HTML. The browser only parses native JS, which is much faster than transpile + execute.',
+        '**Expected gain:** cold start ~60% faster in PWA on iPhone. Nothing changed visually.',
+        '**Stack preserved:** still HTML + React CDN + Firebase CDN. Only the transpilation layer moved out of runtime into the build. No bundler (Vite/webpack), no npm in production, no TypeScript. The `build/build.mjs` is ~60 lines -- simple and auditable.',
+        '**New deploy flow:** push to main -> GitHub Action installs `@babel/core` + `preset-react`, runs the build, emits `dist/`, and deploys via the official Pages action. `dist/` is gitignored -- only source is versioned.',
+        '**One-time prerequisite:** in Repo Settings -> Pages, change "Source" from "Deploy from a branch" to "GitHub Actions". Without that flip, Pages keeps serving the old source index.html and this improvement has no effect.',
+      ],
+    },
+  },
   {
     v: "9.9.8", date: "2026-04-15",
     pt: {

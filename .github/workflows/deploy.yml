@@ -1,0 +1,78 @@
+name: Build & Deploy Louise Pro
+
+# Runs on every push to main. Builds the precompiled dist/ and deploys
+# it via GitHub Pages. Before this takes effect, change the repo's
+# Settings -> Pages -> Source from "Deploy from a branch" to
+# "GitHub Actions".
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Only one deploy at a time. Cancel older pending runs if a new push
+# arrives, but let the running one finish so a production deploy isn't
+# aborted mid-flight.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install build deps
+        working-directory: build
+        run: npm install --no-audit --no-fund
+
+      - name: Build dist/
+        run: node build/build.mjs
+
+      - name: Sanity check output
+        run: |
+          test -f dist/index.html
+          test -f dist/manifest.json
+          test -f dist/sw.js
+          test -f dist/firebase-messaging-sw.js
+          test -d dist/js
+          test -d dist/assets
+          # Fail the build if the actual babel CDN <script> tag leaked through.
+          # (Grep matches the src=... URL inside a script tag, not mentions in
+          # text like the CHANGELOG.)
+          if grep -qE '<script[^>]*src="[^"]*@babel/standalone' dist/index.html; then
+            echo "ERROR: @babel/standalone CDN script tag still present in dist/index.html"
+            exit 1
+          fi
+          if grep -q 'type="text/babel"' dist/index.html; then
+            echo "ERROR: <script type=text/babel> not compiled"
+            exit 1
+          fi
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

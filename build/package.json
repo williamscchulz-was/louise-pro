@@ -1,0 +1,12 @@
+{
+  "name": "louise-pro-build",
+  "private": true,
+  "description": "Build tooling for Louise Pro — precompiles inline JSX so the browser does not load @babel/standalone at runtime.",
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "dependencies": {
+    "@babel/core": "^7.24.0",
+    "@babel/preset-react": "^7.24.0"
+  }
+}
