@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v9.9.0  Navegacao estilo Instagram: swipe horizontal entre abas + nav bar minimalista
   v9.8.2  Sheet: drag de qualquer lugar (padrão iOS), botões deixam de travar
   v9.8.1  Fix: delete no live bedtime + evento retroativo vazava pro bedtime errado
   v9.8.0  Notificações editáveis: título e corpo custom por remédio + edit de lembretes
@@ -254,8 +255,41 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "9.8.2";
+const APP_VERSION = "9.9.0";
 const CHANGELOG = [
+  {
+    v: "9.9.0", date: "2026-04-15",
+    pt: {
+      title: "Navegacao estilo Instagram: swipe + nav bar minimalista",
+      bullets: [
+        '\u2605 **App finalmente parece nativo.** Antes, trocar de aba (Home/Stats/History) era lento porque o React **destruia** toda a pagina anterior e **construia** a nova do zero -- com Ring, eventos, charts, tudo recarregando. Agora as 3 paginas ficam **pre-montadas lado a lado** num container largo. Trocar de aba = so um translateX no container = troca **instantanea, 0ms de processamento**.',
+        '**Swipe horizontal de qualquer lugar.** Igual Instagram: arrasta o dedo pro lado em qualquer area da tela (fora dos botoes) e o conteudo segue o dedo em tempo real. Solta passando de 20% da largura -> pula pra proxima aba. Solta antes -> volta. Sensacao fisica, nao mais aquela animacao fixa de 400ms.',
+        '**Threshold de 8px** antes de virar swipe -- toques curtos em botoes seguem funcionando normal. Se o movimento inicial for mais vertical que horizontal, swipe desiste e libera scroll interno (essencial pras listas longas de History e Stats).',
+        '**Resistencia nas bordas (rubber band)** estilo iOS: tentar arrastar antes de Home ou depois de History gera resistencia em vez de mover -- igual quando voce tenta dar scroll antes do topo no Safari.',
+        '**Nav bar nova:** pill compacta no centro, **sem labels** (so icones), **pill de fundo desliza** pro tab ativo em 300ms. Visual mais "Apple/Instagram" e menos poluido. Saiu o efeito de borda e gradiente em cada botao.',
+        '**Profile virou um tab fixo** na nav bar (icone de engrenagem na direita). Continua abrindo como overlay (nao swipavel) porque e fluxo mais raro e tem o estado dirty/save proprio dele.',
+        '**"+" continua flutuante no centro** da nav bar. Abre o sheet (que ja foi melhorado na v9.8.2). Nao participa do swipe.',
+        'Ordem dos tabs (esquerda -> direita): **Home -> Stats -> [+] -> History -> Profile**. Swipe percorre Home <-> Stats <-> History.',
+        'Pages internas (Growth) continuam funcionando como sempre -- saem da estrutura de swipe e usam tela cheia padrao com botao "voltar".',
+        'Sob o capo: zero remount no React durante troca de tabs. O `key={page}` que forcava destruicao foi embora. `will-change: transform` no container avisa o browser pra pre-alocar GPU.'
+      ]
+    },
+    en: {
+      title: "Instagram-style navigation: swipe + minimalist nav bar",
+      bullets: [
+        '\u2605 **App finally feels native.** Before, switching tabs (Home/Stats/History) was slow because React **destroyed** the entire previous page and **built** the new one from scratch -- with Ring, events, charts, all reloading. Now the 3 pages stay **pre-mounted side-by-side** in a wide container. Switching tabs = just a translateX on the container = **instant switch, 0ms processing**.',
+        '**Horizontal swipe from anywhere.** Just like Instagram: drag your finger sideways anywhere on the screen (outside buttons) and content follows the finger in real time. Release past 20% of the width -> jumps to next tab. Release before -> snaps back. Physical feel, not the old fixed 400ms animation.',
+        '**8px threshold** before becoming a swipe -- short button taps keep working as normal. If the initial movement is more vertical than horizontal, swipe gives up and releases scroll (essential for the long lists in History and Stats).',
+        '**Edge resistance (rubber band)** iOS-style: trying to drag before Home or after History generates resistance instead of moving -- just like trying to scroll above the top in Safari.',
+        '**New nav bar:** compact pill at the center, **no labels** (icons only), **sliding background pill** moves to active tab in 300ms. More "Apple/Instagram" and less cluttered. Border and gradient on each button are gone.',
+        '**Profile became a fixed tab** in the nav bar (gear icon on the right). Still opens as an overlay (not swipeable) because it is a rarer flow and has its own dirty/save state.',
+        '**"+" stays floating at the center** of the nav bar. Opens the sheet (which was improved in v9.8.2). Does not participate in swipe.',
+        'Tab order (left -> right): **Home -> Stats -> [+] -> History -> Profile**. Swipe cycles Home <-> Stats <-> History.',
+        'Internal pages (Growth) keep working as before -- they leave the swipe structure and use a standard full screen with a "back" button.',
+        'Under the hood: zero remount in React during tab switches. The `key={page}` that forced destruction is gone. `will-change: transform` on the container tells the browser to pre-allocate GPU.'
+      ]
+    }
+  },
   {
     v: "9.8.2", date: "2026-04-15",
     pt: {
@@ -2858,7 +2892,7 @@ function EntryRow({entry,onDelete,onEdit,napNum,nightBadge}){const cfg=TYPES[ent
   {editVisible&&<div style={{position:"absolute",left:0,top:0,bottom:0,width:Math.abs(dx),background:editPastThreshold?"linear-gradient(90deg,rgba(96,165,250,0.32),rgba(96,165,250,0.18))":"linear-gradient(90deg,rgba(96,165,250,0.18),rgba(96,165,250,0.08))",display:"flex",alignItems:"center",justifyContent:"flex-start",paddingLeft:24,borderRadius:"18px 0 0 18px",opacity:overlayOpacity,transition:dragging?"none":"opacity .2s ease, background .2s ease"}}><div style={{display:"flex",alignItems:"center",gap:8,color:"#7dd3fc"}}><Icon name="pencil" size={20} color="#7dd3fc"/><span style={{fontSize:13,fontWeight:700,letterSpacing:-0.2,opacity:editPastThreshold?1:0,transition:"opacity .15s ease"}}>{_lang==="en"?"Edit":"Editar"}</span></div></div>}
   {/* Delete overlay (right side, revealed when swiping left) */}
   {deleteVisible&&<div style={{position:"absolute",right:0,top:0,bottom:0,width:Math.abs(dx),background:deletePastThreshold?"linear-gradient(270deg,rgba(248,113,113,0.36),rgba(248,113,113,0.2))":"linear-gradient(270deg,rgba(248,113,113,0.2),rgba(248,113,113,0.08))",display:"flex",alignItems:"center",justifyContent:"flex-end",paddingRight:24,borderRadius:"0 18px 18px 0",opacity:overlayOpacity,transition:dragging?"none":"opacity .2s ease, background .2s ease"}}><div style={{display:"flex",alignItems:"center",gap:8,color:T.red}}><span style={{fontSize:13,fontWeight:700,letterSpacing:-0.2,opacity:deletePastThreshold?1:0,transition:"opacity .15s ease"}}>{_lang==="en"?"Delete":"Excluir"}</span><Icon name="trash" size={20} color={T.red}/></div></div>}
-  <div onPointerDown={onPtrDown} onPointerMove={onPtrMove} onPointerUp={onPtrUp} onPointerCancel={onPtrUp} style={{position:"relative",display:"flex",alignItems:"center",gap:14,padding:"16px 18px 16px 22px",background:"rgba(22,28,60,0.65)",borderRadius:18,border:`1px solid ${T.gBSoft}`,boxShadow:T.insetTop,transform:`translateX(${dx}px)`,transition:dragging?"none":"transform .35s cubic-bezier(0.22,1,0.36,1)",overflow:"hidden",touchAction:"pan-y"}}>
+  <div data-no-swipe="1" onPointerDown={onPtrDown} onPointerMove={onPtrMove} onPointerUp={onPtrUp} onPointerCancel={onPtrUp} style={{position:"relative",display:"flex",alignItems:"center",gap:14,padding:"16px 18px 16px 22px",background:"rgba(22,28,60,0.65)",borderRadius:18,border:`1px solid ${T.gBSoft}`,boxShadow:T.insetTop,transform:`translateX(${dx}px)`,transition:dragging?"none":"transform .35s cubic-bezier(0.22,1,0.36,1)",overflow:"hidden",touchAction:"pan-y"}}>
   {/* Colored stripe (replaces borderLeft for proper rendering with overflow+transform) */}
   <div style={{position:"absolute",left:0,top:0,bottom:0,width:4,background:`linear-gradient(180deg,${cfg.color},${cfg.color}50)`,borderRadius:"0 2px 2px 0",pointerEvents:"none"}}/>
   <button onClick={()=>{if(Math.abs(dx)<5)onEdit&&onEdit(entry)}} style={{width:42,height:42,borderRadius:13,background:`linear-gradient(135deg,${cfg.color}28,${cfg.color}0a)`,border:`1px solid ${cfg.color}45`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,boxShadow:"0 1px 0 0 rgba(255,255,255,0.06) inset"}}><Icon name={cfg.icon} size={18} color={cfg.color}/></button>
@@ -4113,6 +4147,14 @@ function App(){
   const[profile,setProfile]=useState({name:"",birthDate:"2026-03-08",photo:"",mlGoal:0});
   const[activeTimer,setActiveTimer]=useState(null);const[loading,setLoading]=useState(true);
   const[page,setPage]=useState("home");const[showAdd,setShowAdd]=useState(false);const[formType,setFormType]=useState(null);const[editEntry,setEditEntry]=useState(null);const[showOrbit,setShowOrbit]=useState(false);
+  // SWIPE NAV state (v9.9.0) — Instagram-style horizontal swipe between Home/Stats/History
+  const SWIPE_PAGES=["home","stats","history"];
+  const pageToIdx=p=>{const i=SWIPE_PAGES.indexOf(p);return i<0?0:i};
+  const idx=pageToIdx(page);
+  const[dragPct,setDragPct]=useState(0);
+  const[dragging,setDragging]=useState(false);
+  const swipeRef=useRef(null);
+  const swipeState=useRef({startX:0,startY:0,active:false,locked:null,sw:0});
   const[showProfile,setShowProfile]=useState(false);const[showSleepInfo,setShowSleepInfo]=useState(false);
   // Profile contextual navbar state — when editing Profile fields, navbar swaps to Save/Cancel
   const[profileIsDirty,setProfileIsDirty]=useState(false);
@@ -4565,6 +4607,54 @@ function App(){
   );
   const goTo=p=>{setPage(p);setShowAdd(false);setFormType(null)};
 
+  // SWIPE gesture handlers — threshold 12px, horizontal dominance required
+  const onSwipePointerDown=e=>{
+    if(e.target.closest("button,input,textarea,select,a,[data-no-swipe]"))return;
+    const sw=swipeRef.current?swipeRef.current.offsetWidth:window.innerWidth;
+    swipeState.current={startX:e.clientX,startY:e.clientY,active:true,locked:null,sw};
+  };
+  const onSwipePointerMove=e=>{
+    const st=swipeState.current;
+    if(!st.active)return;
+    const dx=e.clientX-st.startX;
+    const dy=e.clientY-st.startY;
+    if(st.locked===null){
+      const ax=Math.abs(dx),ay=Math.abs(dy);
+      if(ax<8&&ay<8)return;
+      if(ay>ax){st.locked="v";st.active=false;return}
+      st.locked="h";
+      setDragging(true);
+      try{e.currentTarget.setPointerCapture(e.pointerId)}catch(_){}
+    }
+    if(st.locked==="h"){
+      let pct=(dx/st.sw)*100;
+      // Resist at edges (iOS-style rubber band)
+      if(idx===0&&pct>0)pct=pct*0.35;
+      else if(idx===SWIPE_PAGES.length-1&&pct<0)pct=pct*0.35;
+      setDragPct(pct);
+      e.preventDefault();
+    }
+  };
+  const onSwipePointerUp=e=>{
+    const st=swipeState.current;
+    if(!st.active&&st.locked!=="h"){swipeState.current={startX:0,startY:0,active:false,locked:null,sw:0};return}
+    if(st.locked==="h"){
+      const dx=e.clientX-st.startX;
+      const threshold=Math.min(st.sw*0.2,80); // 20% of width or 80px, whichever smaller
+      if(dx<-threshold&&idx<SWIPE_PAGES.length-1){
+        setPage(SWIPE_PAGES[idx+1]);
+        setShowAdd(false);
+      }else if(dx>threshold&&idx>0){
+        setPage(SWIPE_PAGES[idx-1]);
+        setShowAdd(false);
+      }
+      setDragPct(0);
+      setDragging(false);
+      try{e.currentTarget.releasePointerCapture(e.pointerId)}catch(_){}
+    }
+    swipeState.current={startX:0,startY:0,active:false,locked:null,sw:0};
+  };
+
   return(<div style={{background:`radial-gradient(ellipse at 50% 0%,#10153d 0%,${T.bg1} 65%)`,height:"100%",overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch",overscrollBehavior:"none",color:T.text,maxWidth:480,margin:"0 auto",position:"relative"}}>
     {/* Starfield */}
     <div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:0}}>
@@ -4578,8 +4668,23 @@ function App(){
     </div>
     {toast&&<Toast message={toast} onUndo={undoRef.current?handleUndo:null} onClose={()=>setToast(null)}/>}
     <div style={{position:"relative",zIndex:1}}>
-      <div key={page} style={{animation:"pageSwitch .4s cubic-bezier(0.22,1,0.36,1) both"}}>
-      {page==="home"&&<div>
+      {/* SWIPE CONTAINER (v9.9.0) — 3 pages pre-mounted side-by-side, translateX follows finger */}
+      {page!=="growth"?<div style={{overflow:"hidden",width:"100%",touchAction:"pan-y"}}>
+        <div
+          ref={swipeRef}
+          onPointerDown={onSwipePointerDown}
+          onPointerMove={onSwipePointerMove}
+          onPointerUp={onSwipePointerUp}
+          onPointerCancel={onSwipePointerUp}
+          style={{
+            display:"flex",
+            width:"300%",
+            transform:`translateX(${(-idx*100/3)+(dragPct/3)}%)`,
+            transition:dragging?"none":"transform .32s cubic-bezier(0.22,1,0.36,1)",
+            willChange:"transform"
+          }}>
+          <div style={{width:`${100/3}%`,flexShrink:0,minWidth:0}}>
+      {<div>
         <div style={{padding:"calc(12px + env(safe-area-inset-top)) 20px 0",display:"flex",alignItems:"center",gap:12}}>
           <div style={{position:"relative"}}><button onClick={()=>setShowProfile(true)} style={{width:52,height:52,borderRadius:16,overflow:"hidden",border:`1.5px solid ${T.accent}20`,background:T.glass,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 2px 12px rgba(0,0,0,0.3)"}}>{profile.photo?<img src={profile.photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<Icon name="sun" size={22} color={T.sub}/>}</button>{daysLeft!==null&&daysLeft>0&&<button onClick={()=>setShowSleepInfo(true)} style={{position:"absolute",top:-5,right:-8,minWidth:24,height:24,borderRadius:12,background:`linear-gradient(135deg,${T.accent},#a78bfa)`,color:"#fff",fontSize:10,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 5px",boxShadow:`0 2px 8px ${T.accent}55`,border:`2px solid ${T.bg1}`}}>{daysLeft}</button>}{sleepRec?.phase===2&&<button onClick={()=>setShowSleepInfo(true)} style={{position:"absolute",top:-2,right:-6,width:20,height:20,borderRadius:10,background:T.green,display:"flex",alignItems:"center",justifyContent:"center",border:`2px solid ${T.bg1}`}}><Icon name="check" size={10} color={T.bg1}/></button>}</div>
           <div style={{flex:1}}><h1 style={{fontSize:17,fontWeight:800,margin:0,letterSpacing:-0.3}}>{babyName}</h1><div style={{display:"flex",alignItems:"center",gap:6,marginTop:3}}><span style={{fontSize:10,color:T.accent,fontWeight:600}}>{age&&<>{age.months>0?`${age.months} ${_lang==="en"?(age.months===1?"month":"months"):(age.months===1?"mês":"meses")}${_lang==="en"?" and ":" e "}`:""}{age.days} {_lang==="en"?"days":"dias"}</>}</span><span style={{width:3,height:3,borderRadius:"50%",background:T.dim}}/><span style={{fontSize:10,color:T.dim}}>{new Date().toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{day:"numeric",month:"short"})}</span></div></div>
@@ -4610,10 +4715,17 @@ function App(){
           return true;
         }).map((e,i,arr)=>{const prev=arr[i-1];let gap=null;if(prev){const t1=new Date(`${e.date}T${e.time}`).getTime();let t2=new Date(`${prev.date}T${prev.time}`).getTime();if(prev.durationMin)t2+=prev.durationMin*60000;const diffMin=Math.abs(Math.round((t1-t2)/60000));if(diffMin>=30){const isSleep=(e.type==="nap"||e.type==="sleep")&&e.durationMin;gap=<div style={{display:"flex",alignItems:"center",gap:10,padding:"4px 16px",margin:"2px 0"}}><div style={{flex:1,height:1,background:`linear-gradient(90deg,transparent,${isSleep?T.accent:T.accent}0a,transparent)`}}/><span style={{fontSize:8,color:isSleep?T.accent:T.dim,letterSpacing:0.5}}>{isSleep?"WW ":""}{fmtDur(diffMin)}</span><div style={{flex:1,height:1,background:`linear-gradient(90deg,transparent,${isSleep?T.accent:T.accent}0a,transparent)`}}/></div>}}const useBlock=e.type==="sleep"&&e.wakings&&e.wakings.length>0;return<React.Fragment key={e.id}>{gap}{useBlock?<SleepBlock entry={e} onDelete={deleteEntry} onEdit={startEdit} entries={entries} activeTimer={activeTimer} onSaveTimer={FB.saveTimer} onSaveEntry={FB.addEntry}/>:<EntryRow entry={e} onDelete={deleteEntry} onEdit={startEdit} napNum={napNums[e.id]||null}/>}</React.Fragment>})}</div>
       </div>}
-      {page==="history"&&<HistoryPage entries={entries} onDelete={deleteEntry} onEdit={startEdit} activeTimer={activeTimer}/>}
-      {page==="stats"&&<StatsPage entries={entries} onGrowth={()=>goTo("growth")}/>}
-      {page==="growth"&&<GrowthPage entries={entries} birthDate={profile.birthDate} profile={profile} onBack={()=>goTo("stats")} onAddEntry={addEntry} onDeleteEntry={deleteEntry}/>}
       </div>
+          <div style={{width:`${100/3}%`,flexShrink:0,minWidth:0}}>
+            {idx>=0&&<StatsPage entries={entries} onGrowth={()=>goTo("growth")}/>}
+          </div>
+          <div style={{width:`${100/3}%`,flexShrink:0,minWidth:0}}>
+            {idx>=0&&<HistoryPage entries={entries} onDelete={deleteEntry} onEdit={startEdit} activeTimer={activeTimer}/>}
+          </div>
+        </div>
+      </div>:<div>
+        <GrowthPage entries={entries} birthDate={profile.birthDate} profile={profile} onBack={()=>goTo("stats")} onAddEntry={addEntry} onDeleteEntry={deleteEntry}/>
+      </div>}
       {/* Bottom spacer so content clears nav bar */}
       <div style={{height:activeTimer?160:90}}/>
     </div>
@@ -4695,11 +4807,48 @@ function App(){
         <Icon name="home" size={20} color="#c4b5fd"/>
       </button>
       </div>}
-    </nav>:<nav style={{position:"fixed",bottom:"6px",left:"50%",transform:"translateX(-50%)",display:"flex",alignItems:"center",gap:4,padding:"9px 14px",background:"linear-gradient(180deg,rgba(14,18,48,0.94),rgba(8,10,28,0.96))",backdropFilter:"blur(30px)",WebkitBackdropFilter:"blur(30px)",borderRadius:44,border:"1px solid rgba(255,255,255,0.06)",boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset, 0 0 0 1px rgba(255,255,255,0.02), 0 8px 32px -4px rgba(0,0,0,0.7), 0 0 60px -20px rgba(139,124,246,0.25)",zIndex:50}}>
-      {[{icon:"home",label:"HOME",active:page==="home"&&!showAdd,action:()=>goTo("home")},{icon:"clock",label:_lang==="en"?"HISTORY":"HIST.",active:page==="history",action:()=>goTo("history")}].map(n=><button key={n.icon} onClick={n.action} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3,padding:"9px 16px",borderRadius:18,background:n.active?"linear-gradient(180deg,rgba(139,124,246,0.22),rgba(139,124,246,0.08))":"transparent",border:n.active?"1px solid rgba(139,124,246,0.28)":"1px solid transparent",boxShadow:n.active?"0 1px 0 0 rgba(255,255,255,0.1) inset, 0 0 0 1px rgba(139,124,246,0.1), 0 4px 12px -4px rgba(139,124,246,0.4)":"none",transition:"all .2s"}}><Icon name={n.icon} size={20} color={n.active?"#c4b5fd":T.dim}/>{n.active&&<span style={{fontSize:9,fontWeight:700,color:"#c4b5fd",letterSpacing:0.3}}>{n.label}</span>}</button>)}
-      <button onClick={()=>{setShowAdd(!showAdd);setFormType(null);setPage("home")}} style={{width:54,height:54,borderRadius:"50%",background:`linear-gradient(180deg,#9b8df8,#7c3aed)`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 1px 0 0 rgba(255,255,255,0.25) inset, 0 0 0 1px rgba(255,255,255,0.08), 0 8px 24px -4px ${T.accent}80, 0 0 0 4px rgba(139,124,246,0.08)`,transition:"transform .2s cubic-bezier(0.34,1.56,0.64,1)",transform:showAdd?"rotate(45deg) scale(1.05)":"scale(1)",margin:"-6px 4px"}}><Icon name="plus" size={26} color="#fff"/></button>
-      {[{icon:"chart",label:"STATS",active:page==="stats"||page==="growth",action:()=>goTo("stats")},{icon:"gear",label:_lang==="en"?"SETTINGS":"CONFIG",active:false,action:()=>setShowProfile(true)}].map(n=><button key={n.icon} onClick={n.action} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3,padding:"9px 16px",borderRadius:18,background:n.active?"linear-gradient(180deg,rgba(139,124,246,0.22),rgba(139,124,246,0.08))":"transparent",border:n.active?"1px solid rgba(139,124,246,0.28)":"1px solid transparent",boxShadow:n.active?"0 1px 0 0 rgba(255,255,255,0.1) inset, 0 0 0 1px rgba(139,124,246,0.1), 0 4px 12px -4px rgba(139,124,246,0.4)":"none",transition:"all .2s"}}><Icon name={n.icon} size={20} color={n.active?"#c4b5fd":T.dim}/>{n.active&&<span style={{fontSize:9,fontWeight:700,color:"#c4b5fd",letterSpacing:0.3}}>{n.label}</span>}</button>)}
-    </nav>}
+    </nav>:(()=>{
+      // NEW NAV BAR (v9.9.0) — minimalist, icon-only, sliding pill background
+      // Tab layout: [Home] [Stats] [+] [History] [Profile]
+      // Active tab index (0-4): home=0, stats=1, plus=(never active), history=3, profile(showProfile)=4
+      const TAB_W=44,TAB_H=40,PAD=6;
+      let activeSlot=-1;
+      if(showProfile)activeSlot=4;
+      else if(page==="home"&&!showAdd)activeSlot=0;
+      else if(page==="stats"||page==="growth")activeSlot=1;
+      else if(page==="history")activeSlot=3;
+      return <nav style={{position:"fixed",bottom:"calc(8px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",display:"flex",alignItems:"center",padding:PAD+"px "+PAD+"px",background:"rgba(14,18,48,0.62)",backdropFilter:"blur(30px) saturate(160%)",WebkitBackdropFilter:"blur(30px) saturate(160%)",borderRadius:26,border:"1px solid rgba(255,255,255,0.06)",boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset, 0 8px 28px -6px rgba(0,0,0,0.65), 0 0 40px -12px rgba(139,124,246,0.28)",zIndex:50}}>
+        {/* Sliding pill — hidden when no swipe page is active (e.g. during showAdd) */}
+        {activeSlot>=0&&<div style={{position:"absolute",top:PAD,left:PAD+activeSlot*TAB_W,width:TAB_W,height:TAB_H,borderRadius:14,background:"linear-gradient(180deg,rgba(139,124,246,0.26),rgba(139,124,246,0.10))",boxShadow:"0 1px 0 0 rgba(255,255,255,0.12) inset",transition:"left .3s cubic-bezier(0.22,1,0.36,1)",pointerEvents:"none",zIndex:0}}/>}
+
+        {/* Tab 0: HOME */}
+        <button onClick={()=>goTo("home")} style={{width:TAB_W,height:TAB_H,display:"flex",alignItems:"center",justifyContent:"center",background:"transparent",border:"none",borderRadius:14,cursor:"pointer",padding:0,position:"relative",zIndex:1,transition:"transform .1s"}}>
+          <Icon name="home" size={20} color={activeSlot===0?"#c4b5fd":T.dim}/>
+        </button>
+
+        {/* Tab 1: STATS */}
+        <button onClick={()=>goTo("stats")} style={{width:TAB_W,height:TAB_H,display:"flex",alignItems:"center",justifyContent:"center",background:"transparent",border:"none",borderRadius:14,cursor:"pointer",padding:0,position:"relative",zIndex:1,transition:"transform .1s"}}>
+          <Icon name="chart" size={20} color={activeSlot===1?"#c4b5fd":T.dim}/>
+        </button>
+
+        {/* Tab 2: PLUS (floating, always center) */}
+        <button onClick={()=>{setShowAdd(!showAdd);setFormType(null);setPage("home")}} style={{width:TAB_W,height:TAB_H,display:"flex",alignItems:"center",justifyContent:"center",background:"transparent",border:"none",cursor:"pointer",padding:0,position:"relative",zIndex:1}}>
+          <div style={{width:44,height:44,borderRadius:"50%",background:"linear-gradient(180deg,#9b8df8,#7c3aed)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 1px 0 0 rgba(255,255,255,0.25) inset, 0 6px 18px -4px rgba(139,124,246,0.65)",transition:"transform .2s cubic-bezier(0.34,1.56,0.64,1)",transform:showAdd?"rotate(45deg) scale(1.05)":"scale(1)"}}>
+            <Icon name="plus" size={22} color="#fff"/>
+          </div>
+        </button>
+
+        {/* Tab 3: HISTORY */}
+        <button onClick={()=>goTo("history")} style={{width:TAB_W,height:TAB_H,display:"flex",alignItems:"center",justifyContent:"center",background:"transparent",border:"none",borderRadius:14,cursor:"pointer",padding:0,position:"relative",zIndex:1,transition:"transform .1s"}}>
+          <Icon name="clock" size={20} color={activeSlot===3?"#c4b5fd":T.dim}/>
+        </button>
+
+        {/* Tab 4: PROFILE */}
+        <button onClick={()=>setShowProfile(true)} style={{width:TAB_W,height:TAB_H,display:"flex",alignItems:"center",justifyContent:"center",background:"transparent",border:"none",borderRadius:14,cursor:"pointer",padding:0,position:"relative",zIndex:1,transition:"transform .1s"}}>
+          <Icon name="gear" size={20} color={activeSlot===4?"#c4b5fd":T.dim}/>
+        </button>
+      </nav>;
+    })()}
   </div>);
 }
 
