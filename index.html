@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v9.8.4  Hotfix: routine-engine.js blindado contra corrupcao de editor (ASCII puro no source)
   v9.8.3  Hints de despertares consolidados em um so (fim dos hints conflitantes na inbox)
   v9.8.2  Sheet: drag de qualquer lugar (padrão iOS), botões deixam de travar
   v9.8.1  Fix: delete no live bedtime + evento retroativo vazava pro bedtime errado
@@ -255,8 +256,31 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "9.8.3";
+const APP_VERSION = "9.8.4";
 const CHANGELOG = [
+  {
+    v: "9.8.4", date: "2026-04-15",
+    pt: {
+      title: "Hotfix: engine blindado contra corrupcao de editor",
+      bullets: [
+        '★ **Bug critico na v9.8.3.** O arquivo `routine-engine.js` servido no GitHub Pages ficou com um caractere de aspas curvas (`\u201c`) onde deveriam ser aspas retas, causando `SyntaxError` no Safari iOS e deixando o app com a tela de erro vermelha logo ao abrir. A causa mais provavel foi algum editor de texto aplicando "auto-correct" em aspas durante o upload manual.',
+        '**Fix:** todo o source do `routine-engine.js` foi reescrito em **ASCII puro**. Simbolos Unicode que aparecem no texto visivel (setas de tendencia ↑↓ e ponto separador ·) agora estao escapados no codigo como `\\u2191`, `\\u2193`, `\\u00b7` — no runtime continuam aparecendo normalmente, mas no arquivo source **nao existe nenhum caractere nao-ASCII**. Qualquer editor pode abrir o arquivo sem risco de auto-correct estragar.',
+        'Comentarios e banner do topo do engine tambem foram convertidos: em-dashes (—) viraram hifens duplos (--), caixa de box-drawing (╔═╗║╚╝) virou ASCII (=|-), acentos em portugues dentro de comentarios sumiram (so em comentarios — strings exibidas preservam acentuacao normalmente).',
+        'Nenhuma mudanca funcional nessa versao — so de formato do arquivo. O comportamento do engine e identico a v9.8.3.',
+        '**Recomendacao pro futuro:** ao fazer upload de arquivos no GitHub, usar o drag-and-drop direto na interface web. Nao abrir o arquivo em editores que possam aplicar auto-correct (Notes do macOS, TextEdit com smart quotes, Word, Pages). Se abrir em editor, usar VS Code ou editor code-aware que nao mexe em aspas.'
+      ]
+    },
+    en: {
+      title: "Hotfix: engine hardened against editor corruption",
+      bullets: [
+        '★ **Critical bug in v9.8.3.** The `routine-engine.js` file served on GitHub Pages ended up with a curly quote character (`\u201c`) where straight quotes should be, causing a `SyntaxError` on Safari iOS and leaving the app stuck on the red error screen right when opened. Most likely cause: some text editor applied "auto-correct" on quotes during manual upload.',
+        '**Fix:** the entire `routine-engine.js` source has been rewritten in **pure ASCII**. Unicode symbols that appear in user-visible text (trend arrows ↑↓ and separator dot ·) are now escaped in code as `\\u2191`, `\\u2193`, `\\u00b7` — at runtime they still appear normally, but in the source file there is **no non-ASCII character at all**. Any editor can open the file without risk of auto-correct messing it up.',
+        'Engine comments and the banner at the top were also converted: em-dashes (—) became double hyphens (--), box-drawing characters (╔═╗║╚╝) became ASCII (=|-), Portuguese accents in comments gone (comments only — displayed strings keep their accents normally).',
+        'No functional change in this version — just file format. Engine behavior is identical to v9.8.3.',
+        '**Recommendation going forward:** when uploading files to GitHub, use the web interface drag-and-drop directly. Avoid opening files in editors that may apply auto-correct (macOS Notes, TextEdit with smart quotes, Word, Pages). If opening in an editor, use VS Code or a code-aware editor that does not touch quotes.'
+      ]
+    }
+  },
   {
     v: "9.8.3", date: "2026-04-15",
     pt: {
