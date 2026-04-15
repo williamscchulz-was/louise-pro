@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v9.8.2  Sheet: drag de qualquer lugar (padrão iOS), botões deixam de travar
   v9.8.1  Fix: delete no live bedtime + evento retroativo vazava pro bedtime errado
   v9.8.0  Notificações editáveis: título e corpo custom por remédio + edit de lembretes
   v9.7.0  Crescimento: form unificado (data + 3 campos), virgula ok, merge por data, edit em antigas
@@ -253,8 +254,35 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "9.8.1";
+const APP_VERSION = "9.8.2";
 const CHANGELOG = [
+  {
+    v: "9.8.2", date: "2026-04-15",
+    pt: {
+      title: "Sheet: drag de qualquer lugar + botões param de travar",
+      bullets: [
+        '★ **Puxar pra baixo agora funciona de qualquer lugar da sheet.** Antes o drag só respondia tocando exatamente em cima dos tracinhos do topo (~38px de área). Agora dá pra começar o gesto em qualquer ponto — igual iPhone nativo, Apple Music, Health, etc.',
+        '★ **Botões deixam de travar.** Antes o drag handler capturava o pointer imediatamente no touch-down, então um toque feito no topo da sheet era "roubado" e o botão não recebia o clique. Resultado: botão parecia que travou. Agora o drag só captura o pointer depois de cruzar o limiar de 8px — toques curtos clicam normalmente.',
+        '**Padrão iOS de gesture recognizer.** Implementado com threshold + commit explícito: enquanto o dedo se move menos de 8px, nada acontece (clique funciona); passou de 8px pra baixo, aí sim vira drag e a sheet acompanha o dedo.',
+        '**Movimento pra cima ignorado.** Se o dedo começa subindo, o drag é descartado de cara (não tem como "rasgar" a sheet pra cima).',
+        '**Scroll interno preservado.** Se a sheet tem conteúdo rolável e o `scrollTop > 0`, drag é cancelado — scroll ganha prioridade. Só quando tá no topo da sheet que drag pra baixo a fecha.',
+        'Threshold (8px), dismissal (28% da altura ou velocidade > 0.55px/ms) e animação de snap de volta preservados da v9.6.0.',
+        'Aplicado no componente `Sheet` genérico — cobre o sheet do "+" no Home, o sheet do AddForm e qualquer outro que use esse componente.'
+      ]
+    },
+    en: {
+      title: "Sheet: drag from anywhere + buttons stop freezing",
+      bullets: [
+        '★ **Swipe-down now works from anywhere on the sheet.** Before, drag only responded when touching exactly on the handle bar (~38px area). Now the gesture can start from any point — like native iPhone, Apple Music, Health, etc.',
+        '★ **Buttons stop freezing.** Before, the drag handler captured the pointer immediately on touch-down, so a tap at the top of the sheet was "stolen" and the button never received the click. Result: button looked frozen. Now drag only captures the pointer after crossing the 8px threshold — short taps click normally.',
+        '**iOS-style gesture recognizer.** Implemented with threshold + explicit commit: while the finger moves less than 8px, nothing happens (tap works); past 8px downward, drag takes over and the sheet follows the finger.',
+        '**Upward motion ignored.** If the finger starts moving up, drag is dismissed immediately (can\'t "tear" the sheet upward).',
+        '**Internal scroll preserved.** If the sheet has scrollable content and `scrollTop > 0`, drag is cancelled — scroll wins. Only when at the top does swipe-down close the sheet.',
+        'Threshold (8px), dismissal (28% of height or velocity > 0.55px/ms) and snap-back animation preserved from v9.6.0.',
+        'Applied to the generic `Sheet` component — covers the "+" sheet on Home, the AddForm sheet, and any other that uses the component.'
+      ]
+    }
+  },
   {
     v: "9.8.1", date: "2026-04-13",
     pt: {
@@ -2384,38 +2412,81 @@ function Toast({message,onUndo,onClose}){const closeRef=useRef(onClose);closeRef
 function Sheet({open,onClose,children}){
   const[vis,setVis]=useState(false),[show,setShow]=useState(false);
   const sheetRef=useRef(null);
-  const dragRef=useRef({active:false,startY:0,lastY:0,lastT:0,velocity:0});
+  // Drag state:
+  //   active: pointer is down
+  //   started: true once we crossed the drag threshold (only then we capture and prevent scroll)
+  //   rejected: true if we decided this gesture is a tap/click/upward drag (ignore until pointerup)
+  const dragRef=useRef({active:false,started:false,rejected:false,startY:0,lastY:0,lastT:0,velocity:0,pointerId:null});
   const[dragY,setDragY]=useState(0);
   const[isDragging,setIsDragging]=useState(false);
+  const DRAG_THRESHOLD=8; // px — movement needed before treating as drag
   useEffect(()=>{
     if(open){setVis(true);setDragY(0);setIsDragging(false);requestAnimationFrame(()=>requestAnimationFrame(()=>setShow(true)))}
     else{setShow(false);const t=setTimeout(()=>{setVis(false);setDragY(0)},350);return()=>clearTimeout(t)}
   },[open]);
   const onPtrDown=(e)=>{
-    if(sheetRef.current&&sheetRef.current.scrollTop>0)return;
-    dragRef.current={active:true,startY:e.clientY,lastY:e.clientY,lastT:performance.now(),velocity:0};
-    setIsDragging(true);
-    try{e.currentTarget.setPointerCapture(e.pointerId)}catch(_){}
+    // Only primary pointer
+    if(!e.isPrimary)return;
+    dragRef.current={active:true,started:false,rejected:false,startY:e.clientY,lastY:e.clientY,lastT:performance.now(),velocity:0,pointerId:e.pointerId};
+    // Do NOT setPointerCapture here — we only capture once we cross the threshold.
+    // This way, taps on children (buttons) work normally.
   };
   const onPtrMove=(e)=>{
-    if(!dragRef.current.active)return;
+    const d=dragRef.current;
+    if(!d.active||d.rejected)return;
+    if(e.pointerId!==d.pointerId)return;
     const now=performance.now();
-    const dt=now-dragRef.current.lastT;
-    const dy=e.clientY-dragRef.current.lastY;
-    if(dt>0)dragRef.current.velocity=dy/dt;
-    dragRef.current.lastY=e.clientY;
-    dragRef.current.lastT=now;
-    let diff=e.clientY-dragRef.current.startY;
-    if(diff<0)diff=Math.max(-20,diff/4);
-    setDragY(diff);
+    const dt=now-d.lastT;
+    const dy=e.clientY-d.lastY;
+    if(dt>0)d.velocity=dy/dt;
+    d.lastY=e.clientY;
+    d.lastT=now;
+    const total=e.clientY-d.startY;
+    if(!d.started){
+      // Haven't crossed threshold yet — decide what this gesture is
+      if(total<-DRAG_THRESHOLD){
+        // Upward movement — not our gesture, give up
+        d.rejected=true;
+        return;
+      }
+      if(total<DRAG_THRESHOLD){
+        // Still below threshold — wait, don't interfere
+        return;
+      }
+      // Crossing threshold downward — but first check if sheet is scrolled.
+      // If the user scrolled down inside the sheet and is now scrolling back up,
+      // scrollTop > 0 means the sheet's own scroll should keep the gesture.
+      if(sheetRef.current&&sheetRef.current.scrollTop>0){
+        d.rejected=true;
+        return;
+      }
+      // Commit to drag — capture pointer and start visual follow
+      d.started=true;
+      setIsDragging(true);
+      try{e.currentTarget.setPointerCapture(d.pointerId)}catch(_){}
+    }
+    // In drag mode — prevent scroll, follow finger
+    if(d.started){
+      if(e.cancelable)e.preventDefault();
+      let diff=total-DRAG_THRESHOLD; // remove the threshold slack so there's no jump
+      if(diff<0)diff=0;
+      setDragY(diff);
+    }
   };
-  const onPtrUp=()=>{
-    if(!dragRef.current.active)return;
+  const onPtrUp=(e)=>{
+    const d=dragRef.current;
+    if(!d.active)return;
+    if(e&&e.pointerId!==undefined&&e.pointerId!==d.pointerId)return;
+    const wasStarted=d.started;
     const distance=dragY;
-    const velocity=dragRef.current.velocity;
-    dragRef.current.active=false;
-    const h=sheetRef.current?.offsetHeight||500;
+    const velocity=d.velocity;
+    d.active=false;d.started=false;d.rejected=false;d.pointerId=null;
+    if(!wasStarted){
+      // Gesture never became a drag — it was a tap or rejected. Do nothing, let click propagate.
+      return;
+    }
     setIsDragging(false);
+    const h=sheetRef.current?.offsetHeight||500;
     if(distance>h*0.28||velocity>0.55){Haptic.light();onClose()}
     else{setDragY(0)}
   };
@@ -2427,8 +2498,8 @@ function Sheet({open,onClose,children}){
   const backdropTransition=isDragging?"none":"opacity .35s";
   return(<div style={{position:"fixed",inset:0,zIndex:100}} onClick={onClose}>
     <div style={{position:"absolute",inset:0,background:"rgba(2,3,10,0.55)",backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",opacity:backdropOpacity,transition:backdropTransition}}/>
-    <div ref={sheetRef} onClick={e=>e.stopPropagation()} style={{position:"absolute",bottom:0,left:0,right:0,maxWidth:480,margin:"0 auto",background:"linear-gradient(180deg,rgba(14,18,52,0.88),rgba(10,14,40,0.82))",backdropFilter:"blur(50px)",WebkitBackdropFilter:"blur(50px)",borderRadius:"32px 32px 0 0",border:"1px solid rgba(255,255,255,0.08)",borderBottom:"none",boxShadow:"0 1px 0 0 rgba(255,255,255,0.1) inset, 0 -12px 50px rgba(0,0,0,0.5), 0 0 80px -20px rgba(139,124,246,0.15)",padding:"0 0 calc(36px + env(safe-area-inset-bottom))",transform:sheetTransform,transition:sheetTransition,maxHeight:"78vh",overflowY:"auto",willChange:"transform"}}>
-      <div onPointerDown={onPtrDown} onPointerMove={onPtrMove} onPointerUp={onPtrUp} onPointerCancel={onPtrUp} style={{padding:"10px 0 28px",touchAction:"none",cursor:"grab"}}>
+    <div ref={sheetRef} onClick={e=>e.stopPropagation()} onPointerDown={onPtrDown} onPointerMove={onPtrMove} onPointerUp={onPtrUp} onPointerCancel={onPtrUp} style={{position:"absolute",bottom:0,left:0,right:0,maxWidth:480,margin:"0 auto",background:"linear-gradient(180deg,rgba(14,18,52,0.88),rgba(10,14,40,0.82))",backdropFilter:"blur(50px)",WebkitBackdropFilter:"blur(50px)",borderRadius:"32px 32px 0 0",border:"1px solid rgba(255,255,255,0.08)",borderBottom:"none",boxShadow:"0 1px 0 0 rgba(255,255,255,0.1) inset, 0 -12px 50px rgba(0,0,0,0.5), 0 0 80px -20px rgba(139,124,246,0.15)",padding:"0 0 calc(36px + env(safe-area-inset-bottom))",transform:sheetTransform,transition:sheetTransition,maxHeight:"78vh",overflowY:"auto",willChange:"transform",touchAction:"pan-y"}}>
+      <div style={{padding:"10px 0 28px",cursor:"grab"}}>
         <div style={{width:44,height:5,borderRadius:3,background:"rgba(140,150,255,0.28)",margin:"0 auto"}}/>
       </div>
       {children}
