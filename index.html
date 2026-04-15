@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v9.9.5  Inbox: hints de despertares consolidados em 1 card (routine-engine v2.2.0)
   v9.9.4  Nav minimalista (pill fina, sem labels) + tap feedback + fix overlay do "+"
   v9.9.3  Teste de workflow Claude Code (bump vazio)
   v9.9.2  Swipe horizontal entre Home/Stats/History (passo 1 da nav redesign)
@@ -261,8 +262,33 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "9.9.4";
+const APP_VERSION = "9.9.5";
 const CHANGELOG = [
+  {
+    v: "9.9.5", date: "2026-04-15",
+    pt: {
+      title: "Inbox mais limpa: hints de despertares em 1 card so",
+      bullets: [
+        '\u2605 **Antes uma manha com dados de despertares podia gerar 4-5 hints diferentes na inbox** -- "Media 1.3 despertares/noite", "Padrao de horario detectado", "Motivo dos despertares", "Mais despertares ultimamente" -- criando sensacao de redundancia e ate contradicao visual.',
+        '**Agora ha 1 hint composto unico:** titulo **"Padrao das noites (N noites)"** e uma linha que agrega media + horario mais comum + motivo mais comum + tendencia (ex: *"Media 1.3 despertares/noite, mais frequente ~04:15, geralmente mamadas (67%) \u00b7 \u2191 mais que a semana passada"*). Leitura de 1 glance em vez de 4.',
+        '**"Dormindo a noite toda" continua como hint separado** -- eh marco positivo (bebe 4+ meses com 0 despertares em 3+ noites) e merece o destaque proprio, nao perde a identidade.',
+        '**Hint sobe pra `warn` (vermelho/laranja)** quando media \u2265 3 despertares/noite E tendencia piorando -- combo que realmente merece atencao. Senao, fica `info` (neutro).',
+        'Protecao contra falso-positivo de STTN em recem-nascidos (< 16 semanas) mantida: nessa idade, 0 despertares significa que nao registrou, nao que dormiu a noite toda.',
+        '**Mudanca so no `routine-engine.js` (v2.1.0 -> v2.2.0).** API publica do engine (`getDayInsights`, `detectPattern`) nao mudou. Resto do app nao foi tocado.',
+      ],
+    },
+    en: {
+      title: "Cleaner inbox: wakings hints consolidated into 1 card",
+      bullets: [
+        '\u2605 **Before, a morning with wakings data could generate 4-5 separate hints** -- "Avg 1.3 wakings/night", "Waking pattern detected", "Waking cause pattern", "More wakings lately" -- creating a feeling of redundancy and even visual contradiction.',
+        '**Now there is 1 single composite hint:** title **"Night pattern (N nights)"** and a line aggregating avg + most common time + most common cause + trend (e.g. *"Avg 1.3 wakings/night, usually around 04:15, mostly feeds (67%) \u00b7 \u2191 more than last week"*). 1-glance readability instead of 4.',
+        '**"Sleeping through the night" stays as a separate hint** -- it is a positive milestone (4+ month baby with 0 wakings over 3+ nights) and deserves its own spotlight, not blended in.',
+        '**Hint escalates to `warn` (red/orange)** when avg \u2265 3 wakings/night AND trend is worsening -- the combo that actually deserves attention. Otherwise stays `info` (neutral).',
+        'False-positive STTN protection for newborns (< 16 weeks) kept: at that age, 0 wakings means "not tracked", not "slept through".',
+        '**Change is in `routine-engine.js` only (v2.1.0 -> v2.2.0).** Engine public API (`getDayInsights`, `detectPattern`) unchanged. Rest of the app was not touched.',
+      ],
+    },
+  },
   {
     v: "9.9.4", date: "2026-04-15",
     pt: {
