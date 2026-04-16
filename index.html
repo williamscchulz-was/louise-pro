@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v10.1.5 FIX: height 100% -> 100dvh no html/body/root (iOS PWA viewport estendido)
   v10.1.4 FIX: nav em React Portal fora do scroll container (bug iOS PWA position:fixed)
   v10.1.3 Nav colada no bottom de verdade: ignora safe-area (igual Instagram)
   v10.1.2 Fix: SW network-first em HTML + auto-reload ao detectar deploy novo (nunca mais stale)
@@ -119,10 +120,10 @@
 
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
-    html,body{height:100%;overflow:hidden;overscroll-behavior:none;background:#070b1e}
+    html,body{height:100vh;height:100dvh;overflow:hidden;overscroll-behavior:none;background:#070b1e}
     body{font-family:'Outfit',sans-serif;
       -webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
-    #root{height:100%;overflow:hidden}
+    #root{height:100vh;height:100dvh;overflow:hidden}
     button{cursor:pointer;border:none;background:none;color:inherit;font-family:inherit}
     input,textarea{font-family:inherit;-webkit-user-select:text;user-select:text}
     input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-outer-spin-button{-webkit-appearance:none}
@@ -316,8 +317,27 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "10.1.4";
+const APP_VERSION = "10.1.5";
 const CHANGELOG = [
+  {
+    v: "10.1.5", date: "2026-04-16",
+    pt: {
+      title: "FIX: altura viewport estendida no iPhone PWA (100dvh)",
+      bullets: [
+        '\u2605 **Continuando o fix do bottom**: v10.1.4 resolveu o bug do overflow (position:fixed dentro de scroll container), mas ainda sobrava ~80px de cosmos vazio abaixo da nav no iPhone PWA. Causa: `html,body,#root { height: 100% }` -- em iOS PWA standalone isso calcula como a altura DISPONIVEL (descontando area de barra inferior), nao a altura fisica da tela. O `bottom:10px` da nav ficava 10px do fim dessa area reduzida, deixando o resto da tela vazio.',
+        '\u2605 **Fix**: mudei pra `height: 100vh; height: 100dvh`. O `100dvh` (dynamic viewport height) eh a altura REAL da tela no iOS 17+, incluindo a zona do home indicator. O `100vh` fica como fallback pra browsers mais velhos. Agora o viewport ocupa a tela inteira e `position:fixed bottom:10px` cola no fim fisico.',
+        'Sem mudanca visual em desktop -- no desktop `100%` e `100dvh` sao equivalentes. Mudanca eh especifica pra iOS PWA standalone.',
+      ],
+    },
+    en: {
+      title: "FIX: extended viewport height on iPhone PWA (100dvh)",
+      bullets: [
+        '\u2605 **Continuing the bottom fix**: v10.1.4 fixed the overflow bug (position:fixed inside scroll container), but there was still ~80px of empty cosmos below the nav on iPhone PWA. Cause: `html,body,#root { height: 100% }` — on iOS PWA standalone this computes as the AVAILABLE height (minus bottom bar area), not the physical screen height. The nav\'s `bottom:10px` sat 10px from the end of that reduced area, leaving the rest of the screen empty.',
+        '\u2605 **Fix**: changed to `height: 100vh; height: 100dvh`. `100dvh` (dynamic viewport height) is the REAL screen height on iOS 17+, including the home indicator zone. `100vh` is the fallback for older browsers. Viewport now fills the whole screen and `position:fixed bottom:10px` hugs the physical end.',
+        'No visual change on desktop — `100%` and `100dvh` are equivalent there. Change is iOS PWA standalone-specific.',
+      ],
+    },
+  },
   {
     v: "10.1.4", date: "2026-04-16",
     pt: {
