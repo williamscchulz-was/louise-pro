@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v10.2.1 Fix faixa preta no bottom iOS PWA: App container 100% -> 100dvh + nav calc intencional
   v10.1.7 FIX REAL: nav usa bottom negativo pra invadir zona fora-do-viewport do PWA
   v10.1.5 FIX: height 100% -> 100dvh no html/body/root (iOS PWA viewport estendido)
   v10.1.4 FIX: nav em React Portal fora do scroll container (bug iOS PWA position:fixed)
@@ -322,8 +323,31 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "10.2.0";
+const APP_VERSION = "10.2.1";
 const CHANGELOG = [
+  {
+    v: "10.2.1", date: "2026-04-16",
+    pt: {
+      title: "Fix faixa preta no bottom iOS PWA (starfield cobre ate o home indicator)",
+      bullets: [
+        '\u2605 **Sintoma:** em iPhones com home indicator, o fundo estrelado do app nao chegava ate o bottom fisico da tela -- sobrava uma faixa solida de ~34px de `#070b1e` visivel abaixo do ultimo pixel do universo pintado. Topo estava correto.',
+        '\u2605 **Causa raiz:** cascata de `height:100%` em `html,body`, `#root` e o container principal do App. Em WebKit em PWA standalone, `100%` resolve pela **layout viewport**, que no iPhone com home indicator NAO inclui a safe-area inferior. Consequencia: o canvas ficava ~34px menor que a tela fisica, e o `background:#070b1e` do `html,body` (pintado pelo proprio browser na area descoberta) aparecia como faixa solida.',
+        '\u2605 **Fix cirurgico:** trocadas 3 declaracoes de `height:100%` por `100dvh` (dynamic viewport height). `dvh` eh a unidade CSS que reporta altura visual real incluindo safe-area, suportada em iOS Safari 15.4+. No CSS puro (html/body e #root) com fallback duplicado `height:100vh; height:100dvh` -- em JSX inline style so `100dvh` porque React sobrescreveria o primeiro.',
+        '**Navbar pill permanece intacta** com `bottom: calc(8px + env(safe-area-inset-bottom))` -- os 8px garantem margem visual acima do home indicator seguindo Apple HIG. TimerBar tambem volta ao `calc(66px + env(safe-area-inset-bottom))` acompanhando.',
+        'Zero mudanca em desktop / Android / Safari em aba normal (100% e 100dvh sao equivalentes la). Zero mudanca no scroll, safe-area do topo, ou qualquer comportamento. Eh cirurgico: 3 declaracoes de altura + 2 offsets calc.',
+      ],
+    },
+    en: {
+      title: "Fix black strip at bottom iOS PWA (starfield reaches the home indicator)",
+      bullets: [
+        '\u2605 **Symptom:** on iPhones with home indicator, the app\'s starfield background did not reach the physical screen bottom — a solid ~34px strip of `#070b1e` remained visible below the last painted universe pixel. Top was fine.',
+        '\u2605 **Root cause:** cascade of `height:100%` on `html,body`, `#root` and the App main container. In WebKit PWA standalone mode, `100%` resolves from the **layout viewport**, which on iPhones with home indicator does NOT include the bottom safe-area. Result: the canvas was ~34px shorter than the physical screen, and `background:#070b1e` from `html,body` (painted by the browser on the uncovered area) appeared as a solid strip.',
+        '\u2605 **Surgical fix:** the 3 `height:100%` declarations swapped to `100dvh` (dynamic viewport height). `dvh` is the CSS unit that reports the real visual height including safe-area, supported in iOS Safari 15.4+. In pure CSS (html/body and #root) with doubled fallback `height:100vh; height:100dvh` — in JSX inline style only `100dvh` because React would overwrite the first.',
+        '**Nav pill stays intact** with `bottom: calc(8px + env(safe-area-inset-bottom))` — the 8px ensures visual margin above the home indicator following Apple HIG. TimerBar also returns to `calc(66px + env(safe-area-inset-bottom))` matching.',
+        'No change on desktop / Android / Safari in normal tab (100% and 100dvh are equivalent there). No change in scroll, top safe-area, or any behavior. Surgical: 3 height declarations + 2 calc offsets.',
+      ],
+    },
+  },
   {
     v: "10.1.7", date: "2026-04-16",
     pt: {
@@ -2801,7 +2825,7 @@ function TimerBar({activeTimer,onStop,onSwitch,onPause,onEditStart}){const[tick,
     const lSecs=Math.floor(lMs/1000),rSecs=Math.floor(rMs/1000);
     const isL=activeTimer.side==="left";
     const bc=T.blue;
-    return(<div style={{position:"absolute",bottom:"72px",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 32px)",maxWidth:448,padding:"14px 14px",borderRadius:20,background:`linear-gradient(180deg,${bc}1a,${bc}06)`,border:`1px solid ${bc}50`,backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",display:"flex",alignItems:"center",gap:10,pointerEvents:"auto",boxShadow:`0 1px 0 0 rgba(255,255,255,0.08) inset, 0 0 0 1px ${bc}15, 0 12px 30px -10px ${bc}40`,overflow:"hidden"}}>
+    return(<div style={{position:"absolute",bottom:"calc(66px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 32px)",maxWidth:448,padding:"14px 14px",borderRadius:20,background:`linear-gradient(180deg,${bc}1a,${bc}06)`,border:`1px solid ${bc}50`,backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",display:"flex",alignItems:"center",gap:10,pointerEvents:"auto",boxShadow:`0 1px 0 0 rgba(255,255,255,0.08) inset, 0 0 0 1px ${bc}15, 0 12px 30px -10px ${bc}40`,overflow:"hidden"}}>
       <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse at 50% 0%,rgba(255,255,255,0.05),transparent 60%)",pointerEvents:"none"}}/>
       <div style={{position:"relative",width:44,height:44,borderRadius:13,background:`linear-gradient(135deg,${bc}38,${bc}10)`,border:`1px solid ${bc}55`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,boxShadow:"0 1px 0 0 rgba(255,255,255,0.1) inset"}}><Icon name="breast" size={20} color="#7dd3fc"/></div>
       <button onClick={()=>onSwitch("left")} style={{position:"relative",flex:1,padding:"8px 4px",borderRadius:14,background:isL?`linear-gradient(180deg,${bc}30,${bc}10)`:"transparent",border:isL?`1px solid ${bc}55`:"1px solid transparent",boxShadow:isL?"0 1px 0 0 rgba(255,255,255,0.1) inset":"none",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
@@ -2833,7 +2857,7 @@ function TimerBar({activeTimer,onStop,onSwitch,onPause,onEditStart}){const[tick,
   // Since label: "desde HH:MM" showing the start time
   const stDate=new Date(activeTimer.startTime);
   const stTimeStr=`${String(stDate.getHours()).padStart(2,"0")}:${String(stDate.getMinutes()).padStart(2,"0")}`;
-  return(<div style={{position:"absolute",bottom:"72px",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 32px)",maxWidth:448,padding:"16px 14px 16px 18px",borderRadius:20,background:`linear-gradient(180deg,${tCol}2e,${tCol}0f)`,border:`1px solid ${tCol}55`,backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",display:"flex",alignItems:"center",gap:12,pointerEvents:"auto",boxShadow:`0 1px 0 0 rgba(255,255,255,0.08) inset, 0 0 0 1px ${tCol}15, 0 12px 30px -10px ${tCol}40`,overflow:"hidden"}}>
+  return(<div style={{position:"absolute",bottom:"calc(66px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 32px)",maxWidth:448,padding:"16px 14px 16px 18px",borderRadius:20,background:`linear-gradient(180deg,${tCol}2e,${tCol}0f)`,border:`1px solid ${tCol}55`,backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",display:"flex",alignItems:"center",gap:12,pointerEvents:"auto",boxShadow:`0 1px 0 0 rgba(255,255,255,0.08) inset, 0 0 0 1px ${tCol}15, 0 12px 30px -10px ${tCol}40`,overflow:"hidden"}}>
     <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse at 50% 0%,rgba(255,255,255,0.06),transparent 60%)",pointerEvents:"none"}}/>
     <div style={{width:50,height:50,borderRadius:15,background:`linear-gradient(135deg,${tCol}45,${tCol}15)`,border:`1px solid ${tCol}55`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,boxShadow:"0 1px 0 0 rgba(255,255,255,0.1) inset",position:"relative"}}><Icon name={tIconName} size={22} color={tColLight}/></div>
     <div style={{flex:1,position:"relative",minWidth:0}}>
@@ -5148,7 +5172,7 @@ function App(){
     st.active=false;st.locked=null;
   };
 
-  return(<div style={{background:`radial-gradient(ellipse at 50% 0%,#10153d 0%,${T.bg1} 65%)`,height:"100%",overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch",overscrollBehavior:"none",color:T.text,maxWidth:480,margin:"0 auto",position:"relative"}}>
+  return(<div style={{background:`radial-gradient(ellipse at 50% 0%,#10153d 0%,${T.bg1} 65%)`,height:"100dvh",overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch",overscrollBehavior:"none",color:T.text,maxWidth:480,margin:"0 auto",position:"relative"}}>
     {/* Starfield */}
     <div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:0}}>
       {/* Nebula patches */}
@@ -5296,7 +5320,7 @@ function App(){
         <Icon name="home" size={20} color="#c4b5fd"/>
       </button>
       </div>}
-    </nav>:<nav style={{position:"absolute",bottom:"8px",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 24px)",maxWidth:420,pointerEvents:"auto",display:"flex",alignItems:"center",justifyContent:"space-around",gap:2,padding:"7px 8px",background:"linear-gradient(180deg,rgba(38,44,90,0.38),rgba(14,18,48,0.58))",backdropFilter:"blur(26px) saturate(200%)",WebkitBackdropFilter:"blur(26px) saturate(200%)",borderRadius:34,border:"1px solid rgba(255,255,255,0.14)",boxShadow:"0 1px 0 0 rgba(255,255,255,0.24) inset, 0 -1px 2px 0 rgba(0,0,0,0.18) inset, 0 10px 32px -8px rgba(0,0,0,0.55), 0 0 48px -18px rgba(139,124,246,0.3)"}}>
+    </nav>:<nav style={{position:"absolute",bottom:"calc(8px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 24px)",maxWidth:420,pointerEvents:"auto",display:"flex",alignItems:"center",justifyContent:"space-around",gap:2,padding:"7px 8px",background:"linear-gradient(180deg,rgba(38,44,90,0.38),rgba(14,18,48,0.58))",backdropFilter:"blur(26px) saturate(200%)",WebkitBackdropFilter:"blur(26px) saturate(200%)",borderRadius:34,border:"1px solid rgba(255,255,255,0.14)",boxShadow:"0 1px 0 0 rgba(255,255,255,0.24) inset, 0 -1px 2px 0 rgba(0,0,0,0.18) inset, 0 10px 32px -8px rgba(0,0,0,0.55), 0 0 48px -18px rgba(139,124,246,0.3)"}}>
       {[{icon:"home",active:page==="home"&&!showAdd,action:()=>goTo("home")},{icon:"clock",active:page==="history",action:()=>goTo("history")}].map(n=><button key={n.icon} className="navbtn" onClick={n.action} style={{display:"flex",alignItems:"center",justifyContent:"center",width:48,height:44,borderRadius:22,background:n.active?"rgba(139,124,246,0.22)":"transparent",border:"none",padding:0}}><Icon name={n.icon} size={n.active?22:20} color={n.active?"#ffffff":T.dim}/></button>)}
       <button className="navfab" onClick={()=>{setShowAdd(!showAdd);setFormType(null);setPage("home")}} style={{width:48,height:44,borderRadius:22,background:`linear-gradient(180deg,#9b8df8,#7c3aed)`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 1px 0 0 rgba(255,255,255,0.22) inset, 0 4px 14px -2px ${T.accent}70`,transform:showAdd?"rotate(45deg)":"rotate(0deg)",margin:"0 2px",border:"none",padding:0}}><Icon name="plus" size={22} color="#fff"/></button>
       {[{icon:"chart",active:page==="stats"||page==="growth",action:()=>goTo("stats")},{icon:"gear",active:false,action:()=>setShowProfile(true)}].map(n=><button key={n.icon} className="navbtn" onClick={n.action} style={{display:"flex",alignItems:"center",justifyContent:"center",width:48,height:44,borderRadius:22,background:n.active?"rgba(139,124,246,0.22)":"transparent",border:"none",padding:0}}><Icon name={n.icon} size={n.active?22:20} color={n.active?"#ffffff":T.dim}/></button>)}
