@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v10.0.3 Nav Liquid Glass estilo Instagram: pill wider + translucido + rim brilhante
   v10.0.2 Nav edge-to-edge: colado no home indicator + blur translucido com saturate(180%)
   v10.0.1 Service Worker com cache: 2o+ cold start quase instantaneo
   v10.0.0 Build step: JSX pre-compilado, Babel Standalone removido, deploy via GitHub Actions
@@ -268,8 +269,37 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "10.0.2";
+const APP_VERSION = "10.0.3";
 const CHANGELOG = [
+  {
+    v: "10.0.3", date: "2026-04-15",
+    pt: {
+      title: "Nav Liquid Glass: referencia direta ao Instagram atual",
+      bullets: [
+        '\u2605 **Reframe do v10.0.2:** William mandou print do nav do Instagram e ele NAO eh edge-to-edge -- eh um pill flutuante IGUAL AO NOSSO, soh que com vidro muito mais translucido e highlights de glass no topo. v10.0.2 errou o alvo indo pra "colado no chao" quando o que faltava era intensificar o efeito glass do pill.',
+        '**Translucencia real:** fundo caiu de `rgba(14,18,48,0.82)` pra `rgba(38,44,90,0.38)` (tom de fundo mais claro tb, puxando pro liquid glass) e top de `rgba(8,10,28,0.88)` pra `rgba(14,18,48,0.58)`. Agora da pra ver o conteudo borrado por tras.',
+        '**Rim brilhante no topo:** adicionado `0 1px 0 0 rgba(255,255,255,0.24) inset` -- linha branca sutil de 1px no topo interno simulando refracao de luz em vidro iOS. Complementado com `0 -1px 2px rgba(0,0,0,0.18) inset` pra sombra interna no bottom, dando profundidade.',
+        '**Blur + saturacao intensificados:** `blur(22px) saturate(180%)` -> `blur(26px) saturate(200%)`. Cores atras ficam mais vivas no blur, feel iOS autentico.',
+        '**Pill mais wide:** antes era content-sized (~260px), agora `width: calc(100% - 24px)` com `maxWidth: 420` e `justify-content: space-around`. Icones espalhados em 85% da largura, matching proporcao do IG.',
+        '**Posicionamento flutuante:** `bottom: calc(12px + env(safe-area-inset-bottom))`. Sobe um pouco do chao (12px acima da safe-area) igual IG faz -- nao eh colado nem flutuando alto demais.',
+        '**Border mais visivel:** `rgba(255,255,255,0.08)` -> `rgba(255,255,255,0.14)`. Delineamento de vidro mais claro, casa com o rim brilhante.',
+        '**Perf preservada:** blur subiu soh 4px (22->26). Custo de backdrop-filter eh quadratico no raio, entao 26 eh ~40% mais caro que 22 (nao 4x). Aceitavel no iPhone 16 Pro Max.',
+      ],
+    },
+    en: {
+      title: "Nav Liquid Glass: direct reference to current Instagram",
+      bullets: [
+        '\u2605 **v10.0.2 reframe:** William sent Instagram\'s nav screenshot and it is NOT edge-to-edge -- it is a floating pill JUST LIKE OURS, only with much more translucent glass and top glass highlights. v10.0.2 missed the target going "flush to the floor" when what was missing was intensifying the glass effect of the pill itself.',
+        '**Real translucency:** background dropped from `rgba(14,18,48,0.82)` to `rgba(38,44,90,0.38)` (lighter base tone, pulling toward liquid glass), and top from `rgba(8,10,28,0.88)` to `rgba(14,18,48,0.58)`. You can actually see blurred content behind now.',
+        '**Bright top rim:** added `0 1px 0 0 rgba(255,255,255,0.24) inset` -- subtle 1px white line on the inner top simulating light refraction on iOS glass. Complemented with `0 -1px 2px rgba(0,0,0,0.18) inset` for bottom inner shadow, adding depth.',
+        '**Blur + saturation intensified:** `blur(22px) saturate(180%)` -> `blur(26px) saturate(200%)`. Colors behind come through livelier in the blur, authentic iOS feel.',
+        '**Wider pill:** was content-sized (~260px), now `width: calc(100% - 24px)` with `maxWidth: 420` and `justify-content: space-around`. Icons spread across 85% of width, matching IG\'s proportion.',
+        '**Floating position:** `bottom: calc(12px + env(safe-area-inset-bottom))`. Lifts slightly off the floor (12px above safe-area) like IG does -- not pinned, not floating too high.',
+        '**More visible border:** `rgba(255,255,255,0.08)` -> `rgba(255,255,255,0.14)`. Clearer glass outline, pairs with the bright rim.',
+        '**Perf preserved:** blur only bumped 4px (22->26). backdrop-filter cost is quadratic in radius, so 26 is ~40% more expensive than 22 (not 4x). Acceptable on iPhone 16 Pro Max.',
+      ],
+    },
+  },
   {
     v: "10.0.2", date: "2026-04-15",
     pt: {
@@ -5040,7 +5070,7 @@ function App(){
         <Icon name="home" size={20} color="#c4b5fd"/>
       </button>
       </div>}
-    </nav>:<nav style={{position:"fixed",bottom:"max(4px, env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",display:"flex",alignItems:"center",gap:2,padding:"6px",background:"linear-gradient(180deg,rgba(14,18,48,0.82),rgba(8,10,28,0.88))",backdropFilter:"blur(22px) saturate(180%)",WebkitBackdropFilter:"blur(22px) saturate(180%)",borderRadius:30,border:"1px solid rgba(255,255,255,0.08)",boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset, 0 8px 28px -6px rgba(0,0,0,0.6), 0 0 40px -16px rgba(139,124,246,0.22)",zIndex:50}}>
+    </nav>:<nav style={{position:"fixed",bottom:"calc(12px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 24px)",maxWidth:420,display:"flex",alignItems:"center",justifyContent:"space-around",gap:2,padding:"7px 8px",background:"linear-gradient(180deg,rgba(38,44,90,0.38),rgba(14,18,48,0.58))",backdropFilter:"blur(26px) saturate(200%)",WebkitBackdropFilter:"blur(26px) saturate(200%)",borderRadius:34,border:"1px solid rgba(255,255,255,0.14)",boxShadow:"0 1px 0 0 rgba(255,255,255,0.24) inset, 0 -1px 2px 0 rgba(0,0,0,0.18) inset, 0 10px 32px -8px rgba(0,0,0,0.55), 0 0 48px -18px rgba(139,124,246,0.3)",zIndex:50}}>
       {[{icon:"home",active:page==="home"&&!showAdd,action:()=>goTo("home")},{icon:"clock",active:page==="history",action:()=>goTo("history")}].map(n=><button key={n.icon} className="navbtn" onClick={n.action} style={{display:"flex",alignItems:"center",justifyContent:"center",width:48,height:44,borderRadius:22,background:n.active?"rgba(139,124,246,0.22)":"transparent",border:"none",padding:0}}><Icon name={n.icon} size={n.active?22:20} color={n.active?"#ffffff":T.dim}/></button>)}
       <button className="navfab" onClick={()=>{setShowAdd(!showAdd);setFormType(null);setPage("home")}} style={{width:48,height:44,borderRadius:22,background:`linear-gradient(180deg,#9b8df8,#7c3aed)`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 1px 0 0 rgba(255,255,255,0.22) inset, 0 4px 14px -2px ${T.accent}70`,transform:showAdd?"rotate(45deg)":"rotate(0deg)",margin:"0 2px",border:"none",padding:0}}><Icon name="plus" size={22} color="#fff"/></button>
       {[{icon:"chart",active:page==="stats"||page==="growth",action:()=>goTo("stats")},{icon:"gear",active:false,action:()=>setShowProfile(true)}].map(n=><button key={n.icon} className="navbtn" onClick={n.action} style={{display:"flex",alignItems:"center",justifyContent:"center",width:48,height:44,borderRadius:22,background:n.active?"rgba(139,124,246,0.22)":"transparent",border:"none",padding:0}}><Icon name={n.icon} size={n.active?22:20} color={n.active?"#ffffff":T.dim}/></button>)}
