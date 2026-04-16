@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v10.1.3 Nav colada no bottom de verdade: ignora safe-area (igual Instagram)
   v10.1.2 Fix: SW network-first em HTML + auto-reload ao detectar deploy novo (nunca mais stale)
   v10.1.1 Nav colada no bottom: removido o 12px de folga que deixava area vazia abaixo
   v10.1.0 Perf bundle: pausa animacoes em bg + content-visibility auto + js bundle (6->1)
@@ -309,8 +310,29 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "10.1.2";
+const APP_VERSION = "10.1.3";
 const CHANGELOG = [
+  {
+    v: "10.1.3", date: "2026-04-16",
+    pt: {
+      title: "Nav colada no bottom de verdade: leitura correta do Instagram",
+      bullets: [
+        '\u2605 **Reinterpretacao:** comparando lado a lado o print do Instagram com o app Louise, o pill do IG esta a ~8-10px do bottom absoluto da tela, NAO respeitando safe-area integralmente. O home indicator passa parcialmente por CIMA do pill (como eh translucido, nao tem conflito visual).',
+        '**v10.1.1 e v10.1.2 respeitavam safe-area-inset-bottom demais** (34px no iPhone 16 Pro Max), deixando faixa de cosmos-background vazio abaixo -- causando a sensacao de "longe do bottom" que William reportou.',
+        '\u2605 **Fix:** `bottom: 10px` (valor absoluto, ignora safe-area). No iPhone, home indicator branco passa levemente sobre a borda superior do pill -- feel IG autentico, pill realmente colado. Em desktop, 10px do bottom do viewport, pratico.',
+        '**Tradeoff consciente:** o home indicator swipe gesture area do iOS (zona de 34px no bottom) agora tem o pill sobreposto. Em teoria, pode ter gesture conflict, mas na pratica iOS prioriza o gesto do sistema. Se algum usuario tiver dificuldade pra disparar o swipe pra home, a gente aumenta o bottom pra 16-20px.',
+      ],
+    },
+    en: {
+      title: "Nav truly hugging the bottom: correct Instagram reading",
+      bullets: [
+        '\u2605 **Reinterpretation:** comparing side-by-side the Instagram screenshot with Louise, IG\'s pill is at ~8-10px from the absolute screen bottom, NOT respecting safe-area fully. The home indicator passes partially OVER the pill (since it\'s translucent, there\'s no visual conflict).',
+        '**v10.1.1 and v10.1.2 respected safe-area-inset-bottom too much** (34px on iPhone 16 Pro Max), leaving an empty cosmos-background strip below -- creating the "far from bottom" feeling William reported.',
+        '\u2605 **Fix:** `bottom: 10px` (absolute value, ignores safe-area). On iPhone, the white home indicator passes slightly over the top edge of the pill -- authentic IG feel, pill actually hugging. On desktop, 10px from the viewport bottom, practical.',
+        '**Conscious tradeoff:** iOS home indicator swipe gesture area (34px zone at bottom) now has the pill overlapping. In theory, there could be gesture conflict, but in practice iOS prioritizes the system gesture. If any user has trouble triggering swipe-to-home, we bump bottom to 16-20px.',
+      ],
+    },
+  },
   {
     v: "10.1.2", date: "2026-04-16",
     pt: {
@@ -5196,7 +5218,7 @@ function App(){
         <Icon name="home" size={20} color="#c4b5fd"/>
       </button>
       </div>}
-    </nav>:<nav style={{position:"fixed",bottom:"max(8px, env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 24px)",maxWidth:420,display:"flex",alignItems:"center",justifyContent:"space-around",gap:2,padding:"7px 8px",background:"linear-gradient(180deg,rgba(38,44,90,0.38),rgba(14,18,48,0.58))",backdropFilter:"blur(26px) saturate(200%)",WebkitBackdropFilter:"blur(26px) saturate(200%)",borderRadius:34,border:"1px solid rgba(255,255,255,0.14)",boxShadow:"0 1px 0 0 rgba(255,255,255,0.24) inset, 0 -1px 2px 0 rgba(0,0,0,0.18) inset, 0 10px 32px -8px rgba(0,0,0,0.55), 0 0 48px -18px rgba(139,124,246,0.3)",zIndex:50}}>
+    </nav>:<nav style={{position:"fixed",bottom:"10px",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 24px)",maxWidth:420,display:"flex",alignItems:"center",justifyContent:"space-around",gap:2,padding:"7px 8px",background:"linear-gradient(180deg,rgba(38,44,90,0.38),rgba(14,18,48,0.58))",backdropFilter:"blur(26px) saturate(200%)",WebkitBackdropFilter:"blur(26px) saturate(200%)",borderRadius:34,border:"1px solid rgba(255,255,255,0.14)",boxShadow:"0 1px 0 0 rgba(255,255,255,0.24) inset, 0 -1px 2px 0 rgba(0,0,0,0.18) inset, 0 10px 32px -8px rgba(0,0,0,0.55), 0 0 48px -18px rgba(139,124,246,0.3)",zIndex:50}}>
       {[{icon:"home",active:page==="home"&&!showAdd,action:()=>goTo("home")},{icon:"clock",active:page==="history",action:()=>goTo("history")}].map(n=><button key={n.icon} className="navbtn" onClick={n.action} style={{display:"flex",alignItems:"center",justifyContent:"center",width:48,height:44,borderRadius:22,background:n.active?"rgba(139,124,246,0.22)":"transparent",border:"none",padding:0}}><Icon name={n.icon} size={n.active?22:20} color={n.active?"#ffffff":T.dim}/></button>)}
       <button className="navfab" onClick={()=>{setShowAdd(!showAdd);setFormType(null);setPage("home")}} style={{width:48,height:44,borderRadius:22,background:`linear-gradient(180deg,#9b8df8,#7c3aed)`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 1px 0 0 rgba(255,255,255,0.22) inset, 0 4px 14px -2px ${T.accent}70`,transform:showAdd?"rotate(45deg)":"rotate(0deg)",margin:"0 2px",border:"none",padding:0}}><Icon name="plus" size={22} color="#fff"/></button>
       {[{icon:"chart",active:page==="stats"||page==="growth",action:()=>goTo("stats")},{icon:"gear",active:false,action:()=>setShowProfile(true)}].map(n=><button key={n.icon} className="navbtn" onClick={n.action} style={{display:"flex",alignItems:"center",justifyContent:"center",width:48,height:44,borderRadius:22,background:n.active?"rgba(139,124,246,0.22)":"transparent",border:"none",padding:0}}><Icon name={n.icon} size={n.active?22:20} color={n.active?"#ffffff":T.dim}/></button>)}
