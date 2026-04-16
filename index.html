@@ -122,7 +122,7 @@
 
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
-    html,body{height:100vh;height:100dvh;overflow:hidden;overscroll-behavior:none;background:#070b1e}
+    html,body{height:100vh;height:100dvh;overflow:hidden;overscroll-behavior:none;background:radial-gradient(ellipse at 50% 0%,#10153d 0%,#070b1e 65%) #070b1e}
     body{font-family:'Outfit',sans-serif;
       -webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
     #root{height:100vh;height:100dvh;overflow:hidden}
@@ -323,7 +323,7 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "10.2.1";
+const APP_VERSION = "10.2.2";
 const CHANGELOG = [
   {
     v: "10.2.1", date: "2026-04-16",
@@ -5172,7 +5172,7 @@ function App(){
     st.active=false;st.locked=null;
   };
 
-  return(<div style={{background:`radial-gradient(ellipse at 50% 0%,#10153d 0%,${T.bg1} 65%)`,height:"100dvh",overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch",overscrollBehavior:"none",color:T.text,maxWidth:480,margin:"0 auto",position:"relative"}}>
+  return(<div style={{background:"transparent",height:"100dvh",overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch",overscrollBehavior:"none",color:T.text,maxWidth:480,margin:"0 auto",position:"relative"}}>
     {/* Starfield */}
     <div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:0}}>
       {/* Nebula patches */}
