@@ -122,10 +122,10 @@
 
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
-    html,body{height:100vh;height:100dvh;overflow:hidden;overscroll-behavior:none;background:radial-gradient(ellipse at 50% 0%,#10153d 0%,#070b1e 65%) #070b1e}
+    html,body{height:100vh;height:100dvh;height:var(--phys-h,100dvh);overflow:hidden;overscroll-behavior:none;background:radial-gradient(ellipse at 50% 0%,#10153d 0%,#070b1e 65%) #070b1e}
     body{font-family:'Outfit',sans-serif;
       -webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
-    #root{height:100vh;height:100dvh;overflow:hidden}
+    #root{height:100vh;height:100dvh;height:var(--phys-h,100dvh);overflow:hidden}
     button{cursor:pointer;border:none;background:none;color:inherit;font-family:inherit}
     input,textarea{font-family:inherit;-webkit-user-select:text;user-select:text}
     input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-outer-spin-button{-webkit-appearance:none}
@@ -181,6 +181,21 @@
      containing block de referência pros filhos com position:fixed. Children que
      precisam clique (a nav, o TimerBar) restauram pointer-events:auto. -->
 <div id="nav-host" style="position:fixed;inset:0;pointer-events:none;z-index:50"></div>
+<!-- Publica --phys-h com screen.height pra que html/body/App container estendam até
+     o fim FÍSICO da tela (não só innerHeight). Assim o scroll container pode
+     escorrer conteúdo até atrás do home indicator, simetricamente ao que já
+     acontece atrás do status bar no topo. -->
+<script>
+(function(){
+  function upd(){
+    var h=(window.screen&&window.screen.height)||window.innerHeight;
+    document.documentElement.style.setProperty('--phys-h',h+'px');
+  }
+  upd();
+  window.addEventListener('resize',upd);
+  window.addEventListener('orientationchange',upd);
+})();
+</script>
 <!-- Debug: shows if app fails to load after 10s -->
 <div id="load-debug" style="position:fixed;inset:0;z-index:9998;background:#070b1e;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:monospace;color:#8b90b8;font-size:12px">
   <div style="font-size:16px;margin-bottom:12px;color:#a78bfa">Louise Pro</div>
@@ -323,7 +338,7 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "10.2.9";
+const APP_VERSION = "10.3.0";
 const CHANGELOG = [
   {
     v: "10.2.1", date: "2026-04-16",
@@ -5172,7 +5187,7 @@ function App(){
     st.active=false;st.locked=null;
   };
 
-  return(<div style={{background:"transparent",height:"100dvh",overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch",overscrollBehavior:"none",color:T.text,maxWidth:480,margin:"0 auto",position:"relative"}}>
+  return(<div style={{background:"transparent",height:"var(--phys-h, 100dvh)",overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch",overscrollBehavior:"none",color:T.text,maxWidth:480,margin:"0 auto",position:"relative"}}>
     {/* Starfield */}
     <div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:0}}>
       {/* Nebula patches */}
