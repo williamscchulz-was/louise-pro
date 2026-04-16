@@ -70,6 +70,37 @@ if (!BABEL_CDN_RE.test(html)) {
   console.log("[build] removed @babel/standalone CDN tag");
 }
 
+// ─── JS BUNDLE (v10.1.0) ─────────────────────────────────────────
+// Concatenate the 6 libs in js/ into a single app-libs.js so the browser
+// makes 1 HTTP request instead of 6 on cold load. Order matters — match
+// the load order from the source index.html's <script src="js/..."> tags.
+const JS_BUNDLE_FILES = [
+  "splash-icon.js",
+  "who-growth.js",
+  "curiosities.js",
+  "wake-lock.js",
+  "device-features.js",
+  "routine-engine.js",
+];
+let bundle = "";
+for (const f of JS_BUNDLE_FILES) {
+  const src = readFileSync(join(ROOT, "js", f), "utf8");
+  bundle += "\n/* ========== " + f + " ========== */\n" + src + "\n;\n";
+}
+mkdirSync(join(DIST, "js"), { recursive: true });
+writeFileSync(join(DIST, "js", "app-libs.js"), bundle);
+console.log("[build] bundled js/ into app-libs.js (" + bundle.length + " chars)");
+
+// Collapse the 6 <script src="js/X.js"> tags into 1 reference to the bundle.
+// Regex matches the first tag through the last, including blank lines between.
+const BUNDLE_SCRIPT_RE = /<script src="js\/splash-icon\.js"><\/script>[\s\S]*?<script src="js\/routine-engine\.js"><\/script>/;
+if (BUNDLE_SCRIPT_RE.test(html)) {
+  html = html.replace(BUNDLE_SCRIPT_RE, '<script src="js/app-libs.js"></script>');
+  console.log("[build] collapsed 6 <script> tags into 1 bundle reference");
+} else {
+  console.warn("[build] WARN: could not find 6-script block to bundle, HTML unchanged");
+}
+
 writeFileSync(join(DIST, "index.html"), html);
 console.log("[build] wrote dist/index.html (" + html.length + " chars)");
 
@@ -81,18 +112,24 @@ const APP_VERSION_MATCH = html.match(/const\s+APP_VERSION\s*=\s*"([^"]+)"/);
 const appVersion = APP_VERSION_MATCH ? APP_VERSION_MATCH[1] : "unknown";
 console.log("[build] detected APP_VERSION = " + appVersion);
 
-// Handle sw.js specially: inject APP_VERSION into the __APP_VERSION__ placeholder.
-const swSrc = readFileSync(join(ROOT, "sw.js"), "utf8");
-const swOut = swSrc.replace(/__APP_VERSION__/g, appVersion);
+// Handle sw.js specially: inject APP_VERSION into the __APP_VERSION__ placeholder,
+// and collapse the 6 individual js/ precache URLs into the bundle URL.
+let swOut = readFileSync(join(ROOT, "sw.js"), "utf8");
+swOut = swOut.replace(/__APP_VERSION__/g, appVersion);
+const SW_PRECACHE_RE = /"\.\/js\/splash-icon\.js",[\s\S]*?"\.\/js\/routine-engine\.js",/;
+if (SW_PRECACHE_RE.test(swOut)) {
+  swOut = swOut.replace(SW_PRECACHE_RE, '"./js/app-libs.js",');
+  console.log("[build] collapsed 6 SW precache URLs into 1 bundle URL");
+}
 writeFileSync(join(DIST, "sw.js"), swOut);
 console.log("[build] wrote dist/sw.js with version " + appVersion);
 
 // Copy the other static files as-is. Service workers and manifest MUST be
-// at root so their scope/registration works correctly.
+// at root so their scope/registration works correctly. js/ is NOT copied —
+// the bundle above replaces it in the deployed output.
 const copies = [
   "manifest.json",
   "firebase-messaging-sw.js",
-  "js",
   "assets",
 ];
 for (const rel of copies) {

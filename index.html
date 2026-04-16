@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v10.1.0 Perf bundle: pausa animacoes em bg + content-visibility auto + js bundle (6->1)
   v10.0.4 Resource hints: preload + preconnect pra primeira install do PWA mais rapida
   v10.0.3 Nav Liquid Glass estilo Instagram: pill wider + translucido + rim brilhante
   v10.0.2 Nav edge-to-edge: colado no home indicator + blur translucido com saturate(180%)
@@ -91,6 +92,12 @@
   window.addEventListener('unhandledrejection',function(e){
     window.onerror('Promise: '+(e.reason&&e.reason.message||e.reason),null,0,0,e.reason);
   });
+  // Toggle body.app-hidden whenever the PWA visibility changes. Paired with
+  // the CSS rule in <style>, this freezes all animations while the app is
+  // backgrounded — useful on iOS PWA where background throttling is weak.
+  document.addEventListener('visibilitychange',function(){
+    if(document.body){document.body.classList.toggle('app-hidden',document.hidden);}
+  });
   </script>
 
   <style>
@@ -137,6 +144,9 @@
     .navbtn:active{transform:scale(0.88)}
     .navfab{transition:transform .22s cubic-bezier(0.34,1.56,0.64,1)}
     .navfab:active{transform:scale(0.92)}
+    /* Pause every CSS animation while the app is in background (visibility API).
+       Saves battery/CPU on iOS PWA and any browser that doesn't auto-throttle. */
+    body.app-hidden *,body.app-hidden *::before,body.app-hidden *::after{animation-play-state:paused !important}
   </style>
 
 </head>
@@ -284,8 +294,31 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "10.0.4";
+const APP_VERSION = "10.1.0";
 const CHANGELOG = [
+  {
+    v: "10.1.0", date: "2026-04-15",
+    pt: {
+      title: "Perf bundle: 4 otimizacoes somadas pra app mais enxuto",
+      bullets: [
+        '\u2605 **Pausa animacoes CSS quando o PWA esta em background.** Listener em `visibilitychange` adiciona uma classe `app-hidden` no `<body>` quando o app some de foco; regra CSS `animation-play-state: paused` congela TUDO (mercurySpin, livePulse, bellWiggle, etc.) ate voltar pro foco. iOS PWA backgrounda com throttle fraco, agora para de queimar bateria e CPU quando minimizado.',
+        '\u2605 **`content-visibility: auto` em cada card do History.** Browser pula renderizacao (layout + paint) de cards fora do viewport ate voce scrollar ate eles. Com historico longo (100+ entries) vira ~10x menos trabalho por frame de scroll. `contain-intrinsic-size: auto 76px` preserva o espaco do scroll pra nao pular.',
+        '\u2605 **`content-visibility: auto` em cada pagina do swipe** (Home / Stats / History). As 3 ficam pre-montadas pro swipe ser instantaneo, mas o browser agora so renderiza o conteudo da pagina visivel. Stats com graficos SVG parava de consumir GPU quando voce estava em Home.',
+        '\u2605 **Bundle dos 6 js/ em 1 arquivo (`js/app-libs.js`).** `build/build.mjs` concatena no ordem correta (splash-icon, who-growth, curiosities, wake-lock, device-features, routine-engine) e reescreve `dist/index.html` pra carregar 1 script em vez de 6. SW precache tambem atualizado. Resultado: 6 requisicoes HTTP -> 1, menos overhead de parsing e negociacao HTTP (mesmo com HTTP/2 que multiplexa, parsing sequencial eh mais eficiente).',
+        'Source continua com 6 arquivos separados (dev-friendly); bundle eh soh no output do build. Zero mudanca de API ou comportamento.',
+      ],
+    },
+    en: {
+      title: "Perf bundle: 4 stacked optimizations for a leaner app",
+      bullets: [
+        '\u2605 **Pause CSS animations when the PWA is backgrounded.** `visibilitychange` listener toggles an `app-hidden` class on `<body>`; CSS rule `animation-play-state: paused` freezes EVERYTHING (mercurySpin, livePulse, bellWiggle, etc.) until the app comes back to focus. iOS PWA throttles backgrounded pages weakly, so now it stops burning battery and CPU when minimized.',
+        '\u2605 **`content-visibility: auto` on every History card.** The browser skips layout + paint of offscreen cards until you scroll into them. With a long history (100+ entries) that\'s ~10x less work per scroll frame. `contain-intrinsic-size: auto 76px` preserves the scroll position so nothing jumps.',
+        '\u2605 **`content-visibility: auto` on every swipe page** (Home / Stats / History). The three pages stay pre-mounted for instant swipe, but the browser now only renders the visible page\'s contents. Stats with its SVG charts stops consuming GPU while you\'re in Home.',
+        '\u2605 **Bundle the 6 js/ files into 1 (`js/app-libs.js`).** `build/build.mjs` concatenates in the correct order (splash-icon, who-growth, curiosities, wake-lock, device-features, routine-engine) and rewrites `dist/index.html` to load 1 script instead of 6. SW precache updated accordingly. Result: 6 HTTP requests -> 1, less parsing overhead and HTTP negotiation (even with HTTP/2 multiplexing, sequential parsing is more efficient).',
+        'Source keeps the 6 separate files (dev-friendly); bundle only exists in build output. Zero API or behavior change.',
+      ],
+    },
+  },
   {
     v: "10.0.4", date: "2026-04-15",
     pt: {
@@ -3190,7 +3223,7 @@ function EntryRow({entry,onDelete,onEdit,napNum,nightBadge}){const cfg=TYPES[ent
   const overlayOpacity=Math.min(1,absPct/DISMISS_PCT);
   const editPastThreshold=dx>0&&absPct>=DISMISS_PCT;
   const deletePastThreshold=dx<0&&absPct>=DISMISS_PCT;
-  return(<div ref={wrapRef} style={{position:"relative",marginBottom:8,overflow:"hidden",borderRadius:18}}>
+  return(<div ref={wrapRef} style={{position:"relative",marginBottom:8,overflow:"hidden",borderRadius:18,contentVisibility:"auto",containIntrinsicSize:"auto 76px"}}>
   {/* Edit overlay (left side, revealed when swiping right) */}
   {editVisible&&<div style={{position:"absolute",left:0,top:0,bottom:0,width:Math.abs(dx),background:editPastThreshold?"linear-gradient(90deg,rgba(96,165,250,0.32),rgba(96,165,250,0.18))":"linear-gradient(90deg,rgba(96,165,250,0.18),rgba(96,165,250,0.08))",display:"flex",alignItems:"center",justifyContent:"flex-start",paddingLeft:24,borderRadius:"18px 0 0 18px",opacity:overlayOpacity,transition:dragging?"none":"opacity .2s ease, background .2s ease"}}><div style={{display:"flex",alignItems:"center",gap:8,color:"#7dd3fc"}}><Icon name="pencil" size={20} color="#7dd3fc"/><span style={{fontSize:13,fontWeight:700,letterSpacing:-0.2,opacity:editPastThreshold?1:0,transition:"opacity .15s ease"}}>{_lang==="en"?"Edit":"Editar"}</span></div></div>}
   {/* Delete overlay (right side, revealed when swiping left) */}
@@ -4983,7 +5016,7 @@ function App(){
           onTouchEnd={onSwipeEnd}
           onTouchCancel={onSwipeEnd}
           style={{display:"flex",width:"300%",transform:`translate3d(calc(${-swipeIdx*(100/3)}% + ${dragPx}px), 0, 0)`,transition:swipeDragging?"none":"transform .28s cubic-bezier(0.2,0.9,0.3,1)",willChange:"transform"}}>
-          <div style={{width:`${100/3}%`,flexShrink:0,minWidth:0}}>
+          <div style={{width:`${100/3}%`,flexShrink:0,minWidth:0,contentVisibility:"auto",containIntrinsicSize:"auto 100vh"}}>
             <div>
         <div style={{padding:"calc(12px + env(safe-area-inset-top)) 20px 0",display:"flex",alignItems:"center",gap:12}}>
           <div style={{position:"relative"}}><button onClick={()=>setShowProfile(true)} style={{width:52,height:52,borderRadius:16,overflow:"hidden",border:`1.5px solid ${T.accent}20`,background:T.glass,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 2px 12px rgba(0,0,0,0.3)"}}>{profile.photo?<img src={profile.photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<Icon name="sun" size={22} color={T.sub}/>}</button>{daysLeft!==null&&daysLeft>0&&<button onClick={()=>setShowSleepInfo(true)} style={{position:"absolute",top:-5,right:-8,minWidth:24,height:24,borderRadius:12,background:`linear-gradient(135deg,${T.accent},#a78bfa)`,color:"#fff",fontSize:10,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 5px",boxShadow:`0 2px 8px ${T.accent}55`,border:`2px solid ${T.bg1}`}}>{daysLeft}</button>}{sleepRec?.phase===2&&<button onClick={()=>setShowSleepInfo(true)} style={{position:"absolute",top:-2,right:-6,width:20,height:20,borderRadius:10,background:T.green,display:"flex",alignItems:"center",justifyContent:"center",border:`2px solid ${T.bg1}`}}><Icon name="check" size={10} color={T.bg1}/></button>}</div>
@@ -5016,10 +5049,10 @@ function App(){
         }).map((e,i,arr)=>{const prev=arr[i-1];let gap=null;if(prev){const t1=new Date(`${e.date}T${e.time}`).getTime();let t2=new Date(`${prev.date}T${prev.time}`).getTime();if(prev.durationMin)t2+=prev.durationMin*60000;const diffMin=Math.abs(Math.round((t1-t2)/60000));if(diffMin>=30){const isSleep=(e.type==="nap"||e.type==="sleep")&&e.durationMin;gap=<div style={{display:"flex",alignItems:"center",gap:10,padding:"4px 16px",margin:"2px 0"}}><div style={{flex:1,height:1,background:`linear-gradient(90deg,transparent,${isSleep?T.accent:T.accent}0a,transparent)`}}/><span style={{fontSize:8,color:isSleep?T.accent:T.dim,letterSpacing:0.5}}>{isSleep?"WW ":""}{fmtDur(diffMin)}</span><div style={{flex:1,height:1,background:`linear-gradient(90deg,transparent,${isSleep?T.accent:T.accent}0a,transparent)`}}/></div>}}const useBlock=e.type==="sleep"&&e.wakings&&e.wakings.length>0;return<React.Fragment key={e.id}>{gap}{useBlock?<SleepBlock entry={e} onDelete={deleteEntry} onEdit={startEdit} entries={entries} activeTimer={activeTimer} onSaveTimer={FB.saveTimer} onSaveEntry={FB.addEntry}/>:<EntryRow entry={e} onDelete={deleteEntry} onEdit={startEdit} napNum={napNums[e.id]||null}/>}</React.Fragment>})}</div>
       </div>
           </div>
-          <div style={{width:`${100/3}%`,flexShrink:0,minWidth:0}}>
+          <div style={{width:`${100/3}%`,flexShrink:0,minWidth:0,contentVisibility:"auto",containIntrinsicSize:"auto 100vh"}}>
             <StatsPage entries={entries} onGrowth={()=>goTo("growth")}/>
           </div>
-          <div style={{width:`${100/3}%`,flexShrink:0,minWidth:0}}>
+          <div style={{width:`${100/3}%`,flexShrink:0,minWidth:0,contentVisibility:"auto",containIntrinsicSize:"auto 100vh"}}>
             <HistoryPage entries={entries} onDelete={deleteEntry} onEdit={startEdit} activeTimer={activeTimer}/>
           </div>
         </div>
