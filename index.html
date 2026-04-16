@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v10.1.2 Fix: SW network-first em HTML + auto-reload ao detectar deploy novo (nunca mais stale)
   v10.1.1 Nav colada no bottom: removido o 12px de folga que deixava area vazia abaixo
   v10.1.0 Perf bundle: pausa animacoes em bg + content-visibility auto + js bundle (6->1)
   v10.0.4 Resource hints: preload + preconnect pra primeira install do PWA mais rapida
@@ -99,6 +100,19 @@
   document.addEventListener('visibilitychange',function(){
     if(document.body){document.body.classList.toggle('app-hidden',document.hidden);}
   });
+  // Auto-reload when a newly installed Service Worker takes control.
+  // Without this, after a deploy the old SW keeps serving the stale
+  // HTML until the user manually refreshes. The `controllerchange`
+  // event fires exactly once per SW takeover — we guard against reload
+  // loops with a session flag.
+  if('serviceWorker' in navigator){
+    var _swReloading=false;
+    navigator.serviceWorker.addEventListener('controllerchange',function(){
+      if(_swReloading)return;
+      _swReloading=true;
+      window.location.reload();
+    });
+  }
   </script>
 
   <style>
@@ -295,8 +309,31 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "10.1.1";
+const APP_VERSION = "10.1.2";
 const CHANGELOG = [
+  {
+    v: "10.1.2", date: "2026-04-16",
+    pt: {
+      title: "Fix critico: Service Worker servia HTML antigo apos deploy",
+      bullets: [
+        '\u2605 **Diagnostico:** depois das v10.1.0 e v10.1.1, William reportou que a nav bar continuava longe do bottom mesmo apos o deploy. Nao era cache do CDN nem falha do Action -- era o **proprio Service Worker (v10.0.1) interceptando os fetches do `index.html` e servindo o HTML cacheado de uma versao anterior.** A estrategia de stale-while-revalidate eh boa pra assets mas pessima pra navegacoes: o usuario ve a versao antiga da interface, e o SW soh atualiza o cache pra *proxima* abertura.',
+        '\u2605 **Fix 1 -- Network-first pra navegacoes.** SW agora detecta requests de navegacao (request.mode === "navigate", accept: text/html, ou URL terminando em "/" ou "index.html") e vai DIRETO pra rede -- soh cai no cache como fallback offline. Assets (JS, CSS, fonts, icones) continuam stale-while-revalidate porque sao versionados.',
+        '\u2605 **Fix 2 -- Auto-reload quando SW novo assume.** Main thread registra listener `controllerchange` no navigator.serviceWorker. Quando um novo SW assume controle (apos `skipWaiting + clients.claim`), a pagina recarrega sozinha. Protegido contra reload-loop via flag de sessao.',
+        '**Efeito combinado:** a partir dessa versao, voce nunca mais vai ver interface desatualizada apos um deploy. Primeiro acesso em qualquer ambiente (desktop, iPhone) puxa a v10.1.2 fresca da rede, e dai pra frente qualquer push que eu fizer na main gera um reload automatico em qualquer sessao que estiver aberta quando o Action terminar.',
+        '**UMA VEZ SO voce precisa forcar reload dessa versao** -- porque o SW antigo ainda ta em controle. Desktop: Ctrl+Shift+R. iPhone PWA: segura o icone -> Remove App -> reinstala via Safari Share. Dai em diante, tudo automatico.',
+      ],
+    },
+    en: {
+      title: "Critical fix: Service Worker was serving stale HTML after deploy",
+      bullets: [
+        '\u2605 **Diagnosis:** after v10.1.0 and v10.1.1, William reported the nav bar still appeared far from the bottom even after deploy. Not a CDN cache issue nor Action failure -- it was **the Service Worker itself (v10.0.1) intercepting `index.html` fetches and serving the cached HTML from an earlier version.** Stale-while-revalidate is fine for assets but terrible for navigations: user sees the old UI, and the SW only updates the cache for the *next* open.',
+        '\u2605 **Fix 1 — Network-first for navigations.** SW now detects navigation requests (request.mode === "navigate", accept: text/html, or URL ending in "/" or "index.html") and goes STRAIGHT to network — cache only as an offline fallback. Assets (JS, CSS, fonts, icons) keep stale-while-revalidate because they\'re versioned.',
+        '\u2605 **Fix 2 — Auto-reload when a new SW takes control.** Main thread attaches a `controllerchange` listener on navigator.serviceWorker. When a new SW assumes control (after `skipWaiting + clients.claim`), the page reloads itself. Guarded against reload loops via a session flag.',
+        '**Combined effect:** from this version onward, you\'ll never see an outdated UI after a deploy again. First visit in any environment (desktop, iPhone) pulls v10.1.2 fresh from the network, and from then on any push I make to main generates an automatic reload on any session that\'s open when the Action finishes.',
+        '**YOU NEED A ONE-TIME FORCE-RELOAD for this version** — because the old SW is still in control. Desktop: Ctrl+Shift+R. iPhone PWA: hold the icon -> Remove App -> reinstall via Safari Share. From there on, everything is automatic.',
+      ],
+    },
+  },
   {
     v: "10.1.1", date: "2026-04-16",
     pt: {

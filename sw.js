@@ -104,16 +104,57 @@ function shouldBypass(url) {
   );
 }
 
+// Is this a navigation request (HTML document load)? We detect three ways:
+//   1. request.mode === "navigate" (standard)
+//   2. request is same-origin and accepts text/html
+//   3. URL ends in "/" or "index.html"
+// Navigation requests use NETWORK-FIRST so users always see the newest HTML,
+// never a stale cached index from a prior deploy. Assets use
+// stale-while-revalidate because they're versioned in the HTML.
+function isNavigation(req) {
+  if (req.mode === "navigate") return true;
+  var accept = req.headers.get("accept") || "";
+  if (accept.indexOf("text/html") !== -1) {
+    var u = req.url;
+    if (u.indexOf(self.location.origin) === 0) {
+      if (u.endsWith("/") || u.indexOf("index.html") !== -1) return true;
+    }
+  }
+  return false;
+}
+
 self.addEventListener("fetch", function (event) {
   var req = event.request;
   if (req.method !== "GET") return;
   if (shouldBypass(req.url)) return;
 
+  // ─── NAVIGATION: network-first ─────────────────────────────────
+  // Guarantees users always get the newest HTML (and hence newest
+  // APP_VERSION, nav styles, changelog, etc) after a deploy. Falls
+  // back to cache only if the network is unreachable.
+  if (isNavigation(req)) {
+    event.respondWith(
+      fetch(req).then(function (resp) {
+        if (resp && resp.status === 200) {
+          var clone = resp.clone();
+          caches.open(CACHE_NAME).then(function (cache) {
+            cache.put(req, clone).catch(function () { /* quota, ignore */ });
+          });
+        }
+        return resp;
+      }).catch(function () {
+        // Offline — serve whatever HTML we cached last.
+        return caches.match(req).then(function (cached) {
+          return cached || caches.match("./") || Response.error();
+        });
+      })
+    );
+    return;
+  }
+
+  // ─── ASSETS: stale-while-revalidate ────────────────────────────
   event.respondWith(
     caches.match(req).then(function (cached) {
-      // Fetch in the background (whether or not we have a cache hit).
-      // If successful, refresh the cache entry. If offline, fall back to
-      // the cached response if there is one.
       var fetchAndUpdate = fetch(req).then(function (resp) {
         if (resp && (resp.status === 200 || resp.type === "opaque")) {
           var clone = resp.clone();
@@ -123,13 +164,10 @@ self.addEventListener("fetch", function (event) {
         }
         return resp;
       }).catch(function () {
-        // Offline and no cache for this URL — let the browser surface
-        // the network error rather than hanging.
         return cached || Response.error();
       });
       return cached || fetchAndUpdate;
     }).catch(function () {
-      // Cache API itself failed (extremely rare). Fall back to network.
       return fetch(req);
     })
   );
