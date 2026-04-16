@@ -122,24 +122,7 @@
 
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
-    html,body{height:100vh;height:100dvh;overflow:hidden;overscroll-behavior:none;background:
-      radial-gradient(1.5px 1.5px at 13% 12%, rgba(200,210,255,0.55) 50%, transparent 51%),
-      radial-gradient(1px 1px at 87% 8%, rgba(200,210,255,0.45) 50%, transparent 51%),
-      radial-gradient(1px 1px at 32% 24%, rgba(210,220,255,0.35) 50%, transparent 51%),
-      radial-gradient(1.5px 1.5px at 68% 18%, rgba(220,225,255,0.5) 50%, transparent 51%),
-      radial-gradient(1px 1px at 9% 38%, rgba(200,210,255,0.4) 50%, transparent 51%),
-      radial-gradient(1px 1px at 48% 32%, rgba(210,215,255,0.3) 50%, transparent 51%),
-      radial-gradient(1.5px 1.5px at 78% 44%, rgba(220,225,255,0.45) 50%, transparent 51%),
-      radial-gradient(1px 1px at 22% 52%, rgba(200,210,255,0.4) 50%, transparent 51%),
-      radial-gradient(1px 1px at 91% 58%, rgba(210,220,255,0.35) 50%, transparent 51%),
-      radial-gradient(1.5px 1.5px at 56% 64%, rgba(220,225,255,0.5) 50%, transparent 51%),
-      radial-gradient(1px 1px at 7% 72%, rgba(200,210,255,0.45) 50%, transparent 51%),
-      radial-gradient(1px 1px at 38% 78%, rgba(210,220,255,0.35) 50%, transparent 51%),
-      radial-gradient(1.5px 1.5px at 72% 82%, rgba(220,225,255,0.5) 50%, transparent 51%),
-      radial-gradient(1px 1px at 19% 88%, rgba(200,210,255,0.4) 50%, transparent 51%),
-      radial-gradient(1px 1px at 94% 92%, rgba(210,220,255,0.45) 50%, transparent 51%),
-      radial-gradient(1px 1px at 54% 96%, rgba(200,215,255,0.4) 50%, transparent 51%),
-      radial-gradient(ellipse at 50% 0%,#10153d 0%,#070b1e 65%) #070b1e}
+    html,body{height:100vh;height:100dvh;overflow:hidden;overscroll-behavior:none;background:radial-gradient(ellipse at 50% 0%,#10153d 0%,#070b1e 65%) #070b1e}
     body{font-family:'Outfit',sans-serif;
       -webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
     #root{height:100vh;height:100dvh;overflow:hidden}
@@ -340,7 +323,7 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "10.2.8";
+const APP_VERSION = "10.2.9";
 const CHANGELOG = [
   {
     v: "10.2.1", date: "2026-04-16",
@@ -5254,11 +5237,12 @@ function App(){
       </div>:null}
       {page==="growth"&&<GrowthPage entries={entries} birthDate={profile.birthDate} profile={profile} onBack={()=>goTo("stats")} onAddEntry={addEntry} onDeleteEntry={deleteEntry}/>}
       {/* Bottom spacer so content clears nav bar + timer (dynamic w/ safe-area) */}
-      {/* Bottom spacer MÍNIMO — queremos que o conteúdo flua ATRÁS da nav pill
-          (estilo Instagram), então só reservamos espaço suficiente pra a última
-          linha de conteúdo não ficar PERMANENTEMENTE coberta. Quando tem timer
-          ativo precisa de um pouco mais. */}
-      <div style={{height:activeTimer?"calc(90px + env(safe-area-inset-bottom))":"calc(24px + env(safe-area-inset-bottom))"}}/>
+      {/* Sem bottom spacer (v10.2.9) — queremos conteúdo passando ATRÁS da nav
+          pill translúcida (Instagram-style: você rola até o fim, o último card
+          vai por baixo do pill, visível borrado pelo backdrop-filter). Só mantemos
+          ~4px pra o último card não ser cortado no visual-viewport-bottom. Com
+          timer ativo dobramos (TimerBar precisa de espaço pra render acima da nav). */}
+      <div style={{height:activeTimer?"calc(76px + env(safe-area-inset-bottom))":"4px"}}/>
     </div>
 
     {/* Fade gradient above nav */}
