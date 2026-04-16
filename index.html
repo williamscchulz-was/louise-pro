@@ -176,23 +176,6 @@
      corretamente em iOS Safari PWA — o bug famoso onde fixed dentro de ancestor com
      overflow:auto vira efetivamente absolute em standalone mode. -->
 <div id="nav-host"></div>
-<!-- iOS PWA standalone reservas aproximadamente 62px ABAIXO do viewport no iPhone
-     16 Pro Max (home indicator + chrome). position:fixed bottom:0 se ancora no
-     limite do viewport interno (innerHeight), não na tela física. Medimos a
-     diferença e publicamos em --screen-bottom-gap pra nav descer usando bottom
-     negativo. Sem isso, qualquer valor de bottom deixa cosmos vazio abaixo. -->
-<script>
-(function(){
-  function updGap(){
-    var gap=Math.max(0,(window.screen&&window.screen.height||0)-window.innerHeight);
-    document.documentElement.style.setProperty('--screen-bottom-gap',gap+'px');
-  }
-  updGap();
-  window.addEventListener('resize',updGap);
-  window.addEventListener('orientationchange',updGap);
-  if(window.visualViewport)window.visualViewport.addEventListener('resize',updGap);
-})();
-</script>
 <!-- Debug: shows if app fails to load after 10s -->
 <div id="load-debug" style="position:fixed;inset:0;z-index:9998;background:#070b1e;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:monospace;color:#8b90b8;font-size:12px">
   <div style="font-size:16px;margin-bottom:12px;color:#a78bfa">Louise Pro</div>
@@ -335,7 +318,7 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "10.1.7";
+const APP_VERSION = "10.1.8";
 const CHANGELOG = [
   {
     v: "10.1.7", date: "2026-04-16",
@@ -2814,7 +2797,7 @@ function TimerBar({activeTimer,onStop,onSwitch,onPause,onEditStart}){const[tick,
     const lSecs=Math.floor(lMs/1000),rSecs=Math.floor(rMs/1000);
     const isL=activeTimer.side==="left";
     const bc=T.blue;
-    return(<div style={{position:"fixed",bottom:"calc(76px - var(--screen-bottom-gap, 0px) + max(4px, env(safe-area-inset-bottom)))",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 32px)",maxWidth:448,padding:"14px 14px",borderRadius:20,background:`linear-gradient(180deg,${bc}1a,${bc}06)`,border:`1px solid ${bc}50`,backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",display:"flex",alignItems:"center",gap:10,zIndex:60,boxShadow:`0 1px 0 0 rgba(255,255,255,0.08) inset, 0 0 0 1px ${bc}15, 0 12px 30px -10px ${bc}40`,overflow:"hidden"}}>
+    return(<div style={{position:"fixed",bottom:"calc(66px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 32px)",maxWidth:448,padding:"14px 14px",borderRadius:20,background:`linear-gradient(180deg,${bc}1a,${bc}06)`,border:`1px solid ${bc}50`,backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",display:"flex",alignItems:"center",gap:10,zIndex:60,boxShadow:`0 1px 0 0 rgba(255,255,255,0.08) inset, 0 0 0 1px ${bc}15, 0 12px 30px -10px ${bc}40`,overflow:"hidden"}}>
       <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse at 50% 0%,rgba(255,255,255,0.05),transparent 60%)",pointerEvents:"none"}}/>
       <div style={{position:"relative",width:44,height:44,borderRadius:13,background:`linear-gradient(135deg,${bc}38,${bc}10)`,border:`1px solid ${bc}55`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,boxShadow:"0 1px 0 0 rgba(255,255,255,0.1) inset"}}><Icon name="breast" size={20} color="#7dd3fc"/></div>
       <button onClick={()=>onSwitch("left")} style={{position:"relative",flex:1,padding:"8px 4px",borderRadius:14,background:isL?`linear-gradient(180deg,${bc}30,${bc}10)`:"transparent",border:isL?`1px solid ${bc}55`:"1px solid transparent",boxShadow:isL?"0 1px 0 0 rgba(255,255,255,0.1) inset":"none",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
@@ -2846,7 +2829,7 @@ function TimerBar({activeTimer,onStop,onSwitch,onPause,onEditStart}){const[tick,
   // Since label: "desde HH:MM" showing the start time
   const stDate=new Date(activeTimer.startTime);
   const stTimeStr=`${String(stDate.getHours()).padStart(2,"0")}:${String(stDate.getMinutes()).padStart(2,"0")}`;
-  return(<div style={{position:"fixed",bottom:"calc(76px - var(--screen-bottom-gap, 0px) + max(4px, env(safe-area-inset-bottom)))",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 32px)",maxWidth:448,padding:"16px 14px 16px 18px",borderRadius:20,background:`linear-gradient(180deg,${tCol}2e,${tCol}0f)`,border:`1px solid ${tCol}55`,backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",display:"flex",alignItems:"center",gap:12,zIndex:60,boxShadow:`0 1px 0 0 rgba(255,255,255,0.08) inset, 0 0 0 1px ${tCol}15, 0 12px 30px -10px ${tCol}40`,overflow:"hidden"}}>
+  return(<div style={{position:"fixed",bottom:"calc(66px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 32px)",maxWidth:448,padding:"16px 14px 16px 18px",borderRadius:20,background:`linear-gradient(180deg,${tCol}2e,${tCol}0f)`,border:`1px solid ${tCol}55`,backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",display:"flex",alignItems:"center",gap:12,zIndex:60,boxShadow:`0 1px 0 0 rgba(255,255,255,0.08) inset, 0 0 0 1px ${tCol}15, 0 12px 30px -10px ${tCol}40`,overflow:"hidden"}}>
     <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse at 50% 0%,rgba(255,255,255,0.06),transparent 60%)",pointerEvents:"none"}}/>
     <div style={{width:50,height:50,borderRadius:15,background:`linear-gradient(135deg,${tCol}45,${tCol}15)`,border:`1px solid ${tCol}55`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,boxShadow:"0 1px 0 0 rgba(255,255,255,0.1) inset",position:"relative"}}><Icon name={tIconName} size={22} color={tColLight}/></div>
     <div style={{flex:1,position:"relative",minWidth:0}}>
@@ -5309,7 +5292,7 @@ function App(){
         <Icon name="home" size={20} color="#c4b5fd"/>
       </button>
       </div>}
-    </nav>:<nav style={{position:"fixed",bottom:"calc(10px - var(--screen-bottom-gap, 0px))",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 24px)",maxWidth:420,display:"flex",alignItems:"center",justifyContent:"space-around",gap:2,padding:"7px 8px",background:"linear-gradient(180deg,rgba(38,44,90,0.38),rgba(14,18,48,0.58))",backdropFilter:"blur(26px) saturate(200%)",WebkitBackdropFilter:"blur(26px) saturate(200%)",borderRadius:34,border:"1px solid rgba(255,255,255,0.14)",boxShadow:"0 1px 0 0 rgba(255,255,255,0.24) inset, 0 -1px 2px 0 rgba(0,0,0,0.18) inset, 0 10px 32px -8px rgba(0,0,0,0.55), 0 0 48px -18px rgba(139,124,246,0.3)",zIndex:50}}>
+    </nav>:<nav style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"calc(100% - 24px)",maxWidth:420,display:"flex",alignItems:"center",justifyContent:"space-around",gap:2,padding:"7px 8px",background:"linear-gradient(180deg,rgba(38,44,90,0.38),rgba(14,18,48,0.58))",backdropFilter:"blur(26px) saturate(200%)",WebkitBackdropFilter:"blur(26px) saturate(200%)",borderRadius:34,border:"1px solid rgba(255,255,255,0.14)",boxShadow:"0 1px 0 0 rgba(255,255,255,0.24) inset, 0 -1px 2px 0 rgba(0,0,0,0.18) inset, 0 10px 32px -8px rgba(0,0,0,0.55), 0 0 48px -18px rgba(139,124,246,0.3)",zIndex:50}}>
       {[{icon:"home",active:page==="home"&&!showAdd,action:()=>goTo("home")},{icon:"clock",active:page==="history",action:()=>goTo("history")}].map(n=><button key={n.icon} className="navbtn" onClick={n.action} style={{display:"flex",alignItems:"center",justifyContent:"center",width:48,height:44,borderRadius:22,background:n.active?"rgba(139,124,246,0.22)":"transparent",border:"none",padding:0}}><Icon name={n.icon} size={n.active?22:20} color={n.active?"#ffffff":T.dim}/></button>)}
       <button className="navfab" onClick={()=>{setShowAdd(!showAdd);setFormType(null);setPage("home")}} style={{width:48,height:44,borderRadius:22,background:`linear-gradient(180deg,#9b8df8,#7c3aed)`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 1px 0 0 rgba(255,255,255,0.22) inset, 0 4px 14px -2px ${T.accent}70`,transform:showAdd?"rotate(45deg)":"rotate(0deg)",margin:"0 2px",border:"none",padding:0}}><Icon name="plus" size={22} color="#fff"/></button>
       {[{icon:"chart",active:page==="stats"||page==="growth",action:()=>goTo("stats")},{icon:"gear",active:false,action:()=>setShowProfile(true)}].map(n=><button key={n.icon} className="navbtn" onClick={n.action} style={{display:"flex",alignItems:"center",justifyContent:"center",width:48,height:44,borderRadius:22,background:n.active?"rgba(139,124,246,0.22)":"transparent",border:"none",padding:0}}><Icon name={n.icon} size={n.active?22:20} color={n.active?"#ffffff":T.dim}/></button>)}
