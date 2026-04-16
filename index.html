@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v10.1.1 Nav colada no bottom: removido o 12px de folga que deixava area vazia abaixo
   v10.1.0 Perf bundle: pausa animacoes em bg + content-visibility auto + js bundle (6->1)
   v10.0.4 Resource hints: preload + preconnect pra primeira install do PWA mais rapida
   v10.0.3 Nav Liquid Glass estilo Instagram: pill wider + translucido + rim brilhante
@@ -294,8 +295,27 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "10.1.0";
+const APP_VERSION = "10.1.1";
 const CHANGELOG = [
+  {
+    v: "10.1.1", date: "2026-04-16",
+    pt: {
+      title: "Nav colada no bottom: eliminada a area vazia abaixo",
+      bullets: [
+        '\u2605 **Bug visual da v10.0.3+:** William estava vendo uma area vazia clara entre o pill da nav e o bottom do viewport (visivel tanto no iPhone quanto no desktop). Causa: `bottom: calc(12px + env(safe-area-inset-bottom))` empurrava o pill 12px ACIMA da safe-area -- no iPhone dava 12+34=46px do chao, sobrava o cosmos-background na faixa inferior.',
+        '**Fix:** `bottom: max(8px, env(safe-area-inset-bottom))`. Resultado: no iPhone, pill flutua exatamente sobre o home indicator (safe-area = 34px, sem folga extra) -- sem mais area vazia abaixo. No desktop, 8px do bottom (bem colado). Em ambos os casos, a nav eh a ultima coisa visivel na tela.',
+        'Nada mais mudou. Glass, border, blur, saturacao, padding, icones -- tudo intacto. Soh a posicao vertical.',
+      ],
+    },
+    en: {
+      title: "Nav hugging the bottom: killed the empty space below",
+      bullets: [
+        '\u2605 **Visual bug from v10.0.3+:** William was seeing a clear empty area between the nav pill and the viewport bottom (visible on both iPhone and desktop). Cause: `bottom: calc(12px + env(safe-area-inset-bottom))` pushed the pill 12px ABOVE the safe-area -- on iPhone that meant 12+34=46px from the floor, leaving the cosmos-background showing in the lower band.',
+        '**Fix:** `bottom: max(8px, env(safe-area-inset-bottom))`. Now on iPhone the pill floats exactly above the home indicator (safe-area = 34px, no extra gap) -- no more empty space below. On desktop, 8px from the bottom (nicely pinned). In both cases, the nav is the last thing visible on screen.',
+        'Nothing else changed. Glass, border, blur, saturation, padding, icons — all intact. Just the vertical position.',
+      ],
+    },
+  },
   {
     v: "10.1.0", date: "2026-04-15",
     pt: {
@@ -5139,7 +5159,7 @@ function App(){
         <Icon name="home" size={20} color="#c4b5fd"/>
       </button>
       </div>}
-    </nav>:<nav style={{position:"fixed",bottom:"calc(12px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 24px)",maxWidth:420,display:"flex",alignItems:"center",justifyContent:"space-around",gap:2,padding:"7px 8px",background:"linear-gradient(180deg,rgba(38,44,90,0.38),rgba(14,18,48,0.58))",backdropFilter:"blur(26px) saturate(200%)",WebkitBackdropFilter:"blur(26px) saturate(200%)",borderRadius:34,border:"1px solid rgba(255,255,255,0.14)",boxShadow:"0 1px 0 0 rgba(255,255,255,0.24) inset, 0 -1px 2px 0 rgba(0,0,0,0.18) inset, 0 10px 32px -8px rgba(0,0,0,0.55), 0 0 48px -18px rgba(139,124,246,0.3)",zIndex:50}}>
+    </nav>:<nav style={{position:"fixed",bottom:"max(8px, env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 24px)",maxWidth:420,display:"flex",alignItems:"center",justifyContent:"space-around",gap:2,padding:"7px 8px",background:"linear-gradient(180deg,rgba(38,44,90,0.38),rgba(14,18,48,0.58))",backdropFilter:"blur(26px) saturate(200%)",WebkitBackdropFilter:"blur(26px) saturate(200%)",borderRadius:34,border:"1px solid rgba(255,255,255,0.14)",boxShadow:"0 1px 0 0 rgba(255,255,255,0.24) inset, 0 -1px 2px 0 rgba(0,0,0,0.18) inset, 0 10px 32px -8px rgba(0,0,0,0.55), 0 0 48px -18px rgba(139,124,246,0.3)",zIndex:50}}>
       {[{icon:"home",active:page==="home"&&!showAdd,action:()=>goTo("home")},{icon:"clock",active:page==="history",action:()=>goTo("history")}].map(n=><button key={n.icon} className="navbtn" onClick={n.action} style={{display:"flex",alignItems:"center",justifyContent:"center",width:48,height:44,borderRadius:22,background:n.active?"rgba(139,124,246,0.22)":"transparent",border:"none",padding:0}}><Icon name={n.icon} size={n.active?22:20} color={n.active?"#ffffff":T.dim}/></button>)}
       <button className="navfab" onClick={()=>{setShowAdd(!showAdd);setFormType(null);setPage("home")}} style={{width:48,height:44,borderRadius:22,background:`linear-gradient(180deg,#9b8df8,#7c3aed)`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 1px 0 0 rgba(255,255,255,0.22) inset, 0 4px 14px -2px ${T.accent}70`,transform:showAdd?"rotate(45deg)":"rotate(0deg)",margin:"0 2px",border:"none",padding:0}}><Icon name="plus" size={22} color="#fff"/></button>
       {[{icon:"chart",active:page==="stats"||page==="growth",action:()=>goTo("stats")},{icon:"gear",active:false,action:()=>setShowProfile(true)}].map(n=><button key={n.icon} className="navbtn" onClick={n.action} style={{display:"flex",alignItems:"center",justifyContent:"center",width:48,height:44,borderRadius:22,background:n.active?"rgba(139,124,246,0.22)":"transparent",border:"none",padding:0}}><Icon name={n.icon} size={n.active?22:20} color={n.active?"#ffffff":T.dim}/></button>)}
