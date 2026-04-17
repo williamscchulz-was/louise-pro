@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v10.4.1 Default do intervalo de mamada muda de 290min (4h50) pra 120min (2h)
   v10.4.0 Next feeding: barra de progresso no card Bottle do Home (intervalo de mamada glanceable)
   v10.3.4 Botao Home do Profile sempre visivel (removido hide-on-scroll desorientante)
   v10.3.3 Fix: TimerBar e botao Save da Sheet caindo atras da nav pill (safe-area no bottom)
@@ -345,8 +346,25 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "10.4.0";
+const APP_VERSION = "10.4.1";
 const CHANGELOG = [
+  {
+    v: "10.4.1", date: "2026-04-17",
+    pt: {
+      title: "Default do intervalo de mamada: 290min \u2192 120min (2h)",
+      bullets: [
+        '\u2605 Novo default do `feedingInterval`: **120 minutos (2h)** em vez de 290. Afeta s\u00f3 quem nunca abriu o Profile pra configurar \u2014 quem j\u00e1 tem um valor salvo continua com o que escolheu.',
+        'Para atualizar um valor j\u00e1 salvo: Profile \u2192 Lembrete de mamada \u2192 campo minutos \u2192 120 \u2192 Salvar.',
+      ],
+    },
+    en: {
+      title: "Feeding interval default: 290min \u2192 120min (2h)",
+      bullets: [
+        '\u2605 New `feedingInterval` default: **120 minutes (2h)** instead of 290. Only affects users who never opened the Profile to configure it \u2014 anyone with a saved value keeps what they chose.',
+        'To update an already-saved value: Profile \u2192 Feeding reminder \u2192 minutes field \u2192 120 \u2192 Save.',
+      ],
+    },
+  },
   {
     v: "10.4.0", date: "2026-04-17",
     pt: {
@@ -3745,14 +3763,14 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
   // Medication reminders list (everything except the feeding interval one)
   const medList=(reminders||[]).filter(r=>r.tipo!=="feedingInterval");
   const[fdEnabled,setFdEnabled]=useState(feedReminder?.ativo===true);
-  const[fdMinutes,setFdMinutes]=useState(feedReminder?.intervalMin||290);
+  const[fdMinutes,setFdMinutes]=useState(feedReminder?.intervalMin||120);
   const[fdBusy,setFdBusy]=useState(false);
-  // Human-readable conversion of fdMinutes (e.g. 290 → "4h 50min")
+  // Human-readable conversion of fdMinutes (e.g. 120 → "2h")
   const fdConverted=(()=>{const v=fdMinutes||0;const h=Math.floor(v/60);const m=v%60;if(h===0)return`${m}min`;if(m===0)return`${h}h`;return`${h}h ${m}min`})();
   // Sync local state when the prop changes (Firestore push from another device)
   useEffect(()=>{
     const r=(reminders||[]).find(x=>x.tipo==="feedingInterval");
-    if(r){setFdEnabled(r.ativo===true);setFdMinutes(r.intervalMin||290)}
+    if(r){setFdEnabled(r.ativo===true);setFdMinutes(r.intervalMin||120)}
   },[reminders]);
   // Save handler — upserts the single feedingInterval reminder
   const saveFeedReminder=async(overrides={})=>{
@@ -3785,7 +3803,7 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
     birthWeight!==String(profile.birthWeight||"")||
     birthLength!==String(profile.birthLength||"")||
     birthHead!==String(profile.birthHead||"")||
-    fdMinutes!==(feedReminder?.intervalMin||290)
+    fdMinutes!==(feedReminder?.intervalMin||120)
   );
   useEffect(()=>{if(onDirtyChange)onDirtyChange(isDirty)},[isDirty]);
   // Populate revertAllRef with function that resets all tracked fields
@@ -3797,7 +3815,7 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
     setBirthWeight(String(profile.birthWeight||""));
     setBirthLength(String(profile.birthLength||""));
     setBirthHead(String(profile.birthHead||""));
-    setFdMinutes(feedReminder?.intervalMin||290);
+    setFdMinutes(feedReminder?.intervalMin||120);
     Haptic.medium();
   };
   // Persists a single toggle change immediately to Firestore (no need to tap Save).
@@ -3854,8 +3872,8 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
     // Save profile fields
     await onSave({name:name.trim(),birthDate:birth,photo,mlGoal:parseInt(mlGoal)||0,birthWeight:parseFloat(birthWeight)||0,birthLength:parseFloat(birthLength)||0,birthHead:parseFloat(birthHead)||0,lang:langSel,keepScreenOn,hapticEnabled,pushEnabled});
     // Also persist feeding reminder interval if it changed
-    if(fdMinutes!==(feedReminder?.intervalMin||290)){
-      const clamped=Math.max(30,Math.min(720,fdMinutes||290));
+    if(fdMinutes!==(feedReminder?.intervalMin||120)){
+      const clamped=Math.max(30,Math.min(720,fdMinutes||120));
       await saveFeedReminder({intervalMin:clamped});
       if(clamped!==fdMinutes)setFdMinutes(clamped);
     }
@@ -4052,7 +4070,7 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
         <div style={{padding:14,borderRadius:14,background:"rgba(14,18,48,0.5)",border:`1px dashed ${T.gBSoft}`,opacity:fdEnabled?1:0.5,transition:"opacity .25s",pointerEvents:fdEnabled?"auto":"none"}}>
           <div style={{fontSize:11,fontWeight:600,color:"#7a80a8",marginBottom:10,letterSpacing:-0.05}}>{langSel==="en"?"Interval":"Intervalo"}</div>
           <div style={{display:"flex",gap:8,alignItems:"stretch"}}>
-            <input type="number" inputMode="numeric" min="30" max="720" value={fdMinutes} onChange={e=>{const n=parseInt(e.target.value)||0;setFdMinutes(n)}} onBlur={()=>{const clamped=Math.max(30,Math.min(720,fdMinutes||290));if(clamped!==fdMinutes)setFdMinutes(clamped)}} style={{flex:1,minWidth:0,padding:"14px 16px",background:"rgba(20,26,60,0.55)",border:`1px solid ${T.gBSoft}`,borderRadius:14,color:T.text,fontSize:17,fontWeight:700,textAlign:"center",fontVariantNumeric:"tabular-nums",letterSpacing:-0.2,outline:"none",boxShadow:T.insetTop,WebkitAppearance:"none",appearance:"none"}}/>
+            <input type="number" inputMode="numeric" min="30" max="720" value={fdMinutes} onChange={e=>{const n=parseInt(e.target.value)||0;setFdMinutes(n)}} onBlur={()=>{const clamped=Math.max(30,Math.min(720,fdMinutes||120));if(clamped!==fdMinutes)setFdMinutes(clamped)}} style={{flex:1,minWidth:0,padding:"14px 16px",background:"rgba(20,26,60,0.55)",border:`1px solid ${T.gBSoft}`,borderRadius:14,color:T.text,fontSize:17,fontWeight:700,textAlign:"center",fontVariantNumeric:"tabular-nums",letterSpacing:-0.2,outline:"none",boxShadow:T.insetTop,WebkitAppearance:"none",appearance:"none"}}/>
             <div style={{display:"flex",alignItems:"center",padding:"0 16px",background:"rgba(20,26,60,0.55)",border:`1px solid ${T.gBSoft}`,borderRadius:14,fontSize:13,color:"#8b90b8",fontWeight:600,boxShadow:T.insetTop,whiteSpace:"nowrap"}}>{langSel==="en"?"minutes":"minutos"}</div>
           </div>
           <div style={{marginTop:10,textAlign:"center",fontSize:12,color:"#c4b5fd",fontWeight:600,letterSpacing:-0.1}}>
@@ -5036,7 +5054,7 @@ function App(){
   // user has the feedingInterval reminder enabled — otherwise the card keeps its plain "ago" row.
   const feedReminder=useMemo(()=>(reminders||[]).find(r=>r.tipo==="feedingInterval"),[reminders]);
   const feedingActive=feedReminder?.ativo===true;
-  const feedingIntervalMin=feedReminder?.intervalMin||290;
+  const feedingIntervalMin=feedReminder?.intervalMin||120;
   const lastNursingSide=useMemo(()=>{const n=entries.find(e=>e.type==="nursing"&&e.side);return n?n.side:null},[entries]);
   const nextNursingSide=lastNursingSide==="left"||lastNursingSide==="both"?"right":"left";
   const topMl=useMemo(()=>{const counts={};entries.filter(e=>e.type==="bottle"&&e.ml).forEach(e=>{counts[e.ml]=(counts[e.ml]||0)+1});return Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([v])=>Number(v))},[entries]);
