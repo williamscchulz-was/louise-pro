@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v10.3.4 Botao Home do Profile sempre visivel (removido hide-on-scroll desorientante)
   v10.3.3 Fix: TimerBar e botao Save da Sheet caindo atras da nav pill (safe-area no bottom)
   v10.3.2 Fix: TimerBar cobrindo o botao Save do AddForm (e tingindo de verde via backdrop-filter)
   v10.2.1 Fix faixa preta no bottom iOS PWA: App container 100% -> 100dvh + nav calc intencional
@@ -343,8 +344,25 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "10.3.3";
+const APP_VERSION = "10.3.4";
 const CHANGELOG = [
+  {
+    v: "10.3.4", date: "2026-04-16",
+    pt: {
+      title: "Bot\u00e3o Home do Profile sempre vis\u00edvel (removido hide on scroll)",
+      bullets: [
+        '\u2605 Antes, o bot\u00e3o Home do Profile sumia ao rolar pra baixo e voltava ao rolar pra cima (hide-on-scroll tipo Instagram). Ficava desorientante \u2014 voc\u00ea ia sair do Profile e o bot\u00e3o n\u00e3o estava l\u00e1. Agora fica fixo sempre.',
+        'Removido: estado `profileNavHidden`, ref `lastScrollYRef`, useEffect de reset, prop `onScroll` do `ProfilePage`. Navbar contextual (Cancelar/Salvar quando tem altera\u00e7\u00f5es) mantida intacta.',
+      ],
+    },
+    en: {
+      title: "Profile Home button always visible (removed hide-on-scroll)",
+      bullets: [
+        '\u2605 The Profile\'s Home button used to slide out on scroll down and return on scroll up (Instagram-style hide-on-scroll). Felt disorienting \u2014 you\'d go to leave the Profile and the button was gone. Now it stays pinned.',
+        'Removed: `profileNavHidden` state, `lastScrollYRef` ref, reset useEffect, `onScroll` prop on `ProfilePage`. The contextual navbar (Cancel/Save when dirty) is untouched.',
+      ],
+    },
+  },
   {
     v: "10.3.3", date: "2026-04-16",
     pt: {
@@ -3634,7 +3652,7 @@ function InboxPanel({inbox,onClose,onMarkRead,onMarkAllRead,lang}){
   </div>);
 }
 
-function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadChangelog,reminders,onAddReminder,onDelReminder,onDirtyChange,cancelSignal,saveSignal,onScroll}){
+function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadChangelog,reminders,onAddReminder,onDelReminder,onDirtyChange,cancelSignal,saveSignal}){
   const[name,setName]=useState(profile.name||"");
   const[birth,setBirth]=useState(profile.birthDate||"");
   const[photo,setPhoto]=useState(profile.photo||"");
@@ -3823,7 +3841,7 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
   };
   saveRef.current=doSave;
   const inp={width:"100%",maxWidth:"100%",boxSizing:"border-box",WebkitAppearance:"none",appearance:"none",padding:"17px 18px",background:"rgba(20,26,60,0.55)",border:`1px solid ${T.gBSoft}`,borderRadius:16,color:T.text,fontSize:17,fontWeight:600,letterSpacing:-0.2,outline:"none",boxShadow:T.insetTop};
-  return(<div onScroll={onScroll} style={{position:"fixed",inset:0,zIndex:200,maxWidth:480,margin:"0 auto",background:`radial-gradient(ellipse at 50% 0%,#10153d,${T.bg1} 65%)`,overflowY:"auto",overflowX:"hidden",overscrollBehavior:"contain",WebkitOverflowScrolling:"touch",paddingTop:"env(safe-area-inset-top)",paddingBottom:"calc(100px + env(safe-area-inset-bottom))"}}>
+  return(<div style={{position:"fixed",inset:0,zIndex:200,maxWidth:480,margin:"0 auto",background:`radial-gradient(ellipse at 50% 0%,#10153d,${T.bg1} 65%)`,overflowY:"auto",overflowX:"hidden",overscrollBehavior:"contain",WebkitOverflowScrolling:"touch",paddingTop:"env(safe-area-inset-top)",paddingBottom:"calc(100px + env(safe-area-inset-bottom))"}}>
     {/* Fade overlays removed — both top and bottom gradient strips were visually distracting,
         making content look dimmed/buggy rather than giving a clean melt effect. Simple solid scroll. */}
     <div style={{display:"flex",alignItems:"center",gap:14,padding:"16px 20px"}}><button onClick={onBack} style={{width:36,height:36,borderRadius:10,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="back" size={18} color={T.sub}/></button><span style={{fontSize:17,fontWeight:700}}>{L("profile")}</span></div>
@@ -4741,11 +4759,6 @@ function App(){
   const[profileCancelSignal,setProfileCancelSignal]=useState(0);
   const[profileSaveSignal,setProfileSaveSignal]=useState(0);
   const profileSaveRef=useRef(null);
-  // Profile nav hide-on-scroll — navbar slides out on scroll down, returns on scroll up
-  const[profileNavHidden,setProfileNavHidden]=useState(false);
-  const lastScrollYRef=useRef(0);
-  // Reset nav visibility whenever Profile is opened/closed
-  useEffect(()=>{if(!showProfile){setProfileNavHidden(false);lastScrollYRef.current=0}},[showProfile]);
   const[inbox,setInbox]=useState({items:[],lastReset:""});const[showInbox,setShowInbox]=useState(false);
   const[reminders,setReminders]=useState([]);
   const[showChangelog,setShowChangelog]=useState(false);const[showUpdateToast,setShowUpdateToast]=useState(false);
@@ -5357,7 +5370,7 @@ function App(){
       {formType&&<AddForm type={formType} onSave={addEntry} savedMeds={savedMeds} onSaveMeds={async m=>await FB.saveMeds(m)} editEntry={editEntry} lastBottleMl={lastBottleMl} topMl={topMl} onStartTimer={type=>{startTimer(type);setFormType(null);setShowAdd(false)}}/>}
     </Sheet>
 
-    {showProfile&&<ProfilePage profile={profile} onSave={async p=>await FB.saveProfile(p)} onBack={()=>{setShowProfile(false);setProfileIsDirty(false)}} onGrowth={()=>{setShowProfile(false);setProfileIsDirty(false);goTo("growth")}} onShowChangelog={()=>setShowChangelog(true)} hasUnreadChangelog={hasUnreadChangelog} reminders={reminders} onAddReminder={async r=>await FB.addReminder(r)} onDelReminder={async id=>await FB.delReminder(id)} onDirtyChange={setProfileIsDirty} cancelSignal={profileCancelSignal} saveSignal={profileSaveSignal} onScroll={e=>{const y=e.currentTarget.scrollTop;const last=lastScrollYRef.current;const delta=y-last;if(y<40){setProfileNavHidden(false)}else if(delta>6){setProfileNavHidden(true)}else if(delta<-6){setProfileNavHidden(false)}lastScrollYRef.current=y}}/>}
+    {showProfile&&<ProfilePage profile={profile} onSave={async p=>await FB.saveProfile(p)} onBack={()=>{setShowProfile(false);setProfileIsDirty(false)}} onGrowth={()=>{setShowProfile(false);setProfileIsDirty(false);goTo("growth")}} onShowChangelog={()=>setShowChangelog(true)} hasUnreadChangelog={hasUnreadChangelog} reminders={reminders} onAddReminder={async r=>await FB.addReminder(r)} onDelReminder={async id=>await FB.delReminder(id)} onDirtyChange={setProfileIsDirty} cancelSignal={profileCancelSignal} saveSignal={profileSaveSignal}/>}
     {showInbox&&<InboxPanel inbox={inbox} onClose={()=>setShowInbox(false)} onMarkRead={markInboxRead} onMarkAllRead={markAllInboxRead} lang={lang}/>}
     {showChangelog&&<ChangelogModal onClose={closeChangelog} lang={lang}/>}
     {showUpdateToast&&!showChangelog&&<UpdateToast fromVersion={profile.lastSeenVersion} toVersion={APP_VERSION} onView={openChangelog} onDismiss={dismissUpdateToast} lang={lang}/>}
@@ -5368,7 +5381,7 @@ function App(){
         e fora do #root (com overflow:hidden) para que position:fixed funcione corretamente
         em iOS Safari PWA standalone. Veja #nav-host no <body>. */}
     {ReactDOM.createPortal(<><TimerBar activeTimer={activeTimer} onStop={stopTimer} onSwitch={switchSide} onPause={pauseNursing} onEditStart={()=>setShowEditStart(true)} hidden={showAdd||!!formType||showProfile||showInbox||showChangelog||showEditStart||showNursingPicker||showSleepInfo}/>
-    {showProfile?<nav style={{position:"fixed",bottom:"6px",left:profileIsDirty?"16px":"50%",right:profileIsDirty?"16px":"auto",transform:profileIsDirty?(profileNavHidden?"translateY(0)":"translateY(0)"):`translateX(-50%) translateY(${profileNavHidden?"120%":"0"})`,opacity:(profileNavHidden&&!profileIsDirty)?0:1,display:"flex",alignItems:"center",gap:8,padding:profileIsDirty?"10px":"0",background:profileIsDirty?"linear-gradient(180deg,rgba(28,22,60,0.97),rgba(22,18,52,0.98))":"transparent",backdropFilter:profileIsDirty?"blur(16px)":"none",WebkitBackdropFilter:profileIsDirty?"blur(16px)":"none",borderRadius:profileIsDirty?22:999,border:profileIsDirty?"1px solid rgba(139,124,246,0.35)":"none",boxShadow:profileIsDirty?"0 1px 0 0 rgba(255,255,255,0.1) inset, 0 0 0 1px rgba(139,124,246,0.15), 0 12px 36px -8px rgba(139,124,246,0.4)":"none",zIndex:250,animation:profileIsDirty?"slideUp 0.3s cubic-bezier(0.22,1,0.36,1)":"none",transition:"transform .28s cubic-bezier(0.22,1,0.36,1), opacity .2s ease"}}>
+    {showProfile?<nav style={{position:"fixed",bottom:"6px",left:profileIsDirty?"16px":"50%",right:profileIsDirty?"16px":"auto",transform:profileIsDirty?"translateY(0)":"translateX(-50%)",opacity:1,display:"flex",alignItems:"center",gap:8,padding:profileIsDirty?"10px":"0",background:profileIsDirty?"linear-gradient(180deg,rgba(28,22,60,0.97),rgba(22,18,52,0.98))":"transparent",backdropFilter:profileIsDirty?"blur(16px)":"none",WebkitBackdropFilter:profileIsDirty?"blur(16px)":"none",borderRadius:profileIsDirty?22:999,border:profileIsDirty?"1px solid rgba(139,124,246,0.35)":"none",boxShadow:profileIsDirty?"0 1px 0 0 rgba(255,255,255,0.1) inset, 0 0 0 1px rgba(139,124,246,0.15), 0 12px 36px -8px rgba(139,124,246,0.4)":"none",zIndex:250,animation:profileIsDirty?"slideUp 0.3s cubic-bezier(0.22,1,0.36,1)":"none"}}>
       {profileIsDirty?<>
         <button onClick={()=>{Haptic.medium();setProfileCancelSignal(s=>s+1)}} style={{flex:"0 0 42%",padding:13,borderRadius:14,background:"rgba(14,18,48,0.7)",color:"#8b90b8",fontSize:14,fontWeight:700,border:"1px solid rgba(255,255,255,0.08)",cursor:"pointer",letterSpacing:-0.2,display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
           <Icon name="x" size={14} color="#8b90b8"/>{_lang==="en"?"Cancel":"Cancelar"}
