@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v10.4.0 Next feeding: barra de progresso no card Bottle do Home (intervalo de mamada glanceable)
   v10.3.4 Botao Home do Profile sempre visivel (removido hide-on-scroll desorientante)
   v10.3.3 Fix: TimerBar e botao Save da Sheet caindo atras da nav pill (safe-area no bottom)
   v10.3.2 Fix: TimerBar cobrindo o botao Save do AddForm (e tingindo de verde via backdrop-filter)
@@ -344,8 +345,29 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "10.3.4";
+const APP_VERSION = "10.4.0";
 const CHANGELOG = [
+  {
+    v: "10.4.0", date: "2026-04-17",
+    pt: {
+      title: "Next feeding: barra de progresso no card Bottle do Home",
+      bullets: [
+        '\u2605 **Nova barra de progresso** no card Bottle do Home mostrando quanto tempo passou desde a \u00faltima mamada e quando \u00e9 a pr\u00f3xima. Linha de baixo ganhou duas legendas: "5min ago" (esquerda) e "\u2192 16:45" (direita). Glanceable \u2014 d\u00e1 pra saber o momento da pr\u00f3xima mamada sem abrir nada.',
+        '**Cores evoluem com o tempo**: verde normal at\u00e9 80% do intervalo, \u00e2mbar nos \u00faltimos 20% ("chegando"), vermelho quando passa ("+Xm late").',
+        '**Fonte:** usa o reminder `feedingInterval` existente (default 290min, configur\u00e1vel no Profile). Se o toggle estiver desligado, o card mant\u00e9m o layout antigo com s\u00f3 "5min ago".',
+        'Tick de 30s no App root pra atualizar a barra ao vivo (antes o card s\u00f3 re-renderizava em mudan\u00e7a de entries).',
+      ],
+    },
+    en: {
+      title: "Next feeding: progress bar on the Bottle card on Home",
+      bullets: [
+        '\u2605 **New progress bar** on the Home Bottle card showing time since the last feed and when the next one is due. Bottom line now has two labels: "5min ago" (left) and "\u2192 16:45" (right). Glanceable \u2014 you can read next-feeding time at a glance.',
+        '**Colors evolve with time**: normal green up to 80% of the interval, amber on the last 20% ("closing in"), red when it passes ("+Xm late").',
+        '**Source:** uses the existing `feedingInterval` reminder (default 290min, configurable in Profile). If the toggle is off, the card keeps the old layout with just "5min ago".',
+        '30s tick at App root to keep the bar updating live (previously the card only re-rendered on `entries` change).',
+      ],
+    },
+  },
   {
     v: "10.3.4", date: "2026-04-16",
     pt: {
@@ -4743,6 +4765,9 @@ function App(){
   const[profile,setProfile]=useState({name:"",birthDate:"2026-03-08",photo:"",mlGoal:0});
   const[activeTimer,setActiveTimer]=useState(null);const[loading,setLoading]=useState(true);
   const[page,setPage]=useState("home");const[showAdd,setShowAdd]=useState(false);const[formType,setFormType]=useState(null);const[editEntry,setEditEntry]=useState(null);const[showOrbit,setShowOrbit]=useState(false);
+  // Minute-ish tick so time-based UI (next-feeding progress bar on the Bottle card) refreshes without a full reload.
+  const[nowTick,setNowTick]=useState(0);
+  useEffect(()=>{const iv=setInterval(()=>setNowTick(k=>k+1),30000);return()=>clearInterval(iv)},[]);
   // SWIPE NAV (v9.9.2) — Step 1: only Home/Stats/History swipe. Profile stays overlay.
   const SWIPE_PAGES=["home","stats","history"];
   const swipeIdx=SWIPE_PAGES.indexOf(page);
@@ -5007,6 +5032,11 @@ function App(){
   const todayE=useMemo(()=>entries.filter(e=>e.date===today),[entries,today]);
   const totalMl=todayE.filter(e=>e.type==="bottle").reduce((s,e)=>s+(e.ml||0),0);
   const lastBottleMl=useMemo(()=>{const b=entries.find(e=>e.type==="bottle"&&e.ml);return b?b.ml:0},[entries]);
+  // Next-feeding progress (for the Bottle quick-stat card on Home). Only computed if the
+  // user has the feedingInterval reminder enabled — otherwise the card keeps its plain "ago" row.
+  const feedReminder=useMemo(()=>(reminders||[]).find(r=>r.tipo==="feedingInterval"),[reminders]);
+  const feedingActive=feedReminder?.ativo===true;
+  const feedingIntervalMin=feedReminder?.intervalMin||290;
   const lastNursingSide=useMemo(()=>{const n=entries.find(e=>e.type==="nursing"&&e.side);return n?n.side:null},[entries]);
   const nextNursingSide=lastNursingSide==="left"||lastNursingSide==="both"?"right":"left";
   const topMl=useMemo(()=>{const counts={};entries.filter(e=>e.type==="bottle"&&e.ml).forEach(e=>{counts[e.ml]=(counts[e.ml]||0)+1});return Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([v])=>Number(v))},[entries]);
@@ -5288,7 +5318,21 @@ function App(){
         {napSug&&(napSug.state==="stretching"||napSug.state==="overdue")&&<div style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:T.orangeS,border:`1px solid ${T.orange}22`,display:"flex",alignItems:"center",gap:10,animation:"pulse 1.5s infinite"}}><Icon name="zap" size={18} color={napSug.state==="overdue"?"#f87171":T.orange}/><div><div style={{fontSize:12,fontWeight:700,color:napSug.state==="overdue"?"#f87171":T.orange}}>{napSug.state==="overdue"?(_lang==="en"?"Past max window":"Passou do maximo"):(_lang==="en"?"Stretching":"Esticando")}</div><div style={{fontSize:10,color:T.sub}}>{napSug.state==="overdue"?(_lang==="en"?`${fmtDur(napSug.el)} awake — risk of overtired`:`${fmtDur(napSug.el)} acordada — risco de overtired`):(_lang==="en"?"Past average, still within range":"Passou da media, ainda dentro do range")}</div></div></div>}
         {!activeTimer&&sleepRec?.phase===2&&daySchedule.length>0&&daySchedule.filter(s=>s.status==="next").map((s,i)=><div key={"ns"+i} style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:`${T.accent}10`,border:`1px solid ${T.accent}18`,display:"flex",alignItems:"center",gap:10}}><Icon name="star" size={18} color={T.accent} fill={T.accent}/><div><div style={{fontSize:12,fontWeight:700,color:T.accent}}>{s.bed?(_lang==="en"?"Bedtime ~":"Sono ~"):(_lang==="en"?"Next nap ~":"Prox. soneca ~")}{minToTime(s.startMin)}</div><div style={{fontSize:10,color:T.sub}}>{s.bed?"":`${s.pos}${_lang==="en"?["","st","nd","rd"][s.pos]||"th":"a"} · `}WW {fmtDur(s.ww)}{s.durRange?" · "+s.durRange:""}</div></div></div>)}
         <InsightCards insights={dayInsights} phase={sleepRec?.phase}/>
-        <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr)",gap:6,padding:"0 20px",marginBottom:14}}>{[{i:"bottle",v:`${totalMl}`,u:"ml",c:T.green,t:["bottle"],tap:"bottle",l:_lang==="en"?"Bottle":"Mamad."},{i:"breast",v:totalNursingMin>0?fmtDur(totalNursingMin):`${totalNursing}x`,c:T.blue,t:["nursing"],tap:"nursing",l:_lang==="en"?"Nursing":"Amam."},{i:"moon",v:fmtDur(totalSleep),c:T.purple,t:["sleep","nap"],tap:"nap",l:_lang==="en"?"Sleep":"Sono"},{i:"diaper",v:`${totalDiapers}`,c:T.pink,t:["diaper"],tap:"diaper",l:_lang==="en"?"Diaper":"Fralda"}].map((p,idx)=>{const last=entries.find(e=>p.t.includes(e.type));let ago=null;if(last){if(p.t.includes("sleep")&&last.durationMin){const endMs=new Date(`${last.date}T${last.time}`).getTime()+last.durationMin*60000;const endD=new Date(endMs);const ed=`${endD.getFullYear()}-${String(endD.getMonth()+1).padStart(2,"0")}-${String(endD.getDate()).padStart(2,"0")}`;const et=`${String(endD.getHours()).padStart(2,"0")}:${String(endD.getMinutes()).padStart(2,"0")}`;ago=timeSince(ed,et)}else{ago=timeSince(last.date,last.time)}}return<button key={idx} onClick={()=>{if(p.tap==="nap"&&!activeTimer)startTimer("nap");else if(p.tap==="nursing"&&!activeTimer)startTimer("nursing",nextNursingSide);else if(!activeTimer)setFormType(p.tap)}} style={{padding:"10px",borderRadius:12,background:`${p.c}06`,border:`1px solid ${p.c}0a`,textAlign:"left"}}><div style={{display:"flex",alignItems:"center",gap:5,marginBottom:3}}><Icon name={p.i} size={12} color={p.c}/><span style={{fontSize:9,color:T.dim}}>{p.l}</span></div><div style={{fontSize:16,fontWeight:800,color:p.c}}>{p.v}{p.u?<span style={{fontSize:11,opacity:0.6}}>{p.u}</span>:null}</div>{ago&&<div style={{fontSize:12,color:`${p.c}88`,fontWeight:600,marginTop:3}}>{ago}</div>}</button>})}</div>
+        <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr)",gap:6,padding:"0 20px",marginBottom:14}}>{[{i:"bottle",v:`${totalMl}`,u:"ml",c:T.green,t:["bottle"],tap:"bottle",l:_lang==="en"?"Bottle":"Mamad."},{i:"breast",v:totalNursingMin>0?fmtDur(totalNursingMin):`${totalNursing}x`,c:T.blue,t:["nursing"],tap:"nursing",l:_lang==="en"?"Nursing":"Amam."},{i:"moon",v:fmtDur(totalSleep),c:T.purple,t:["sleep","nap"],tap:"nap",l:_lang==="en"?"Sleep":"Sono"},{i:"diaper",v:`${totalDiapers}`,c:T.pink,t:["diaper"],tap:"diaper",l:_lang==="en"?"Diaper":"Fralda"}].map((p,idx)=>{const last=entries.find(e=>p.t.includes(e.type));let ago=null;if(last){if(p.t.includes("sleep")&&last.durationMin){const endMs=new Date(`${last.date}T${last.time}`).getTime()+last.durationMin*60000;const endD=new Date(endMs);const ed=`${endD.getFullYear()}-${String(endD.getMonth()+1).padStart(2,"0")}-${String(endD.getDate()).padStart(2,"0")}`;const et=`${String(endD.getHours()).padStart(2,"0")}:${String(endD.getMinutes()).padStart(2,"0")}`;ago=timeSince(ed,et)}else{ago=timeSince(last.date,last.time)}}
+        // Bottle-only: compute progress toward the next feeding when the feedingInterval reminder is enabled.
+        let feedProg=null;
+        if(p.tap==="bottle"&&feedingActive&&last&&last.date&&last.time){
+          const lastMs=new Date(`${last.date}T${last.time}`).getTime();
+          const intervalMs=feedingIntervalMin*60000;
+          const elapsedMs=Date.now()-lastMs;
+          const prog=Math.max(0,Math.min(1.15,elapsedMs/intervalMs));
+          const nextD=new Date(lastMs+intervalMs);
+          const nextStr=`${String(nextD.getHours()).padStart(2,"0")}:${String(nextD.getMinutes()).padStart(2,"0")}`;
+          const lateMin=prog>=1?Math.max(1,Math.round((elapsedMs-intervalMs)/60000)):0;
+          const barColor=prog>=1?"#f87171":prog>=0.8?"#fbbf24":p.c;
+          feedProg={prog,nextStr,lateMin,barColor};
+        }
+        return<button key={idx} onClick={()=>{if(p.tap==="nap"&&!activeTimer)startTimer("nap");else if(p.tap==="nursing"&&!activeTimer)startTimer("nursing",nextNursingSide);else if(!activeTimer)setFormType(p.tap)}} style={{padding:"10px",borderRadius:12,background:`${p.c}06`,border:`1px solid ${p.c}0a`,textAlign:"left"}}><div style={{display:"flex",alignItems:"center",gap:5,marginBottom:3}}><Icon name={p.i} size={12} color={p.c}/><span style={{fontSize:9,color:T.dim}}>{p.l}</span></div><div style={{fontSize:16,fontWeight:800,color:p.c}}>{p.v}{p.u?<span style={{fontSize:11,opacity:0.6}}>{p.u}</span>:null}</div>{feedProg?<><div style={{height:3,borderRadius:2,background:`${p.c}1a`,marginTop:7,overflow:"hidden"}}><div style={{height:"100%",width:`${Math.min(100,feedProg.prog*100)}%`,background:feedProg.prog>=0.8?feedProg.barColor:`linear-gradient(90deg,${p.c},${p.c}cc)`,borderRadius:2,transition:"width .4s ease, background .3s ease"}}/></div><div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginTop:4,fontSize:10,fontWeight:600,fontVariantNumeric:"tabular-nums"}}><span style={{color:`${p.c}88`}}>{ago}</span><span style={{color:feedProg.barColor,fontWeight:700}}>{feedProg.prog>=1?`+${feedProg.lateMin}m late`:`→ ${feedProg.nextStr}`}</span></div></>:(ago&&<div style={{fontSize:12,color:`${p.c}88`,fontWeight:600,marginTop:3}}>{ago}</div>)}</button>})}</div>
         <div style={{padding:"0 20px"}}><div style={{fontSize:11,fontWeight:600,color:T.dim,marginBottom:8,textTransform:"uppercase",letterSpacing:0.8}}>{L("today")}</div>{todayE.length===0&&!liveBedtime&&<div style={{textAlign:"center",padding:"32px 20px",color:T.dim}}><Icon name="star" size={32} color={T.dim} fill={T.dim}/><div style={{fontSize:13,marginTop:8}}>{_lang==="en"?"Tap + to add":"Toque + para registrar"}</div></div>}{liveBedtime&&<SleepBlock entry={liveBedtime} entries={entries} isLive={true} activeTimer={activeTimer} onSaveTimer={FB.saveTimer} onSaveEntry={FB.addEntry} onDelete={deleteEntry} onEdit={startEdit}/>}{todayE.filter(e=>{
           // Only hide events linked to the live bedtime if their time actually falls within it.
           // Protects against legacy data where retroactive events got wrongly linked (pre v9.8.1).
