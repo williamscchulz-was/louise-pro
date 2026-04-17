@@ -173,6 +173,8 @@ Pedido → Mockup HTML → Aprovação do William → Implementação no filesys
 
 Regras de git:
 - Commit apenas quando o William pedir explicitamente (ou quando o escopo da tarefa incluir "commita e pusha")
+- **Sempre pra `main`**. Mesmo trabalhando numa worktree `claude/<nome>`, o push é `git push origin HEAD:main` — nada de PR intermediário, nada de deixar mudança parada numa branch. A main é a fonte da verdade e é o que a GitHub Action publica.
+- Depois de pushar pro remote/main a partir de uma worktree: o working tree da main local (`C:\Users\willi\Documents\projects\louise-pro`) fica desatualizado. Pra uma nova sessão lá começar com o CLAUDE.md atual, rodar `git pull` na main local (ou abrir a sessão no worktree ativo).
 - Nunca force-push em `main`; nunca `--no-verify` sem pedido explícito
 - Mensagem de commit curta e focada no porquê; uma mudança funcional = um commit
 
