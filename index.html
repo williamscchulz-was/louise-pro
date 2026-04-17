@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v10.4.2 Fix: navbar Cancelar/Salvar do Profile esticava em todo o viewport em desktop
   v10.4.1 Default do intervalo de mamada muda de 290min (4h50) pra 120min (2h)
   v10.4.0 Next feeding: barra de progresso no card Bottle do Home (intervalo de mamada glanceable)
   v10.3.4 Botao Home do Profile sempre visivel (removido hide-on-scroll desorientante)
@@ -141,6 +142,7 @@
     @keyframes fadeIn{from{opacity:0}to{opacity:1}}
     @keyframes pageSwitch{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
     @keyframes slideUp{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
+    @keyframes slideUpCentered{from{transform:translateX(-50%) translateY(12px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
     @keyframes mercurySpin{to{transform:rotate(360deg)}}
     @keyframes slideDown{from{transform:translateX(-50%) translateY(-20px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
     @keyframes toastSlideDown{from{transform:translateY(-20px);opacity:0}to{transform:translateY(0);opacity:1}}
@@ -346,8 +348,27 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "10.4.1";
+const APP_VERSION = "10.4.2";
 const CHANGELOG = [
+  {
+    v: "10.4.2", date: "2026-04-17",
+    pt: {
+      title: "Fix: navbar Cancelar/Salvar do Profile esticava em todo o viewport (desktop)",
+      bullets: [
+        '\u2605 No modo dirty do Profile (com altera\u00e7\u00f5es n\u00e3o salvas), a barra com Cancelar/Salvar usava `left:16px` + `right:16px` e esticava na largura INTEIRA do viewport. Em desktop isso jogava os bot\u00f5es longe do conte\u00fado (que fica em coluna de 480px centralizada), ficando visualmente desconectado.',
+        'Fix: centralizada com `left:50% + translateX(-50%)` e `maxWidth:448px`, como todo o resto do app. Mobile n\u00e3o muda (sempre estava dentro dos 480px).',
+        'Bonus: `slideUp` keyframes sobrescreviam o `translateX(-50%)` durante a anima\u00e7\u00e3o. Criado `slideUpCentered` que preserva a centraliza\u00e7\u00e3o.',
+      ],
+    },
+    en: {
+      title: "Fix: Profile Cancel/Save navbar stretched across the full viewport (desktop)",
+      bullets: [
+        '\u2605 In Profile dirty mode (with unsaved changes), the Cancel/Save bar used `left:16px` + `right:16px` and stretched the ENTIRE viewport width. On desktop that pushed the buttons far from the content (which lives in a centered 480px column), making them look disconnected.',
+        'Fix: centered with `left:50% + translateX(-50%)` and `maxWidth:448px`, matching the rest of the app. Mobile is unchanged (was always within 480px).',
+        'Bonus: the `slideUp` keyframes overwrote `translateX(-50%)` during the animation. Added `slideUpCentered` which preserves the centering.',
+      ],
+    },
+  },
   {
     v: "10.4.1", date: "2026-04-17",
     pt: {
@@ -5443,7 +5464,7 @@ function App(){
         e fora do #root (com overflow:hidden) para que position:fixed funcione corretamente
         em iOS Safari PWA standalone. Veja #nav-host no <body>. */}
     {ReactDOM.createPortal(<><TimerBar activeTimer={activeTimer} onStop={stopTimer} onSwitch={switchSide} onPause={pauseNursing} onEditStart={()=>setShowEditStart(true)} hidden={showAdd||!!formType||showProfile||showInbox||showChangelog||showEditStart||showNursingPicker||showSleepInfo}/>
-    {showProfile?<nav style={{position:"fixed",bottom:"6px",left:profileIsDirty?"16px":"50%",right:profileIsDirty?"16px":"auto",transform:profileIsDirty?"translateY(0)":"translateX(-50%)",opacity:1,display:"flex",alignItems:"center",gap:8,padding:profileIsDirty?"10px":"0",background:profileIsDirty?"linear-gradient(180deg,rgba(28,22,60,0.97),rgba(22,18,52,0.98))":"transparent",backdropFilter:profileIsDirty?"blur(16px)":"none",WebkitBackdropFilter:profileIsDirty?"blur(16px)":"none",borderRadius:profileIsDirty?22:999,border:profileIsDirty?"1px solid rgba(139,124,246,0.35)":"none",boxShadow:profileIsDirty?"0 1px 0 0 rgba(255,255,255,0.1) inset, 0 0 0 1px rgba(139,124,246,0.15), 0 12px 36px -8px rgba(139,124,246,0.4)":"none",zIndex:250,animation:profileIsDirty?"slideUp 0.3s cubic-bezier(0.22,1,0.36,1)":"none"}}>
+    {showProfile?<nav style={{position:"fixed",bottom:"6px",left:"50%",transform:"translateX(-50%)",width:profileIsDirty?"calc(100% - 32px)":"auto",maxWidth:profileIsDirty?448:"none",opacity:1,display:"flex",alignItems:"center",gap:8,padding:profileIsDirty?"10px":"0",background:profileIsDirty?"linear-gradient(180deg,rgba(28,22,60,0.97),rgba(22,18,52,0.98))":"transparent",backdropFilter:profileIsDirty?"blur(16px)":"none",WebkitBackdropFilter:profileIsDirty?"blur(16px)":"none",borderRadius:profileIsDirty?22:999,border:profileIsDirty?"1px solid rgba(139,124,246,0.35)":"none",boxShadow:profileIsDirty?"0 1px 0 0 rgba(255,255,255,0.1) inset, 0 0 0 1px rgba(139,124,246,0.15), 0 12px 36px -8px rgba(139,124,246,0.4)":"none",zIndex:250,animation:profileIsDirty?"slideUpCentered 0.3s cubic-bezier(0.22,1,0.36,1)":"none"}}>
       {profileIsDirty?<>
         <button onClick={()=>{Haptic.medium();setProfileCancelSignal(s=>s+1)}} style={{flex:"0 0 42%",padding:13,borderRadius:14,background:"rgba(14,18,48,0.7)",color:"#8b90b8",fontSize:14,fontWeight:700,border:"1px solid rgba(255,255,255,0.08)",cursor:"pointer",letterSpacing:-0.2,display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
           <Icon name="x" size={14} color="#8b90b8"/>{_lang==="en"?"Cancel":"Cancelar"}
