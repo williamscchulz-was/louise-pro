@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v10.4.5 Fix: mamada noturna invisivel no Hoje (bedtime que comeca ontem e acaba hoje)
   v10.4.4 FIX REAL: nav-host z-index 50->300 (ProfilePage z-200 cobria a nav inteira no desktop)
   v10.4.3 Fix: navbar do Profile atras do home indicator + restaura pointer-events
   v10.4.2 Fix: navbar Cancelar/Salvar do Profile esticava em todo o viewport em desktop
@@ -350,8 +351,27 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "10.4.4";
+const APP_VERSION = "10.4.5";
 const CHANGELOG = [
+  {
+    v: "10.4.5", date: "2026-04-17",
+    pt: {
+      title: "Fix: eventos noturnos invis\u00edveis (mamada do meio da noite sumia do Hoje)",
+      bullets: [
+        '\u2605 Bug: uma mamada registrada durante um bedtime que **come\u00e7ou ontem e terminou hoje** (ex: bedtime 22:03 ontem \u2192 07:10 hoje, mamada \u00e0s 06:47 hoje) sumia da lista de Hoje. Apareceia no Ring mas n\u00e3o no hist\u00f3rico.',
+        '\u2605 Causa: `findContainingBedtime` identificava que a mamada estava dentro do bedtime de ontem e filtrava da lista, MAS o bedtime em si n\u00e3o era renderizado (date=ontem, lista filtra por today). Resultado: evento \u00f3rf\u00e3o, nem dentro do SleepBlock nem como EntryRow.',
+        '\u2605 **Fix**: s\u00f3 esconder o evento se o bedtime realmente vai ser renderizado como SleepBlock (live, ou date=today com wakings). Caso contr\u00e1rio, mostra como EntryRow normal. Aplicado no Home e no History.',
+      ],
+    },
+    en: {
+      title: "Fix: overnight events invisible (middle-of-the-night bottle vanished from Today)",
+      bullets: [
+        '\u2605 Bug: a bottle logged during a bedtime that **started yesterday and ended today** (e.g. bedtime 22:03 yesterday \u2192 07:10 today, bottle at 06:47 today) disappeared from the Today list. Showed up on the Ring but not in the history.',
+        '\u2605 Cause: `findContainingBedtime` detected that the bottle was inside yesterday\'s bedtime and filtered it from the list, BUT the bedtime itself was not rendered (date=yesterday, list filters by today). Result: orphan event, neither inside a SleepBlock nor as a standalone EntryRow.',
+        '\u2605 **Fix**: only hide the event if the bedtime will actually render as a SleepBlock (live, or date=today with wakings). Otherwise, show it as a regular EntryRow. Applied on Home and History.',
+      ],
+    },
+  },
   {
     v: "10.4.4", date: "2026-04-17",
     pt: {
@@ -4551,7 +4571,14 @@ function HistoryPage({entries,onDelete,onEdit,activeTimer}){
     })
     :filtered.filter(e=>{
       if(e.nightWake)return false;
-      if(findContainingBedtime(e,entries))return false;
+      // Only hide events contained in a bedtime if that bedtime is actually being rendered
+      // on the current viewed day (as SleepBlock). Otherwise the event becomes an invisible
+      // orphan — e.g. a night bottle during a bedtime that started the previous day. v10.4.5.
+      const cb=findContainingBedtime(e,entries);
+      if(cb){
+        const renderedHere=cb.date===viewDate&&cb.wakings&&cb.wakings.length>0;
+        if(renderedHere)return false;
+      }
       return true;
     }).map(e=>(e.type==="sleep"&&e.wakings&&e.wakings.length>0)?<SleepBlock key={e.id} entry={e} onDelete={onDelete} onEdit={onEdit} entries={entries} activeTimer={activeTimer} onSaveTimer={FB.saveTimer} onSaveEntry={FB.addEntry}/>:<EntryRow key={e.id} entry={e} onDelete={onDelete} onEdit={onEdit}/>);
   return(<div style={{padding:"calc(16px + env(safe-area-inset-top)) 20px 0"}}>
@@ -5420,7 +5447,14 @@ function App(){
             if(!isNaN(evMs)&&evMs>=bStart&&evMs<=bEnd)return false;
             // Event has nightWake link but time is outside — orphan, show in today list
           }
-          if(findContainingBedtime(e,entries))return false;
+          // Only hide events contained in a bedtime if that bedtime is actually being rendered
+          // (as SleepBlock). Otherwise the event would become an invisible orphan. v10.4.5.
+          const cb=findContainingBedtime(e,entries);
+          if(cb){
+            const isLive=liveBedtime&&liveBedtime.id===cb.id;
+            const willRenderAsBlock=cb.date===today&&cb.wakings&&cb.wakings.length>0;
+            if(isLive||willRenderAsBlock)return false;
+          }
           return true;
         }).map((e,i,arr)=>{const prev=arr[i-1];let gap=null;if(prev){const t1=new Date(`${e.date}T${e.time}`).getTime();let t2=new Date(`${prev.date}T${prev.time}`).getTime();if(prev.durationMin)t2+=prev.durationMin*60000;const diffMin=Math.abs(Math.round((t1-t2)/60000));if(diffMin>=30){const isSleep=(e.type==="nap"||e.type==="sleep")&&e.durationMin;gap=<div style={{display:"flex",alignItems:"center",gap:10,padding:"4px 16px",margin:"2px 0"}}><div style={{flex:1,height:1,background:`linear-gradient(90deg,transparent,${isSleep?T.accent:T.accent}0a,transparent)`}}/><span style={{fontSize:8,color:isSleep?T.accent:T.dim,letterSpacing:0.5}}>{isSleep?"WW ":""}{fmtDur(diffMin)}</span><div style={{flex:1,height:1,background:`linear-gradient(90deg,transparent,${isSleep?T.accent:T.accent}0a,transparent)`}}/></div>}}const useBlock=e.type==="sleep"&&e.wakings&&e.wakings.length>0;return<React.Fragment key={e.id}>{gap}{useBlock?<SleepBlock entry={e} onDelete={deleteEntry} onEdit={startEdit} entries={entries} activeTimer={activeTimer} onSaveTimer={FB.saveTimer} onSaveEntry={FB.addEntry}/>:<EntryRow entry={e} onDelete={deleteEntry} onEdit={startEdit} napNum={napNums[e.id]||null}/>}</React.Fragment>})}</div>
       </div>
