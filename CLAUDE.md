@@ -4,7 +4,7 @@
 
 Este `CLAUDE.md` é lido automaticamente pelo Claude Code no início de toda sessão dentro deste repositório. Ele descreve o projeto, a stack, os princípios não-negociáveis e o workflow de entrega. Você (Claude Code) deve tratar este documento como contexto permanente — não precisa que o William cole ou relembre nada daqui.
 
-Mantenha o arquivo atualizado: se algo mudar de forma estrutural (stack, workflow, princípios, versão atual), proponha uma edição aqui junto com a mudança.
+**Regra dura (v10.4.7):** *toda* alteração feita neste repo precisa ser refletida aqui. Versão atual, decisões arquitetônicas, bugs latentes descobertos, padrões novos — tudo. O objetivo é que uma nova sessão comece sem contexto nenhum e ainda assim saiba o que o William sabe. Ao commitar uma mudança funcional, atualizar este arquivo faz parte do mesmo commit (não um commit separado depois).
 
 -----
 
@@ -14,7 +14,7 @@ Mantenha o arquivo atualizado: se algo mudar de forma estrutural (stack, workflo
 - **Localização**: Blumenau, SC, Brasil (BRT, UTC-3)
 - **Repositório**: https://github.com/williamscchulz-was/louise-pro
 - **Live**: https://williamscchulz-was.github.io/louise-pro/
-- **Versão atual**: v10.0.0 (app) / routine-engine v2.2.1
+- **Versão atual**: v10.4.7 (app) / routine-engine v2.2.1
 - **Bilíngue**: Português e Inglês (toda a interface, insights, curiosidades e changelog)
 
 ## Stack
@@ -89,6 +89,38 @@ louise-pro/
 - `config/meds` — medicamentos salvos pra quick-select
 - `config/active` — timer ativo (sync em tempo real entre dispositivos)
 - `config/inbox` — estado da caixa de notificações
+- `config/reminders/items/{id}` — lembretes. `tipo:"feedingInterval"` (default 120min desde v10.4.1) ou `tipo:"scheduled"` (medicamento com horários)
+
+-----
+
+## Arquitetura visual — portals, z-index, stacking
+
+Descoberta dolorosa na v10.4.4 que vale tatuar:
+
+- `<body>` tem dois filhos diretos: `#root` (app) e `#nav-host` (portal onde vivem `TimerBar` e a `nav` flutuante).
+- Desde v10.4.4: `#nav-host` é `position:fixed inset:0 pointer-events:none z-index:300`. **Precisa ser maior que qualquer overlay** pra nav não ficar atrás.
+- Mapa de z-index de overlays no app:
+  - `Modal` / `UpdateToast`: 150
+  - `ProfilePage` / `Sheet`: 200
+  - `InboxPanel`: 210
+  - `#nav-host` (nav+timer portal): **300**
+  - `#load-debug`: 9998
+- `#nav-host` tem `pointer-events:none` pro conteúdo atrás receber clique. Filhos que precisam clicar (a `nav`, o `TimerBar`) restauram com `pointer-events:auto` no próprio estilo.
+- Position:fixed DENTRO de ancestor com `overflow:auto` vira efetivamente absolute em iOS PWA standalone (bug conhecido do WebKit). Por isso nav + TimerBar ficam fora do App root via `ReactDOM.createPortal`.
+- TimerBar tem prop `hidden` que desmonta o bar quando qualquer overlay inferior abre (Sheet/Modal/ProfilePage/InboxPanel/etc) — evita cobrir botões Save e evita `backdrop-filter` pegar cor errada. Não tenta fade (o tick de 1s resetava a transition).
+
+-----
+
+## Lista do Hoje (Home) — regras de filtro
+
+Filtro complexo que já gerou vários bugs. Estado atual (v10.4.6+):
+
+- `todayE = entries.filter(e => e.date === today)`.
+- Um evento é **escondido** da lista apenas se:
+  1. `e.nightWake && liveBedtime` e o tempo cai dentro do liveBedtime (evento será mostrado dentro do SleepBlock live), OU
+  2. `findContainingBedtime(e)` retorna um bedtime que **vai realmente ser renderizado** como SleepBlock (live OU `cb.date===today && cb.wakings.length>0`). Caso contrário, mostra como EntryRow normal (evita evento órfão).
+- `findContainingBedtime` usa **bordas estritas**: `evMs > startMs && evMs < endMs`. Evento exatamente na hora de início/fim conta como fora — caso típico: primeira mamada da manhã logada na mesma hora que o bedtime terminou. Mesma estritude aplicada em `retroactiveEvents` do SleepBlock e `linkedEvents` das wakings.
+- Spacer do bottom do scroll do Home: `calc(80px + safe-area)` sem timer ativo, `calc(160px + safe-area)` com timer (nav pill em z:300 tapa os últimos pixels se o spacer for menor).
 
 -----
 
@@ -96,10 +128,11 @@ louise-pro/
 
 ### Workflow obrigatório
 
-1. **Mockup HTML primeiro** sempre que houver mudança visual ou de UI — William revisa e aprova antes de implementar
+1. **Mockup HTML primeiro** sempre que houver mudança visual ou de UI — William revisa e aprova antes de implementar. Salvar em `.claude/mockups/<nome>.html` e abrir via preview server.
 2. **Commits incrementais e focados** — evitar bundling de mudanças não relacionadas
 3. **Bump de versão + changelog** acompanha toda mudança funcional (no formato bilíngue novo)
-4. **Validação antes de entregar**: brace balance via Python + babel `transformSync` via Node
+4. **Atualizar CLAUDE.md** no mesmo commit sempre que a mudança tiver implicação arquitetônica, descoberta de bug latente, ou alteração de invariante. A versão atual aqui em cima sempre tem que bater com `APP_VERSION` do index.html.
+5. **Validação antes de entregar**: `node build/build.mjs` roda o babel transform — se der erro de sintaxe, aparece aqui. Sempre rodar antes de commitar uma mudança no index.html.
 
 ### Padrões Babel-safe (evitar travas no Babel Standalone)
 
@@ -132,9 +165,9 @@ louise-pro/
 
 ```
 Pedido → Mockup HTML → Aprovação do William → Implementação no filesystem
-       → Bump versão (com entrada bilíngue no CHANGELOG)
-       → Validação local (node --check em js/, node build/build.mjs pra testar)
-       → git add / commit com mensagem descritiva
+       → Bump versão + entrada bilíngue no CHANGELOG + atualiza CLAUDE.md se houver mudança arquitetônica
+       → Validação local (node build/build.mjs)
+       → git add / commit com mensagem descritiva (CLAUDE.md no MESMO commit)
        → git push → GitHub Action roda build + deploy via Pages
 ```
 
