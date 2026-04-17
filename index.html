@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v10.3.2 Fix: TimerBar cobrindo o botao Save do AddForm (e tingindo de verde via backdrop-filter)
   v10.2.1 Fix faixa preta no bottom iOS PWA: App container 100% -> 100dvh + nav calc intencional
   v10.1.7 FIX REAL: nav usa bottom negativo pra invadir zona fora-do-viewport do PWA
   v10.1.5 FIX: height 100% -> 100dvh no html/body/root (iOS PWA viewport estendido)
@@ -341,8 +342,29 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "10.3.1";
+const APP_VERSION = "10.3.2";
 const CHANGELOG = [
+  {
+    v: "10.3.2", date: "2026-04-16",
+    pt: {
+      title: "Fix: TimerBar cobrindo o bot\u00e3o Save do AddForm (e tingindo de verde)",
+      bullets: [
+        '\u2605 **Bug:** com um timer ativo (bedtime/nap/tummy/nursing), abrir qualquer Sheet do AddForm deixava a pill do timer **por cima do bot\u00e3o Save**. Pior ainda, o `backdrop-filter:blur(16px)` do timer amostrava o verde do Save por baixo e tingia a pill inteira de verde \u2014 bedtime aparecia como se fosse tummy time.',
+        '\u2605 **Causa raiz:** o `#nav-host` (host dos portals de nav+timer) \u00e9 `position:fixed z-index:50` no `<body>`, irm\u00e3o do `#root`. O Sheet usa `z-index:200`, mas vive **dentro** do `#root`. Pela regra de stacking do CSS, elemento **posicionado** (#nav-host) pinta acima de **n\u00e3o-posicionado** (#root), ignorando z-indexes internos. Por isso o timer ficava por cima.',
+        '\u2605 **Fix:** nova prop `hidden` no TimerBar. Quando qualquer overlay inferior est\u00e1 aberto (`showAdd`, `formType`, `showProfile`, `showInbox`, `showChangelog`, `showEditStart`, `showNursingPicker`, `showSleepInfo`), o TimerBar desmonta via early return. Reaparece ao fechar. Save 100% vis\u00edvel, cor correta de volta. O `UpdateToast` fica no topo, ent\u00e3o n\u00e3o entra na lista.',
+        'Sem fade: o `tick` de 1s do TimerBar re-renderizava e resetava qualquer CSS transition tentando animar. Unmount limpo \u00e9 mais simples e visualmente indistingu\u00edvel (o Sheet j\u00e1 tem sua pr\u00f3pria anima\u00e7\u00e3o subindo).',
+      ],
+    },
+    en: {
+      title: "Fix: TimerBar covering the AddForm Save button (and tinting it green)",
+      bullets: [
+        '\u2605 **Bug:** with an active timer (bedtime/nap/tummy/nursing), opening any AddForm Sheet left the timer pill **on top of the Save button**. Worse, the timer\'s `backdrop-filter:blur(16px)` sampled the green Save underneath and tinted the whole pill green \u2014 bedtime looked like tummy time.',
+        '\u2605 **Root cause:** `#nav-host` (portal host for nav+timer) is `position:fixed z-index:50` on `<body>`, sibling of `#root`. The Sheet uses `z-index:200`, but lives **inside** `#root`. Per CSS stacking rules, a **positioned** element (#nav-host) paints above a **non-positioned** one (#root), regardless of internal z-indexes. That\'s why the timer sat on top.',
+        '\u2605 **Fix:** new `hidden` prop on TimerBar. When any bottom-anchored overlay is open (`showAdd`, `formType`, `showProfile`, `showInbox`, `showChangelog`, `showEditStart`, `showNursingPicker`, `showSleepInfo`), the TimerBar unmounts via early return. Comes back on close. Save 100% visible, correct color restored. `UpdateToast` lives at the top, so it stays out of the list.',
+        'No fade: the TimerBar\'s 1s `tick` re-rendered and kept resetting any CSS transition. A clean unmount is simpler and visually indistinguishable (the Sheet already has its own slide-up animation).',
+      ],
+    },
+  },
   {
     v: "10.2.1", date: "2026-04-16",
     pt: {
@@ -2834,7 +2856,11 @@ function NursingSidePicker({open,onClose,onSelect}){
   </div>);
 }
 
-function TimerBar({activeTimer,onStop,onSwitch,onPause,onEditStart}){const[tick,setTick]=useState(0);useEffect(()=>{if(!activeTimer)return;const iv=setInterval(()=>setTick(k=>k+1),1000);return()=>clearInterval(iv)},[activeTimer]);if(!activeTimer)return null;
+function TimerBar({activeTimer,onStop,onSwitch,onPause,onEditStart,hidden}){const[tick,setTick]=useState(0);useEffect(()=>{if(!activeTimer)return;const iv=setInterval(()=>setTick(k=>k+1),1000);return()=>clearInterval(iv)},[activeTimer]);if(!activeTimer)return null;
+  // hidden=true: unmount the bar when an overlay (Sheet/Modal/etc) is open, so it stops covering
+  // form save buttons and stops tinting via backdrop-filter. Fix for v10.3.2. No fade because the
+  // tick interval (1s) kept restarting any CSS transition — unmounting is cleaner anyway.
+  if(hidden)return null;
   if(activeTimer.type==="nursing"){
     const now=Date.now();const paused=!!activeTimer.paused;
     const elapsed=paused?0:(now-new Date(activeTimer.sideStart||activeTimer.startTime).getTime());
@@ -5321,7 +5347,7 @@ function App(){
     {/* TimerBar + Nav via React Portal — vivem fora do scroll container (App root com overflow:auto)
         e fora do #root (com overflow:hidden) para que position:fixed funcione corretamente
         em iOS Safari PWA standalone. Veja #nav-host no <body>. */}
-    {ReactDOM.createPortal(<><TimerBar activeTimer={activeTimer} onStop={stopTimer} onSwitch={switchSide} onPause={pauseNursing} onEditStart={()=>setShowEditStart(true)}/>
+    {ReactDOM.createPortal(<><TimerBar activeTimer={activeTimer} onStop={stopTimer} onSwitch={switchSide} onPause={pauseNursing} onEditStart={()=>setShowEditStart(true)} hidden={showAdd||!!formType||showProfile||showInbox||showChangelog||showEditStart||showNursingPicker||showSleepInfo}/>
     {showProfile?<nav style={{position:"fixed",bottom:"6px",left:profileIsDirty?"16px":"50%",right:profileIsDirty?"16px":"auto",transform:profileIsDirty?(profileNavHidden?"translateY(0)":"translateY(0)"):`translateX(-50%) translateY(${profileNavHidden?"120%":"0"})`,opacity:(profileNavHidden&&!profileIsDirty)?0:1,display:"flex",alignItems:"center",gap:8,padding:profileIsDirty?"10px":"0",background:profileIsDirty?"linear-gradient(180deg,rgba(28,22,60,0.97),rgba(22,18,52,0.98))":"transparent",backdropFilter:profileIsDirty?"blur(16px)":"none",WebkitBackdropFilter:profileIsDirty?"blur(16px)":"none",borderRadius:profileIsDirty?22:999,border:profileIsDirty?"1px solid rgba(139,124,246,0.35)":"none",boxShadow:profileIsDirty?"0 1px 0 0 rgba(255,255,255,0.1) inset, 0 0 0 1px rgba(139,124,246,0.15), 0 12px 36px -8px rgba(139,124,246,0.4)":"none",zIndex:250,animation:profileIsDirty?"slideUp 0.3s cubic-bezier(0.22,1,0.36,1)":"none",transition:"transform .28s cubic-bezier(0.22,1,0.36,1), opacity .2s ease"}}>
       {profileIsDirty?<>
         <button onClick={()=>{Haptic.medium();setProfileCancelSignal(s=>s+1)}} style={{flex:"0 0 42%",padding:13,borderRadius:14,background:"rgba(14,18,48,0.7)",color:"#8b90b8",fontSize:14,fontWeight:700,border:"1px solid rgba(255,255,255,0.08)",cursor:"pointer",letterSpacing:-0.2,display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
