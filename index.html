@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v10.4.7 Fix: scroll do Home nao chegava no fim do ultimo card (nav pill cobria)
   v10.4.6 Fix: evento exatamente na hora do fim do bedtime aparece como top-level no Hoje
   v10.4.5 Fix: mamada noturna invisivel no Hoje (bedtime que comeca ontem e acaba hoje)
   v10.4.4 FIX REAL: nav-host z-index 50->300 (ProfilePage z-200 cobria a nav inteira no desktop)
@@ -352,8 +353,25 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "10.4.6";
+const APP_VERSION = "10.4.7";
 const CHANGELOG = [
+  {
+    v: "10.4.7", date: "2026-04-17",
+    pt: {
+      title: "Fix: scroll do Home n\u00e3o chegava no fim do \u00faltimo card (nav pill cobria)",
+      bullets: [
+        '\u2605 Bug: desde que o `#nav-host` subiu pra `z-index:300` (v10.4.4), a nav pill cobria os \u00faltimos ~80px do scroll do Home. Os botaozinhos \u201cEdit\u201d do SleepBlock ou a \u00faltima linha ficavam invis\u00edveis.',
+        '\u2605 Fix: spacer do bottom da Home subiu de `4px` pra `calc(80px + safe-area)` sem timer ativo, e de `calc(76px + safe-area)` pra `calc(160px + safe-area)` com timer ativo (nav + TimerBar + respiro).',
+      ],
+    },
+    en: {
+      title: "Fix: Home scroll couldn\u2019t reach the end of the last card (nav pill covered it)",
+      bullets: [
+        '\u2605 Bug: since `#nav-host` was raised to `z-index:300` (v10.4.4), the nav pill covered the last ~80px of the Home scroll. The SleepBlock\'s `Edit` button or the last row stayed invisible.',
+        '\u2605 Fix: Home bottom spacer bumped from `4px` to `calc(80px + safe-area)` without active timer, and from `calc(76px + safe-area)` to `calc(160px + safe-area)` with timer (nav + TimerBar + breathing room).',
+      ],
+    },
+  },
   {
     v: "10.4.6", date: "2026-04-17",
     pt: {
@@ -5497,7 +5515,7 @@ function App(){
           vai por baixo do pill, visível borrado pelo backdrop-filter). Só mantemos
           ~4px pra o último card não ser cortado no visual-viewport-bottom. Com
           timer ativo dobramos (TimerBar precisa de espaço pra render acima da nav). */}
-      <div style={{height:activeTimer?"calc(76px + env(safe-area-inset-bottom))":"4px"}}/>
+      <div style={{height:activeTimer?"calc(160px + env(safe-area-inset-bottom))":"calc(80px + env(safe-area-inset-bottom))"}}/>
     </div>
 
     {/* Fade gradient above nav */}
