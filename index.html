@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v10.3.3 Fix: TimerBar e botao Save da Sheet caindo atras da nav pill (safe-area no bottom)
   v10.3.2 Fix: TimerBar cobrindo o botao Save do AddForm (e tingindo de verde via backdrop-filter)
   v10.2.1 Fix faixa preta no bottom iOS PWA: App container 100% -> 100dvh + nav calc intencional
   v10.1.7 FIX REAL: nav usa bottom negativo pra invadir zona fora-do-viewport do PWA
@@ -342,8 +343,27 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "10.3.2";
+const APP_VERSION = "10.3.3";
 const CHANGELOG = [
+  {
+    v: "10.3.3", date: "2026-04-16",
+    pt: {
+      title: "Fix: TimerBar e bot\u00e3o Save caindo atr\u00e1s da nav pill",
+      bullets: [
+        '\u2605 **TimerBar subiu**: `bottom:"74px"` hard-coded (sem safe-area) virou `calc(88px + env(safe-area-inset-bottom))`. No iPhone com home indicator, os 34px da safe-area fazem a nav ficar a ~100px do bottom do viewport, e o TimerBar antes ficava com os \u00faltimos ~26px escondidos atr\u00e1s da nav pill. Agora o TimerBar tem ~20px de respiro acima do topo da nav.',
+        '\u2605 **Sheet do AddForm tamb\u00e9m**: `paddingBottom` era `calc(36px + safe-area)` (\u2248 70px), o que deixava o bot\u00e3o Save dentro da zona da nav pill (42\u2013100px do bottom). Subiu pra `calc(90px + safe-area)` (\u2248 124px), Save termina bem acima da nav.',
+        'Duas mudan\u00e7as num\u00e9ricas, zero restrutura\u00e7\u00e3o. Complementa a v10.3.2 (que resolveu o overlap do timer vs Save mas deixou ambos caindo atr\u00e1s da nav).',
+      ],
+    },
+    en: {
+      title: "Fix: TimerBar and Save button sitting behind the nav pill",
+      bullets: [
+        '\u2605 **TimerBar moved up**: hard-coded `bottom:"74px"` (no safe-area) became `calc(88px + env(safe-area-inset-bottom))`. On iPhone with home indicator, the 34px safe-area pushes the nav to ~100px from viewport bottom, and the TimerBar\'s bottom ~26px were hidden behind the nav pill. Now the TimerBar has ~20px of breathing room above the nav top.',
+        '\u2605 **AddForm Sheet too**: `paddingBottom` was `calc(36px + safe-area)` (\u2248 70px), which left the Save button inside the nav pill zone (42\u2013100px from bottom). Bumped to `calc(90px + safe-area)` (\u2248 124px), Save lands well above the nav.',
+        'Two numeric bumps, zero restructure. Complements v10.3.2 (which fixed the timer-over-Save overlap but left both landing behind the nav).',
+      ],
+    },
+  },
   {
     v: "10.3.2", date: "2026-04-16",
     pt: {
@@ -2869,7 +2889,7 @@ function TimerBar({activeTimer,onStop,onSwitch,onPause,onEditStart,hidden}){cons
     const lSecs=Math.floor(lMs/1000),rSecs=Math.floor(rMs/1000);
     const isL=activeTimer.side==="left";
     const bc=T.blue;
-    return(<div style={{position:"absolute",bottom:"74px",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 32px)",maxWidth:448,padding:"14px 14px",borderRadius:20,background:`linear-gradient(180deg,${bc}1a,${bc}06)`,border:`1px solid ${bc}50`,backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",display:"flex",alignItems:"center",gap:10,pointerEvents:"auto",boxShadow:`0 1px 0 0 rgba(255,255,255,0.08) inset, 0 0 0 1px ${bc}15, 0 12px 30px -10px ${bc}40`,overflow:"hidden"}}>
+    return(<div style={{position:"absolute",bottom:"calc(88px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 32px)",maxWidth:448,padding:"14px 14px",borderRadius:20,background:`linear-gradient(180deg,${bc}1a,${bc}06)`,border:`1px solid ${bc}50`,backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",display:"flex",alignItems:"center",gap:10,pointerEvents:"auto",boxShadow:`0 1px 0 0 rgba(255,255,255,0.08) inset, 0 0 0 1px ${bc}15, 0 12px 30px -10px ${bc}40`,overflow:"hidden"}}>
       <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse at 50% 0%,rgba(255,255,255,0.05),transparent 60%)",pointerEvents:"none"}}/>
       <div style={{position:"relative",width:44,height:44,borderRadius:13,background:`linear-gradient(135deg,${bc}38,${bc}10)`,border:`1px solid ${bc}55`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,boxShadow:"0 1px 0 0 rgba(255,255,255,0.1) inset"}}><Icon name="breast" size={20} color="#7dd3fc"/></div>
       <button onClick={()=>onSwitch("left")} style={{position:"relative",flex:1,padding:"8px 4px",borderRadius:14,background:isL?`linear-gradient(180deg,${bc}30,${bc}10)`:"transparent",border:isL?`1px solid ${bc}55`:"1px solid transparent",boxShadow:isL?"0 1px 0 0 rgba(255,255,255,0.1) inset":"none",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
@@ -2901,7 +2921,7 @@ function TimerBar({activeTimer,onStop,onSwitch,onPause,onEditStart,hidden}){cons
   // Since label: "desde HH:MM" showing the start time
   const stDate=new Date(activeTimer.startTime);
   const stTimeStr=`${String(stDate.getHours()).padStart(2,"0")}:${String(stDate.getMinutes()).padStart(2,"0")}`;
-  return(<div style={{position:"absolute",bottom:"74px",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 32px)",maxWidth:448,padding:"16px 14px 16px 18px",borderRadius:20,background:`linear-gradient(180deg,${tCol}2e,${tCol}0f)`,border:`1px solid ${tCol}55`,backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",display:"flex",alignItems:"center",gap:12,pointerEvents:"auto",boxShadow:`0 1px 0 0 rgba(255,255,255,0.08) inset, 0 0 0 1px ${tCol}15, 0 12px 30px -10px ${tCol}40`,overflow:"hidden"}}>
+  return(<div style={{position:"absolute",bottom:"calc(88px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 32px)",maxWidth:448,padding:"16px 14px 16px 18px",borderRadius:20,background:`linear-gradient(180deg,${tCol}2e,${tCol}0f)`,border:`1px solid ${tCol}55`,backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",display:"flex",alignItems:"center",gap:12,pointerEvents:"auto",boxShadow:`0 1px 0 0 rgba(255,255,255,0.08) inset, 0 0 0 1px ${tCol}15, 0 12px 30px -10px ${tCol}40`,overflow:"hidden"}}>
     <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse at 50% 0%,rgba(255,255,255,0.06),transparent 60%)",pointerEvents:"none"}}/>
     <div style={{width:50,height:50,borderRadius:15,background:`linear-gradient(135deg,${tCol}45,${tCol}15)`,border:`1px solid ${tCol}55`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,boxShadow:"0 1px 0 0 rgba(255,255,255,0.1) inset",position:"relative"}}><Icon name={tIconName} size={22} color={tColLight}/></div>
     <div style={{flex:1,position:"relative",minWidth:0}}>
@@ -3090,7 +3110,7 @@ function Sheet({open,onClose,children}){
   const backdropTransition=isDragging?"none":"opacity .35s";
   return(<div style={{position:"fixed",inset:0,zIndex:200}} onClick={onClose}>
     <div style={{position:"absolute",inset:0,background:"rgba(2,3,10,0.55)",backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",opacity:backdropOpacity,transition:backdropTransition}}/>
-    <div ref={sheetRef} onClick={e=>e.stopPropagation()} onPointerDown={onPtrDown} onPointerMove={onPtrMove} onPointerUp={onPtrUp} onPointerCancel={onPtrUp} style={{position:"absolute",bottom:0,left:0,right:0,maxWidth:480,margin:"0 auto",background:"linear-gradient(180deg,rgba(14,18,52,0.94),rgba(10,14,40,0.92))",backdropFilter:"blur(22px)",WebkitBackdropFilter:"blur(22px)",borderRadius:"32px 32px 0 0",border:"1px solid rgba(255,255,255,0.08)",borderBottom:"none",boxShadow:"0 1px 0 0 rgba(255,255,255,0.1) inset, 0 -12px 50px rgba(0,0,0,0.5), 0 0 80px -20px rgba(139,124,246,0.15)",padding:"0 0 calc(36px + env(safe-area-inset-bottom))",transform:sheetTransform,transition:sheetTransition,maxHeight:"78vh",overflowY:"auto",willChange:"transform",touchAction:"pan-y"}}>
+    <div ref={sheetRef} onClick={e=>e.stopPropagation()} onPointerDown={onPtrDown} onPointerMove={onPtrMove} onPointerUp={onPtrUp} onPointerCancel={onPtrUp} style={{position:"absolute",bottom:0,left:0,right:0,maxWidth:480,margin:"0 auto",background:"linear-gradient(180deg,rgba(14,18,52,0.94),rgba(10,14,40,0.92))",backdropFilter:"blur(22px)",WebkitBackdropFilter:"blur(22px)",borderRadius:"32px 32px 0 0",border:"1px solid rgba(255,255,255,0.08)",borderBottom:"none",boxShadow:"0 1px 0 0 rgba(255,255,255,0.1) inset, 0 -12px 50px rgba(0,0,0,0.5), 0 0 80px -20px rgba(139,124,246,0.15)",padding:"0 0 calc(90px + env(safe-area-inset-bottom))",transform:sheetTransform,transition:sheetTransition,maxHeight:"78vh",overflowY:"auto",willChange:"transform",touchAction:"pan-y"}}>
       <div style={{padding:"10px 0 28px",cursor:"grab"}}>
         <div style={{width:44,height:5,borderRadius:3,background:"rgba(140,150,255,0.28)",margin:"0 auto"}}/>
       </div>
