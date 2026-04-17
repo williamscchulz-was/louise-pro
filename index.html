@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v10.4.4 FIX REAL: nav-host z-index 50->300 (ProfilePage z-200 cobria a nav inteira no desktop)
   v10.4.3 Fix: navbar do Profile atras do home indicator + restaura pointer-events
   v10.4.2 Fix: navbar Cancelar/Salvar do Profile esticava em todo o viewport em desktop
   v10.4.1 Default do intervalo de mamada muda de 290min (4h50) pra 120min (2h)
@@ -191,7 +192,7 @@
      tela (incluindo a safe-area do home indicator do iPhone) e servir como
      containing block de referência pros filhos com position:fixed. Children que
      precisam clique (a nav, o TimerBar) restauram pointer-events:auto. -->
-<div id="nav-host" style="position:fixed;inset:0;pointer-events:none;z-index:50"></div>
+<div id="nav-host" style="position:fixed;inset:0;pointer-events:none;z-index:300"></div>
 <!-- Publica --phys-h com screen.height pra que html/body/App container estendam até
      o fim FÍSICO da tela (não só innerHeight). Assim o scroll container pode
      escorrer conteúdo até atrás do home indicator, simetricamente ao que já
@@ -349,8 +350,27 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "10.4.3";
+const APP_VERSION = "10.4.4";
 const CHANGELOG = [
+  {
+    v: "10.4.4", date: "2026-04-17",
+    pt: {
+      title: "FIX REAL: nav do Profile/Home atr\u00e1s do ProfilePage por causa de z-index",
+      bullets: [
+        '\u2605 Causa real do \u201csem bot\u00e3o Home/Save\u201d no Profile: o `#nav-host` (portal que hospeda a nav flutuante) tinha `z-index:50` no body, enquanto o `ProfilePage` tem `z-index:200`. Ambos s\u00e3o `position:fixed`, ent\u00e3o ficam no mesmo n\u00edvel de stacking do body \u2014 e 200 > 50, ou seja, a ProfilePage com background opaco ficava por cima da nav inteira, escondendo bot\u00f5es Home/Cancelar/Salvar.',
+        '\u2605 **Fix**: `#nav-host` subiu pra `z-index:300`. Agora a nav flutuante fica acima de qualquer overlay (ProfilePage, Sheet, Modal, InboxPanel). Mesma abordagem usada pra navs flutuantes em apps tipo iOS.',
+        'Latente desde a v10.1.4 (quando a nav foi portalizada). Passou batido no mobile porque o home indicator + safe-area tapava a \u00e1rea \u2014 o bug real aparecia s\u00f3 em desktop.',
+      ],
+    },
+    en: {
+      title: "REAL FIX: Profile/Home nav behind ProfilePage due to z-index",
+      bullets: [
+        '\u2605 Real cause of the missing Home/Save button in Profile: `#nav-host` (portal hosting the floating nav) had `z-index:50` at body level, while `ProfilePage` has `z-index:200`. Both are `position:fixed`, so they sit at the same body stacking level \u2014 and 200 > 50, meaning the opaque ProfilePage covered the entire nav, hiding Home/Cancel/Save.',
+        '\u2605 **Fix**: `#nav-host` bumped to `z-index:300`. The floating nav now sits above any overlay (ProfilePage, Sheet, Modal, InboxPanel). Same pattern used by iOS-style floating navs.',
+        'Latent since v10.1.4 (when the nav was portaled). Hidden on mobile because the home indicator + safe-area covered the area \u2014 the real bug only showed on desktop.',
+      ],
+    },
+  },
   {
     v: "10.4.3", date: "2026-04-17",
     pt: {
