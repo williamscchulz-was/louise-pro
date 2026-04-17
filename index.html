@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v10.4.3 Fix: navbar do Profile atras do home indicator + restaura pointer-events
   v10.4.2 Fix: navbar Cancelar/Salvar do Profile esticava em todo o viewport em desktop
   v10.4.1 Default do intervalo de mamada muda de 290min (4h50) pra 120min (2h)
   v10.4.0 Next feeding: barra de progresso no card Bottle do Home (intervalo de mamada glanceable)
@@ -348,8 +349,25 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "10.4.2";
+const APP_VERSION = "10.4.3";
 const CHANGELOG = [
+  {
+    v: "10.4.3", date: "2026-04-17",
+    pt: {
+      title: "Fix: navbar do Profile atr\u00e1s do home indicator + sem pointer-events",
+      bullets: [
+        '\u2605 `bottom:"6px"` sem safe-area deixava a navbar do Profile parcialmente atr\u00e1s do home indicator no iPhone PWA \u2014 efeito vis\u00edvel: bot\u00e3o Home/Save sumia. Trocado por `calc(8px + env(safe-area-inset-bottom))`, mesma f\u00f3rmula da nav principal do app.',
+        '\u2605 Adicionado `pointerEvents:"auto"` na navbar. O `#nav-host` tem `pointer-events:none`, ent\u00e3o filhos que precisam de clique t\u00eam que restaurar \u2014 a nav principal do Home j\u00e1 tinha, a do Profile n\u00e3o.',
+      ],
+    },
+    en: {
+      title: "Fix: Profile navbar behind the home indicator + missing pointer-events",
+      bullets: [
+        '\u2605 `bottom:"6px"` without safe-area left the Profile navbar partially behind the home indicator on iPhone PWA \u2014 visible effect: Home/Save button disappeared. Swapped for `calc(8px + env(safe-area-inset-bottom))`, matching the app main nav.',
+        '\u2605 Added `pointerEvents:"auto"` on the navbar. `#nav-host` has `pointer-events:none`, so children that need clicks must restore it \u2014 the Home main nav already did, the Profile one did not.',
+      ],
+    },
+  },
   {
     v: "10.4.2", date: "2026-04-17",
     pt: {
@@ -5464,7 +5482,7 @@ function App(){
         e fora do #root (com overflow:hidden) para que position:fixed funcione corretamente
         em iOS Safari PWA standalone. Veja #nav-host no <body>. */}
     {ReactDOM.createPortal(<><TimerBar activeTimer={activeTimer} onStop={stopTimer} onSwitch={switchSide} onPause={pauseNursing} onEditStart={()=>setShowEditStart(true)} hidden={showAdd||!!formType||showProfile||showInbox||showChangelog||showEditStart||showNursingPicker||showSleepInfo}/>
-    {showProfile?<nav style={{position:"fixed",bottom:"6px",left:"50%",transform:"translateX(-50%)",width:profileIsDirty?"calc(100% - 32px)":"auto",maxWidth:profileIsDirty?448:"none",opacity:1,display:"flex",alignItems:"center",gap:8,padding:profileIsDirty?"10px":"0",background:profileIsDirty?"linear-gradient(180deg,rgba(28,22,60,0.97),rgba(22,18,52,0.98))":"transparent",backdropFilter:profileIsDirty?"blur(16px)":"none",WebkitBackdropFilter:profileIsDirty?"blur(16px)":"none",borderRadius:profileIsDirty?22:999,border:profileIsDirty?"1px solid rgba(139,124,246,0.35)":"none",boxShadow:profileIsDirty?"0 1px 0 0 rgba(255,255,255,0.1) inset, 0 0 0 1px rgba(139,124,246,0.15), 0 12px 36px -8px rgba(139,124,246,0.4)":"none",zIndex:250,animation:profileIsDirty?"slideUpCentered 0.3s cubic-bezier(0.22,1,0.36,1)":"none"}}>
+    {showProfile?<nav style={{position:"fixed",bottom:"calc(8px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",width:profileIsDirty?"calc(100% - 32px)":"auto",maxWidth:profileIsDirty?448:"none",opacity:1,display:"flex",alignItems:"center",gap:8,padding:profileIsDirty?"10px":"0",pointerEvents:"auto",background:profileIsDirty?"linear-gradient(180deg,rgba(28,22,60,0.97),rgba(22,18,52,0.98))":"transparent",backdropFilter:profileIsDirty?"blur(16px)":"none",WebkitBackdropFilter:profileIsDirty?"blur(16px)":"none",borderRadius:profileIsDirty?22:999,border:profileIsDirty?"1px solid rgba(139,124,246,0.35)":"none",boxShadow:profileIsDirty?"0 1px 0 0 rgba(255,255,255,0.1) inset, 0 0 0 1px rgba(139,124,246,0.15), 0 12px 36px -8px rgba(139,124,246,0.4)":"none",zIndex:250,animation:profileIsDirty?"slideUpCentered 0.3s cubic-bezier(0.22,1,0.36,1)":"none"}}>
       {profileIsDirty?<>
         <button onClick={()=>{Haptic.medium();setProfileCancelSignal(s=>s+1)}} style={{flex:"0 0 42%",padding:13,borderRadius:14,background:"rgba(14,18,48,0.7)",color:"#8b90b8",fontSize:14,fontWeight:700,border:"1px solid rgba(255,255,255,0.08)",cursor:"pointer",letterSpacing:-0.2,display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
           <Icon name="x" size={14} color="#8b90b8"/>{_lang==="en"?"Cancel":"Cancelar"}
