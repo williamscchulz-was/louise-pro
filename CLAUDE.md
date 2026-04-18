@@ -14,7 +14,7 @@ Este `CLAUDE.md` é lido automaticamente pelo Claude Code no início de toda ses
 - **Localização**: Blumenau, SC, Brasil (BRT, UTC-3)
 - **Repositório**: https://github.com/williamscchulz-was/louise-pro
 - **Live**: https://williamscchulz-was.github.io/louise-pro/
-- **Versão atual**: v10.5.0 (app) / routine-engine v2.2.1
+- **Versão atual**: v10.5.1 (app) / routine-engine v2.2.1
 - **Bilíngue**: Português e Inglês (toda a interface, insights, curiosidades e changelog)
 
 ## Stack
@@ -108,6 +108,18 @@ Descoberta dolorosa na v10.4.4 que vale tatuar:
 - `#nav-host` tem `pointer-events:none` pro conteúdo atrás receber clique. Filhos que precisam clicar (a `nav`, o `TimerBar`) restauram com `pointer-events:auto` no próprio estilo.
 - Position:fixed DENTRO de ancestor com `overflow:auto` vira efetivamente absolute em iOS PWA standalone (bug conhecido do WebKit). Por isso nav + TimerBar ficam fora do App root via `ReactDOM.createPortal`.
 - TimerBar tem prop `hidden` que desmonta o bar quando qualquer overlay inferior abre (Sheet/Modal/ProfilePage/InboxPanel/etc) — evita cobrir botões Save e evita `backdrop-filter` pegar cor errada. Não tenta fade (o tick de 1s resetava a transition).
+
+-----
+
+## Performance iPhone PWA — regras aprendidas
+
+Bugs de perf descobertos e corrigidos durante as auditorias. Valem tatuar:
+
+- **App-level tick interval**: durante timer ativo, 5s (não 1s). O arco do Ring é imperceptível se mover a cada 5s (<2° por passo em nap de 20min). Usar 1s faz o App inteiro re-renderizar 9x3600 vezes numa noite de bedtime — bateria derrete. Exceção: o próprio TimerBar tem tick interno de 1s pra display "17:03", fine.
+- **React.memo em componentes pesados**: Ring, SleepBlock, EntryRow têm memo desde v10.5.1. Sem memo, qualquer re-render do App (mudança de qualquer state) força redraw mesmo quando props são idênticos. Regra: componente visualmente pesado + props estáveis → embrulhar em React.memo.
+- **backdrop-filter é QUADRÁTICO no raio**: blur(26px) não custa 2x blur(13px), custa ~4x. Em elementos sempre visíveis (nav pill), usar no máximo blur(18-20px) com saturate(180%). Evitar empilhar mais de 2 blurs visíveis ao mesmo tempo.
+- **body.app-hidden pausa animações**: `body.app-hidden *{animation-play-state:paused !important}` implementado no CSS. PWA em background não gasta CPU com mercury ring spinning, twinkle, pulse. NÃO remover.
+- **Firestore subEntries carrega TUDO**: sem date-window, depois de 1 ano de uso entries passa de 1000 rows. Próxima otimização planejada: adicionar where('date', '>=', today-90d) em subEntries e carregar history sob demanda. Não feito ainda (v10.5.1).
 
 -----
 
