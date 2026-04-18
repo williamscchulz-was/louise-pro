@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v10.5.3 Perf: Starfield module-level memo + Profile photo sig (isDirty vira O(1) por keystroke)
   v10.5.2 Firestore offline persistence ON: cold start iPhone PWA instantaneo + app offline-capable
   v10.5.1 Perf iPhone: tick 1s->5s em bedtime + React.memo em Ring/SleepBlock/EntryRow + blur 26->18
   v10.5.0 CRITICO: fix de data-loss no profile (saveProfile agora usa merge + side-paths delta-only)
@@ -367,8 +368,25 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "10.5.2";
+const APP_VERSION = "10.5.3";
 const CHANGELOG = [
+  {
+    v: "10.5.3", date: "2026-04-18",
+    pt: {
+      title: "Perf iPhone: Starfield e Profile photo sig \u2014 menos trabalho por keystroke",
+      bullets: [
+        '\u2605 **Starfield extra\u00eddo pra m\u00f3dulo-level + React.memo**. Antes, os 93 pontos (60 small + 25 medium + 8 bright) eram re-criados em JSX a cada re-render do App. Agora o componente renderiza 1x por sess\u00e3o e reusa o tree. N\u00e3o muda o visual \u2014 dados aleat\u00f3rios, mas estáveis enquanto o app est\u00e1 aberto.',
+        '\u2605 **Profile photo sig**: o `isDirty` do Profile comparava a foto base64 (50-200KB) direto string-vs-string. Era O(n) por re-render \u2014 e o Profile re-renderiza em cada keystroke. Agora assinatura curta (`length:first24:last24`) via `useMemo` cacheia o resultado; isDirty vira O(1). Elimina lag percept\u00edvel ao digitar nome/meta no iPhone quando a foto t\u00e1 salva.',
+      ],
+    },
+    en: {
+      title: "iPhone perf: Starfield and Profile photo signature \u2014 less work per keystroke",
+      bullets: [
+        '\u2605 **Starfield extracted to module level + React.memo**. Before, the 93 dots (60 small + 25 medium + 8 bright) were re-created in JSX on every App re-render. Now the component renders once per session and reuses the tree. Visual unchanged \u2014 random data, but stable while the app is open.',
+        '\u2605 **Profile photo signature**: `isDirty` in Profile compared the 50-200KB base64 photo string-to-string. O(n) per re-render \u2014 and Profile re-renders on every keystroke. Now a short signature (`length:first24:last24`) via `useMemo` caches the result; isDirty becomes O(1). Eliminates noticeable lag when typing name/goal on iPhone if a photo is saved.',
+      ],
+    },
+  },
   {
     v: "10.5.2", date: "2026-04-18",
     pt: {
@@ -4000,10 +4018,16 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
 
   // ═══ UNIFIED DIRTY STATE ═══
   // Tracks all input fields (including feeding reminder) but NOT the toggles (keepScreenOn/haptic/push/lang/feedingEnabled which autosave)
+  // Photo sig (v10.5.3): foto é base64 de 50-200KB. Compare direto string-vs-string é O(n)
+  // e roda a cada re-render da ProfilePage (re-renders acontecem em cada keystroke nos inputs).
+  // Assinatura curta = length + primeiros 24 + últimos 24 chars. useMemo garante que o
+  // hash só recalcula quando a string muda de referência. O isDirty vira O(1) por render.
+  const photoSig = useMemo(()=>photo?`${photo.length}:${photo.slice(0,24)}:${photo.slice(-24)}`:"",[photo]);
+  const remotePhotoSig = useMemo(()=>{const p=profile.photo||"";return p?`${p.length}:${p.slice(0,24)}:${p.slice(-24)}`:""},[profile.photo]);
   const isDirty=(
     name!==(profile.name||"")||
     birth!==(profile.birthDate||"")||
-    photo!==(profile.photo||"")||
+    photoSig!==remotePhotoSig||
     mlGoal!==String(profile.mlGoal||"")||
     birthWeight!==String(profile.birthWeight||"")||
     birthLength!==String(profile.birthLength||"")||
@@ -4976,6 +5000,24 @@ function GrowthPage({entries,birthDate,profile,onBack,onAddEntry,onDeleteEntry})
   </div>);
 }
 
+// Starfield gerado 1x por sessão (dados aleatórios mas estáveis enquanto o app tá aberto).
+// Extraído pra cá + React.memo pra nunca re-renderizar junto com o App. v10.5.3.
+const _STARFIELD_COLORS = ["rgba(251,191,36,0.6)","rgba(167,139,250,0.5)","rgba(52,211,153,0.45)","rgba(96,165,250,0.5)","rgba(244,114,182,0.4)","rgba(251,191,36,0.5)","rgba(200,210,255,0.6)","rgba(167,139,250,0.45)"];
+const STARFIELD_DATA = {
+  sm: Array.from({length:60},(_,i)=>({k:"s"+i,w:Math.random()*1+0.6,h:Math.random()*1+0.6,o:Math.random()*0.35+0.15,t:Math.random()*100,l:Math.random()*100})),
+  md: Array.from({length:25},(_,i)=>({k:"m"+i,w:Math.random()*1.5+1.2,h:Math.random()*1.5+1.2,o:Math.random()*0.5+0.25,t:Math.random()*100,l:Math.random()*100,g:4+Math.random()*5})),
+  br: Array.from({length:8},(_,i)=>({k:"b"+i,w:2.5+Math.random(),h:2.5+Math.random(),c:_STARFIELD_COLORS[i],t:Math.random()*80+10,l:Math.random()*90+5})),
+};
+const Starfield = React.memo(function Starfield(){
+  return(<div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:0}}>
+    <div style={{position:"absolute",width:"60%",height:"40%",top:"5%",right:"-10%",background:"radial-gradient(ellipse,rgba(120,80,200,0.06) 0%,transparent 70%)",filter:"blur(40px)"}}/>
+    <div style={{position:"absolute",width:"50%",height:"30%",bottom:"20%",left:"-5%",background:"radial-gradient(ellipse,rgba(60,100,180,0.05) 0%,transparent 70%)",filter:"blur(30px)"}}/>
+    {STARFIELD_DATA.sm.map(s=><div key={s.k} style={{position:"absolute",width:s.w,height:s.h,background:`rgba(210,220,255,${s.o})`,borderRadius:"50%",top:s.t+"%",left:s.l+"%"}}/>)}
+    {STARFIELD_DATA.md.map(s=><div key={s.k} style={{position:"absolute",width:s.w,height:s.h,background:`rgba(220,230,255,${s.o})`,borderRadius:"50%",top:s.t+"%",left:s.l+"%",boxShadow:`0 0 ${s.g}px rgba(220,230,255,0.4)`}}/>)}
+    {STARFIELD_DATA.br.map(s=><div key={s.k} style={{position:"absolute",width:s.w,height:s.h,background:s.c,borderRadius:"50%",top:s.t+"%",left:s.l+"%",boxShadow:`0 0 12px ${s.c}, 0 0 4px ${s.c}`}}/>)}
+  </div>);
+});
+
 // ── MAIN APP ──
 function App(){
   const[entries,setEntries]=useState([]);const[savedMeds,setSavedMeds]=useState([]);
@@ -5423,13 +5465,7 @@ function App(){
     prevWind.current=!!napSug?.wind;prevOver.current=!!napSug?.over;
   },[napSug?.wind,napSug?.over]);
 
-  const starfield=useMemo(()=>{
-    const sm=Array.from({length:60},(_,i)=>({k:"s"+i,w:Math.random()*1+0.6,h:Math.random()*1+0.6,o:Math.random()*0.35+0.15,t:Math.random()*100,l:Math.random()*100}));
-    const md=Array.from({length:25},(_,i)=>({k:"m"+i,w:Math.random()*1.5+1.2,h:Math.random()*1.5+1.2,o:Math.random()*0.5+0.25,t:Math.random()*100,l:Math.random()*100,g:4+Math.random()*5}));
-    const cols=["rgba(251,191,36,0.6)","rgba(167,139,250,0.5)","rgba(52,211,153,0.45)","rgba(96,165,250,0.5)","rgba(244,114,182,0.4)","rgba(251,191,36,0.5)","rgba(200,210,255,0.6)","rgba(167,139,250,0.45)"];
-    const br=Array.from({length:8},(_,i)=>({k:"b"+i,w:2.5+Math.random(),h:2.5+Math.random(),c:cols[i],t:Math.random()*80+10,l:Math.random()*90+5}));
-    return{sm,md,br};
-  },[]);
+  // Starfield foi extraído pra módulo-level (ver `<Starfield/>` logo antes do App). v10.5.3.
 
   if(splash||loading)return(
     <div style={{background:"linear-gradient(180deg,#0e0825,#070b1e 70%,#070b1e)",minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",fontFamily:"'Outfit',sans-serif",overflow:"hidden",opacity:splash?1:0,transition:"opacity .4s",position:"relative"}}>
@@ -5505,16 +5541,8 @@ function App(){
   };
 
   return(<div style={{background:"transparent",height:"var(--phys-h, 100dvh)",overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch",overscrollBehavior:"none",color:T.text,maxWidth:480,margin:"0 auto",position:"relative"}}>
-    {/* Starfield */}
-    <div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:0}}>
-      {/* Nebula patches */}
-      <div style={{position:"absolute",width:"60%",height:"40%",top:"5%",right:"-10%",background:"radial-gradient(ellipse,rgba(120,80,200,0.06) 0%,transparent 70%)",filter:"blur(40px)"}}/>
-      <div style={{position:"absolute",width:"50%",height:"30%",bottom:"20%",left:"-5%",background:"radial-gradient(ellipse,rgba(60,100,180,0.05) 0%,transparent 70%)",filter:"blur(30px)"}}/>
-      {/* Small stars */}
-      {starfield.sm.map(s=><div key={s.k} style={{position:"absolute",width:s.w,height:s.h,background:`rgba(210,220,255,${s.o})`,borderRadius:"50%",top:s.t+"%",left:s.l+"%"}}/>)}
-      {starfield.md.map(s=><div key={s.k} style={{position:"absolute",width:s.w,height:s.h,background:`rgba(220,230,255,${s.o})`,borderRadius:"50%",top:s.t+"%",left:s.l+"%",boxShadow:`0 0 ${s.g}px rgba(220,230,255,0.4)`}}/>)}
-      {starfield.br.map(s=><div key={s.k} style={{position:"absolute",width:s.w,height:s.h,background:s.c,borderRadius:"50%",top:s.t+"%",left:s.l+"%",boxShadow:`0 0 12px ${s.c}, 0 0 4px ${s.c}`}}/>)}
-    </div>
+    {/* Starfield: componente memoizado, renderiza 1x por sessão (v10.5.3). */}
+    <Starfield/>
     {toast&&<Toast message={toast} onUndo={undoRef.current?handleUndo:null} onClose={()=>setToast(null)}/>}
     <div style={{position:"relative",zIndex:1}}>
       {/* SWIPE CONTAINER (v9.9.2) — Home/Stats/History pre-mounted side-by-side */}
