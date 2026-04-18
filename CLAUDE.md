@@ -14,7 +14,7 @@ Este `CLAUDE.md` é lido automaticamente pelo Claude Code no início de toda ses
 - **Localização**: Blumenau, SC, Brasil (BRT, UTC-3)
 - **Repositório**: https://github.com/williamscchulz-was/louise-pro
 - **Live**: https://williamscchulz-was.github.io/louise-pro/
-- **Versão atual**: v10.5.1 (app) / routine-engine v2.2.1
+- **Versão atual**: v10.5.2 (app) / routine-engine v2.2.1
 - **Bilíngue**: Português e Inglês (toda a interface, insights, curiosidades e changelog)
 
 ## Stack
@@ -119,7 +119,8 @@ Bugs de perf descobertos e corrigidos durante as auditorias. Valem tatuar:
 - **React.memo em componentes pesados**: Ring, SleepBlock, EntryRow têm memo desde v10.5.1. Sem memo, qualquer re-render do App (mudança de qualquer state) força redraw mesmo quando props são idênticos. Regra: componente visualmente pesado + props estáveis → embrulhar em React.memo.
 - **backdrop-filter é QUADRÁTICO no raio**: blur(26px) não custa 2x blur(13px), custa ~4x. Em elementos sempre visíveis (nav pill), usar no máximo blur(18-20px) com saturate(180%). Evitar empilhar mais de 2 blurs visíveis ao mesmo tempo.
 - **body.app-hidden pausa animações**: `body.app-hidden *{animation-play-state:paused !important}` implementado no CSS. PWA em background não gasta CPU com mercury ring spinning, twinkle, pulse. NÃO remover.
-- **Firestore subEntries carrega TUDO**: sem date-window, depois de 1 ano de uso entries passa de 1000 rows. Próxima otimização planejada: adicionar where('date', '>=', today-90d) em subEntries e carregar history sob demanda. Não feito ainda (v10.5.1).
+- **Firestore offline persistence ON desde v10.5.2**: `db.enablePersistence({synchronizeTabs: true})` chamado logo após `firebase.firestore()`. O SDK cacheia tudo no IndexedDB — cold start PWA é instantâneo (serve cache + sync em background). App também funciona offline. NÃO remover esse call. `synchronizeTabs: true` é essencial pra não dar lock conflict quando Safari + PWA standalone abertos simultaneamente.
+- **Firestore subEntries carrega TUDO**: sem date-window, depois de 1 ano de uso entries passa de 1000 rows. Próxima otimização planejada: adicionar `where('date', '>=', today-90d)` em subEntries e carregar history sob demanda. Não feito ainda (v10.5.2) — offline persistence mitiga o problema a curto prazo.
 
 -----
 

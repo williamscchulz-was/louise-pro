@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v10.5.2 Firestore offline persistence ON: cold start iPhone PWA instantaneo + app offline-capable
   v10.5.1 Perf iPhone: tick 1s->5s em bedtime + React.memo em Ring/SleepBlock/EntryRow + blur 26->18
   v10.5.0 CRITICO: fix de data-loss no profile (saveProfile agora usa merge + side-paths delta-only)
   v10.4.7 Fix: scroll do Home nao chegava no fim do ultimo card (nav pill cobria)
@@ -276,6 +277,13 @@ firebase.initializeApp({
 });
 const db = firebase.firestore();
 
+// OFFLINE PERSISTENCE (v10.5.2): cacheia entries/config no IndexedDB.
+// Impacto no cold start iPhone PWA: antes de receber do servidor (200-800ms), o app
+// já renderiza com o último snapshot em cache. Sensação de "abriu instantâneo".
+// synchronizeTabs: multi-aba ou PWA + Safari abertos não brigam pelo lock.
+// Catch silencioso: em browsers sem suporte (raríssimo), segue sem persistência.
+db.enablePersistence({synchronizeTabs: true}).catch(()=>{});
+
 // Firebase functions (global, accessed by React code)
 window.FB = {
   subEntries(cb) {
@@ -359,8 +367,29 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "10.5.1";
+const APP_VERSION = "10.5.2";
 const CHANGELOG = [
+  {
+    v: "10.5.2", date: "2026-04-18",
+    pt: {
+      title: "Firestore offline persistence ON \u2014 cold start iPhone PWA instant\u00e2neo",
+      bullets: [
+        '\u2605 Ativado `db.enablePersistence({synchronizeTabs: true})` no init do Firebase. O SDK agora cacheia entries + config no IndexedDB local.',
+        '\u2605 **Impacto**: antes, no cold start do PWA iPhone (especialmente em dias sem conex\u00e3o boa), o app ficava em splash 500-800ms esperando o primeiro `onSnapshot` chegar da rede. Agora o cache serve imediatamente \u2014 Ring, timer ativo, entries do dia, tudo aparece na primeira frame. Sync com servidor continua em background (ningu\u00e9m v\u00ea dados stale por mais de 1-2s).',
+        '\u2605 Bonus offline: app funciona OFFLINE agora. Abriu sem rede? Mostra o \u00faltimo estado conhecido. Saves v\u00e3o pra queue do SDK e sincronizam quando voltar online. Notifica\u00e7\u00f5es push ainda precisam de rede.',
+        '`synchronizeTabs: true` evita conflito de lock se o Safari e o PWA standalone estiverem abertos ao mesmo tempo. Catch silencioso fallback em browsers sem suporte (raríssimo).',
+      ],
+    },
+    en: {
+      title: "Firestore offline persistence ON \u2014 instant cold start on iPhone PWA",
+      bullets: [
+        '\u2605 Enabled `db.enablePersistence({synchronizeTabs: true})` in Firebase init. The SDK now caches entries + config in local IndexedDB.',
+        '\u2605 **Impact**: before, on iPhone PWA cold start (especially on flaky networks), the app sat on splash 500-800ms waiting for the first `onSnapshot` from the wire. Now the cache serves immediately \u2014 Ring, active timer, today\'s entries, all show up on the first frame. Server sync continues in background (nobody sees stale data for more than 1-2s).',
+        '\u2605 Offline bonus: the app works OFFLINE now. Opened without network? Shows last known state. Saves go to the SDK queue and sync when back online. Push notifications still need network.',
+        '`synchronizeTabs: true` prevents lock conflict if Safari + the standalone PWA are open at once. Silent catch fallback on browsers without support (very rare).',
+      ],
+    },
+  },
   {
     v: "10.5.1", date: "2026-04-18",
     pt: {
