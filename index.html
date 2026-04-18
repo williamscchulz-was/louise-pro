@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v10.5.0 CRITICO: fix de data-loss no profile (saveProfile agora usa merge + side-paths delta-only)
   v10.4.7 Fix: scroll do Home nao chegava no fim do ultimo card (nav pill cobria)
   v10.4.6 Fix: evento exatamente na hora do fim do bedtime aparece como top-level no Hoje
   v10.4.5 Fix: mamada noturna invisivel no Hoje (bedtime que comeca ontem e acaba hoje)
@@ -290,13 +291,17 @@ window.FB = {
   },
   async delEntry(id) { await db.collection('entries').doc(id).delete(); },
   subProfile(cb) { return db.collection('config').doc('profile').onSnapshot(s => cb(s.exists ? s.data() : null)); },
-  async saveProfile(p) { await db.collection('config').doc('profile').set(p); },
+  // MERGE: campos não incluídos em `p` ficam preservados. Blinda contra callers que passam
+  // payload parcial (ex: side-paths que só atualizam lastSeenVersion) ou state stale de
+  // outra aba/dispositivo. SEM merge qualquer save parcial limpava name/photo/etc. v10.5.0.
+  async saveProfile(p) { await db.collection('config').doc('profile').set(p, {merge:true}); },
   subMeds(cb) { return db.collection('config').doc('meds').onSnapshot(s => cb(s.exists ? s.data()?.list : null)); },
   async saveMeds(m) { await db.collection('config').doc('meds').set({list:m}); },
   subTimer(cb) { return db.collection('config').doc('active').onSnapshot(s => cb(s.exists ? s.data() : null)); },
   async saveTimer(t) { await db.collection('config').doc('active').set(t||{cleared:true}); },
   subInbox(cb) { return db.collection('config').doc('inbox').onSnapshot(s => cb(s.exists ? s.data() : null)); },
-  async saveInbox(data) { await db.collection('config').doc('inbox').set(data); },
+  // MERGE defensivo: mesmo padrão do saveProfile — preserva campos não incluídos em `data`.
+  async saveInbox(data) { await db.collection('config').doc('inbox').set(data, {merge:true}); },
   // Push notification token storage — each token is a separate doc in subcollection
   // Path: config/pushTokens/tokens/{tokenId}
   // Worker reads from this path to fan out push notifications.
@@ -353,8 +358,33 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "10.4.7";
+const APP_VERSION = "10.5.0";
 const CHANGELOG = [
+  {
+    v: "10.5.0", date: "2026-04-18",
+    pt: {
+      title: "CR\u00cdTICO: fix de data-loss no profile (foto + nome podendo sumir)",
+      bullets: [
+        '\u2605 Bug: a foto e o nome da Louise sumiram depois de um uso normal. Causa raiz: `FB.saveProfile` usava `.set(p)` que **substitui o documento inteiro** no Firestore. Qualquer save parcial (ex: toast de update marcando `lastSeenVersion`, toggle de pushEnabled) com `{...profile, campo}` onde `profile` estava stale em mem\u00f3ria (race com `onSnapshot` no cold start, multi-aba, ou multi-device) sobrescrevia name/photo/etc com valores default.',
+        '\u2605 **3 camadas de defesa**:',
+        '1) `FB.saveProfile` e `FB.saveInbox` agora usam `.set(data, {merge:true})` \u2014 campos n\u00e3o inclu\u00eddos no payload ficam preservados. Blinda contra qualquer caller que passe payload parcial.',
+        '2) Side-paths (`markChangelogSeen`, first-install auto-mark) mandam APENAS o delta: `{lastSeenVersion: X}` em vez de spread de `profile`. Combinado com merge, payload de 1 campo.',
+        '3) `persistToggle` do Profile tamb\u00e9m delta-only agora. Toggle de keepScreenOn/pushEnabled manda s\u00f3 a flag, nada mais.',
+        'N\u00e3o muda nada vis\u00edvel. \u00c9 fix puro de seguran\u00e7a de dados. Se algu\u00e9m j\u00e1 perdeu campos, precisa reinserir no Profile \u2014 n\u00e3o tem como recuperar automaticamente. Da v10.5.0 em diante, loss como este n\u00e3o consegue mais acontecer.',
+      ],
+    },
+    en: {
+      title: "CRITICAL: profile data-loss fix (photo + name could disappear)",
+      bullets: [
+        '\u2605 Bug: Louise\'s photo and name vanished after normal usage. Root cause: `FB.saveProfile` used `.set(p)` which **replaces the whole document** on Firestore. Any partial save (e.g. update toast marking `lastSeenVersion`, pushEnabled toggle) with `{...profile, field}` where `profile` was stale in memory (race with `onSnapshot` on cold start, multi-tab, or multi-device) overwrote name/photo/etc with default values.',
+        '\u2605 **3 defense layers**:',
+        '1) `FB.saveProfile` and `FB.saveInbox` now use `.set(data, {merge:true})` \u2014 fields not included in the payload are preserved. Guards against any caller passing a partial payload.',
+        '2) Side-paths (`markChangelogSeen`, first-install auto-mark) send ONLY the delta: `{lastSeenVersion: X}` instead of spreading `profile`. Combined with merge, 1-field payload.',
+        '3) Profile\'s `persistToggle` is delta-only now too. Toggling keepScreenOn/pushEnabled sends just the flag, nothing else.',
+        'No visible change. Pure data-safety fix. Anyone who already lost fields needs to re-enter them in Profile \u2014 no automatic recovery. From v10.5.0 onwards this class of loss cannot happen.',
+      ],
+    },
+  },
   {
     v: "10.4.7", date: "2026-04-17",
     pt: {
@@ -3939,23 +3969,10 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
     Haptic.medium();
   };
   // Persists a single toggle change immediately to Firestore (no need to tap Save).
-  // Builds the patch from current state values plus the override.
+  // DELTA-ONLY (v10.5.0): só manda os campos que de fato mudaram. Combinado com saveProfile
+  // usando merge, zero risco de sobrescrever name/photo com state stale desta aba.
   const persistToggle=async(overrides)=>{
-    const patch={
-      name:name.trim(),
-      birthDate:birth,
-      photo,
-      mlGoal:parseInt(mlGoal)||0,
-      birthWeight:parseFloat(birthWeight)||0,
-      birthLength:parseFloat(birthLength)||0,
-      birthHead:parseFloat(birthHead)||0,
-      lang:langSel,
-      keepScreenOn,
-      hapticEnabled,
-      pushEnabled,
-      ...overrides
-    };
-    try{await onSave(patch)}catch(e){/* fail silent */}
+    try{await onSave(overrides)}catch(e){/* fail silent */}
   };
   const handlePushToggle=async()=>{
     if(pushBusy)return;
@@ -4951,13 +4968,17 @@ function App(){
     if(profile.lastSeenVersion&&profile.lastSeenVersion!==APP_VERSION){
       setShowUpdateToast(true);
     }else if(!profile.lastSeenVersion){
-      // First time: mark silently without showing toast
-      FB.saveProfile({...profile,lastSeenVersion:APP_VERSION}).catch(()=>{});
+      // First time: mark silently without showing toast.
+      // CRÍTICO: só manda o delta (lastSeenVersion), NUNCA spread de `profile`.
+      // Com saveProfile usando merge, isso é suficiente. Antes, spread de profile
+      // stale em memória (race com onSnapshot / multi-aba) limpava name/photo. v10.5.0.
+      FB.saveProfile({lastSeenVersion:APP_VERSION}).catch(()=>{});
     }
   },[loading,profile.lastSeenVersion]);
   const markChangelogSeen=()=>{
     if(profile.lastSeenVersion!==APP_VERSION){
-      FB.saveProfile({...profile,lastSeenVersion:APP_VERSION}).catch(()=>{});
+      // Delta-only save (v10.5.0). Ver coment\u00e1rio acima.
+      FB.saveProfile({lastSeenVersion:APP_VERSION}).catch(()=>{});
     }
   };
   const openChangelog=()=>{setShowChangelog(true);setShowUpdateToast(false);markChangelogSeen()};

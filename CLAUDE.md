@@ -14,7 +14,7 @@ Este `CLAUDE.md` é lido automaticamente pelo Claude Code no início de toda ses
 - **Localização**: Blumenau, SC, Brasil (BRT, UTC-3)
 - **Repositório**: https://github.com/williamscchulz-was/louise-pro
 - **Live**: https://williamscchulz-was.github.io/louise-pro/
-- **Versão atual**: v10.4.7 (app) / routine-engine v2.2.1
+- **Versão atual**: v10.5.0 (app) / routine-engine v2.2.1
 - **Bilíngue**: Português e Inglês (toda a interface, insights, curiosidades e changelog)
 
 ## Stack
@@ -108,6 +108,19 @@ Descoberta dolorosa na v10.4.4 que vale tatuar:
 - `#nav-host` tem `pointer-events:none` pro conteúdo atrás receber clique. Filhos que precisam clicar (a `nav`, o `TimerBar`) restauram com `pointer-events:auto` no próprio estilo.
 - Position:fixed DENTRO de ancestor com `overflow:auto` vira efetivamente absolute em iOS PWA standalone (bug conhecido do WebKit). Por isso nav + TimerBar ficam fora do App root via `ReactDOM.createPortal`.
 - TimerBar tem prop `hidden` que desmonta o bar quando qualquer overlay inferior abre (Sheet/Modal/ProfilePage/InboxPanel/etc) — evita cobrir botões Save e evita `backdrop-filter` pegar cor errada. Não tenta fade (o tick de 1s resetava a transition).
+
+-----
+
+## Integridade de dados — NUNCA QUEBRAR
+
+Perda de dados aconteceu na v10.4.7 (foto + nome da Louise sumiram). Fix em v10.5.0. Regras absolutas daqui pra frente:
+
+- **Todo `.set()` no Firestore precisa de `{merge:true}`** salvo quando explicitamente fizer sentido substituir o doc inteiro (ex: `saveTimer` ou entries novos). Atualmente com merge: `saveProfile`, `saveInbox`. Sem merge: `saveTimer` (state completo do timer), `addEntry` (entry novo), `saveMeds` (sempre full list), `savePushToken` (doc dedicado por token), `addReminder` (reminder individual).
+- **Side-paths NUNCA mandam spread de estado em memória**. Se o objetivo é marcar um campo, manda só `{campo: valor}`. Exemplos:
+  - `markChangelogSeen` → `FB.saveProfile({lastSeenVersion:APP_VERSION})`, não `{...profile,lastSeenVersion}`.
+  - `persistToggle` no Profile → manda só o override, não o patch completo.
+- **Causa do bug original**: race condition (onSnapshot ainda não tinha disparado) + multi-aba + `.set()` replace + spread de `profile` default em memória. Qualquer combinação dos 3 fatores e os dados sumiam.
+- Se precisar deletar um campo explicitamente, usar `firebase.firestore.FieldValue.delete()` (merge ignora `undefined`).
 
 -----
 
