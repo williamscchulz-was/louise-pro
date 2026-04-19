@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v10.5.4 Limpeza: nowTick removido (redundante) + contain:layout/paint em SleepBlock
   v10.5.3 Perf: Starfield module-level memo + Profile photo sig (isDirty vira O(1) por keystroke)
   v10.5.2 Firestore offline persistence ON: cold start iPhone PWA instantaneo + app offline-capable
   v10.5.1 Perf iPhone: tick 1s->5s em bedtime + React.memo em Ring/SleepBlock/EntryRow + blur 26->18
@@ -368,8 +369,25 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "10.5.3";
+const APP_VERSION = "10.5.4";
 const CHANGELOG = [
+  {
+    v: "10.5.4", date: "2026-04-18",
+    pt: {
+      title: "Limpeza: tick redundante removido + CSS containment em SleepBlock",
+      bullets: [
+        '\u2605 **`nowTick` removido**: era um segundo `setInterval` de 30s criado na v10.4.0 pra atualizar a barra de next-feeding. Redundante \u2014 o `tick` principal do App j\u00e1 fira 30s no idle. Menos um interval rodando em background.',
+        '\u2605 **`contain: layout paint` no SleepBlock**: iOS browser agora pode isolar repaints do bloco de bedtime (header + timeline + night-activity nested). Scroll mais suave na lista do Hoje e no History. EntryRow j\u00e1 tinha `contentVisibility:auto` (mais agressivo) desde v9.9.2.',
+      ],
+    },
+    en: {
+      title: "Cleanup: redundant tick removed + CSS containment on SleepBlock",
+      bullets: [
+        '\u2605 **`nowTick` removed**: was a second 30s `setInterval` introduced in v10.4.0 to refresh the next-feeding bar. Redundant \u2014 App\'s main `tick` already fires 30s while idle. One less interval running in background.',
+        '\u2605 **`contain: layout paint` on SleepBlock**: iOS browser can now isolate repaints of the bedtime block (header + timeline + nested night-activity). Smoother scroll on Today list and History. EntryRow already had `contentVisibility:auto` (more aggressive) since v9.9.2.',
+      ],
+    },
+  },
   {
     v: "10.5.3", date: "2026-04-18",
     pt: {
@@ -3483,7 +3501,7 @@ const SleepBlock = React.memo(function SleepBlock({entry,onDelete,onEdit,entries
 
   // Live mode: end label is "agora / now" instead of computed end time
   const endLabel=isLive?(_lang==="en"?"now":"agora"):endT;
-  return(<div style={{position:"relative",marginBottom:8,borderRadius:20,background:"linear-gradient(180deg,rgba(167,139,250,0.08),rgba(167,139,250,0.03))",border:`1px solid ${isLive?"rgba(96,165,250,0.4)":T.gBSoft}`,overflow:"hidden",animation:isLive?"livePulse 2.5s ease-in-out infinite":"none",boxShadow:isLive?"0 0 16px rgba(96,165,250,0.18), "+T.insetTop:T.insetTop}}>
+  return(<div style={{position:"relative",marginBottom:8,borderRadius:20,background:"linear-gradient(180deg,rgba(167,139,250,0.08),rgba(167,139,250,0.03))",border:`1px solid ${isLive?"rgba(96,165,250,0.4)":T.gBSoft}`,overflow:"hidden",animation:isLive?"livePulse 2.5s ease-in-out infinite":"none",boxShadow:isLive?"0 0 16px rgba(96,165,250,0.18), "+T.insetTop:T.insetTop,contain:"layout paint"}}>
     {/* Colored stripe (matches new EntryRow style) */}
     <div style={{position:"absolute",left:0,top:0,bottom:0,width:4,background:"linear-gradient(180deg,#a78bfa,rgba(167,139,250,0.3))",borderRadius:"0 2px 2px 0",pointerEvents:"none",zIndex:1}}/>
     {/* Live ribbon (only when isLive) */}
@@ -5024,9 +5042,9 @@ function App(){
   const[profile,setProfile]=useState({name:"",birthDate:"2026-03-08",photo:"",mlGoal:0});
   const[activeTimer,setActiveTimer]=useState(null);const[loading,setLoading]=useState(true);
   const[page,setPage]=useState("home");const[showAdd,setShowAdd]=useState(false);const[formType,setFormType]=useState(null);const[editEntry,setEditEntry]=useState(null);const[showOrbit,setShowOrbit]=useState(false);
-  // Minute-ish tick so time-based UI (next-feeding progress bar on the Bottle card) refreshes without a full reload.
-  const[nowTick,setNowTick]=useState(0);
-  useEffect(()=>{const iv=setInterval(()=>setNowTick(k=>k+1),30000);return()=>clearInterval(iv)},[]);
+  // `nowTick` removido na v10.5.4 — era redundante com o main tick (já fira cada 30s no idle).
+  // A barra de next-feeding no card Bottle pega Date.now() em cada render do App, que acontece
+  // automaticamente a cada 30s via o tick principal (linha ~5088).
   // SWIPE NAV (v9.9.2) — Step 1: only Home/Stats/History swipe. Profile stays overlay.
   const SWIPE_PAGES=["home","stats","history"];
   const swipeIdx=SWIPE_PAGES.indexOf(page);
