@@ -26,6 +26,7 @@ const CACHE_NAME = "louise-pro-" + CACHE_VERSION;
 const PRECACHE_LOCAL = [
   "./",
   "./manifest.json",
+  "./firebase-messaging-sw.js",
   "./js/splash-icon.js",
   "./js/who-growth.js",
   "./js/curiosities.js",

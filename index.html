@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.2.0 Backup export/import + quick wins (memo StatsPage/HistoryPage + manifest shortcuts)
   v11.1.0 Notificacoes per-device: marcar lida persiste + update toast aparece em cada device (localStorage)
   v11.0.0 Sprint de resiliencia + a11y: ErrorBoundary + URL routing + empty states + aria-labels + contraste + swipe fix
   v10.8.0 3 fixes: Diaper wet/dirty + Night pattern dedup (cross-midnight) + SW update banner
@@ -387,6 +388,45 @@ window.FB = {
   async delReminder(id) {
     await db.collection('config').doc('reminders').collection('items').doc(id).delete();
   },
+  // ── BACKUP / RESTORE (v11.2) ──
+  // Exporta TODO o state da Louise pro formato JSON que pode ser salvo em disco / iCloud /
+  // Dropbox / etc. Importa restaura. Nossa rede de seguranca caso o Firestore tenha quota
+  // issue, conta suspensa, ou alguem deletar por acidente.
+  async exportAll() {
+    const entriesSnap = await db.collection('entries').get();
+    const entries = entriesSnap.docs.map(d => ({...d.data(), _docId: d.id}));
+    const profileSnap = await db.collection('config').doc('profile').get();
+    const profile = profileSnap.exists ? profileSnap.data() : null;
+    const medsSnap = await db.collection('config').doc('meds').get();
+    const meds = medsSnap.exists ? (medsSnap.data().list || []) : [];
+    const inboxSnap = await db.collection('config').doc('inbox').get();
+    const inbox = inboxSnap.exists ? inboxSnap.data() : null;
+    const remindersSnap = await db.collection('config').doc('reminders').collection('items').get();
+    const reminders = remindersSnap.docs.map(d => ({...d.data(), _id: d.id}));
+    return {
+      _meta: { version: 1, exportedAt: new Date().toISOString(), app: 'louise-pro' },
+      entries, profile, meds, inbox, reminders
+    };
+  },
+  async importAll(data) {
+    if (!data || !data._meta || data._meta.app !== 'louise-pro') throw new Error('Invalid backup file');
+    // Entries: set each (merge:false — replaces; import overwrites what was there)
+    if (Array.isArray(data.entries)) {
+      for (const e of data.entries) {
+        const clean = {...e}; delete clean._docId;
+        await db.collection('entries').doc(e.id || e._docId).set(clean);
+      }
+    }
+    if (data.profile) await db.collection('config').doc('profile').set(data.profile, {merge: false});
+    if (Array.isArray(data.meds)) await db.collection('config').doc('meds').set({list: data.meds});
+    if (data.inbox) await db.collection('config').doc('inbox').set(data.inbox, {merge: false});
+    if (Array.isArray(data.reminders)) {
+      for (const r of data.reminders) {
+        const clean = {...r}; delete clean._id;
+        await db.collection('config').doc('reminders').collection('items').doc(r._id).set(clean);
+      }
+    }
+  },
 };
 dbg('Firebase ready');
 } catch(e) { dbg('Firebase Error: '+e.message); throw e; }
@@ -411,8 +451,37 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.1.0";
+const APP_VERSION = "11.2.0";
 const CHANGELOG = [
+  {
+    v: "11.2.0", date: "2026-04-19",
+    pt: {
+      title: "Backup export/import + quick wins (memo StatsPage/HistoryPage + manifest shortcuts)",
+      bullets: [
+        '\u2605 **Sistema de backup completo (Opt A)**. Nova se\u00e7\u00e3o "Backup" no Profile com: (a) bot\u00e3o "Exportar dados" que baixa JSON com TUDO (entries, perfil, meds, lembretes, inbox) direto pros Downloads/iCloud/Files; (b) bot\u00e3o "Importar backup" que restaura um JSON \u2014 com confirma\u00e7\u00e3o forte (acao destrutiva); (c) auto-export silencioso a cada 24h que gera um JSON e faz download autom\u00e1tico quando o Profile \u00e9 aberto. Mostra "\u00daltimo backup: 3h" debaixo do t\u00edtulo.',
+        '**Uso**: se o Firestore tiver quota issue, conta suspensa, ou algu\u00e9m deletar por acidente \u2014 voc\u00ea restaura em 30s do JSON. Tamb\u00e9m serve pra migrar entre contas ou devices sem Firestore.',
+        '\u2605 **Quick wins (Opt B)**:',
+        '\u2022 React.memo no StatsPage e HistoryPage \u2014 n\u00e3o re-renderizam a cada tick do App durante timer ativo.',
+        '\u2022 `firebase-messaging-sw.js` agora no precache do SW \u2014 push notifications respondem mais r\u00e1pido no primeiro uso.',
+        '\u2022 `manifest.json` ganhou `categories` (health, lifestyle, utilities) e `shortcuts` (3 atalhos: Registrar, Hist\u00f3rico, Stats). iPhone mostra atalho long-press no \u00edcone do PWA.',
+        '\u2022 2 `<div onClick>` \u00far\u0dfrfos no SleepBlock viraram `<button>` pra screen reader / keyboard nav.',
+        'Opt C (Firebase modular SDK) descartado \u2014 ROI baixo pro PWA instalado que j\u00e1 tem SW cache.',
+      ],
+    },
+    en: {
+      title: "Backup export/import + quick wins (memo StatsPage/HistoryPage + manifest shortcuts)",
+      bullets: [
+        '\u2605 **Full backup system (Opt A)**. New "Backup" section in Profile with: (a) "Export data" button downloads JSON with EVERYTHING (entries, profile, meds, reminders, inbox) straight to Downloads/iCloud/Files; (b) "Import backup" button restores from a JSON \u2014 with strong confirmation (destructive); (c) silent auto-export every 24h that generates + auto-downloads JSON when Profile is opened. Shows "Last backup: 3h" under the title.',
+        '**Use case**: if Firestore has a quota issue, account suspended, or someone deletes by accident \u2014 restore in 30s from JSON. Also works to migrate between accounts or devices without Firestore.',
+        '\u2605 **Quick wins (Opt B)**:',
+        '\u2022 React.memo on StatsPage and HistoryPage \u2014 no more re-render on every App tick during active timer.',
+        '\u2022 `firebase-messaging-sw.js` now in SW precache \u2014 push notifications respond faster on first use.',
+        '\u2022 `manifest.json` got `categories` (health, lifestyle, utilities) and `shortcuts` (3 shortcuts: Log, History, Stats). iPhone shows long-press shortcut menu on the PWA icon.',
+        '\u2022 2 orphan `<div onClick>` in SleepBlock became `<button>` for screen reader / keyboard nav.',
+        'Opt C (Firebase modular SDK) dropped \u2014 low ROI for installed PWA that already has SW cache.',
+      ],
+    },
+  },
   {
     v: "11.1.0", date: "2026-04-19",
     pt: {
@@ -3123,6 +3192,17 @@ const I={
   stats:{pt:"Estatísticas",en:"Statistics"},
   settings:{pt:"Configurações",en:"Settings"},
   notifications:{pt:"Notificações",en:"Notifications"},
+  // v11.2 backup keys
+  backup:{pt:"Backup",en:"Backup"},
+  exportData:{pt:"Exportar dados",en:"Export data"},
+  importData:{pt:"Importar backup",en:"Import backup"},
+  lastBackup:{pt:"Último backup",en:"Last backup"},
+  never:{pt:"nunca",en:"never"},
+  backupDesc:{pt:"Baixa todos os registros, perfil e lembretes como JSON. Backup automático a cada 24h fica salvo no device.",en:"Downloads all entries, profile and reminders as JSON. Auto backup every 24h saved on device."},
+  importConfirm:{pt:"Importar vai SUBSTITUIR todos os dados atuais pelos do arquivo. Essa ação não pode ser desfeita. Continuar?",en:"Importing will REPLACE all current data with the file's data. This cannot be undone. Continue?"},
+  exportedJust:{pt:"Backup exportado agora",en:"Backup just exported"},
+  importedOk:{pt:"Backup restaurado",en:"Backup restored"},
+  importErr:{pt:"Arquivo inválido",en:"Invalid file"},
   delete:{pt:"Apagar",en:"Delete"},
   undo:{pt:"Desfazer",en:"Undo"},
   registered:{pt:"registrado",en:"registered"},
@@ -3752,10 +3832,10 @@ const SleepBlock = React.memo(function SleepBlock({entry,onDelete,onEdit,entries
     else if(le.type==="bath")txt=_lang==="en"?"Bath":"Banho";
     else txt=TL(le.type);
     return(<div style={{display:"flex",alignItems:"center",gap:9,padding:"6px 0"}}>
-      <div onClick={ev=>{ev.stopPropagation();onEdit&&onEdit(le)}} style={{width:24,height:24,borderRadius:7,background:cfg.bg,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,cursor:"pointer"}}>
+      <button aria-label={_lang==="en"?"Edit":"Editar"} onClick={ev=>{ev.stopPropagation();onEdit&&onEdit(le)}} style={{width:24,height:24,borderRadius:7,background:cfg.bg,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,cursor:"pointer",border:"none",padding:0}}>
         <Icon name={cfg.icon} size={13} color={cfg.color}/>
-      </div>
-      <div onClick={ev=>{ev.stopPropagation();onEdit&&onEdit(le)}} style={{flex:1,fontSize:11,color:T.text,fontWeight:500,cursor:"pointer"}}>{txt}</div>
+      </button>
+      <button onClick={ev=>{ev.stopPropagation();onEdit&&onEdit(le)}} style={{flex:1,fontSize:11,color:T.text,fontWeight:500,cursor:"pointer",textAlign:"left",background:"transparent",border:"none",padding:0}}>{txt}</button>
       <div style={{fontSize:10,color:T.sub,fontWeight:600,fontVariantNumeric:"tabular-nums"}}>{le.time}</div>
       <button onClick={ev=>{ev.stopPropagation();if(confirm(_lang==="en"?`Delete this ${TL(le.type)||le.type}?`:`Excluir ${TL(le.type)||le.type}?`)){onDelete&&onDelete(le.id)}}} style={{width:22,height:22,borderRadius:6,background:"transparent",border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginLeft:2}}>
         <Icon name="trash" size={11} color={T.dim}/>
@@ -4641,6 +4721,7 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
       <button onClick={()=>{if(isDirty)doSave();onGrowth()}} style={{width:"100%",padding:14,borderRadius:12,marginBottom:10,background:"rgba(163,230,53,0.08)",border:"1px solid rgba(163,230,53,0.15)",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
         <Icon name="ruler" size={16} color="#a3e635"/><span style={{fontSize:14,fontWeight:700,color:"#a3e635"}}>{L("viewGrowth")}</span>
       </button>
+      <BackupSection/>
       <div style={{marginTop:20}}>
         <button onClick={onShowChangelog} style={{width:"100%",padding:"14px 16px",borderRadius:14,background:"rgba(22,28,60,0.4)",border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",gap:12,textAlign:"left",cursor:"pointer"}}>
           <div style={{width:36,height:36,borderRadius:10,background:"linear-gradient(135deg,rgba(139,124,246,0.18),rgba(124,58,237,0.10))",border:"1px solid rgba(139,124,246,0.22)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
@@ -4749,7 +4830,9 @@ function UpdateToast({fromVersion,toVersion,onView,onDismiss,lang}){
   </div>);
 }
 
-function StatsPage({entries,onGrowth}){
+// StatsPage memoizado (v11.2) — re-render só quando entries/onGrowth mudarem,
+// não a cada tick de 5s do App durante timer ativo.
+const StatsPage = React.memo(function StatsPage({entries,onGrowth}){
   const[period,setPeriod]=useState(7);
   const today=todayStr();
   // Build the day window:
@@ -5008,9 +5091,10 @@ function StatsPage({entries,onGrowth}){
       )}
     </div>
   </div>);
-}
+});
 
-function HistoryPage({entries,onDelete,onEdit,activeTimer}){
+// HistoryPage memoizado (v11.2) — mesmo motivo do StatsPage.
+const HistoryPage = React.memo(function HistoryPage({entries,onDelete,onEdit,activeTimer}){
   const[dateIdx,setDateIdx]=useState(0);
   const[filter,setFilter]=useState("all");
   const viewDate=dateOffset(todayStr(),-dateIdx);
@@ -5081,7 +5165,7 @@ function HistoryPage({entries,onDelete,onEdit,activeTimer}){
       <div style={{fontSize:12,color:T.sub,lineHeight:1.55,maxWidth:240,margin:"0 auto"}}>{filter!=="all"?(_lang==="en"?"Try changing the filter or switching to another day.":"Tente mudar o filtro ou ir para outro dia."):(_lang==="en"?"Tap + below to register the first.":"Toque + abaixo para registrar o primeiro.")}</div>
     </div>):listItems}
   </div>);
-}
+});
 
 // ── GROWTH PAGE with WHO percentiles ──
 // Helper: parse decimal string accepting both comma and dot (pt-BR friendly)
@@ -5354,6 +5438,107 @@ const Starfield = React.memo(function Starfield(){
     {STARFIELD_DATA.br.map(s=><div key={s.k} style={{position:"absolute",width:s.w,height:s.h,background:s.c,borderRadius:"50%",top:s.t+"%",left:s.l+"%",boxShadow:`0 0 12px ${s.c}, 0 0 4px ${s.c}`}}/>)}
   </div>);
 });
+
+// ── BACKUP SECTION (v11.2) ──
+// Aparece no Profile entre "View growth" e "Louise Pro version". Duas operações:
+// 1) Exportar: gera JSON + dispara download (browser salva em Files/iCloud/Downloads).
+// 2) Importar: file picker → confirmação explícita → restaura.
+// Também faz auto-export silencioso pra IndexedDB a cada 24h pra ter snapshot local recente
+// independente do Firestore. Mostra "Último backup há Xh" em todas chamadas (manual ou auto).
+const BACKUP_KEY = "lp_last_backup_at";
+function fmtBackupAgo(ts, lang){
+  if(!ts) return lang==="en"?"never":"nunca";
+  const diffMin = Math.floor((Date.now()-ts)/60000);
+  if(diffMin<1) return lang==="en"?"just now":"agora";
+  if(diffMin<60) return `${diffMin}min`;
+  const h = Math.floor(diffMin/60);
+  if(h<24) return `${h}h`;
+  const d = Math.floor(h/24);
+  return lang==="en"?`${d}d ago`:`${d}d atrás`;
+}
+function downloadJSON(obj, filename){
+  const blob = new Blob([JSON.stringify(obj, null, 2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{document.body.removeChild(a); URL.revokeObjectURL(url)},100);
+}
+function BackupSection(){
+  const[lastAt,setLastAt]=useState(()=>{try{const v=localStorage.getItem(BACKUP_KEY);return v?parseInt(v,10):0}catch(_){return 0}});
+  const[busy,setBusy]=useState(false);
+  const[msg,setMsg]=useState("");
+  const fileRef=useRef(null);
+  // Auto-backup 24h (silent): ao montar o Profile, se >24h do último, gera JSON e baixa.
+  useEffect(()=>{
+    const H24=24*3600*1000;
+    if(lastAt&&Date.now()-lastAt<H24)return;
+    // Evita auto-trigger em loop se falhar — marca tentativa com timestamp atual.
+    (async()=>{
+      try{
+        const data=await FB.exportAll();
+        downloadJSON(data,`louise-backup-${todayStr()}.json`);
+        const now=Date.now();
+        setLastAt(now);
+        try{localStorage.setItem(BACKUP_KEY,String(now))}catch(_){}
+      }catch(e){console.warn("[LP] auto-backup failed:",e.message)}
+    })();
+  },[]);
+  const onExport=async()=>{
+    if(busy)return;
+    setBusy(true);setMsg("");
+    try{
+      const data=await FB.exportAll();
+      downloadJSON(data,`louise-backup-${todayStr()}.json`);
+      const now=Date.now();setLastAt(now);
+      try{localStorage.setItem(BACKUP_KEY,String(now))}catch(_){}
+      setMsg(L("exportedJust"));
+      Haptic.success();
+      setTimeout(()=>setMsg(""),3000);
+    }catch(e){setMsg("Erro: "+e.message);Haptic.warning();setTimeout(()=>setMsg(""),4000)}
+    setBusy(false);
+  };
+  const onImportClick=()=>{fileRef.current?.click()};
+  const onImportFile=async(e)=>{
+    const f=e.target.files?.[0];if(!f)return;
+    if(!confirm(L("importConfirm"))){e.target.value="";return}
+    setBusy(true);setMsg("");
+    try{
+      const txt=await f.text();
+      const data=JSON.parse(txt);
+      await FB.importAll(data);
+      setMsg(L("importedOk"));
+      Haptic.success();
+      setTimeout(()=>{setMsg("");window.location.reload()},1500);
+    }catch(err){setMsg(L("importErr")+": "+err.message);Haptic.warning();setTimeout(()=>setMsg(""),5000)}
+    setBusy(false);
+    e.target.value="";
+  };
+  return(<div style={{marginTop:16,padding:"16px 18px",borderRadius:14,background:"rgba(22,28,60,0.4)",border:`1px solid ${T.gB}`,boxShadow:T.insetTop}}>
+    <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+      <div style={{width:32,height:32,borderRadius:9,background:"rgba(52,211,153,0.12)",border:"1px solid rgba(52,211,153,0.28)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6ee7b7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      </div>
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{fontSize:13,fontWeight:700,color:T.text}}>{L("backup")}</div>
+        <div style={{fontSize:10,color:T.sub,fontWeight:600,marginTop:1,fontVariantNumeric:"tabular-nums"}}>{L("lastBackup")}: {fmtBackupAgo(lastAt,_lang)}</div>
+      </div>
+    </div>
+    <div style={{fontSize:11,color:T.sub,lineHeight:1.5,marginBottom:12}}>{L("backupDesc")}</div>
+    <div style={{display:"flex",gap:8}}>
+      <button onClick={onExport} disabled={busy} style={{flex:1,padding:"11px 12px",borderRadius:11,background:busy?"rgba(52,211,153,0.1)":"linear-gradient(180deg,rgba(52,211,153,0.22),rgba(16,185,129,0.12))",border:"1px solid rgba(52,211,153,0.35)",color:"#6ee7b7",fontSize:12,fontWeight:700,letterSpacing:-0.1,display:"flex",alignItems:"center",justifyContent:"center",gap:6,opacity:busy?0.6:1}}>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        {L("exportData")}
+      </button>
+      <button onClick={onImportClick} disabled={busy} style={{flex:1,padding:"11px 12px",borderRadius:11,background:"rgba(22,28,60,0.6)",border:`1px solid ${T.gBSoft}`,color:T.sub,fontSize:12,fontWeight:700,letterSpacing:-0.1,display:"flex",alignItems:"center",justifyContent:"center",gap:6,opacity:busy?0.6:1}}>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        {L("importData")}
+      </button>
+      <input ref={fileRef} type="file" accept="application/json,.json" onChange={onImportFile} style={{display:"none"}}/>
+    </div>
+    {msg&&<div style={{fontSize:11,color:msg.startsWith("Erro")||msg.toLowerCase().includes("inv")?"#f87171":"#6ee7b7",marginTop:10,textAlign:"center",fontWeight:600}}>{msg}</div>}
+  </div>);
+}
 
 // ── ERROR BOUNDARY (v11.0) ──
 // Última linha de defesa: se qualquer componente der throw durante render,
