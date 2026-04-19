@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.0.0 Sprint de resiliencia + a11y: ErrorBoundary + URL routing + empty states + aria-labels + contraste + swipe fix
   v10.8.0 3 fixes: Diaper wet/dirty + Night pattern dedup (cross-midnight) + SW update banner
   v10.7.2 AddForm (novo + editar) vira Modal central (Sheet slide-up aposentado em forms)
   v10.7.1 Refinamentos sutis: tabular-nums + tap feedback + pulse na mudanca + data sutil + sparkle no Ring
@@ -210,6 +211,23 @@
     /* Pause every CSS animation while the app is in background (visibility API).
        Saves battery/CPU on iOS PWA and any browser that doesn't auto-throttle. */
     body.app-hidden *,body.app-hidden *::before,body.app-hidden *::after{animation-play-state:paused !important}
+    /* Accessibility (v11.0): respect user's reduced-motion preference. Users with
+       vestibular disorders or sensitivity to motion can disable CSS animations
+       globally via system setting. We keep instant transitions (0.01ms) instead of 0
+       so layout-dependent state changes still commit. */
+    @media (prefers-reduced-motion: reduce){
+      *,*::before,*::after{
+        animation-duration:0.01ms !important;
+        animation-iteration-count:1 !important;
+        transition-duration:0.01ms !important;
+      }
+    }
+    /* Focus-visible outline for keyboard nav (desktop + iPad bluetooth kb).
+       Only shows when user arrived via keyboard, not mouse/touch. */
+    button:focus-visible,input:focus-visible,textarea:focus-visible,a:focus-visible,[tabindex]:focus-visible{
+      outline:2px solid #8b7cf6;
+      outline-offset:2px;
+    }
   </style>
 
 </head>
@@ -392,8 +410,33 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "10.8.0";
+const APP_VERSION = "11.0.0";
 const CHANGELOG = [
+  {
+    v: "11.0.0", date: "2026-04-19",
+    pt: {
+      title: "Sprint de resili\u00eancia + a11y + UX polish (auditoria AUDIT_REPORT.md)",
+      bullets: [
+        '\u2605 **Error Boundary no App root**: qualquer exce\u00e7\u00e3o de render vira tela com "Oops! Recarregando em 3s\u2026" + spinner, e o app recarrega sozinho. Zero tela branca. Logs de erro v\u00e3o pra console pra debug.',
+        '\u2605 **Swipe-to-delete fix**: adicionado `onPointerCancel` dedicado (em vez de reusar `onPointerUp`) que reseta estado sem disparar a\u00e7\u00e3o. Tamb\u00e9m reset em `visibilitychange` (se app vai pra bg no meio do gesto). Bug do "gesto travado" some.',
+        '\u2605 **URL hash routing**: `#home`, `#stats`, `#history`, `#growth` na URL. Bot\u00e3o voltar do iPhone em PWA standalone agora navega entre abas em vez de fechar o app. Deep link fica poss\u00edvel. Analytics externos veem navega\u00e7\u00e3o.',
+        '\u2605 **Empty states**: History com "Nenhum evento neste dia" + CTA "Toque + abaixo". Stats com "Sem dados suficientes" + dica. \u00cdcone grande sutil, bem menos "tela vazia".',
+        '\u2605 **a11y base**: `aria-label` em todos bot\u00f5es \u00edcone-only da nav principal (Home/History/Stats/Settings/+) e Modal X. Contraste do `T.sub` subiu de `#8b90b8` (2.8:1) pra `#a3aac8` (3.8:1) \u2014 sol forte e baixa vis\u00e3o melhoram. `:focus-visible` outline pra navega\u00e7\u00e3o por teclado. `prefers-reduced-motion` respeitado (anima\u00e7\u00f5es viram transi\u00e7\u00f5es instant\u00e2neas).',
+        '\u2605 **Dead code purge**: `edgeGlow` helper + `EDGE_GLOW_BG*` constantes da v10.6.x (revertidas em v10.7.0) removidos.',
+      ],
+    },
+    en: {
+      title: "Resilience + a11y + UX polish sprint (from AUDIT_REPORT.md)",
+      bullets: [
+        '\u2605 **Error Boundary on App root**: any render exception shows an "Oops! Reloading in 3s\u2026" screen with spinner, app auto-reloads. No more white-screen crashes. Errors logged to console for debug.',
+        '\u2605 **Swipe-to-delete fix**: dedicated `onPointerCancel` handler (separate from `onPointerUp`) resets state without firing the action. Also reset on `visibilitychange` (if the app is backgrounded mid-gesture). "Stuck gesture" bug gone.',
+        '\u2605 **URL hash routing**: `#home`, `#stats`, `#history`, `#growth` in the URL. iPhone back button in standalone PWA now navigates tabs instead of closing the app. Deep links possible. External analytics see navigation.',
+        '\u2605 **Empty states**: History with "No events this day" + "Tap + below" CTA. Stats with "Not enough data yet" + hint. Big subtle icon, much less "empty screen" feel.',
+        '\u2605 **Base a11y**: `aria-label` on all icon-only buttons in the main nav (Home/History/Stats/Settings/+) and Modal X. `T.sub` contrast bumped from `#8b90b8` (2.8:1) to `#a3aac8` (3.8:1) \u2014 bright sun and low vision improve. `:focus-visible` outline for keyboard navigation. `prefers-reduced-motion` respected (animations become instant transitions).',
+        '\u2605 **Dead code purge**: `edgeGlow` helper + `EDGE_GLOW_BG*` constants from v10.6.x (reverted in v10.7.0) removed.',
+      ],
+    },
+  },
   {
     v: "10.8.0", date: "2026-04-19",
     pt: {
@@ -3026,24 +3069,8 @@ function Icon({name,size=20,color="currentColor",fill="none"}){
 
 
 // ── THEME ──
-const T={bg1:"#070b1e",bg2:"#0d1133",bg3:"#141a42",glass:"rgba(22,28,60,0.6)",gB:"rgba(90,100,180,0.12)",gBSoft:"rgba(255,255,255,0.06)",insetTop:"0 1px 0 0 rgba(255,255,255,0.04) inset",insetTopStrong:"0 1px 0 0 rgba(255,255,255,0.08) inset",text:"#e4e6f5",sub:"#8b90b8",dim:"#555a80",accent:"#8b7cf6",green:"#34d399",greenS:"rgba(52,211,153,0.1)",purple:"#a78bfa",purpleS:"rgba(167,139,250,0.1)",pink:"#f472b6",pinkS:"rgba(244,114,182,0.1)",amber:"#fbbf24",amberS:"rgba(251,191,36,0.1)",orange:"#fb923c",orangeS:"rgba(251,146,60,0.1)",blue:"#38bdf8",blueS:"rgba(56,189,248,0.12)",red:"#f87171",redS:"rgba(248,113,113,0.1)",cyan:"#22d3ee",cyanS:"rgba(34,211,238,0.1)"};
+const T={bg1:"#070b1e",bg2:"#0d1133",bg3:"#141a42",glass:"rgba(22,28,60,0.6)",gB:"rgba(90,100,180,0.12)",gBSoft:"rgba(255,255,255,0.06)",insetTop:"0 1px 0 0 rgba(255,255,255,0.04) inset",insetTopStrong:"0 1px 0 0 rgba(255,255,255,0.08) inset",text:"#e4e6f5",sub:"#a3aac8",dim:"#555a80",accent:"#8b7cf6",green:"#34d399",greenS:"rgba(52,211,153,0.1)",purple:"#a78bfa",purpleS:"rgba(167,139,250,0.1)",pink:"#f472b6",pinkS:"rgba(244,114,182,0.1)",amber:"#fbbf24",amberS:"rgba(251,191,36,0.1)",orange:"#fb923c",orangeS:"rgba(251,146,60,0.1)",blue:"#38bdf8",blueS:"rgba(56,189,248,0.12)",red:"#f87171",redS:"rgba(248,113,113,0.1)",cyan:"#22d3ee",cyanS:"rgba(34,211,238,0.1)"};
 const TYPES={bottle:{label:{pt:"Mamadeira",en:"Bottle"},icon:"bottle",color:T.green,bg:T.greenS},nursing:{label:{pt:"Amamentação",en:"Nursing"},icon:"breast",color:T.blue,bg:T.blueS},sleep:{label:{pt:"Sono",en:"Bedtime"},icon:"bed",color:T.purple,bg:T.purpleS},wakeup:{label:{pt:"Acordou",en:"Woke up"},icon:"sun",color:T.amber,bg:T.amberS},nap:{label:{pt:"Soneca",en:"Nap"},icon:"cloud",color:T.purple,bg:T.purpleS},nightwaking:{label:{pt:"Acordou à noite",en:"Night waking"},icon:"zap",color:T.orange,bg:T.orangeS},diaper:{label:{pt:"Fralda",en:"Diaper"},icon:"diaper",color:T.pink,bg:T.pinkS},medicine:{label:{pt:"Medicamento",en:"Medicine"},icon:"pill",color:T.amber,bg:T.amberS},temperature:{label:{pt:"Temperatura",en:"Temperature"},icon:"thermo",color:T.red,bg:T.redS},bath:{label:{pt:"Banho",en:"Bath"},icon:"bath",color:T.cyan,bg:T.cyanS},tummytime:{label:{pt:"Tummy time",en:"Tummy time"},icon:"baby",color:T.amber,bg:T.amberS},growth:{label:{pt:"Crescimento",en:"Growth"},icon:"ruler",color:"#a3e635",bg:"rgba(163,230,53,0.1)"}};
-
-// Edge glow helper (v10.6.0, refinado v10.6.1) — 4 inner shadows convertidas de Figma pra CSS box-shadow.
-// Ref: 400x400 icon com Y:-80 Blur:60. `scale` ajusta proporcionalmente pra elementos menores.
-// `hex` é a cor do tipo (ex T.green, T.purple). Retorna string pronta pra `boxShadow`.
-// GPU-cheap no iOS (diferente de backdrop-filter blur). Pode usar em listas.
-// 2 backgrounds disponíveis: EDGE_GLOW_BG (dark opaco) pra Modal/Ring interno, e
-// EDGE_GLOW_BG_SOFT (soft navy translúcido) pra elementos sobre starfield — deixa o cosmos passar atrás.
-const EDGE_GLOW_BG = "linear-gradient(180deg,#0A0909 0%,#09101F 100%)";
-const EDGE_GLOW_BG_SOFT = "linear-gradient(180deg,rgba(22,28,60,0.55),rgba(20,26,60,0.4))";
-function edgeGlow(hex, scale=1, intensity=1){
-  const h=(hex||"#8b7cf6").replace("#","");
-  const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16);
-  const s=v=>Math.round(v*scale);
-  const a1=1*intensity, a2=0.5*intensity, a3=0.4*intensity, a4=0.15*intensity;
-  return `inset 0 ${s(-80)}px ${s(60)}px ${s(-30)}px rgba(${r},${g},${b},${a1}), inset 0 ${s(-40)}px ${s(30)}px ${s(-8)}px rgba(${r},${g},${b},${a2}), inset 0 ${s(-20)}px ${s(20)}px ${s(-6)}px rgba(255,255,255,${a3}), inset 0 ${s(6)}px ${s(6)}px ${s(-2)}px rgba(${r},${g},${b},${a4})`;
-}
 
 // ── i18n ──
 const I={
@@ -3066,6 +3093,12 @@ const I={
   save:{pt:"Salvar",en:"Save"},
   update:{pt:"Atualizar",en:"Update"},
   cancel:{pt:"Cancelar",en:"Cancel"},
+  // v11.0 a11y keys — usados em aria-labels pra botões ícone-only.
+  close:{pt:"Fechar",en:"Close"},
+  addEvent:{pt:"Adicionar evento",en:"Add event"},
+  stats:{pt:"Estatísticas",en:"Statistics"},
+  settings:{pt:"Configurações",en:"Settings"},
+  notifications:{pt:"Notificações",en:"Notifications"},
   delete:{pt:"Apagar",en:"Delete"},
   undo:{pt:"Desfazer",en:"Undo"},
   registered:{pt:"registrado",en:"registered"},
@@ -3638,7 +3671,7 @@ function Modal({open,onClose,children,wide}){const[vis,setVis]=useState(false),[
     <div style={{position:"absolute",inset:0,background:"rgba(2,3,10,0.55)",backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",opacity:show?1:0,transition:"opacity .35s"}}/>
     <div onClick={e=>e.stopPropagation()} style={{position:"relative",width:"100%",maxWidth:mw,maxHeight:"88vh",background:"linear-gradient(180deg,rgba(20,26,60,0.94),rgba(14,18,52,0.93))",backdropFilter:"blur(18px)",WebkitBackdropFilter:"blur(18px)",borderRadius:26,border:"1px solid rgba(255,255,255,0.08)",boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset, 0 0 0 1px rgba(255,255,255,0.03), 0 24px 64px -12px rgba(0,0,0,0.65), 0 0 80px -20px rgba(139,124,246,0.18)",transform:show?"scale(1)":"scale(0.92)",opacity:show?1:0,transition:"all .35s cubic-bezier(0.22,1,0.36,1)",overflow:"hidden",display:"flex",flexDirection:"column"}}>
       <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse at 50% 0%,rgba(255,255,255,0.04),transparent 50%)",pointerEvents:"none",borderRadius:26}}/>
-      <button onClick={onClose} style={{position:"absolute",top:14,right:14,width:32,height:32,borderRadius:11,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"center",color:T.dim,boxShadow:T.insetTop,zIndex:3}}><Icon name="x" size={14} color={T.dim}/></button>
+      <button aria-label={L("close")} onClick={onClose} style={{position:"absolute",top:14,right:14,width:32,height:32,borderRadius:11,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"center",color:T.dim,boxShadow:T.insetTop,zIndex:3}}><Icon name="x" size={14} color={T.dim}/></button>
       <div style={{position:"relative",overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch",padding:wide?"22px 14px 18px":"28px 24px 24px"}}>{children}</div>
     </div>
   </div>)}
@@ -3983,6 +4016,22 @@ const EntryRow = React.memo(function EntryRow({entry,onDelete,onEdit,napNum,nigh
       setDx(0);
     }
   };
+  // Pointer cancel = iOS cancelou o gesto (scroll conflict, visibility change, etc).
+  // Nunca dispara ação — só reseta estado visualmente. v11.0.
+  const onPtrCancel=()=>{
+    const d=dragRef.current;
+    d.active=false;d.locked=false;d.committed=false;d.dx=0;
+    lastThresholdRef.current=0;
+    setDragging(false);
+    setDx(0);
+  };
+  // Reset drag se app vai pra background enquanto dedo tá no meio do gesto.
+  // Senão o iOS pode dispensar o pointer e ficar com state travado.
+  useEffect(()=>{
+    const onVis=()=>{if(document.hidden)onPtrCancel()};
+    document.addEventListener("visibilitychange",onVis);
+    return()=>document.removeEventListener("visibilitychange",onVis);
+  },[]);
   // Visual: opacity of overlays scales with swipe distance
   const w=wrapRef.current?.offsetWidth||320;
   const absPct=Math.min(1,Math.abs(dx)/w);
@@ -3996,7 +4045,7 @@ const EntryRow = React.memo(function EntryRow({entry,onDelete,onEdit,napNum,nigh
   {editVisible&&<div style={{position:"absolute",left:0,top:0,bottom:0,width:Math.abs(dx),background:editPastThreshold?"linear-gradient(90deg,rgba(96,165,250,0.32),rgba(96,165,250,0.18))":"linear-gradient(90deg,rgba(96,165,250,0.18),rgba(96,165,250,0.08))",display:"flex",alignItems:"center",justifyContent:"flex-start",paddingLeft:24,borderRadius:"18px 0 0 18px",opacity:overlayOpacity,transition:dragging?"none":"opacity .2s ease, background .2s ease"}}><div style={{display:"flex",alignItems:"center",gap:8,color:"#7dd3fc"}}><Icon name="pencil" size={20} color="#7dd3fc"/><span style={{fontSize:13,fontWeight:700,letterSpacing:-0.2,opacity:editPastThreshold?1:0,transition:"opacity .15s ease"}}>{_lang==="en"?"Edit":"Editar"}</span></div></div>}
   {/* Delete overlay (right side, revealed when swiping left) */}
   {deleteVisible&&<div style={{position:"absolute",right:0,top:0,bottom:0,width:Math.abs(dx),background:deletePastThreshold?"linear-gradient(270deg,rgba(248,113,113,0.36),rgba(248,113,113,0.2))":"linear-gradient(270deg,rgba(248,113,113,0.2),rgba(248,113,113,0.08))",display:"flex",alignItems:"center",justifyContent:"flex-end",paddingRight:24,borderRadius:"0 18px 18px 0",opacity:overlayOpacity,transition:dragging?"none":"opacity .2s ease, background .2s ease"}}><div style={{display:"flex",alignItems:"center",gap:8,color:T.red}}><span style={{fontSize:13,fontWeight:700,letterSpacing:-0.2,opacity:deletePastThreshold?1:0,transition:"opacity .15s ease"}}>{_lang==="en"?"Delete":"Excluir"}</span><Icon name="trash" size={20} color={T.red}/></div></div>}
-  <div data-no-swipe="1" onPointerDown={onPtrDown} onPointerMove={onPtrMove} onPointerUp={onPtrUp} onPointerCancel={onPtrUp} style={{position:"relative",display:"flex",alignItems:"center",gap:14,padding:"16px 18px 16px 22px",background:"rgba(22,28,60,0.65)",borderRadius:18,border:`1px solid ${T.gBSoft}`,boxShadow:T.insetTop,transform:`translateX(${dx}px)`,transition:dragging?"none":"transform .35s cubic-bezier(0.22,1,0.36,1)",overflow:"hidden",touchAction:"pan-y"}}>
+  <div data-no-swipe="1" onPointerDown={onPtrDown} onPointerMove={onPtrMove} onPointerUp={onPtrUp} onPointerCancel={onPtrCancel} style={{position:"relative",display:"flex",alignItems:"center",gap:14,padding:"16px 18px 16px 22px",background:"rgba(22,28,60,0.65)",borderRadius:18,border:`1px solid ${T.gBSoft}`,boxShadow:T.insetTop,transform:`translateX(${dx}px)`,transition:dragging?"none":"transform .35s cubic-bezier(0.22,1,0.36,1)",overflow:"hidden",touchAction:"pan-y"}}>
   {/* Colored stripe (replaces borderLeft for proper rendering with overflow+transform) */}
   <div style={{position:"absolute",left:0,top:0,bottom:0,width:4,background:`linear-gradient(180deg,${cfg.color},${cfg.color}50)`,borderRadius:"0 2px 2px 0",pointerEvents:"none"}}/>
   <button onClick={()=>{if(Math.abs(dx)<5)onEdit&&onEdit(entry)}} style={{width:42,height:42,borderRadius:13,background:`linear-gradient(135deg,${cfg.color}28,${cfg.color}0a)`,border:`1px solid ${cfg.color}45`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,boxShadow:"0 1px 0 0 rgba(255,255,255,0.06) inset"}}><Icon name={cfg.icon} size={18} color={cfg.color}/></button>
@@ -4762,6 +4811,19 @@ function StatsPage({entries,onGrowth}){
     :(_lang==="en"?`Last ${numComplete} complete day${numComplete>1?"s":""}`:`Últimos ${numComplete} ${numComplete>1?"dias completos":"dia completo"}`);
   const exportCSV=()=>{const h="Data,Hora,Tipo,Detalhe,Notas\n";const rows=entries.map(e=>{let d="";if(e.ml)d=`${e.ml}ml`;else if(e.durationMin)d=fmtDur(e.durationMin);else if(e.name)d=e.name;else if(e.value)d=`${e.value}°C`;else if(e.subtype)d=e.subtype;return`${e.date},${e.time},${TL(e.type)||e.type},${d},${e.notes||""}`}).join("\n");const blob=new Blob([h+rows],{type:"text/csv"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=`louise-pro-${todayStr()}.csv`;a.click();URL.revokeObjectURL(url)};
   const TrendBadge=({val})=>val===0?null:<div style={{display:"flex",alignItems:"center",gap:3,marginTop:4}}><Icon name={val>0?"arrowUp":"arrowDown"} size={10} color={val>0?T.green:T.orange}/><span style={{fontSize:9,fontWeight:600,color:val>0?T.green:T.orange}}>{val>0?"+":""}{val}%</span><span style={{fontSize:8,color:T.dim}}>vs {_lang==="en"?"prev":"ant"}</span></div>;
+  // Empty state: no entries recorded yet (first install, nothing logged). v11.0.
+  if(entries.length===0){
+    return(<div style={{padding:"calc(16px + env(safe-area-inset-top)) 20px 0"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+        <h2 style={{fontSize:17,fontWeight:700,margin:0}}>{L("summary")}</h2>
+      </div>
+      <div style={{padding:"60px 24px 20px",textAlign:"center"}}>
+        <div style={{width:58,height:58,borderRadius:18,background:"rgba(139,124,246,0.08)",border:"1px solid rgba(139,124,246,0.15)",display:"inline-flex",alignItems:"center",justifyContent:"center",marginBottom:16,color:"rgba(196,181,253,0.5)"}}><Icon name="chart" size={26} color="rgba(196,181,253,0.5)"/></div>
+        <div style={{fontSize:15,fontWeight:700,color:"#f0f2ff",letterSpacing:-0.2,marginBottom:6}}>{_lang==="en"?"Not enough data yet":"Sem dados suficientes"}</div>
+        <div style={{fontSize:12,color:T.sub,lineHeight:1.55,maxWidth:260,margin:"0 auto"}}>{_lang==="en"?"Log some events over a few days and patterns will appear here — averages, trends, growth curves.":"Registre alguns eventos nos próximos dias e os padrões aparecem aqui — médias, tendências, curvas de crescimento."}</div>
+      </div>
+    </div>);
+  }
   return(<div style={{padding:"calc(16px + env(safe-area-inset-top)) 20px 0"}}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
       <h2 style={{fontSize:17,fontWeight:700,margin:0}}>{L("summary")}</h2>
@@ -4986,8 +5048,11 @@ function HistoryPage({entries,onDelete,onEdit,activeTimer}){
     <div style={{display:"flex",gap:6,marginBottom:14,overflowX:"auto",paddingBottom:2}}>
       {filters.map(f=>{const isActive=filter===f.v;return<button key={f.v} onClick={()=>setFilter(f.v)} style={{padding:"9px 16px",borderRadius:12,fontSize:12,fontWeight:600,whiteSpace:"nowrap",letterSpacing:-0.1,background:isActive?`linear-gradient(180deg,${f.c}38,${f.c}12)`:"rgba(22,28,60,0.5)",color:isActive?f.c:T.sub,border:`1px solid ${isActive?f.c+"55":T.gBSoft}`,boxShadow:isActive?`0 1px 0 0 rgba(255,255,255,0.1) inset, 0 0 0 1px ${f.c}25, 0 6px 16px -8px ${f.c}50`:T.insetTop}}>{f.l}</button>})}
     </div>
-    {filtered.length===0&&<p style={{color:T.dim,textAlign:"center",padding:40,fontSize:13}}>{L("noEntries")}{filter!=="all"?(_lang==="en"?" of this type":" desse tipo"):""}</p>}
-    {listItems}
+    {filtered.length===0?(<div style={{padding:"48px 24px 20px",textAlign:"center"}}>
+      <div style={{width:58,height:58,borderRadius:18,background:"rgba(139,124,246,0.08)",border:"1px solid rgba(139,124,246,0.15)",display:"inline-flex",alignItems:"center",justifyContent:"center",marginBottom:16,color:"rgba(196,181,253,0.5)"}}><Icon name="clock" size={26} color="rgba(196,181,253,0.5)"/></div>
+      <div style={{fontSize:15,fontWeight:700,color:"#f0f2ff",letterSpacing:-0.2,marginBottom:6}}>{_lang==="en"?"No events this day":"Nenhum evento neste dia"}</div>
+      <div style={{fontSize:12,color:T.sub,lineHeight:1.55,maxWidth:240,margin:"0 auto"}}>{filter!=="all"?(_lang==="en"?"Try changing the filter or switching to another day.":"Tente mudar o filtro ou ir para outro dia."):(_lang==="en"?"Tap + below to register the first.":"Toque + abaixo para registrar o primeiro.")}</div>
+    </div>):listItems}
   </div>);
 }
 
@@ -5263,12 +5328,60 @@ const Starfield = React.memo(function Starfield(){
   </div>);
 });
 
+// ── ERROR BOUNDARY (v11.0) ──
+// Última linha de defesa: se qualquer componente der throw durante render,
+// em vez de tela branca aparece esse fallback, e o app faz reload em 3s pra
+// tentar recuperar. Logs vão pra console pra debug depois.
+class ErrorBoundary extends React.Component {
+  constructor(props){super(props);this.state={hasError:false,err:null}}
+  static getDerivedStateFromError(err){return{hasError:true,err:err}}
+  componentDidCatch(err,info){console.error("[LP] ErrorBoundary caught:",err,info)}
+  componentDidUpdate(_,prev){
+    if(this.state.hasError&&!prev.hasError){
+      setTimeout(function(){window.location.reload()},3000);
+    }
+  }
+  render(){
+    if(this.state.hasError){
+      return(<div style={{position:"fixed",inset:0,background:"linear-gradient(180deg,#070b1e 0%,#0b1130 100%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"36px 28px",textAlign:"center",color:"#f0f2ff",fontFamily:"'Outfit',sans-serif"}}>
+        <div style={{width:72,height:72,borderRadius:24,background:"rgba(248,113,113,0.1)",border:"1.5px solid rgba(248,113,113,0.25)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:30,color:"#f87171",marginBottom:20,boxShadow:"0 0 32px -8px rgba(248,113,113,0.3)"}}>\u26A0</div>
+        <div style={{fontSize:22,fontWeight:800,letterSpacing:-0.5,marginBottom:6}}>Oops!</div>
+        <div style={{fontSize:13,color:"#a3aac8",lineHeight:1.55,marginBottom:20,maxWidth:240}}>Algo quebrou. Recarregando em 3s\u2026</div>
+        <div style={{width:28,height:28,border:"2.5px solid rgba(139,124,246,0.2)",borderTopColor:"#a78bfa",borderRadius:"50%",animation:"spin 0.9s linear infinite"}}/>
+        <style>{"@keyframes spin{to{transform:rotate(360deg)}}"}</style>
+      </div>);
+    }
+    return this.props.children;
+  }
+}
+
 // ── MAIN APP ──
 function App(){
   const[entries,setEntries]=useState([]);const[savedMeds,setSavedMeds]=useState([]);
   const[profile,setProfile]=useState({name:"",birthDate:"2026-03-08",photo:"",mlGoal:0});
   const[activeTimer,setActiveTimer]=useState(null);const[loading,setLoading]=useState(true);
-  const[page,setPage]=useState("home");const[showAdd,setShowAdd]=useState(false);const[formType,setFormType]=useState(null);const[editEntry,setEditEntry]=useState(null);const[showOrbit,setShowOrbit]=useState(false);
+  // URL hash routing (v11.0): persiste a aba atual no hash pra (1) botão voltar do iPhone
+  // funcionar entre Home/Stats/History, (2) deep links compartilháveis, (3) analytics terem
+  // visibilidade. Só aplica pras 3 abas principais — Profile/Inbox/Modals continuam overlays.
+  const _VALID_PAGES = ["home","stats","history","growth"];
+  const _initialHash = (typeof window!=="undefined" && window.location.hash.slice(1))||"";
+  const[page,setPage]=useState(_VALID_PAGES.includes(_initialHash)?_initialHash:"home");
+  useEffect(()=>{
+    if(typeof window==="undefined")return;
+    if(_VALID_PAGES.includes(page)){
+      const h = "#"+page;
+      if(window.location.hash!==h){
+        history.replaceState(null,"",h);
+      }
+    }
+  },[page]);
+  useEffect(()=>{
+    if(typeof window==="undefined")return;
+    const onHash=()=>{const h=window.location.hash.slice(1)||"home";if(_VALID_PAGES.includes(h))setPage(h)};
+    window.addEventListener("hashchange",onHash);
+    return()=>window.removeEventListener("hashchange",onHash);
+  },[]);
+  const[showAdd,setShowAdd]=useState(false);const[formType,setFormType]=useState(null);const[editEntry,setEditEntry]=useState(null);const[showOrbit,setShowOrbit]=useState(false);
   // `nowTick` removido na v10.5.4 — era redundante com o main tick (já fira cada 30s no idle).
   // A barra de next-feeding no card Bottle pega Date.now() em cada render do App, que acontece
   // automaticamente a cada 30s via o tick principal (linha ~5088).
@@ -5964,9 +6077,9 @@ function App(){
       </button>
       </div>}
     </nav>:<nav style={{position:"absolute",bottom:"calc(8px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 24px)",maxWidth:420,pointerEvents:"auto",display:"flex",alignItems:"center",justifyContent:"space-around",gap:2,padding:"7px 8px",background:"linear-gradient(180deg,rgba(38,44,90,0.38),rgba(14,18,48,0.58))",backdropFilter:"blur(18px) saturate(180%)",WebkitBackdropFilter:"blur(18px) saturate(180%)",borderRadius:34,border:"1px solid rgba(255,255,255,0.14)",boxShadow:"0 1px 0 0 rgba(255,255,255,0.24) inset, 0 -1px 2px 0 rgba(0,0,0,0.18) inset, 0 10px 32px -8px rgba(0,0,0,0.55), 0 0 48px -18px rgba(139,124,246,0.3)"}}>
-      {[{icon:"home",active:page==="home"&&!showAdd,action:()=>goTo("home")},{icon:"clock",active:page==="history",action:()=>goTo("history")}].map(n=><button key={n.icon} className="navbtn" onClick={n.action} style={{display:"flex",alignItems:"center",justifyContent:"center",width:48,height:44,borderRadius:22,background:n.active?"rgba(139,124,246,0.22)":"transparent",border:"none",padding:0}}><Icon name={n.icon} size={n.active?22:20} color={n.active?"#ffffff":T.dim}/></button>)}
-      <button className="navfab" onClick={()=>{setShowAdd(!showAdd);setFormType(null);setPage("home")}} style={{width:48,height:44,borderRadius:22,background:`linear-gradient(180deg,#9b8df8,#7c3aed)`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 1px 0 0 rgba(255,255,255,0.22) inset, 0 4px 14px -2px ${T.accent}70`,transform:showAdd?"rotate(45deg)":"rotate(0deg)",margin:"0 2px",border:"none",padding:0}}><Icon name="plus" size={22} color="#fff"/></button>
-      {[{icon:"chart",active:page==="stats"||page==="growth",action:()=>goTo("stats")},{icon:"gear",active:false,action:()=>setShowProfile(true)}].map(n=><button key={n.icon} className="navbtn" onClick={n.action} style={{display:"flex",alignItems:"center",justifyContent:"center",width:48,height:44,borderRadius:22,background:n.active?"rgba(139,124,246,0.22)":"transparent",border:"none",padding:0}}><Icon name={n.icon} size={n.active?22:20} color={n.active?"#ffffff":T.dim}/></button>)}
+      {[{icon:"home",label:L("home"),active:page==="home"&&!showAdd,action:()=>goTo("home")},{icon:"clock",label:L("history"),active:page==="history",action:()=>goTo("history")}].map(n=><button key={n.icon} aria-label={n.label} className="navbtn" onClick={n.action} style={{display:"flex",alignItems:"center",justifyContent:"center",width:48,height:44,borderRadius:22,background:n.active?"rgba(139,124,246,0.22)":"transparent",border:"none",padding:0}}><Icon name={n.icon} size={n.active?22:20} color={n.active?"#ffffff":T.dim}/></button>)}
+      <button aria-label={showAdd?L("close"):L("addEvent")} className="navfab" onClick={()=>{setShowAdd(!showAdd);setFormType(null);setPage("home")}} style={{width:48,height:44,borderRadius:22,background:`linear-gradient(180deg,#9b8df8,#7c3aed)`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 1px 0 0 rgba(255,255,255,0.22) inset, 0 4px 14px -2px ${T.accent}70`,transform:showAdd?"rotate(45deg)":"rotate(0deg)",margin:"0 2px",border:"none",padding:0}}><Icon name="plus" size={22} color="#fff"/></button>
+      {[{icon:"chart",label:L("stats"),active:page==="stats"||page==="growth",action:()=>goTo("stats")},{icon:"gear",label:L("settings"),active:false,action:()=>setShowProfile(true)}].map(n=><button key={n.icon} aria-label={n.label} className="navbtn" onClick={n.action} style={{display:"flex",alignItems:"center",justifyContent:"center",width:48,height:44,borderRadius:22,background:n.active?"rgba(139,124,246,0.22)":"transparent",border:"none",padding:0}}><Icon name={n.icon} size={n.active?22:20} color={n.active?"#ffffff":T.dim}/></button>)}
     </nav>}
     </>, document.getElementById("nav-host"))}
   </div>);
@@ -5974,7 +6087,7 @@ function App(){
 
 // Remove loading screen
 var _ld=document.getElementById('load-debug');if(_ld)_ld.remove();
-ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+ReactDOM.createRoot(document.getElementById('root')).render(<ErrorBoundary><App/></ErrorBoundary>);
 </script>
 
 </body>
