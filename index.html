@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v10.7.0 Rollback do Beautiful Glow: cards/circles/Ring voltam ao minimalista (starfield visivel)
   v10.6.2 Fix: Ring disc translucido + breathing funcionando (CSS class em vez de inline animation)
   v10.6.1 Cards do Home translucidos (starfield passa atras) + Ring respira no bedtime
   v10.6.0 Beautiful edge glow: cards do Home + circulos do popup + + Ring (4 inner shadows Figma->CSS)
@@ -165,10 +166,6 @@
     @keyframes twinkle{0%,100%{opacity:.1}50%{opacity:.6}}
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
     @keyframes glowBreathe{0%,100%{transform:scale(1);opacity:0.7}50%{transform:scale(1.18);opacity:1}}
-    @keyframes ringDiscBreathe{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:0.88}50%{transform:translate(-50%,-50%) scale(1.015);opacity:1}}
-    /* Classe pra animação do Ring bedtime — usar className em vez de inline style pra que re-renders
-       do React (tick a cada 5s) não resetem o progresso da animação CSS. v10.6.2. */
-    .ring-disc-breathe{animation:ringDiscBreathe 4s ease-in-out infinite}
     @keyframes softPulse{0%,100%{opacity:0.65}50%{opacity:1}}
     @keyframes glowCenter{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:0.7}50%{transform:translate(-50%,-50%) scale(1.18);opacity:1}}
     @keyframes ringExpand{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:0.5}50%{transform:translate(-50%,-50%) scale(1.6);opacity:0}}
@@ -377,8 +374,33 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "10.6.2";
+const APP_VERSION = "10.7.0";
 const CHANGELOG = [
+  {
+    v: "10.7.0", date: "2026-04-18",
+    pt: {
+      title: "Rollback do Beautiful Glow \u2014 volta ao minimalismo (v10.5.4 visual)",
+      bullets: [
+        '\u2605 **Beautiful Glow revertido em 3 lugares**: cards do Home, c\u00edrculos do popup +, e disco central do Ring. Sobrecarregou o visual e tapou o starfield atr\u00e1s. Volta ao design minimalista da v10.5.4.',
+        '\u2022 **Cards do Home**: tint sutil `${cor}06` (3% alpha) + borda quase invis\u00edvel. Cosmos aparece atr\u00e1s.',
+        '\u2022 **C\u00edrculos do popup +**: dark radial gradient + borda colorida sutil (original).',
+        '\u2022 **Ring**: disco central removido. Texto flutua sobre starfield puro. S\u00f3 os SVG arcs marcam os eventos.',
+        '**Mantidos da v10.6.x**: tudo que \u00e9 n\u00e3o-visual \u2014 data-loss fix, tick throttle, React.memo, offline persistence, Firestore merge, v10.5.5 Modal central do botão + (que ficou bom).',
+        'Aprendizado: o Beautiful Glow funciona em isolamento (ex: app icon), mas replicado em v\u00e1rios elementos da tela bate de frente com o starfield e adiciona peso visual. Minimalismo ganha.',
+      ],
+    },
+    en: {
+      title: "Beautiful Glow rollback \u2014 back to minimalism (v10.5.4 visual)",
+      bullets: [
+        '\u2605 **Beautiful Glow reverted in 3 places**: Home cards, + popup circles, and central Ring disc. It overloaded the visual and hid the starfield behind. Back to v10.5.4 minimalist design.',
+        '\u2022 **Home cards**: subtle `${color}06` tint (3% alpha) + near-invisible border. Cosmos shows through.',
+        '\u2022 **+ popup circles**: dark radial gradient + subtle colored border (original).',
+        '\u2022 **Ring**: central disc removed. Text floats over pure starfield. Only SVG arcs mark events.',
+        '**Kept from v10.6.x**: everything non-visual \u2014 data-loss fix, tick throttle, React.memo, offline persistence, Firestore merge, v10.5.5 central + Modal (that one worked).',
+        'Lesson: Beautiful Glow works in isolation (e.g. app icon), but replicated across several screen elements it fights with the starfield and adds visual weight. Minimalism wins.',
+      ],
+    },
+  },
   {
     v: "10.6.2", date: "2026-04-18",
     pt: {
@@ -3087,17 +3109,11 @@ const Ring = React.memo(function Ring({activeTimer,napSug,tick,recentEvents,lang
     }
   }
 
-  // Edge-glow disc dentro do Ring (v10.6.0): disco circular atrás dos arcs com gradient
-  // dark navy + inner shadows coloridos pela cor do estado ativo. Adiciona "peso" visual
-  // ao centro do Ring, inspirado no Beautiful Shadow style. Arcs continuam por cima.
-  // Breathing effect v10.6.1: quando bedtime ativo, o disco "respira" a 4s ciclos —
-  // scale 1.015 + opacity 0.88-1 — vibe "baby dormindo".
-  const _glowC = col1!==T.dim?col1:T.accent;
-  const _isBedtime = isBedtime;
+  // Ring original: SVG puro com arcs, sem disco central (Beautiful Glow revertido em v10.7.0
+  // — minimalismo vence, starfield aparece atrás do center text).
   return(<div style={{position:"relative",width:sz,margin:"0 auto"}}>
     <div style={{position:"relative",width:sz,height:sz}}>
-      <div className={_isBedtime?"ring-disc-breathe":""} style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:sz*0.78,height:sz*0.78,borderRadius:"50%",background:EDGE_GLOW_BG_SOFT,boxShadow:edgeGlow(_glowC,0.55,0.75),zIndex:0,pointerEvents:"none",transition:"box-shadow .4s ease"}}/>
-      <svg width={sz} height={sz} style={{overflow:"visible",position:"relative",zIndex:1}}>
+      <svg width={sz} height={sz} style={{overflow:"visible"}}>
         <defs><filter id="slpG"><feGaussianBlur stdDeviation="8" result="b"/><feFlood floodColor={T.purple} floodOpacity="0.35" result="c"/><feComposite in="c" in2="b" operator="in" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
         <path d={descArc(startAng,startAng+totalArc)} fill="none" stroke="rgba(40,55,120,0.18)" strokeWidth={20} strokeLinecap="round"/>
         {/* Sleep pills */}
@@ -5717,7 +5733,7 @@ function App(){
           const barColor=prog>=1?"#f87171":prog>=0.8?"#fbbf24":p.c;
           feedProg={prog,nextStr,lateMin,barColor};
         }
-        return<button key={idx} onClick={()=>{if(p.tap==="nap"&&!activeTimer)startTimer("nap");else if(p.tap==="nursing"&&!activeTimer)startTimer("nursing",nextNursingSide);else if(!activeTimer)setFormType(p.tap)}} style={{padding:"12px",borderRadius:14,background:EDGE_GLOW_BG_SOFT,boxShadow:edgeGlow(p.c,0.28,0.7),border:`1px solid ${p.c}18`,textAlign:"left",position:"relative",overflow:"hidden"}}><div style={{display:"flex",alignItems:"center",gap:5,marginBottom:3}}><Icon name={p.i} size={12} color={p.c}/><span style={{fontSize:9,color:T.dim}}>{p.l}</span></div><div style={{fontSize:16,fontWeight:800,color:p.c}}>{p.v}{p.u?<span style={{fontSize:11,opacity:0.6}}>{p.u}</span>:null}</div>{feedProg?<><div style={{height:3,borderRadius:2,background:`${p.c}1a`,marginTop:7,overflow:"hidden"}}><div style={{height:"100%",width:`${Math.min(100,feedProg.prog*100)}%`,background:feedProg.prog>=0.8?feedProg.barColor:`linear-gradient(90deg,${p.c},${p.c}cc)`,borderRadius:2,transition:"width .4s ease, background .3s ease"}}/></div><div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginTop:4,fontSize:10,fontWeight:600,fontVariantNumeric:"tabular-nums"}}><span style={{color:`${p.c}88`}}>{ago}</span><span style={{color:feedProg.barColor,fontWeight:700}}>{feedProg.prog>=1?`+${feedProg.lateMin}m late`:`→ ${feedProg.nextStr}`}</span></div></>:(ago&&<div style={{fontSize:12,color:`${p.c}88`,fontWeight:600,marginTop:3}}>{ago}</div>)}</button>})}</div>
+        return<button key={idx} onClick={()=>{if(p.tap==="nap"&&!activeTimer)startTimer("nap");else if(p.tap==="nursing"&&!activeTimer)startTimer("nursing",nextNursingSide);else if(!activeTimer)setFormType(p.tap)}} style={{padding:"10px",borderRadius:12,background:`${p.c}06`,border:`1px solid ${p.c}0a`,textAlign:"left"}}><div style={{display:"flex",alignItems:"center",gap:5,marginBottom:3}}><Icon name={p.i} size={12} color={p.c}/><span style={{fontSize:9,color:T.dim}}>{p.l}</span></div><div style={{fontSize:16,fontWeight:800,color:p.c}}>{p.v}{p.u?<span style={{fontSize:11,opacity:0.6}}>{p.u}</span>:null}</div>{feedProg?<><div style={{height:3,borderRadius:2,background:`${p.c}1a`,marginTop:7,overflow:"hidden"}}><div style={{height:"100%",width:`${Math.min(100,feedProg.prog*100)}%`,background:feedProg.prog>=0.8?feedProg.barColor:`linear-gradient(90deg,${p.c},${p.c}cc)`,borderRadius:2,transition:"width .4s ease, background .3s ease"}}/></div><div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginTop:4,fontSize:10,fontWeight:600,fontVariantNumeric:"tabular-nums"}}><span style={{color:`${p.c}88`}}>{ago}</span><span style={{color:feedProg.barColor,fontWeight:700}}>{feedProg.prog>=1?`+${feedProg.lateMin}m late`:`→ ${feedProg.nextStr}`}</span></div></>:(ago&&<div style={{fontSize:12,color:`${p.c}88`,fontWeight:600,marginTop:3}}>{ago}</div>)}</button>})}</div>
         <div style={{padding:"0 20px"}}><div style={{fontSize:11,fontWeight:600,color:T.dim,marginBottom:8,textTransform:"uppercase",letterSpacing:0.8}}>{L("today")}</div>{todayE.length===0&&!liveBedtime&&<div style={{textAlign:"center",padding:"32px 20px",color:T.dim}}><Icon name="star" size={32} color={T.dim} fill={T.dim}/><div style={{fontSize:13,marginTop:8}}>{_lang==="en"?"Tap + to add":"Toque + para registrar"}</div></div>}{liveBedtime&&<SleepBlock entry={liveBedtime} entries={entries} isLive={true} activeTimer={activeTimer} onSaveTimer={FB.saveTimer} onSaveEntry={FB.addEntry} onDelete={deleteEntry} onEdit={startEdit}/>}{todayE.filter(e=>{
           // Only hide events linked to the live bedtime if their time actually falls within it.
           // Protects against legacy data where retroactive events got wrongly linked (pre v9.8.1).
@@ -5797,7 +5813,8 @@ function App(){
     <Modal open={showAdd&&!formType} onClose={()=>setShowAdd(false)}>
       <div style={{fontSize:11,fontWeight:700,color:"#7a80a8",letterSpacing:0.5,textTransform:"uppercase",marginBottom:16,textAlign:"center"}}>{_lang==="en"?"Add event":"Adicionar evento"}</div>
       <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)",gap:"10px 0"}}>{["wakeup","bottle","nursing","sleep","nap","diaper","bath","medicine","temperature","tummytime"].map((type,i)=>{const cfg=TYPES[type];const last=entries.find(e=>e.type===type);const agoRaw=last?timeSince(last.date,last.time):null;const ago=agoRaw==="now"?"Just now":agoRaw;return(<button key={type} onClick={()=>setFormType(type)} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8,padding:"8px 4px 4px",animation:`slideUp .3s ease ${i*0.025}s both`}}>
-        <div style={{width:58,height:58,borderRadius:"50%",background:EDGE_GLOW_BG,border:`1px solid ${cfg.color}30`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:edgeGlow(cfg.color,0.2),position:"relative",overflow:"hidden",filter:`drop-shadow(0 4px 12px rgba(0,0,0,0.4)) drop-shadow(0 0 8px ${cfg.color}33)`}}>
+        <div style={{width:58,height:58,borderRadius:"50%",background:`radial-gradient(circle at 35% 30%, rgba(50,60,120,0.95), rgba(18,22,55,0.98))`,border:`1.5px solid ${cfg.color}25`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 4px 16px rgba(0,0,0,0.35), 0 0 20px ${cfg.color}18, inset 0 1px 0 rgba(200,210,255,0.08), inset 0 -2px 4px rgba(0,0,0,0.2)`,position:"relative",overflow:"hidden",filter:`drop-shadow(0 0 4px ${cfg.color}44)`}}>
+          <div style={{position:"absolute",top:"15%",left:"25%",width:"40%",height:"30%",background:`radial-gradient(ellipse,${cfg.color}12,transparent)`,borderRadius:"50%",filter:"blur(5px)"}}/>
           <Icon name={cfg.icon} size={22} color={cfg.color}/>
         </div>
         <div style={{textAlign:"center",minWidth:0,maxWidth:"100%"}}><div style={{fontSize:11,fontWeight:600,color:T.text,lineHeight:1.2,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{cfg.label[_lang]||cfg.label.en}</div>{ago&&<div style={{fontSize:10,color:T.sub,fontWeight:500,marginTop:2,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{ago}</div>}</div>

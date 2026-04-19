@@ -14,7 +14,7 @@ Este `CLAUDE.md` é lido automaticamente pelo Claude Code no início de toda ses
 - **Localização**: Blumenau, SC, Brasil (BRT, UTC-3)
 - **Repositório**: https://github.com/williamscchulz-was/louise-pro
 - **Live**: https://williamscchulz-was.github.io/louise-pro/
-- **Versão atual**: v10.6.2 (app) / routine-engine v2.2.1
+- **Versão atual**: v10.7.0 (app) / routine-engine v2.2.1
 - **Bilíngue**: Português e Inglês (toda a interface, insights, curiosidades e changelog)
 
 ## Stack
@@ -111,13 +111,16 @@ Descoberta dolorosa na v10.4.4 que vale tatuar:
 
 -----
 
-## Linguagem visual — Beautiful edge glow (v10.6.0)
+## Linguagem visual — minimalista (atual, v10.7.0)
 
-Estilo de ícone convertido de Figma (`Beautiful Shadow` plugin) pra CSS puro. Aplicado nos quick-stats cards do Home, nos círculos do popup +, e no disco central do Ring.
+- Cards do Home: tint sutil com `${color}06` (3% alpha) + borda `${color}0a`. Starfield atrás. MINIMAL.
+- Círculos do popup + : dark radial gradient + borda colorida sutil + soft glow externo.
+- Ring: SVG puro com arcs, sem disco central, sem background. Text center flutua sobre starfield.
+- Regra geral: quando em dúvida, menos > mais. O cosmos atrás é a identidade.
 
-- Helper: `edgeGlow(hex, scale, intensity)` em index.html (logo após TYPES). Recebe cor do tipo, scale (proporcional ao tamanho do elemento) e intensity (transparência das shadows, default 1). Retorna string pronta pra `boxShadow`.
-- Backgrounds disponíveis: `EDGE_GLOW_BG` (dark opaco, usado em Modal/Ring interno) e `EDGE_GLOW_BG_SOFT` (navy translúcido 55/40%, usado em elementos sobre starfield — deixa o cosmos passar atrás).
-- Usos atuais: cards do Home (scale 0.28, intensity 0.7, SOFT bg — starfield atrás), círculos do popup + (scale 0.2, full intensity, OPAQUE bg), disco central do Ring (scale 0.65, full intensity, OPAQUE bg, com breathing animation quando bedtime).
+### Helper `edgeGlow()` — dormindo
+
+O helper `edgeGlow(hex, scale, intensity)` + constantes `EDGE_GLOW_BG`/`EDGE_GLOW_BG_SOFT` continuam em index.html (logo após TYPES). Foram usados na v10.6.x (Beautiful Shadow style — 4 inner shadows em camadas) e REVERTIDOS na v10.7.0 por sobrecarregar visualmente. Deixados como ferramenta caso queira aplicar em algo isolado no futuro (app icon, conquista, etc). Não usar em vários elementos simultâneos.
 - As 4 inner shadows embutidas simulam as da referência Figma (Y:-80 Blur:60 primary glow + Y:-40 halo + Y:-20 white kiss + Y:6 top hint). GPU-cheap em iOS — diferente do backdrop-filter blur, este efeito é barato em listas longas.
 - NÃO aplicado no app icon (launcher) por pedido do William.
 - Se criar novo componente com glow: use sempre o helper, não copie as shadows inline. Consistência.
