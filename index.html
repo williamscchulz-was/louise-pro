@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v10.6.2 Fix: Ring disc translucido + breathing funcionando (CSS class em vez de inline animation)
   v10.6.1 Cards do Home translucidos (starfield passa atras) + Ring respira no bedtime
   v10.6.0 Beautiful edge glow: cards do Home + circulos do popup + + Ring (4 inner shadows Figma->CSS)
   v10.5.5 Botao + vira Modal central (scale+fade em vez de Sheet slide-up bugado no iPhone)
@@ -165,6 +166,9 @@
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
     @keyframes glowBreathe{0%,100%{transform:scale(1);opacity:0.7}50%{transform:scale(1.18);opacity:1}}
     @keyframes ringDiscBreathe{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:0.88}50%{transform:translate(-50%,-50%) scale(1.015);opacity:1}}
+    /* Classe pra animação do Ring bedtime — usar className em vez de inline style pra que re-renders
+       do React (tick a cada 5s) não resetem o progresso da animação CSS. v10.6.2. */
+    .ring-disc-breathe{animation:ringDiscBreathe 4s ease-in-out infinite}
     @keyframes softPulse{0%,100%{opacity:0.65}50%{opacity:1}}
     @keyframes glowCenter{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:0.7}50%{transform:translate(-50%,-50%) scale(1.18);opacity:1}}
     @keyframes ringExpand{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:0.5}50%{transform:translate(-50%,-50%) scale(1.6);opacity:0}}
@@ -373,8 +377,27 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "10.6.1";
+const APP_VERSION = "10.6.2";
 const CHANGELOG = [
+  {
+    v: "10.6.2", date: "2026-04-18",
+    pt: {
+      title: "Fix: Ring disc transl\u00facido + breathing de verdade funcionando",
+      bullets: [
+        '\u2605 **Fundo preto do Ring disc removido**. Agora usa `EDGE_GLOW_BG_SOFT` (mesmo translúcido dos cards) — starfield passa atrás. Intensity do glow reduzida (0.75) e scale (0.55) pra n\u00e3o dominar o conte\u00fado do Ring.',
+        '\u2605 **Breathing agora funciona de verdade no bedtime**. Problema na v10.6.1: a anima\u00e7\u00e3o estava inline no style + React re-renderiza o Ring a cada 5s (tick), resetando o progresso da CSS transition. Fix: movi pra uma classe CSS `.ring-disc-breathe` toggada via `className`. Animation CSS ignora re-renders de React.',
+        '\u2605 Mesma l\u00f3gica do fix da v10.3.2 do TimerBar (inline CSS transitions quebram com re-renders frequentes) \u2014 agora documentada no CLAUDE.md como padr\u00e3o.',
+      ],
+    },
+    en: {
+      title: "Fix: Ring disc translucent + breathing actually working",
+      bullets: [
+        '\u2605 **Ring disc black background removed**. Now uses `EDGE_GLOW_BG_SOFT` (same translucent as cards) \u2014 starfield shows through. Glow intensity reduced (0.75) and scale (0.55) so it doesn\'t dominate the Ring content.',
+        '\u2605 **Breathing now actually works in bedtime**. Issue in v10.6.1: the animation was inline in the style + React re-renders Ring every 5s (tick), resetting the CSS transition progress. Fix: moved it to a CSS class `.ring-disc-breathe` toggled via `className`. CSS animations ignore React re-renders.',
+        '\u2605 Same lesson as v10.3.2 TimerBar fix (inline CSS transitions break under frequent re-renders) \u2014 now documented in CLAUDE.md as the pattern.',
+      ],
+    },
+  },
   {
     v: "10.6.1", date: "2026-04-18",
     pt: {
@@ -3073,7 +3096,7 @@ const Ring = React.memo(function Ring({activeTimer,napSug,tick,recentEvents,lang
   const _isBedtime = isBedtime;
   return(<div style={{position:"relative",width:sz,margin:"0 auto"}}>
     <div style={{position:"relative",width:sz,height:sz}}>
-      <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:sz*0.78,height:sz*0.78,borderRadius:"50%",background:EDGE_GLOW_BG,boxShadow:edgeGlow(_glowC,0.65),zIndex:0,pointerEvents:"none",transition:"box-shadow .4s ease",animation:_isBedtime?"ringDiscBreathe 4s ease-in-out infinite":"none"}}/>
+      <div className={_isBedtime?"ring-disc-breathe":""} style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:sz*0.78,height:sz*0.78,borderRadius:"50%",background:EDGE_GLOW_BG_SOFT,boxShadow:edgeGlow(_glowC,0.55,0.75),zIndex:0,pointerEvents:"none",transition:"box-shadow .4s ease"}}/>
       <svg width={sz} height={sz} style={{overflow:"visible",position:"relative",zIndex:1}}>
         <defs><filter id="slpG"><feGaussianBlur stdDeviation="8" result="b"/><feFlood floodColor={T.purple} floodOpacity="0.35" result="c"/><feComposite in="c" in2="b" operator="in" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
         <path d={descArc(startAng,startAng+totalArc)} fill="none" stroke="rgba(40,55,120,0.18)" strokeWidth={20} strokeLinecap="round"/>

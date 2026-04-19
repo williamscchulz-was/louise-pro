@@ -14,7 +14,7 @@ Este `CLAUDE.md` é lido automaticamente pelo Claude Code no início de toda ses
 - **Localização**: Blumenau, SC, Brasil (BRT, UTC-3)
 - **Repositório**: https://github.com/williamscchulz-was/louise-pro
 - **Live**: https://williamscchulz-was.github.io/louise-pro/
-- **Versão atual**: v10.6.1 (app) / routine-engine v2.2.1
+- **Versão atual**: v10.6.2 (app) / routine-engine v2.2.1
 - **Bilíngue**: Português e Inglês (toda a interface, insights, curiosidades e changelog)
 
 ## Stack
@@ -129,6 +129,7 @@ Estilo de ícone convertido de Figma (`Beautiful Shadow` plugin) pra CSS puro. A
 Bugs de perf descobertos e corrigidos durante as auditorias. Valem tatuar:
 
 - **App-level tick interval**: durante timer ativo, 5s (não 1s). O arco do Ring é imperceptível se mover a cada 5s (<2° por passo em nap de 20min). Usar 1s faz o App inteiro re-renderizar 9x3600 vezes numa noite de bedtime — bateria derrete. Exceção: o próprio TimerBar tem tick interno de 1s pra display "17:03", fine.
+- **CSS animations/transitions: SEMPRE via classe CSS, NUNCA inline.** Componentes com re-render frequente (qualquer coisa que recebe `tick` como prop) vão resetar a animação se ela estiver no inline `style.animation`. Primeiro caso: TimerBar v10.3.2 (fade). Segundo caso: Ring disc breathe v10.6.2. Regra: toggle a classe via `className={cond?'foo':''}` e defina `@keyframes` + `.foo{animation:...}` no CSS estático lá em cima. Inline style reset a cada re-render, classes não.
 - **React.memo em componentes pesados**: Ring, SleepBlock, EntryRow têm memo desde v10.5.1. Sem memo, qualquer re-render do App (mudança de qualquer state) força redraw mesmo quando props são idênticos. Regra: componente visualmente pesado + props estáveis → embrulhar em React.memo.
 - **backdrop-filter é QUADRÁTICO no raio**: blur(26px) não custa 2x blur(13px), custa ~4x. Em elementos sempre visíveis (nav pill), usar no máximo blur(18-20px) com saturate(180%). Evitar empilhar mais de 2 blurs visíveis ao mesmo tempo.
 - **body.app-hidden pausa animações**: `body.app-hidden *{animation-play-state:paused !important}` implementado no CSS. PWA em background não gasta CPU com mercury ring spinning, twinkle, pulse. NÃO remover.
