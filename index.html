@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.3.0 Auto-backup 24h promovido pro App root (global) + botoes renomeados + status mais claro
   v11.2.0 Backup export/import + quick wins (memo StatsPage/HistoryPage + manifest shortcuts)
   v11.1.0 Notificacoes per-device: marcar lida persiste + update toast aparece em cada device (localStorage)
   v11.0.0 Sprint de resiliencia + a11y: ErrorBoundary + URL routing + empty states + aria-labels + contraste + swipe fix
@@ -451,8 +452,31 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.2.0";
+const APP_VERSION = "11.3.0";
 const CHANGELOG = [
+  {
+    v: "11.3.0", date: "2026-04-19",
+    pt: {
+      title: "Auto-backup 24h promovido pro n\u00edvel do app + UI mais clara",
+      bullets: [
+        '\u2605 **Auto-backup 24h agora \u00e9 global**: antes s\u00f3 disparava quando Profile era aberto (podia ficar dias sem rodar). Agora, em TODO cold start ou resume-de-background, se passou 24h desde o \u00faltimo, baixa o JSON sozinho. Delay de 8s ap\u00f3s o app carregar pra n\u00e3o atrapalhar o primeiro frame.',
+        '\u2605 **Bot\u00f5es renomeados** no Profile:',
+        '\u2022 "Exportar dados" \u2192 "Fazer backup agora" (intent expl\u00edcito)',
+        '\u2022 "Importar backup" \u2192 "Restaurar do arquivo"',
+        '\u2605 **Status line mais rica**: "\u00daltimo backup: 3h \u00b7 pr\u00f3x. auto: 21h". Voc\u00ea sabe exatamente quando o pr\u00f3ximo vai rodar sem precisar calcular.',
+      ],
+    },
+    en: {
+      title: "24h auto-backup promoted to app-level + clearer UI",
+      bullets: [
+        '\u2605 **24h auto-backup is now global**: before, only fired when Profile was opened (could go days without running). Now, on EVERY cold start or resume-from-background, if 24h passed since the last one, the JSON downloads on its own. 8s delay after app loads so it doesn\'t fight the first frame.',
+        '\u2605 **Buttons renamed** in Profile:',
+        '\u2022 "Export data" \u2192 "Backup now" (explicit intent)',
+        '\u2022 "Import backup" \u2192 "Restore from file"',
+        '\u2605 **Richer status line**: "Last backup: 3h \u00b7 next auto: 21h". You know exactly when the next one will run without doing math.',
+      ],
+    },
+  },
   {
     v: "11.2.0", date: "2026-04-19",
     pt: {
@@ -5465,24 +5489,16 @@ function downloadJSON(obj, filename){
   setTimeout(()=>{document.body.removeChild(a); URL.revokeObjectURL(url)},100);
 }
 function BackupSection(){
+  // Lê o state do localStorage a cada render (evitaria ficar stale se o auto-backup do App
+  // root disparar enquanto Profile está aberto). v11.3.
   const[lastAt,setLastAt]=useState(()=>{try{const v=localStorage.getItem(BACKUP_KEY);return v?parseInt(v,10):0}catch(_){return 0}});
   const[busy,setBusy]=useState(false);
   const[msg,setMsg]=useState("");
   const fileRef=useRef(null);
-  // Auto-backup 24h (silent): ao montar o Profile, se >24h do último, gera JSON e baixa.
+  // Sincroniza com localStorage a cada foco do Profile — se App root auto-exportou
+  // enquanto Profile estava fechado, pega o timestamp novo.
   useEffect(()=>{
-    const H24=24*3600*1000;
-    if(lastAt&&Date.now()-lastAt<H24)return;
-    // Evita auto-trigger em loop se falhar — marca tentativa com timestamp atual.
-    (async()=>{
-      try{
-        const data=await FB.exportAll();
-        downloadJSON(data,`louise-backup-${todayStr()}.json`);
-        const now=Date.now();
-        setLastAt(now);
-        try{localStorage.setItem(BACKUP_KEY,String(now))}catch(_){}
-      }catch(e){console.warn("[LP] auto-backup failed:",e.message)}
-    })();
+    try{const v=localStorage.getItem(BACKUP_KEY);if(v)setLastAt(parseInt(v,10))}catch(_){}
   },[]);
   const onExport=async()=>{
     if(busy)return;
@@ -5514,6 +5530,11 @@ function BackupSection(){
     setBusy(false);
     e.target.value="";
   };
+  // Calcula quando \u00e9 o pr\u00f3ximo auto-backup (24h depois do \u00faltimo).
+  const H24=24*3600*1000;
+  const nextAuto=lastAt?lastAt+H24:0;
+  const nextInMs=nextAuto-Date.now();
+  const nextInStr=nextInMs<=0?(_lang==="en"?"any moment":"a qualquer momento"):(nextInMs<3600*1000?(_lang==="en"?`${Math.ceil(nextInMs/60000)}min`:`${Math.ceil(nextInMs/60000)}min`):(_lang==="en"?`${Math.ceil(nextInMs/3600000)}h`:`${Math.ceil(nextInMs/3600000)}h`));
   return(<div style={{marginTop:16,padding:"16px 18px",borderRadius:14,background:"rgba(22,28,60,0.4)",border:`1px solid ${T.gB}`,boxShadow:T.insetTop}}>
     <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
       <div style={{width:32,height:32,borderRadius:9,background:"rgba(52,211,153,0.12)",border:"1px solid rgba(52,211,153,0.28)",display:"flex",alignItems:"center",justifyContent:"center"}}>
@@ -5521,18 +5542,18 @@ function BackupSection(){
       </div>
       <div style={{flex:1,minWidth:0}}>
         <div style={{fontSize:13,fontWeight:700,color:T.text}}>{L("backup")}</div>
-        <div style={{fontSize:10,color:T.sub,fontWeight:600,marginTop:1,fontVariantNumeric:"tabular-nums"}}>{L("lastBackup")}: {fmtBackupAgo(lastAt,_lang)}</div>
+        <div style={{fontSize:10,color:T.sub,fontWeight:600,marginTop:1,fontVariantNumeric:"tabular-nums"}}>{L("lastBackup")}: {fmtBackupAgo(lastAt,_lang)}{lastAt?` \u00b7 ${_lang==="en"?"next auto":"pr\u00f3x. auto"}: ${nextInStr}`:""}</div>
       </div>
     </div>
     <div style={{fontSize:11,color:T.sub,lineHeight:1.5,marginBottom:12}}>{L("backupDesc")}</div>
     <div style={{display:"flex",gap:8}}>
       <button onClick={onExport} disabled={busy} style={{flex:1,padding:"11px 12px",borderRadius:11,background:busy?"rgba(52,211,153,0.1)":"linear-gradient(180deg,rgba(52,211,153,0.22),rgba(16,185,129,0.12))",border:"1px solid rgba(52,211,153,0.35)",color:"#6ee7b7",fontSize:12,fontWeight:700,letterSpacing:-0.1,display:"flex",alignItems:"center",justifyContent:"center",gap:6,opacity:busy?0.6:1}}>
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        {L("exportData")}
+        {_lang==="en"?"Backup now":"Fazer backup agora"}
       </button>
       <button onClick={onImportClick} disabled={busy} style={{flex:1,padding:"11px 12px",borderRadius:11,background:"rgba(22,28,60,0.6)",border:`1px solid ${T.gBSoft}`,color:T.sub,fontSize:12,fontWeight:700,letterSpacing:-0.1,display:"flex",alignItems:"center",justifyContent:"center",gap:6,opacity:busy?0.6:1}}>
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        {L("importData")}
+        {_lang==="en"?"Restore from file":"Restaurar do arquivo"}
       </button>
       <input ref={fileRef} type="file" accept="application/json,.json" onChange={onImportFile} style={{display:"none"}}/>
     </div>
@@ -5658,6 +5679,30 @@ function App(){
   const openChangelog=()=>{setShowChangelog(true);setShowUpdateToast(false);markChangelogSeen()};
   const dismissUpdateToast=()=>{setShowUpdateToast(false);markChangelogSeen()};
   const closeChangelog=()=>{setShowChangelog(false);markChangelogSeen()};
+
+  // Auto-backup 24h no N\u00cdVEL DO APP (v11.3) — antes era s\u00f3 quando Profile abria.
+  // Agora, todo cold start ou resume de bg: se j\u00e1 passou 24h, baixa JSON automaticamente.
+  // Garante backup di\u00e1rio real mesmo se voc\u00ea nunca abrir o Profile.
+  // Delay de 8s ap\u00f3s loading=false pra n\u00e3o interferir no primeiro paint.
+  const backupTriedRef=useRef(false);
+  useEffect(()=>{
+    if(loading||backupTriedRef.current)return;
+    backupTriedRef.current=true;
+    const H24=24*3600*1000;
+    let lastAt=0;
+    try{const v=localStorage.getItem("lp_last_backup_at");if(v)lastAt=parseInt(v,10)}catch(_){}
+    if(lastAt&&Date.now()-lastAt<H24)return; // ainda dentro das 24h
+    // Delay pra n\u00e3o disparar download no meio do primeiro frame.
+    const t=setTimeout(async()=>{
+      try{
+        const data=await FB.exportAll();
+        downloadJSON(data,`louise-backup-${todayStr()}.json`);
+        const now=Date.now();
+        try{localStorage.setItem("lp_last_backup_at",String(now))}catch(_){}
+      }catch(e){console.warn("[LP] auto-backup failed:",e.message)}
+    },8000);
+    return()=>clearTimeout(t);
+  },[loading]);
 
   // App-level tick: atualiza napSug, Ring arc, e cards dependentes de tempo.
   // Timer ativo: 5s (antes era 1s) — sweep do arco do Ring em 5s é imperceptível (<2deg
