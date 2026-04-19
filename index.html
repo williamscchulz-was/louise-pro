@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.5.0 Toast de confirmacao quando auto-backup roda (voce sabe sem abrir Profile)
   v11.4.0 Backup vai pra nuvem (Firestore) em vez de baixar arquivo, sempre mais recente sobrescreve
   v11.3.0 Auto-backup 24h promovido pro App root (global) + botoes renomeados + status mais claro
   v11.2.0 Backup export/import + quick wins (memo StatsPage/HistoryPage + manifest shortcuts)
@@ -473,8 +474,27 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.4.0";
+const APP_VERSION = "11.5.0";
 const CHANGELOG = [
+  {
+    v: "11.5.0", date: "2026-04-19",
+    pt: {
+      title: "Toast de confirma\u00e7\u00e3o quando auto-backup roda",
+      bullets: [
+        '\u2605 Quando o auto-backup 24h rodar no cold start, aparece um toast verde "\u2713 Backup autom\u00e1tico salvo" por 3s no topo da tela. Assim voc\u00ea sabe que rodou sem precisar abrir Profile pra checar status.',
+        'S\u00f3 aparece quando rodou de verdade (se ainda n\u00e3o passou 24h, nada acontece \u2014 sem toast falso).',
+        'Se falhar, fica s\u00f3 no `console.warn` (sem spam pro usu\u00e1rio). Na pr\u00f3xima vez que Profile abrir, o status mostra o backup antigo e voc\u00ea pode rodar manual.',
+      ],
+    },
+    en: {
+      title: "Toast confirmation when auto-backup runs",
+      bullets: [
+        '\u2605 When the 24h auto-backup fires on cold start, a green toast "\u2713 Auto-backup saved" shows for 3s at the top of the screen. So you know it ran without opening Profile to check status.',
+        'Only shows on actual successful runs (if <24h, nothing happens \u2014 no false toast).',
+        'On failure, only `console.warn` (no user spam). Next time Profile opens, status shows the old backup and you can run manually.',
+      ],
+    },
+  },
   {
     v: "11.4.0", date: "2026-04-19",
     pt: {
@@ -5776,10 +5796,9 @@ function App(){
   const dismissUpdateToast=()=>{setShowUpdateToast(false);markChangelogSeen()};
   const closeChangelog=()=>{setShowChangelog(false);markChangelogSeen()};
 
-  // Auto-backup 24h no N\u00cdVEL DO APP (v11.3, atualizado v11.4).
-  // v11.3: antes baixava JSON pro device.
-  // v11.4: salva em Firestore `config/backups/latest` (compartilhado entre os 2 devices, sempre
-  // sobrescreve). Silencioso, sem download. Delay de 8s ap\u00f3s loading=false.
+  // Auto-backup 24h no N\u00cdVEL DO APP. v11.3: arquivo local. v11.4: Firestore. v11.5: toast.
+  // Toast de confirma\u00e7\u00e3o visual p\u00f3s-sucesso pro user saber que rodou — sen\u00e3o ele s\u00f3
+  // descobre abrindo Profile.
   const backupTriedRef=useRef(false);
   useEffect(()=>{
     if(loading||backupTriedRef.current)return;
@@ -5793,6 +5812,8 @@ function App(){
         const data=await FB.exportAll();
         await FB.saveBackup(data);
         try{localStorage.setItem("lp_last_backup_at",String(Date.now()))}catch(_){}
+        // Toast discreto de confirma\u00e7\u00e3o (3s, auto-dismiss).
+        setToast(_lang==="en"?"\u2713 Auto-backup saved":"\u2713 Backup autom\u00e1tico salvo");
       }catch(e){console.warn("[LP] auto-backup failed:",e.message)}
     },8000);
     return()=>clearTimeout(t);
