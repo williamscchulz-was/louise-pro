@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v10.7.2 AddForm (novo + editar) vira Modal central (Sheet slide-up aposentado em forms)
   v10.7.1 Refinamentos sutis: tabular-nums + tap feedback + pulse na mudanca + data sutil + sparkle no Ring
   v10.7.0 Rollback do Beautiful Glow: cards/circles/Ring voltam ao minimalista (starfield visivel)
   v10.6.2 Fix: Ring disc translucido + breathing funcionando (CSS class em vez de inline animation)
@@ -380,8 +381,31 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "10.7.1";
+const APP_VERSION = "10.7.2";
 const CHANGELOG = [
+  {
+    v: "10.7.2", date: "2026-04-19",
+    pt: {
+      title: "AddForm (novo + editar) vira Modal central \u2014 fim do Sheet slide-up em formul\u00e1rios",
+      bullets: [
+        '\u2605 **AddForm agora \u00e9 Modal central** em vez de Sheet que deslizava de baixo. Unifica com o popup de sele\u00e7\u00e3o de tipo (v10.5.5) \u2014 todo fluxo de formul\u00e1rio (novo ou editar) usa o mesmo padr\u00e3o scale+fade 250ms.',
+        '\u2022 Toque em "+" \u2192 Modal com 10 tipos (v10.5.5). Toque num tipo \u2192 Modal com o form. Salva ou cancela \u2192 volta.',
+        '\u2022 Toque em qualquer entrada no hist\u00f3rico (ex: Bottle 100ml) \u2192 mesmo Modal do form em modo "editar".',
+        '\u2605 **Modal ganhou prop `wide`**: aumenta maxWidth pra 400px (default 340) e reduz padding horizontal (14 em vez de 24) pra campos de data+hora lado-a-lado caberem confortavel. Com scroll interno autom\u00e1tico pra forms altos (growth com 3 medi\u00e7\u00f5es).',
+        '\u2605 **X close button** agora fixo no canto superior direito do frame, independente de scroll. Inv\u00edsivel qualquer bug de slide-up no iPhone.',
+      ],
+    },
+    en: {
+      title: "AddForm (new + edit) becomes a central Modal \u2014 end of the Sheet slide-up for forms",
+      bullets: [
+        '\u2605 **AddForm is now a central Modal** instead of a Sheet that slid from the bottom. Unifies with the type picker popup (v10.5.5) \u2014 every form flow (new or edit) uses the same 250ms scale+fade pattern.',
+        '\u2022 Tap "+" \u2192 Modal with 10 types (v10.5.5). Tap a type \u2192 Modal with the form. Save or cancel \u2192 back.',
+        '\u2022 Tap any history entry (e.g. Bottle 100ml) \u2192 same form Modal in "edit" mode.',
+        '\u2605 **Modal got a `wide` prop**: bumps maxWidth to 400px (default 340) and reduces horizontal padding (14 instead of 24) so date+time fields fit comfortably side by side. Internal auto-scroll for tall forms (growth with 3 measurements).',
+        '\u2605 **X close button** now pinned to the top-right corner of the frame, independent of scroll. Goodbye iPhone slide-up jank.',
+      ],
+    },
+  },
   {
     v: "10.7.1", date: "2026-04-18",
     pt: {
@@ -3575,7 +3599,19 @@ function Sheet({open,onClose,children}){
   </div>)
 }
 
-function Modal({open,onClose,children}){const[vis,setVis]=useState(false),[show,setShow]=useState(false);useEffect(()=>{if(open){setVis(true);requestAnimationFrame(()=>requestAnimationFrame(()=>setShow(true)))}else{setShow(false);const t=setTimeout(()=>setVis(false),300);return()=>clearTimeout(t)}},[open]);if(!vis)return null;return(<div style={{position:"fixed",inset:0,zIndex:150,display:"flex",alignItems:"center",justifyContent:"center",padding:24}} onClick={onClose}><div style={{position:"absolute",inset:0,background:"rgba(2,3,10,0.55)",backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",opacity:show?1:0,transition:"opacity .35s"}}/><div onClick={e=>e.stopPropagation()} style={{position:"relative",width:"100%",maxWidth:340,background:"linear-gradient(180deg,rgba(20,26,60,0.94),rgba(14,18,52,0.93))",backdropFilter:"blur(18px)",WebkitBackdropFilter:"blur(18px)",borderRadius:26,border:"1px solid rgba(255,255,255,0.08)",boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset, 0 0 0 1px rgba(255,255,255,0.03), 0 24px 64px -12px rgba(0,0,0,0.65), 0 0 80px -20px rgba(139,124,246,0.18)",padding:"28px 24px 24px",transform:show?"scale(1)":"scale(0.92)",opacity:show?1:0,transition:"all .35s cubic-bezier(0.22,1,0.36,1)",overflow:"hidden"}}><div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse at 50% 0%,rgba(255,255,255,0.04),transparent 50%)",pointerEvents:"none",borderRadius:26}}/><button onClick={onClose} style={{position:"absolute",top:14,right:14,width:32,height:32,borderRadius:11,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"center",color:T.dim,boxShadow:T.insetTop,zIndex:1}}><Icon name="x" size={14} color={T.dim}/></button><div style={{position:"relative"}}>{children}</div></div></div>)}
+function Modal({open,onClose,children,wide}){const[vis,setVis]=useState(false),[show,setShow]=useState(false);useEffect(()=>{if(open){setVis(true);requestAnimationFrame(()=>requestAnimationFrame(()=>setShow(true)))}else{setShow(false);const t=setTimeout(()=>setVis(false),300);return()=>clearTimeout(t)}},[open]);if(!vis)return null;
+  // v10.7.2: prop `wide` pra forms (AddForm edit/new). Aumenta maxWidth pra 400, mant\u00e9m scroll
+  // interno pra forms altos (growth com 3 medi\u00e7\u00f5es etc). X button fixo no canto superior direito
+  // do frame do modal; conte\u00fado com scroll abaixo dele.
+  const mw=wide?400:340;
+  return(<div style={{position:"fixed",inset:0,zIndex:150,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={onClose}>
+    <div style={{position:"absolute",inset:0,background:"rgba(2,3,10,0.55)",backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",opacity:show?1:0,transition:"opacity .35s"}}/>
+    <div onClick={e=>e.stopPropagation()} style={{position:"relative",width:"100%",maxWidth:mw,maxHeight:"88vh",background:"linear-gradient(180deg,rgba(20,26,60,0.94),rgba(14,18,52,0.93))",backdropFilter:"blur(18px)",WebkitBackdropFilter:"blur(18px)",borderRadius:26,border:"1px solid rgba(255,255,255,0.08)",boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset, 0 0 0 1px rgba(255,255,255,0.03), 0 24px 64px -12px rgba(0,0,0,0.65), 0 0 80px -20px rgba(139,124,246,0.18)",transform:show?"scale(1)":"scale(0.92)",opacity:show?1:0,transition:"all .35s cubic-bezier(0.22,1,0.36,1)",overflow:"hidden",display:"flex",flexDirection:"column"}}>
+      <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse at 50% 0%,rgba(255,255,255,0.04),transparent 50%)",pointerEvents:"none",borderRadius:26}}/>
+      <button onClick={onClose} style={{position:"absolute",top:14,right:14,width:32,height:32,borderRadius:11,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"center",color:T.dim,boxShadow:T.insetTop,zIndex:3}}><Icon name="x" size={14} color={T.dim}/></button>
+      <div style={{position:"relative",overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch",padding:wide?"22px 14px 18px":"28px 24px 24px"}}>{children}</div>
+    </div>
+  </div>)}
 
 function Fld({label,children}){return<div style={{marginBottom:18,minWidth:0}}><label style={{fontSize:11,color:"#7a80a8",fontWeight:600,marginBottom:10,display:"block",letterSpacing:-0.05}}>{label}</label>{children}</div>}
 function Seg({opts,val,set,color}){return<div style={{display:"flex",gap:6}}>{opts.map(o=><button key={o.v} onClick={()=>set(o.v)} style={{flex:1,padding:"12px 4px",borderRadius:10,fontSize:13,fontWeight:600,background:val===o.v?color:T.glass,color:val===o.v?T.bg1:T.text,border:`1px solid ${val===o.v?color:T.gB}`}}>{o.l}</button>)}</div>}
@@ -5852,9 +5888,12 @@ function App(){
       </button>)})}</div>
     </Modal>
 
-    <Sheet open={!!formType} onClose={()=>{setFormType(null);setEditEntry(null)}}>
+    {/* AddForm agora \u00e9 Modal central (v10.7.2) em vez de Sheet slide-up. Unifica com o +
+        popup e resolve o jank de anim\u00e7\u00e3o no iPhone. prop `wide` deixa um pouco mais largo
+        pros campos de data/hora caberem confort\u00e1veis. */}
+    <Modal open={!!formType} onClose={()=>{setFormType(null);setEditEntry(null)}} wide>
       {formType&&<AddForm type={formType} onSave={addEntry} savedMeds={savedMeds} onSaveMeds={async m=>await FB.saveMeds(m)} editEntry={editEntry} lastBottleMl={lastBottleMl} topMl={topMl} onStartTimer={type=>{startTimer(type);setFormType(null);setShowAdd(false)}}/>}
-    </Sheet>
+    </Modal>
 
     {showProfile&&<ProfilePage profile={profile} onSave={async p=>await FB.saveProfile(p)} onBack={()=>{setShowProfile(false);setProfileIsDirty(false)}} onGrowth={()=>{setShowProfile(false);setProfileIsDirty(false);goTo("growth")}} onShowChangelog={()=>setShowChangelog(true)} hasUnreadChangelog={hasUnreadChangelog} reminders={reminders} onAddReminder={async r=>await FB.addReminder(r)} onDelReminder={async id=>await FB.delReminder(id)} onDirtyChange={setProfileIsDirty} cancelSignal={profileCancelSignal} saveSignal={profileSaveSignal}/>}
     {showInbox&&<InboxPanel inbox={inbox} onClose={()=>setShowInbox(false)} onMarkRead={markInboxRead} onMarkAllRead={markAllInboxRead} lang={lang}/>}
