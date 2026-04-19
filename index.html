@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v10.6.0 Beautiful edge glow: cards do Home + circulos do popup + + Ring (4 inner shadows Figma->CSS)
   v10.5.5 Botao + vira Modal central (scale+fade em vez de Sheet slide-up bugado no iPhone)
   v10.5.4 Limpeza: nowTick removido (redundante) + contain:layout/paint em SleepBlock
   v10.5.3 Perf: Starfield module-level memo + Profile photo sig (isDirty vira O(1) por keystroke)
@@ -370,8 +371,33 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "10.5.5";
+const APP_VERSION = "10.6.0";
 const CHANGELOG = [
+  {
+    v: "10.6.0", date: "2026-04-18",
+    pt: {
+      title: "Beautiful edge glow: cards do Home + c\u00edrculos do + + Ring",
+      bullets: [
+        '\u2605 Aplicado o estilo de **4 inner shadows em camadas** (convertido de Figma \u201cBeautiful Shadow\u201d pra CSS puro) em 3 lugares:',
+        '1) **Quick stats cards do Home** (Bottle, Nursing, Sleep, Diaper) \u2014 cada card ganha dark-navy gradient + edge glow na cor do tipo. Bottle glow verde, Sleep roxo, Diaper rosa, Nursing azul.',
+        '2) **C\u00edrculos do popup +** (quick-add modal) \u2014 os 10 tipos (wake/bottle/nurse/sleep/nap/diaper/bath/med/temp/tummy) com edge glow na cor espec\u00edfica. Ganho visual grande, identidade mais forte.',
+        '3) **Ring central** \u2014 disco circular atr\u00e1s dos arcs com edge glow dinamicamente colorido pelo estado ativo (roxo pra bedtime/nap, azul pra nursing, \u00e2mbar pra stretching, etc). Arcs continuam em cima, disco d\u00e1 peso visual.',
+        'Implementado via helper `edgeGlow(hex, scale)` que gera a string de 4 box-shadows inset. Scale ajusta proporcionalmente pra elementos pequenos (0.2 pros c\u00edrculos, 0.35 pros cards, 0.65 pro Ring). GPU-cheap no iOS (ao contr\u00e1rio de backdrop-filter blur).',
+        '\u274c **N\u00c3O** aplicado no app icon (launcher) por pedido expresso.',
+      ],
+    },
+    en: {
+      title: "Beautiful edge glow: Home cards + + button circles + Ring",
+      bullets: [
+        '\u2605 Applied the **4-layered inner shadow** style (Figma \u201cBeautiful Shadow\u201d converted to pure CSS) in 3 places:',
+        '1) **Home quick stats cards** (Bottle, Nursing, Sleep, Diaper) \u2014 each card gets dark-navy gradient + edge glow in the type color. Bottle green glow, Sleep purple, Diaper pink, Nursing blue.',
+        '2) **+ popup circles** (quick-add modal) \u2014 the 10 types (wake/bottle/nurse/sleep/nap/diaper/bath/med/temp/tummy) with per-type edge glow. Huge visual lift, stronger identity.',
+        '3) **Central Ring** \u2014 circular disc behind the arcs with edge glow dynamically tinted by the active state (purple for bedtime/nap, blue for nursing, amber for stretching, etc). Arcs still on top, disc adds visual weight.',
+        'Implemented via `edgeGlow(hex, scale)` helper that generates the 4 inset box-shadow string. Scale tunes proportionally for small elements (0.2 for circles, 0.35 for cards, 0.65 for Ring). GPU-cheap on iOS (unlike backdrop-filter blur).',
+        '\u274c **NOT** applied to the app icon (launcher) per explicit request.',
+      ],
+    },
+  },
   {
     v: "10.5.5", date: "2026-04-18",
     pt: {
@@ -2854,6 +2880,18 @@ function Icon({name,size=20,color="currentColor",fill="none"}){
 const T={bg1:"#070b1e",bg2:"#0d1133",bg3:"#141a42",glass:"rgba(22,28,60,0.6)",gB:"rgba(90,100,180,0.12)",gBSoft:"rgba(255,255,255,0.06)",insetTop:"0 1px 0 0 rgba(255,255,255,0.04) inset",insetTopStrong:"0 1px 0 0 rgba(255,255,255,0.08) inset",text:"#e4e6f5",sub:"#8b90b8",dim:"#555a80",accent:"#8b7cf6",green:"#34d399",greenS:"rgba(52,211,153,0.1)",purple:"#a78bfa",purpleS:"rgba(167,139,250,0.1)",pink:"#f472b6",pinkS:"rgba(244,114,182,0.1)",amber:"#fbbf24",amberS:"rgba(251,191,36,0.1)",orange:"#fb923c",orangeS:"rgba(251,146,60,0.1)",blue:"#38bdf8",blueS:"rgba(56,189,248,0.12)",red:"#f87171",redS:"rgba(248,113,113,0.1)",cyan:"#22d3ee",cyanS:"rgba(34,211,238,0.1)"};
 const TYPES={bottle:{label:{pt:"Mamadeira",en:"Bottle"},icon:"bottle",color:T.green,bg:T.greenS},nursing:{label:{pt:"Amamentação",en:"Nursing"},icon:"breast",color:T.blue,bg:T.blueS},sleep:{label:{pt:"Sono",en:"Bedtime"},icon:"bed",color:T.purple,bg:T.purpleS},wakeup:{label:{pt:"Acordou",en:"Woke up"},icon:"sun",color:T.amber,bg:T.amberS},nap:{label:{pt:"Soneca",en:"Nap"},icon:"cloud",color:T.purple,bg:T.purpleS},nightwaking:{label:{pt:"Acordou à noite",en:"Night waking"},icon:"zap",color:T.orange,bg:T.orangeS},diaper:{label:{pt:"Fralda",en:"Diaper"},icon:"diaper",color:T.pink,bg:T.pinkS},medicine:{label:{pt:"Medicamento",en:"Medicine"},icon:"pill",color:T.amber,bg:T.amberS},temperature:{label:{pt:"Temperatura",en:"Temperature"},icon:"thermo",color:T.red,bg:T.redS},bath:{label:{pt:"Banho",en:"Bath"},icon:"bath",color:T.cyan,bg:T.cyanS},tummytime:{label:{pt:"Tummy time",en:"Tummy time"},icon:"baby",color:T.amber,bg:T.amberS},growth:{label:{pt:"Crescimento",en:"Growth"},icon:"ruler",color:"#a3e635",bg:"rgba(163,230,53,0.1)"}};
 
+// Edge glow helper (v10.6.0) — 4 inner shadows convertidas de Figma pra CSS box-shadow.
+// Ref: 400x400 icon com Y:-80 Blur:60. `scale` ajusta proporcionalmente pra elementos menores.
+// `hex` é a cor do tipo (ex T.green, T.purple). Retorna string pronta pra `boxShadow`.
+// GPU-cheap no iOS (diferente de backdrop-filter blur). Pode usar em listas.
+const EDGE_GLOW_BG = "linear-gradient(180deg,#0A0909 0%,#09101F 100%)";
+function edgeGlow(hex, scale=1){
+  const h=(hex||"#8b7cf6").replace("#","");
+  const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16);
+  const s=v=>Math.round(v*scale);
+  return `inset 0 ${s(-80)}px ${s(60)}px ${s(-30)}px rgba(${r},${g},${b},1), inset 0 ${s(-40)}px ${s(30)}px ${s(-8)}px rgba(${r},${g},${b},0.5), inset 0 ${s(-20)}px ${s(20)}px ${s(-6)}px rgba(255,255,255,0.4), inset 0 ${s(6)}px ${s(6)}px ${s(-2)}px rgba(${r},${g},${b},0.15)`;
+}
+
 // ── i18n ──
 const I={
   today:{pt:"Hoje",en:"Today"},
@@ -3001,9 +3039,14 @@ const Ring = React.memo(function Ring({activeTimer,napSug,tick,recentEvents,lang
     }
   }
 
+  // Edge-glow disc dentro do Ring (v10.6.0): disco circular atrás dos arcs com gradient
+  // dark navy + inner shadows coloridos pela cor do estado ativo. Adiciona "peso" visual
+  // ao centro do Ring, inspirado no Beautiful Shadow style. Arcs continuam por cima.
+  const _glowC = col1!==T.dim?col1:T.accent;
   return(<div style={{position:"relative",width:sz,margin:"0 auto"}}>
     <div style={{position:"relative",width:sz,height:sz}}>
-      <svg width={sz} height={sz} style={{overflow:"visible"}}>
+      <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:sz*0.78,height:sz*0.78,borderRadius:"50%",background:EDGE_GLOW_BG,boxShadow:edgeGlow(_glowC,0.65),zIndex:0,pointerEvents:"none",transition:"box-shadow .4s ease"}}/>
+      <svg width={sz} height={sz} style={{overflow:"visible",position:"relative",zIndex:1}}>
         <defs><filter id="slpG"><feGaussianBlur stdDeviation="8" result="b"/><feFlood floodColor={T.purple} floodOpacity="0.35" result="c"/><feComposite in="c" in2="b" operator="in" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
         <path d={descArc(startAng,startAng+totalArc)} fill="none" stroke="rgba(40,55,120,0.18)" strokeWidth={20} strokeLinecap="round"/>
         {/* Sleep pills */}
@@ -5623,7 +5666,7 @@ function App(){
           const barColor=prog>=1?"#f87171":prog>=0.8?"#fbbf24":p.c;
           feedProg={prog,nextStr,lateMin,barColor};
         }
-        return<button key={idx} onClick={()=>{if(p.tap==="nap"&&!activeTimer)startTimer("nap");else if(p.tap==="nursing"&&!activeTimer)startTimer("nursing",nextNursingSide);else if(!activeTimer)setFormType(p.tap)}} style={{padding:"10px",borderRadius:12,background:`${p.c}06`,border:`1px solid ${p.c}0a`,textAlign:"left"}}><div style={{display:"flex",alignItems:"center",gap:5,marginBottom:3}}><Icon name={p.i} size={12} color={p.c}/><span style={{fontSize:9,color:T.dim}}>{p.l}</span></div><div style={{fontSize:16,fontWeight:800,color:p.c}}>{p.v}{p.u?<span style={{fontSize:11,opacity:0.6}}>{p.u}</span>:null}</div>{feedProg?<><div style={{height:3,borderRadius:2,background:`${p.c}1a`,marginTop:7,overflow:"hidden"}}><div style={{height:"100%",width:`${Math.min(100,feedProg.prog*100)}%`,background:feedProg.prog>=0.8?feedProg.barColor:`linear-gradient(90deg,${p.c},${p.c}cc)`,borderRadius:2,transition:"width .4s ease, background .3s ease"}}/></div><div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginTop:4,fontSize:10,fontWeight:600,fontVariantNumeric:"tabular-nums"}}><span style={{color:`${p.c}88`}}>{ago}</span><span style={{color:feedProg.barColor,fontWeight:700}}>{feedProg.prog>=1?`+${feedProg.lateMin}m late`:`→ ${feedProg.nextStr}`}</span></div></>:(ago&&<div style={{fontSize:12,color:`${p.c}88`,fontWeight:600,marginTop:3}}>{ago}</div>)}</button>})}</div>
+        return<button key={idx} onClick={()=>{if(p.tap==="nap"&&!activeTimer)startTimer("nap");else if(p.tap==="nursing"&&!activeTimer)startTimer("nursing",nextNursingSide);else if(!activeTimer)setFormType(p.tap)}} style={{padding:"12px",borderRadius:14,background:EDGE_GLOW_BG,boxShadow:edgeGlow(p.c,0.35),border:`1px solid ${p.c}15`,textAlign:"left",position:"relative",overflow:"hidden"}}><div style={{display:"flex",alignItems:"center",gap:5,marginBottom:3}}><Icon name={p.i} size={12} color={p.c}/><span style={{fontSize:9,color:T.dim}}>{p.l}</span></div><div style={{fontSize:16,fontWeight:800,color:p.c}}>{p.v}{p.u?<span style={{fontSize:11,opacity:0.6}}>{p.u}</span>:null}</div>{feedProg?<><div style={{height:3,borderRadius:2,background:`${p.c}1a`,marginTop:7,overflow:"hidden"}}><div style={{height:"100%",width:`${Math.min(100,feedProg.prog*100)}%`,background:feedProg.prog>=0.8?feedProg.barColor:`linear-gradient(90deg,${p.c},${p.c}cc)`,borderRadius:2,transition:"width .4s ease, background .3s ease"}}/></div><div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginTop:4,fontSize:10,fontWeight:600,fontVariantNumeric:"tabular-nums"}}><span style={{color:`${p.c}88`}}>{ago}</span><span style={{color:feedProg.barColor,fontWeight:700}}>{feedProg.prog>=1?`+${feedProg.lateMin}m late`:`→ ${feedProg.nextStr}`}</span></div></>:(ago&&<div style={{fontSize:12,color:`${p.c}88`,fontWeight:600,marginTop:3}}>{ago}</div>)}</button>})}</div>
         <div style={{padding:"0 20px"}}><div style={{fontSize:11,fontWeight:600,color:T.dim,marginBottom:8,textTransform:"uppercase",letterSpacing:0.8}}>{L("today")}</div>{todayE.length===0&&!liveBedtime&&<div style={{textAlign:"center",padding:"32px 20px",color:T.dim}}><Icon name="star" size={32} color={T.dim} fill={T.dim}/><div style={{fontSize:13,marginTop:8}}>{_lang==="en"?"Tap + to add":"Toque + para registrar"}</div></div>}{liveBedtime&&<SleepBlock entry={liveBedtime} entries={entries} isLive={true} activeTimer={activeTimer} onSaveTimer={FB.saveTimer} onSaveEntry={FB.addEntry} onDelete={deleteEntry} onEdit={startEdit}/>}{todayE.filter(e=>{
           // Only hide events linked to the live bedtime if their time actually falls within it.
           // Protects against legacy data where retroactive events got wrongly linked (pre v9.8.1).
@@ -5703,8 +5746,7 @@ function App(){
     <Modal open={showAdd&&!formType} onClose={()=>setShowAdd(false)}>
       <div style={{fontSize:11,fontWeight:700,color:"#7a80a8",letterSpacing:0.5,textTransform:"uppercase",marginBottom:16,textAlign:"center"}}>{_lang==="en"?"Add event":"Adicionar evento"}</div>
       <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)",gap:"10px 0"}}>{["wakeup","bottle","nursing","sleep","nap","diaper","bath","medicine","temperature","tummytime"].map((type,i)=>{const cfg=TYPES[type];const last=entries.find(e=>e.type===type);const agoRaw=last?timeSince(last.date,last.time):null;const ago=agoRaw==="now"?"Just now":agoRaw;return(<button key={type} onClick={()=>setFormType(type)} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8,padding:"8px 4px 4px",animation:`slideUp .3s ease ${i*0.025}s both`}}>
-        <div style={{width:58,height:58,borderRadius:"50%",background:`radial-gradient(circle at 35% 30%, rgba(50,60,120,0.95), rgba(18,22,55,0.98))`,border:`1.5px solid ${cfg.color}25`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 4px 16px rgba(0,0,0,0.35), 0 0 20px ${cfg.color}18, inset 0 1px 0 rgba(200,210,255,0.08), inset 0 -2px 4px rgba(0,0,0,0.2)`,position:"relative",overflow:"hidden",filter:`drop-shadow(0 0 4px ${cfg.color}44)`}}>
-          <div style={{position:"absolute",top:"15%",left:"25%",width:"40%",height:"30%",background:`radial-gradient(ellipse,${cfg.color}12,transparent)`,borderRadius:"50%",filter:"blur(5px)"}}/>
+        <div style={{width:58,height:58,borderRadius:"50%",background:EDGE_GLOW_BG,border:`1px solid ${cfg.color}30`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:edgeGlow(cfg.color,0.2),position:"relative",overflow:"hidden",filter:`drop-shadow(0 4px 12px rgba(0,0,0,0.4)) drop-shadow(0 0 8px ${cfg.color}33)`}}>
           <Icon name={cfg.icon} size={22} color={cfg.color}/>
         </div>
         <div style={{textAlign:"center",minWidth:0,maxWidth:"100%"}}><div style={{fontSize:11,fontWeight:600,color:T.text,lineHeight:1.2,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{cfg.label[_lang]||cfg.label.en}</div>{ago&&<div style={{fontSize:10,color:T.sub,fontWeight:500,marginTop:2,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{ago}</div>}</div>
