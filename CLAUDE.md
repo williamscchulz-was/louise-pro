@@ -14,7 +14,7 @@ Este `CLAUDE.md` é lido automaticamente pelo Claude Code no início de toda ses
 - **Localização**: Blumenau, SC, Brasil (BRT, UTC-3)
 - **Repositório**: https://github.com/williamscchulz-was/louise-pro
 - **Live**: https://williamscchulz-was.github.io/louise-pro/
-- **Versão atual**: v11.3.0 (app) / routine-engine v2.2.1
+- **Versão atual**: v11.4.0 (app) / routine-engine v2.2.1
 - **Bilíngue**: Português e Inglês (toda a interface, insights, curiosidades e changelog)
 
 ## Stack
@@ -90,6 +90,7 @@ louise-pro/
 - `config/active` — timer ativo (sync em tempo real entre dispositivos)
 - `config/inbox` — estado da caixa de notificações
 - `config/reminders/items/{id}` — lembretes. `tipo:"feedingInterval"` (default 120min desde v10.4.1) ou `tipo:"scheduled"` (medicamento com horários)
+- `config/backups` — snapshot único de backup (v11.4). Fields: `snapshot`, `updatedAt`, `size`. Sempre sobrescrito pelo mais recente. Compartilhado entre os 2 devices do casal. Auto-save a cada 24h via App root. Limite 1 MiB (Firestore hard limit) — `FB.saveBackup` falha com erro claro se passar disso.
 
 -----
 
