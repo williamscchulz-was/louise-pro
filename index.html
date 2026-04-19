@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v10.8.0 3 fixes: Diaper wet/dirty + Night pattern dedup (cross-midnight) + SW update banner
   v10.7.2 AddForm (novo + editar) vira Modal central (Sheet slide-up aposentado em forms)
   v10.7.1 Refinamentos sutis: tabular-nums + tap feedback + pulse na mudanca + data sutil + sparkle no Ring
   v10.7.0 Rollback do Beautiful Glow: cards/circles/Ring voltam ao minimalista (starfield visivel)
@@ -138,7 +139,17 @@
     navigator.serviceWorker.addEventListener('controllerchange',function(){
       if(_swReloading)return;
       _swReloading=true;
-      window.location.reload();
+      // v10.8.0: banner visível curto antes do reload pra usuário entender que é update, não bug.
+      try{
+        var b=document.createElement('div');
+        b.style.cssText='position:fixed;top:calc(14px + env(safe-area-inset-top));left:14px;right:14px;max-width:420px;margin:0 auto;padding:12px 14px;border-radius:16px;background:linear-gradient(180deg,#34d399,#10b981);color:#050820;font:700 13px -apple-system,BlinkMacSystemFont,system-ui,sans-serif;letter-spacing:-0.2px;box-shadow:0 12px 32px -8px rgba(52,211,153,0.5);z-index:999999;display:flex;align-items:center;gap:10px;animation:swBannerIn .3s ease';
+        b.innerHTML='<span style="display:inline-block;width:16px;height:16px;border:2px solid rgba(5,8,32,0.3);border-top-color:#050820;border-radius:50%;animation:swSpin .8s linear infinite"></span><span>Atualizando Louise Pro\u2026</span>';
+        var st=document.createElement('style');
+        st.textContent='@keyframes swBannerIn{0%{opacity:0;transform:translateY(-10px)}100%{opacity:1;transform:translateY(0)}}@keyframes swSpin{to{transform:rotate(360deg)}}';
+        document.head.appendChild(st);
+        document.body.appendChild(b);
+      }catch(e){}
+      setTimeout(function(){window.location.reload()},800);
     });
   }
   </script>
@@ -381,8 +392,27 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "10.7.2";
+const APP_VERSION = "10.8.0";
 const CHANGELOG = [
+  {
+    v: "10.8.0", date: "2026-04-19",
+    pt: {
+      title: "3 fixes: Diaper wet/dirty breakdown + Night pattern dedup + SW update banner",
+      bullets: [
+        '\u2605 **Card Diaper no Home ganhou breakdown xixi/coc\u00f4**: abaixo do total, uma linha com \u00edcone droplet azul (`\ud83d\udca7 N wet`) e poop marrom (`\ud83d\udca9 N dirty`). "Both" conta em ambos. Minimalista, s\u00f3 aparece se tiver pelo menos um registro do dia.',
+        '\u2605 **Night pattern duplicado corrigido**: bedtimes cross-midnight eram divididos em 2 entries (`sleep_X` + `sleep_X_b`), e o engine contava cada metade como "noite" separada. Resultado: apareciam 2 cards "Night pattern" com contagens diferentes (ex: "5 nights" + "4 nights" pra mesma an\u00e1lise). Fix em `routine-engine.js:291`: filtrar IDs terminando em "_b" na sele\u00e7\u00e3o do bedtime di\u00e1rio. Trade-off: wakings p\u00f3s-midnight s\u00e3o exclu\u00eddas do count (aceit\u00e1vel pra v1 do fix).',
+        '\u2605 **SW update banner vis\u00edvel**: quando um Service Worker novo toma controle (ap\u00f3s deploy), aparece uma banner verde "Atualizando Louise Pro\u2026" por 800ms com spinner antes do reload autom\u00e1tico. Usu\u00e1rio entende que \u00e9 atualiza\u00e7\u00e3o, n\u00e3o bug. SW j\u00e1 tinha `skipWaiting` + `clients.claim` + network-first desde v10.1.x \u2014 s\u00f3 faltava o feedback visual.',
+      ],
+    },
+    en: {
+      title: "3 fixes: Diaper wet/dirty breakdown + Night pattern dedup + SW update banner",
+      bullets: [
+        '\u2605 **Home Diaper card got a wet/dirty breakdown**: below the total, a line with blue droplet icon (`\ud83d\udca7 N wet`) and brown poop (`\ud83d\udca9 N dirty`). "Both" counts in both. Minimal, only shows when at least one entry today.',
+        '\u2605 **Night pattern duplicate fixed**: cross-midnight bedtimes were split into 2 entries (`sleep_X` + `sleep_X_b`), and the engine counted each half as a separate "night". Result: 2 "Night pattern" cards with different counts (e.g. "5 nights" + "4 nights" for the same analysis). Fix in `routine-engine.js:291`: filter IDs ending in "_b" in daily bedtime selection. Trade-off: post-midnight wakings are excluded from the count (acceptable for v1).',
+        '\u2605 **SW update banner visible**: when a new Service Worker takes control (after a deploy), a green banner "Atualizando Louise Pro\u2026" with a spinner shows for 800ms before the auto-reload. User understands it\'s an update, not a bug. SW already had `skipWaiting` + `clients.claim` + network-first since v10.1.x \u2014 just missing the visual feedback.',
+      ],
+    },
+  },
   {
     v: "10.7.2", date: "2026-04-19",
     pt: {
@@ -5526,6 +5556,10 @@ function App(){
   const totalNursing=todayE.filter(e=>e.type==="nursing").length;
   const totalSleep=sumRealSleep(todayE);
   const totalDiapers=todayE.filter(e=>e.type==="diaper").length;
+  // Breakdown wet/dirty pro card Diaper no Home (v10.8.0). "both" conta em ambos.
+  const todayDiapers=todayE.filter(e=>e.type==="diaper");
+  const wetDiapers=todayDiapers.filter(e=>e.subtype==="wet"||e.subtype==="both").length;
+  const dirtyDiapers=todayDiapers.filter(e=>e.subtype==="dirty"||e.subtype==="both").length;
   const napNums=useMemo(()=>{const naps=[...todayE].reverse().filter(e=>e.type==="nap");const m={};naps.forEach((n,i)=>{m[n.id]=i+1});return m},[todayE]);
   const age=calcAge(profile.birthDate);const babyName=profile.name||"Bebê";
   const sleepRec=useMemo(()=>getSleepRec(entries,age,profile.birthDate),[entries,age,profile.birthDate]);
@@ -5800,7 +5834,9 @@ function App(){
           const barColor=prog>=1?"#f87171":prog>=0.8?"#fbbf24":p.c;
           feedProg={prog,nextStr,lateMin,barColor};
         }
-        return<button key={idx} className="home-card" onClick={()=>{if(p.tap==="nap"&&!activeTimer)startTimer("nap");else if(p.tap==="nursing"&&!activeTimer)startTimer("nursing",nextNursingSide);else if(!activeTimer)setFormType(p.tap)}} style={{padding:"10px",borderRadius:12,background:`${p.c}06`,border:`1px solid ${p.c}0a`,textAlign:"left",cursor:"pointer"}}><div style={{display:"flex",alignItems:"center",gap:5,marginBottom:3}}><Icon name={p.i} size={12} color={p.c}/><span style={{fontSize:9,color:T.dim}}>{p.l}</span></div><div style={{fontSize:16,fontWeight:800,color:p.c}}><span key={p.v} className="val-pulse">{p.v}</span>{p.u?<span style={{fontSize:11,opacity:0.6}}>{p.u}</span>:null}</div>{feedProg?<><div style={{height:3,borderRadius:2,background:`${p.c}1a`,marginTop:7,overflow:"hidden"}}><div style={{height:"100%",width:`${Math.min(100,feedProg.prog*100)}%`,background:feedProg.prog>=0.8?feedProg.barColor:`linear-gradient(90deg,${p.c},${p.c}cc)`,borderRadius:2,transition:"width .4s ease, background .3s ease"}}/></div><div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginTop:4,fontSize:10,fontWeight:600,fontVariantNumeric:"tabular-nums"}}><span style={{color:`${p.c}88`}}>{ago}</span><span style={{color:feedProg.barColor,fontWeight:700}}>{feedProg.prog>=1?`+${feedProg.lateMin}m late`:`→ ${feedProg.nextStr}`}</span></div></>:(ago&&<div style={{fontSize:12,color:`${p.c}88`,fontWeight:600,marginTop:3,fontVariantNumeric:"tabular-nums"}}>{ago}</div>)}</button>})}</div>
+        // Diaper breakdown wet/dirty (v10.8.0). Opção C do mockup — ícones coloridos.
+        const diaperBreakdown=p.tap==="diaper"&&(wetDiapers>0||dirtyDiapers>0)?(<div style={{display:"flex",gap:8,marginTop:3,fontSize:11,fontWeight:700,fontVariantNumeric:"tabular-nums"}}>{wetDiapers>0&&<span style={{display:"inline-flex",alignItems:"center",gap:3,color:"#93c5fd"}}><Icon name="droplet" size={11} color="#93c5fd"/>{wetDiapers}</span>}{dirtyDiapers>0&&<span style={{display:"inline-flex",alignItems:"center",gap:3,color:"#a16b4a"}}><Icon name="poop" size={11} color="#a16b4a"/>{dirtyDiapers}</span>}</div>):null;
+        return<button key={idx} className="home-card" onClick={()=>{if(p.tap==="nap"&&!activeTimer)startTimer("nap");else if(p.tap==="nursing"&&!activeTimer)startTimer("nursing",nextNursingSide);else if(!activeTimer)setFormType(p.tap)}} style={{padding:"10px",borderRadius:12,background:`${p.c}06`,border:`1px solid ${p.c}0a`,textAlign:"left",cursor:"pointer"}}><div style={{display:"flex",alignItems:"center",gap:5,marginBottom:3}}><Icon name={p.i} size={12} color={p.c}/><span style={{fontSize:9,color:T.dim}}>{p.l}</span></div><div style={{fontSize:16,fontWeight:800,color:p.c}}><span key={p.v} className="val-pulse">{p.v}</span>{p.u?<span style={{fontSize:11,opacity:0.6}}>{p.u}</span>:null}</div>{diaperBreakdown}{feedProg?<><div style={{height:3,borderRadius:2,background:`${p.c}1a`,marginTop:7,overflow:"hidden"}}><div style={{height:"100%",width:`${Math.min(100,feedProg.prog*100)}%`,background:feedProg.prog>=0.8?feedProg.barColor:`linear-gradient(90deg,${p.c},${p.c}cc)`,borderRadius:2,transition:"width .4s ease, background .3s ease"}}/></div><div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginTop:4,fontSize:10,fontWeight:600,fontVariantNumeric:"tabular-nums"}}><span style={{color:`${p.c}88`}}>{ago}</span><span style={{color:feedProg.barColor,fontWeight:700}}>{feedProg.prog>=1?`+${feedProg.lateMin}m late`:`→ ${feedProg.nextStr}`}</span></div></>:(ago&&<div style={{fontSize:12,color:`${p.c}88`,fontWeight:600,marginTop:3,fontVariantNumeric:"tabular-nums"}}>{ago}</div>)}</button>})}</div>
         <div style={{padding:"0 20px"}}><div style={{fontSize:11,fontWeight:600,color:T.dim,marginBottom:8,textTransform:"uppercase",letterSpacing:0.8}}>{L("today")}<span style={{opacity:0.5,marginLeft:8,fontWeight:500}}>· {new Date().toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{weekday:"short",day:"numeric"}).replace(".","")}</span></div>{todayE.length===0&&!liveBedtime&&<div style={{textAlign:"center",padding:"32px 20px",color:T.dim}}><Icon name="star" size={32} color={T.dim} fill={T.dim}/><div style={{fontSize:13,marginTop:8}}>{_lang==="en"?"Tap + to add":"Toque + para registrar"}</div></div>}{liveBedtime&&<SleepBlock entry={liveBedtime} entries={entries} isLive={true} activeTimer={activeTimer} onSaveTimer={FB.saveTimer} onSaveEntry={FB.addEntry} onDelete={deleteEntry} onEdit={startEdit}/>}{todayE.filter(e=>{
           // Only hide events linked to the live bedtime if their time actually falls within it.
           // Protects against legacy data where retroactive events got wrongly linked (pre v9.8.1).

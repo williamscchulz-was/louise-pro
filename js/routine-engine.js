@@ -287,8 +287,11 @@
       // Bath
       var baths = de.filter(function(e) { return e.type === "bath"; });
 
-      // Bedtime
-      var bed = de.find(function(e) { return e.type === "sleep"; });
+      // Bedtime — v10.8.0: filtrar IDs terminando em "_b" para não contar metade pós-midnight
+      // de um bedtime cross-midnight como noite separada. Isso elimina o bug de "Night pattern"
+      // aparecer duplicado (ex: "5 nights" + "4 nights" pra mesma análise de 7 dias).
+      // Wakings pós-midnight são ignoradas no count por simplicidade — aceito trade-off.
+      var bed = de.find(function(e) { return e.type === "sleep" && !(e.id||"").endsWith("_b"); });
       var bedMin = bed ? toMinutes(bed.time) : null;
       var nightTimeInBed = bed && bed.durationMin ? bed.durationMin : null;
       // Extract wakings and compute real sleep (time in bed minus awake time).
