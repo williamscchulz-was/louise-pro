@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v10.5.5 Botao + vira Modal central (scale+fade em vez de Sheet slide-up bugado no iPhone)
   v10.5.4 Limpeza: nowTick removido (redundante) + contain:layout/paint em SleepBlock
   v10.5.3 Perf: Starfield module-level memo + Profile photo sig (isDirty vira O(1) por keystroke)
   v10.5.2 Firestore offline persistence ON: cold start iPhone PWA instantaneo + app offline-capable
@@ -369,8 +370,27 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "10.5.4";
+const APP_VERSION = "10.5.5";
 const CHANGELOG = [
+  {
+    v: "10.5.5", date: "2026-04-18",
+    pt: {
+      title: "Bot\u00e3o + vira popup central (acabou o slide-up bugado)",
+      bullets: [
+        '\u2605 **Antes**: toque no + abria um Sheet que deslizava de baixo cobrindo 78% da tela. No iPhone a anima\u00e7\u00e3o + scroll interno davam uma sensa\u00e7\u00e3o de jank. **Agora**: abre um Modal central com scale+fade 250ms, sem slide, sem scroll.',
+        'Grid 3\u00d74 com os 10 tipos (wakeup/bottle/nursing/sleep/nap/diaper/bath/medicine/temperature/tummytime). C\u00edrculos diminu\u00eddos (70\u219258px) pra caber no maxWidth:340 do Modal. Stagger animation nos items preservado (0.025s por \u00edcone).',
+        'Fechamento: tap no backdrop, tap no FAB (que vira X rotacionado 45\u00b0), ou Esc em desktop. O **AddForm** em si (Bottle/Amount/Save) continua Sheet bottom-up \u2014 faz sentido pra form com inputs e scroll.',
+      ],
+    },
+    en: {
+      title: "+ button becomes a central popup (slide-up bug gone)",
+      bullets: [
+        '\u2605 **Before**: tapping + opened a Sheet that slid from the bottom covering 78% of the screen. On iPhone the animation + internal scroll created a janky feel. **Now**: opens a central Modal with scale+fade 250ms, no slide, no scroll.',
+        '3\u00d74 grid with all 10 types (wakeup/bottle/nursing/sleep/nap/diaper/bath/medicine/temperature/tummytime). Circles shrunk (70\u219258px) to fit the Modal\'s maxWidth:340. Item stagger animation preserved (0.025s per icon).',
+        'To close: tap backdrop, tap FAB (which rotates 45\u00b0 into an X), or Esc on desktop. The **AddForm** itself (Bottle/Amount/Save) stays a bottom-up Sheet \u2014 makes sense for a form with inputs and scroll.',
+      ],
+    },
+  },
   {
     v: "10.5.4", date: "2026-04-18",
     pt: {
@@ -5677,16 +5697,19 @@ function App(){
       </>}
     </Modal>
 
-    <Sheet open={showAdd&&!formType} onClose={()=>setShowAdd(false)}>
-      <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)",gap:"10px 0",padding:"0 16px"}}>{["wakeup","bottle","nursing","sleep","nap","diaper","bath","medicine","temperature","tummytime"].map((type,i)=>{const cfg=TYPES[type];const last=entries.find(e=>e.type===type);const agoRaw=last?timeSince(last.date,last.time):null;const ago=agoRaw==="now"?"Just now":agoRaw;return(<button key={type} onClick={()=>setFormType(type)} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:10,padding:"12px 4px 8px",animation:`slideUp .3s ease ${i*0.035}s both`}}>
-        <div style={{width:70,height:70,borderRadius:"50%",background:`radial-gradient(circle at 35% 30%, rgba(50,60,120,0.95), rgba(18,22,55,0.98))`,border:`1.5px solid ${cfg.color}25`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 4px 20px rgba(0,0,0,0.4), 0 0 24px ${cfg.color}18, 0 0 48px ${cfg.color}08, inset 0 1px 0 rgba(200,210,255,0.08), inset 0 -2px 4px rgba(0,0,0,0.2)`,position:"relative",overflow:"hidden",filter:`drop-shadow(0 0 5px ${cfg.color}44)`}}>
-          {/* Inner glow spot */}
-          <div style={{position:"absolute",top:"15%",left:"25%",width:"40%",height:"30%",background:`radial-gradient(ellipse,${cfg.color}12,transparent)`,borderRadius:"50%",filter:"blur(6px)"}}/>
-          <Icon name={cfg.icon} size={27} color={cfg.color}/>
+    {/* AddPicker (v10.5.5): seletor de tipo é um Modal central (scale+fade 250ms), não mais Sheet
+        que deslizava de baixo cobrindo 78% da tela. O slide-up causava jank/bug percebido no iPhone.
+        O AddForm em si (Bottle/Amount/Save) continua Sheet porque tem inputs e scroll. */}
+    <Modal open={showAdd&&!formType} onClose={()=>setShowAdd(false)}>
+      <div style={{fontSize:11,fontWeight:700,color:"#7a80a8",letterSpacing:0.5,textTransform:"uppercase",marginBottom:16,textAlign:"center"}}>{_lang==="en"?"Add event":"Adicionar evento"}</div>
+      <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)",gap:"10px 0"}}>{["wakeup","bottle","nursing","sleep","nap","diaper","bath","medicine","temperature","tummytime"].map((type,i)=>{const cfg=TYPES[type];const last=entries.find(e=>e.type===type);const agoRaw=last?timeSince(last.date,last.time):null;const ago=agoRaw==="now"?"Just now":agoRaw;return(<button key={type} onClick={()=>setFormType(type)} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8,padding:"8px 4px 4px",animation:`slideUp .3s ease ${i*0.025}s both`}}>
+        <div style={{width:58,height:58,borderRadius:"50%",background:`radial-gradient(circle at 35% 30%, rgba(50,60,120,0.95), rgba(18,22,55,0.98))`,border:`1.5px solid ${cfg.color}25`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 4px 16px rgba(0,0,0,0.35), 0 0 20px ${cfg.color}18, inset 0 1px 0 rgba(200,210,255,0.08), inset 0 -2px 4px rgba(0,0,0,0.2)`,position:"relative",overflow:"hidden",filter:`drop-shadow(0 0 4px ${cfg.color}44)`}}>
+          <div style={{position:"absolute",top:"15%",left:"25%",width:"40%",height:"30%",background:`radial-gradient(ellipse,${cfg.color}12,transparent)`,borderRadius:"50%",filter:"blur(5px)"}}/>
+          <Icon name={cfg.icon} size={22} color={cfg.color}/>
         </div>
-        <div style={{textAlign:"center"}}><div style={{fontSize:12,fontWeight:600,color:T.text,lineHeight:1.3}}>{cfg.label[_lang]||cfg.label.en}</div>{ago&&<div style={{fontSize:12,color:T.sub,fontWeight:500,marginTop:2}}>{ago}</div>}</div>
+        <div style={{textAlign:"center",minWidth:0,maxWidth:"100%"}}><div style={{fontSize:11,fontWeight:600,color:T.text,lineHeight:1.2,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{cfg.label[_lang]||cfg.label.en}</div>{ago&&<div style={{fontSize:10,color:T.sub,fontWeight:500,marginTop:2,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{ago}</div>}</div>
       </button>)})}</div>
-    </Sheet>
+    </Modal>
 
     <Sheet open={!!formType} onClose={()=>{setFormType(null);setEditEntry(null)}}>
       {formType&&<AddForm type={formType} onSave={addEntry} savedMeds={savedMeds} onSaveMeds={async m=>await FB.saveMeds(m)} editEntry={editEntry} lastBottleMl={lastBottleMl} topMl={topMl} onStartTimer={type=>{startTimer(type);setFormType(null);setShowAdd(false)}}/>}
