@@ -14,7 +14,7 @@ Este `CLAUDE.md` é lido automaticamente pelo Claude Code no início de toda ses
 - **Localização**: Blumenau, SC, Brasil (BRT, UTC-3)
 - **Repositório**: https://github.com/williamscchulz-was/louise-pro
 - **Live**: https://williamscchulz-was.github.io/louise-pro/
-- **Versão atual**: v11.0.0 (app) / routine-engine v2.2.1
+- **Versão atual**: v11.1.0 (app) / routine-engine v2.2.1
 - **Bilíngue**: Português e Inglês (toda a interface, insights, curiosidades e changelog)
 
 ## Stack
@@ -138,6 +138,20 @@ Bugs de perf descobertos e corrigidos durante as auditorias. Valem tatuar:
 - **body.app-hidden pausa animações**: `body.app-hidden *{animation-play-state:paused !important}` implementado no CSS. PWA em background não gasta CPU com mercury ring spinning, twinkle, pulse. NÃO remover.
 - **Firestore offline persistence ON desde v10.5.2**: `db.enablePersistence({synchronizeTabs: true})` chamado logo após `firebase.firestore()`. O SDK cacheia tudo no IndexedDB — cold start PWA é instantâneo (serve cache + sync em background). App também funciona offline. NÃO remover esse call. `synchronizeTabs: true` é essencial pra não dar lock conflict quando Safari + PWA standalone abertos simultaneamente.
 - **Firestore subEntries carrega TUDO**: sem date-window, depois de 1 ano de uso entries passa de 1000 rows. Próxima otimização planejada: adicionar `where('date', '>=', today-90d)` em subEntries e carregar history sob demanda. Não feito ainda (v10.5.2) — offline persistence mitiga o problema a curto prazo.
+
+-----
+
+## State per-device vs shared — regra (v11.1)
+
+O app é usado pelo William + esposa em 2 iPhones simultâneos, com Firestore compartilhado. Regra de divisão do state:
+
+- **Compartilhado (Firestore)**: dados do bebê (entries, profile básico, timer ativo, config de reminders), notificações GERADAS pela engine (inbox.items).
+- **Per-device (localStorage)**: "eu já vi essa versão" (`lp_last_seen_version`), "eu marquei essa notificação como lida" (`lp_inbox_read` — Set de keys). A engine continua gerando a mesma notificação pros 2 devices, mas cada um rastreia sozinho quais marcou como vistas.
+
+Regra prática: se o state é "eu, neste device, já percebi X", vai pra localStorage. Se é dado da Louise ou config compartilhada, Firestore.
+
+- Legacy `inbox.items[].read === true` do Firestore AINDA é respeitado como fallback (OR com localReadKeys) pra não quebrar dados pré-v11.1.
+- `profile.lastSeenVersion` do Firestore é usado APENAS como fallback na primeira abertura pós-v11.1 (se localStorage vazio MAS Firestore tem valor, herda pra não spammar toast).
 
 -----
 
