@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.6.0 Auto-backup na primeira abertura do dia (1x por dia calendario, nao mais 24h rolling)
   v11.5.0 Toast de confirmacao quando auto-backup roda (voce sabe sem abrir Profile)
   v11.4.0 Backup vai pra nuvem (Firestore) em vez de baixar arquivo, sempre mais recente sobrescreve
   v11.3.0 Auto-backup 24h promovido pro App root (global) + botoes renomeados + status mais claro
@@ -474,8 +475,29 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.5.0";
+const APP_VERSION = "11.6.0";
 const CHANGELOG = [
+  {
+    v: "11.6.0", date: "2026-04-19",
+    pt: {
+      title: "Auto-backup na primeira abertura do dia (antes era 24h rolling)",
+      bullets: [
+        '\u2605 Mental model mais simples: **"1 backup por dia, na primeira abertura do app"**. Antes era "24h desde o \u00faltimo", que podia cair em hor\u00e1rios aleat\u00f3rios.',
+        'L\u00f3gica agora usa data do calend\u00e1rio local (`lp_last_backup_date` em formato `YYYY-MM-DD`). Se a data guardada n\u00e3o \u00e9 hoje, roda.',
+        'Profile mostra `pr\u00f3x. auto: amanh\u00e3` se j\u00e1 tem backup de hoje, ou `a qualquer momento` se ainda n\u00e3o.',
+        'Bot\u00e3o manual "Fazer backup agora" tamb\u00e9m marca a data, ent\u00e3o se voc\u00ea rodar manual \u00e0s 8h, o auto n\u00e3o roda de novo \u00e0s 15h.',
+      ],
+    },
+    en: {
+      title: "Auto-backup on first app open of the day (was 24h rolling)",
+      bullets: [
+        '\u2605 Simpler mental model: **"1 backup per day, on the first app open"**. Before it was "24h since last", which could land at random times of day.',
+        'Logic now uses local calendar date (`lp_last_backup_date` in `YYYY-MM-DD`). If stored date isn\'t today, runs.',
+        'Profile shows `next auto: tomorrow` if already backed up today, or `any moment` if not.',
+        'Manual "Backup now" also marks the date, so if you run manually at 8am, auto won\'t fire again at 3pm.',
+      ],
+    },
+  },
   {
     v: "11.5.0", date: "2026-04-19",
     pt: {
@@ -5577,13 +5599,19 @@ function BackupSection(){
   },[]);
   const lastAt=backupMeta?new Date(backupMeta.updatedAt).getTime():0;
   // "Fazer backup agora" — salva no Firestore (compartilhado entre os 2 devices).
+  // v11.6: tamb\u00e9m marca a data de hoje em `lp_last_backup_date` pra o auto-backup
+  // n\u00e3o rodar de novo hoje.
   const onBackupNow=async()=>{
     if(busy)return;
     setBusy(true);setMsg("");
     try{
       const data=await FB.exportAll();
       const result=await FB.saveBackup(data);
-      try{localStorage.setItem(BACKUP_KEY,String(Date.now()))}catch(_){}
+      const now=Date.now();
+      try{
+        localStorage.setItem(BACKUP_KEY,String(now));
+        localStorage.setItem("lp_last_backup_date",todayStr());
+      }catch(_){}
       setBackupMeta({updatedAt:new Date().toISOString(),size:result.size});
       setMsg(_lang==="en"?"Backup saved to cloud":"Backup salvo na nuvem");
       Haptic.success();
@@ -5636,11 +5664,10 @@ function BackupSection(){
     setBusy(false);
     e.target.value="";
   };
-  // Calcula quando \u00e9 o pr\u00f3ximo auto-backup (24h depois do \u00faltimo).
-  const H24=24*3600*1000;
-  const nextAuto=lastAt?lastAt+H24:0;
-  const nextInMs=nextAuto-Date.now();
-  const nextInStr=nextInMs<=0?(_lang==="en"?"any moment":"a qualquer momento"):(nextInMs<3600*1000?(_lang==="en"?`${Math.ceil(nextInMs/60000)}min`:`${Math.ceil(nextInMs/60000)}min`):(_lang==="en"?`${Math.ceil(nextInMs/3600000)}h`:`${Math.ceil(nextInMs/3600000)}h`));
+  // Pr\u00f3ximo auto-backup: primeiro open do pr\u00f3ximo dia (v11.6).
+  let lastBackupDate="";
+  try{lastBackupDate=localStorage.getItem("lp_last_backup_date")||""}catch(_){}
+  const nextInStr=lastBackupDate===todayStr()?(_lang==="en"?"tomorrow":"amanh\u00e3"):(_lang==="en"?"any moment":"a qualquer momento");
   return(<div style={{marginTop:16,padding:"16px 18px",borderRadius:14,background:"rgba(22,28,60,0.4)",border:`1px solid ${T.gB}`,boxShadow:T.insetTop}}>
     <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
       <div style={{width:32,height:32,borderRadius:9,background:"rgba(52,211,153,0.12)",border:"1px solid rgba(52,211,153,0.28)",display:"flex",alignItems:"center",justifyContent:"center"}}>
@@ -5796,23 +5823,27 @@ function App(){
   const dismissUpdateToast=()=>{setShowUpdateToast(false);markChangelogSeen()};
   const closeChangelog=()=>{setShowChangelog(false);markChangelogSeen()};
 
-  // Auto-backup 24h no N\u00cdVEL DO APP. v11.3: arquivo local. v11.4: Firestore. v11.5: toast.
-  // Toast de confirma\u00e7\u00e3o visual p\u00f3s-sucesso pro user saber que rodou — sen\u00e3o ele s\u00f3
-  // descobre abrindo Profile.
+  // Auto-backup na primeira abertura do dia (v11.6). Antes era 24h rolling, agora usa
+  // data do calend\u00e1rio local: se `lp_last_backup_date` n\u00e3o \u00e9 hoje, roda. Mental model do
+  // usu\u00e1rio: "1 backup por dia, primeiro open da manh\u00e3". Mais previs\u00edvel.
+  // Delay de 8s ap\u00f3s loading pra n\u00e3o brigar com first paint.
   const backupTriedRef=useRef(false);
   useEffect(()=>{
     if(loading||backupTriedRef.current)return;
     backupTriedRef.current=true;
-    const H24=24*3600*1000;
-    let lastAt=0;
-    try{const v=localStorage.getItem("lp_last_backup_at");if(v)lastAt=parseInt(v,10)}catch(_){}
-    if(lastAt&&Date.now()-lastAt<H24)return;
+    const today=todayStr();
+    let lastDate="";
+    try{lastDate=localStorage.getItem("lp_last_backup_date")||""}catch(_){}
+    if(lastDate===today)return; // j\u00e1 tem backup de hoje
     const t=setTimeout(async()=>{
       try{
         const data=await FB.exportAll();
         await FB.saveBackup(data);
-        try{localStorage.setItem("lp_last_backup_at",String(Date.now()))}catch(_){}
-        // Toast discreto de confirma\u00e7\u00e3o (3s, auto-dismiss).
+        const now=Date.now();
+        try{
+          localStorage.setItem("lp_last_backup_date",today);
+          localStorage.setItem("lp_last_backup_at",String(now)); // timestamp p/ display
+        }catch(_){}
         setToast(_lang==="en"?"\u2713 Auto-backup saved":"\u2713 Backup autom\u00e1tico salvo");
       }catch(e){console.warn("[LP] auto-backup failed:",e.message)}
     },8000);
