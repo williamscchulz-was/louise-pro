@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.7.1 Fix Profile v11.7.0: header vira sticky (Save/Cancel acompanha scroll) + bg com gradient proprio + Starfield (antes mostrava a aba atras)
   v11.7.0 Profile polish: Save/Cancel no topo (so quando editando) + Nursing picker vira Modal + birth aceita virgula/ponto + background transparente + % na meta de ml
   v11.6.0 Auto-backup na primeira abertura do dia (1x por dia calendario, nao mais 24h rolling)
   v11.5.0 Toast de confirmacao quando auto-backup roda (voce sabe sem abrir Profile)
@@ -476,8 +477,27 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.7.0";
+const APP_VERSION = "11.7.1";
 const CHANGELOG = [
+  {
+    v: "11.7.1", date: "2026-04-20",
+    pt: {
+      title: "Fix Profile v11.7.0: header sticky + background pr\u00f3prio (n\u00e3o mostra a aba atr\u00e1s)",
+      bullets: [
+        '\u2605 **Save/Cancel agora acompanham o scroll**: header virou `position: sticky` com blur atr\u00e1s. Antes, se voc\u00ea scrollava pra editar um campo mais embaixo, Save sumia no topo.',
+        'Profile background **n\u00e3o \u00e9 mais transparente** \u2014 tem o mesmo gradient radial do body + Starfield interno. Antes (v11.7.0) mostrava a aba ativa (Home/Stats/History) atr\u00e1s do Profile, parecia bug.',
+        'Borda sutil roxa no header quando tem edi\u00e7\u00e3o pendente, pra refor\u00e7ar que tem a\u00e7\u00e3o.',
+      ],
+    },
+    en: {
+      title: "Fix Profile v11.7.0: sticky header + own background (no longer leaks the tab behind)",
+      bullets: [
+        '\u2605 **Save/Cancel now follow the scroll**: header is `position: sticky` with a blur backdrop. Before, scrolling down to edit a field would hide Save at the top.',
+        'Profile background is **no longer transparent** \u2014 it has the same radial gradient as body + its own Starfield. Before (v11.7.0) the active tab (Home/Stats/History) leaked through, looked like a bug.',
+        'Subtle purple border on the header when there are unsaved edits, reinforcing action.',
+      ],
+    },
+  },
   {
     v: "11.7.0", date: "2026-04-17",
     pt: {
@@ -4640,14 +4660,15 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
   };
   saveRef.current=doSave;
   const inp={width:"100%",maxWidth:"100%",boxSizing:"border-box",WebkitAppearance:"none",appearance:"none",padding:"17px 18px",background:"rgba(20,26,60,0.55)",border:`1px solid ${T.gBSoft}`,borderRadius:16,color:T.text,fontSize:17,fontWeight:600,letterSpacing:-0.2,outline:"none",boxShadow:T.insetTop};
-  // v11.7: background transparente pra deixar starfield do App root aparecer atrás
-  // (mesma identidade visual das outras páginas — Home/Stats/History).
-  return(<div style={{position:"fixed",inset:0,zIndex:200,maxWidth:480,margin:"0 auto",background:"transparent",overflowY:"auto",overflowX:"hidden",overscrollBehavior:"contain",WebkitOverflowScrolling:"touch",paddingTop:"env(safe-area-inset-top)",paddingBottom:"calc(100px + env(safe-area-inset-bottom))"}}>
+  // v11.7.1: Profile usa o MESMO gradient do body + Starfield interno pra compartilhar
+  // a identidade visual do app — antes (v11.7) era transparent e mostrava a aba atr\u00e1s.
+  return(<div style={{position:"fixed",inset:0,zIndex:200,maxWidth:480,margin:"0 auto",background:"radial-gradient(ellipse 140% 55% at 50% 100%, #1a1f52 0%, transparent 70%), radial-gradient(ellipse at 50% 0%, #10153d 0%, #070b1e 65%), #070b1e",overflowY:"auto",overflowX:"hidden",overscrollBehavior:"contain",WebkitOverflowScrolling:"touch",paddingTop:"env(safe-area-inset-top)",paddingBottom:"calc(100px + env(safe-area-inset-bottom))"}}>
+    <Starfield/>
     {/* Fade overlays removed — both top and bottom gradient strips were visually distracting,
         making content look dimmed/buggy rather than giving a clean melt effect. Simple solid scroll. */}
     {/* Header (v11.7): back + title + conditional Cancelar/Salvar \u00e0 direita quando isDirty.
         Migrado do bottom pill flutuante (que ficava atr\u00e1s do teclado). */}
-    <div style={{display:"flex",alignItems:"center",gap:10,padding:"16px 14px 16px 20px"}}>
+    <div style={{position:"sticky",top:0,zIndex:10,display:"flex",alignItems:"center",gap:10,padding:"16px 14px 16px 20px",background:"rgba(7,11,30,0.72)",backdropFilter:"blur(14px)",WebkitBackdropFilter:"blur(14px)",borderBottom:isDirty?"1px solid rgba(139,124,246,0.18)":"1px solid rgba(255,255,255,0.04)"}}>
       <button aria-label={_lang==="en"?"Back":"Voltar"} onClick={onBack} style={{width:36,height:36,borderRadius:10,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name="back" size={18} color={T.sub}/></button>
       <span style={{flex:1,fontSize:17,fontWeight:700,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{L("profile")}</span>
       {isDirty&&<>
