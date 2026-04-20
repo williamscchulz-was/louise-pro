@@ -486,7 +486,7 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.7.7";
+const APP_VERSION = "11.7.8";
 const CHANGELOG = [
   {
     v: "11.7.7", date: "2026-04-20",
@@ -5052,7 +5052,7 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
               <div style={{display:"flex",alignItems:"center",padding:"0 16px",background:"rgba(20,26,60,0.55)",border:`1px solid ${T.gBSoft}`,borderRadius:14,fontSize:13,color:"#8b90b8",fontWeight:600,boxShadow:T.insetTop,whiteSpace:"nowrap"}}>{langSel==="en"?"minutes":"minutos"}</div>
             </div>
             <div style={{marginTop:8,textAlign:"center",fontSize:11,color:"#c4b5fd",fontWeight:600,letterSpacing:-0.1}}>
-              <strong style={{fontVariantNumeric:"tabular-nums",color:"#e0d4ff"}}>{fdConverted}</strong> \u00b7 {langSel==="en"?"bar on Home card":"barra do card Home"}
+              <strong style={{fontVariantNumeric:"tabular-nums",color:"#e0d4ff"}}>{fdConverted}</strong> {"\u00b7"} {langSel==="en"?"bar on Home card":"barra do card Home"}
             </div>
           </div>
           {/* Intervalo do push */}
@@ -5065,7 +5065,7 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
               <div style={{display:"flex",alignItems:"center",padding:"0 16px",background:"rgba(20,26,60,0.55)",border:`1px solid ${T.gBSoft}`,borderRadius:14,fontSize:13,color:"#8b90b8",fontWeight:600,boxShadow:T.insetTop,whiteSpace:"nowrap"}}>{langSel==="en"?"minutes":"minutos"}</div>
             </div>
             <div style={{marginTop:8,textAlign:"center",fontSize:11,color:"#c4b5fd",fontWeight:600,letterSpacing:-0.1}}>
-              <strong style={{fontVariantNumeric:"tabular-nums",color:"#e0d4ff"}}>{fdPushConverted}</strong> \u00b7 {langSel==="en"?"push fires after this":"push dispara depois disso"}
+              <strong style={{fontVariantNumeric:"tabular-nums",color:"#e0d4ff"}}>{fdPushConverted}</strong> {"\u00b7"} {langSel==="en"?"push fires after this":"push dispara depois disso"}
             </div>
           </div>
         </div>
