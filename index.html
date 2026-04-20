@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.7.0 Profile polish: Save/Cancel no topo (so quando editando) + Nursing picker vira Modal + birth aceita virgula/ponto + background transparente + % na meta de ml
   v11.6.0 Auto-backup na primeira abertura do dia (1x por dia calendario, nao mais 24h rolling)
   v11.5.0 Toast de confirmacao quando auto-backup roda (voce sabe sem abrir Profile)
   v11.4.0 Backup vai pra nuvem (Firestore) em vez de baixar arquivo, sempre mais recente sobrescreve
@@ -475,8 +476,31 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.6.0";
+const APP_VERSION = "11.7.0";
 const CHANGELOG = [
+  {
+    v: "11.7.0", date: "2026-04-17",
+    pt: {
+      title: "Profile polish: Save/Cancel no topo + Nursing Modal + virgula em kg + background transparente + % na meta",
+      bullets: [
+        '\u2605 **Save/Cancel** sa\u00edram da pill flutuante (que o teclado cobria) pro **header do Profile**. S\u00f3 aparecem quando tem edi\u00e7\u00e3o pendente \u2014 sem poluir quando est\u00e1 s\u00f3 olhando.',
+        'Nursing side picker (L/R) virou **Modal central**, consistente com o popup do bot\u00e3o + (antes era bottom sheet que bugava no iPhone).',
+        'Birth weight/length/head agora aceita **v\u00edrgula OU ponto** (`3,33` ou `3.33` kg). Campo virou `type="text" inputMode="decimal"` com parser que normaliza.',
+        'Background do Profile agora \u00e9 **transparente** \u2014 starfield passa atr\u00e1s, igual o resto do app.',
+        'Card de Bottle no Home mostra **% da meta** ao lado do ml (quando `mlGoal > 0`). Minimalista, s\u00f3 o n\u00famero \u2014 sem "da meta".',
+      ],
+    },
+    en: {
+      title: "Profile polish: Save/Cancel on top + Nursing Modal + comma in kg + transparent bg + % goal",
+      bullets: [
+        '\u2605 **Save/Cancel** moved from floating pill (which the keyboard covered) to the **Profile header**. They only show when there are unsaved edits \u2014 no clutter when just looking.',
+        'Nursing side picker (L/R) is now a **central Modal**, consistent with the + button popup (was a bottom sheet that glitched on iPhone).',
+        'Birth weight/length/head now accepts **comma OR dot** (`3,33` or `3.33` kg). Field is `type="text" inputMode="decimal"` with a normalizing parser.',
+        'Profile background is now **transparent** \u2014 starfield shows through, matching the rest of the app.',
+        'Bottle card on Home shows **% of goal** next to ml (when `mlGoal > 0`). Minimalist, just the number \u2014 no "of goal" label.',
+      ],
+    },
+  },
   {
     v: "11.6.0", date: "2026-04-19",
     pt: {
@@ -4603,7 +4627,9 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
   const handlePhoto=e=>{const f=e.target.files?.[0];if(!f)return;const rd=new FileReader();rd.onload=ev=>{const img=new Image();img.onload=()=>{const c=document.createElement("canvas"),mx=200;let w=img.width,h=img.height;if(w>h){h=(h/w)*mx;w=mx}else{w=(w/h)*mx;h=mx}c.width=w;c.height=h;c.getContext("2d").drawImage(img,0,0,w,h);setPhoto(c.toDataURL("image/jpeg",0.8))};img.src=ev.target.result};rd.readAsDataURL(f)};
   const doSave=async()=>{
     // Save profile fields
-    await onSave({name:name.trim(),birthDate:birth,photo,mlGoal:parseInt(mlGoal)||0,birthWeight:parseFloat(birthWeight)||0,birthLength:parseFloat(birthLength)||0,birthHead:parseFloat(birthHead)||0,lang:langSel,keepScreenOn,hapticEnabled,pushEnabled});
+    // v11.7: parse com comma OR ponto (BRT keyboard usa v\u00edrgula por default).
+    const pFloat=v=>parseFloat(String(v||"").replace(",","."))||0;
+    await onSave({name:name.trim(),birthDate:birth,photo,mlGoal:parseInt(mlGoal)||0,birthWeight:pFloat(birthWeight),birthLength:pFloat(birthLength),birthHead:pFloat(birthHead),lang:langSel,keepScreenOn,hapticEnabled,pushEnabled});
     // Also persist feeding reminder interval if it changed
     if(fdMinutes!==(feedReminder?.intervalMin||120)){
       const clamped=Math.max(30,Math.min(720,fdMinutes||120));
@@ -4614,10 +4640,26 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
   };
   saveRef.current=doSave;
   const inp={width:"100%",maxWidth:"100%",boxSizing:"border-box",WebkitAppearance:"none",appearance:"none",padding:"17px 18px",background:"rgba(20,26,60,0.55)",border:`1px solid ${T.gBSoft}`,borderRadius:16,color:T.text,fontSize:17,fontWeight:600,letterSpacing:-0.2,outline:"none",boxShadow:T.insetTop};
-  return(<div style={{position:"fixed",inset:0,zIndex:200,maxWidth:480,margin:"0 auto",background:`radial-gradient(ellipse at 50% 0%,#10153d,${T.bg1} 65%)`,overflowY:"auto",overflowX:"hidden",overscrollBehavior:"contain",WebkitOverflowScrolling:"touch",paddingTop:"env(safe-area-inset-top)",paddingBottom:"calc(100px + env(safe-area-inset-bottom))"}}>
+  // v11.7: background transparente pra deixar starfield do App root aparecer atrás
+  // (mesma identidade visual das outras páginas — Home/Stats/History).
+  return(<div style={{position:"fixed",inset:0,zIndex:200,maxWidth:480,margin:"0 auto",background:"transparent",overflowY:"auto",overflowX:"hidden",overscrollBehavior:"contain",WebkitOverflowScrolling:"touch",paddingTop:"env(safe-area-inset-top)",paddingBottom:"calc(100px + env(safe-area-inset-bottom))"}}>
     {/* Fade overlays removed — both top and bottom gradient strips were visually distracting,
         making content look dimmed/buggy rather than giving a clean melt effect. Simple solid scroll. */}
-    <div style={{display:"flex",alignItems:"center",gap:14,padding:"16px 20px"}}><button onClick={onBack} style={{width:36,height:36,borderRadius:10,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="back" size={18} color={T.sub}/></button><span style={{fontSize:17,fontWeight:700}}>{L("profile")}</span></div>
+    {/* Header (v11.7): back + title + conditional Cancelar/Salvar \u00e0 direita quando isDirty.
+        Migrado do bottom pill flutuante (que ficava atr\u00e1s do teclado). */}
+    <div style={{display:"flex",alignItems:"center",gap:10,padding:"16px 14px 16px 20px"}}>
+      <button aria-label={_lang==="en"?"Back":"Voltar"} onClick={onBack} style={{width:36,height:36,borderRadius:10,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name="back" size={18} color={T.sub}/></button>
+      <span style={{flex:1,fontSize:17,fontWeight:700,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{L("profile")}</span>
+      {isDirty&&<>
+        <button onClick={()=>{Haptic.medium();if(revertAllRef.current)revertAllRef.current()}} style={{padding:"8px 12px",borderRadius:10,background:"rgba(14,18,48,0.6)",border:"1px solid rgba(255,255,255,0.08)",color:"#a3aac8",fontSize:12,fontWeight:700,letterSpacing:-0.1,display:"flex",alignItems:"center",gap:4}}>
+          <Icon name="x" size={12} color="#a3aac8"/>{_lang==="en"?"Cancel":"Cancelar"}
+        </button>
+        <button onClick={()=>{if(saveRef.current)saveRef.current()}} style={{padding:"8px 14px",borderRadius:10,background:"linear-gradient(180deg,#9b8df8,#7c3aed)",color:"#fff",fontSize:12,fontWeight:800,letterSpacing:-0.1,border:"1px solid rgba(139,124,246,0.55)",boxShadow:"0 4px 12px -4px rgba(139,124,246,0.5), 0 1px 0 0 rgba(255,255,255,0.2) inset",display:"flex",alignItems:"center",gap:5}}>
+          <span style={{width:5,height:5,borderRadius:"50%",background:"#fbbf24",animation:"pulse 1.4s ease-in-out infinite"}}/>
+          {_lang==="en"?"Save":"Salvar"}
+        </button>
+      </>}
+    </div>
     <div style={{padding:"0 20px"}}>
       <div style={{display:"flex",flexDirection:"column",alignItems:"center",marginBottom:24}}><button onClick={()=>fr.current?.click()} style={{width:88,height:88,borderRadius:"50%",overflow:"hidden",background:T.glass,border:`2px solid ${T.accent}33`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 4px 20px rgba(0,0,0,0.3)"}}>{photo?<img src={photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<Icon name="sun" size={32} color={T.sub}/>}</button><input ref={fr} type="file" accept="image/*" style={{display:"none"}} onChange={handlePhoto}/><span style={{fontSize:11,color:T.dim,marginTop:8}}>{_lang==="en"?"Tap to change":"Toque para alterar"}</span></div>
       <div style={{background:"rgba(22,28,60,0.4)",borderRadius:16,border:`1px solid ${T.gB}`,padding:16,marginBottom:12}}>
@@ -4829,9 +4871,9 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
       <div style={{background:"rgba(22,28,60,0.4)",borderRadius:16,border:`1px solid ${T.gB}`,padding:16,marginBottom:16}}>
         <div style={{fontSize:10,fontWeight:700,color:T.dim,marginBottom:10,textTransform:"uppercase",letterSpacing:1.2}}>{L("birthData")}</div>
         <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)",gap:8}}>
-          <Fld label={`${L("weight")} (kg)`}><input type="number" inputMode="decimal" step="0.01" placeholder="3.2" value={birthWeight} onChange={e=>setBirthWeight(e.target.value)} style={{...inp,textAlign:"center",padding:"12px 8px"}}/></Fld>
-          <Fld label={`${_lang==="en"?"Length":"Comp."} (cm)`}><input type="number" inputMode="decimal" step="0.1" placeholder="49" value={birthLength} onChange={e=>setBirthLength(e.target.value)} style={{...inp,textAlign:"center",padding:"12px 8px"}}/></Fld>
-          <Fld label={`${L("head")} (cm)`}><input type="number" inputMode="decimal" step="0.1" placeholder="34" value={birthHead} onChange={e=>setBirthHead(e.target.value)} style={{...inp,textAlign:"center",padding:"12px 8px"}}/></Fld>
+          <Fld label={`${L("weight")} (kg)`}><input type="text" inputMode="decimal" placeholder={_lang==="pt"?"3,2":"3.2"} value={birthWeight} onChange={e=>setBirthWeight(e.target.value)} style={{...inp,textAlign:"center",padding:"12px 8px"}}/></Fld>
+          <Fld label={`${_lang==="en"?"Length":"Comp."} (cm)`}><input type="text" inputMode="decimal" placeholder="49" value={birthLength} onChange={e=>setBirthLength(e.target.value)} style={{...inp,textAlign:"center",padding:"12px 8px"}}/></Fld>
+          <Fld label={`${L("head")} (cm)`}><input type="text" inputMode="decimal" placeholder="34" value={birthHead} onChange={e=>setBirthHead(e.target.value)} style={{...inp,textAlign:"center",padding:"12px 8px"}}/></Fld>
         </div>
       </div>
       <button onClick={()=>{if(isDirty)doSave();onGrowth()}} style={{width:"100%",padding:14,borderRadius:12,marginBottom:10,background:"rgba(163,230,53,0.08)",border:"1px solid rgba(163,230,53,0.15)",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
@@ -6388,7 +6430,7 @@ function App(){
         }
         // Diaper breakdown wet/dirty (v10.8.0). Opção C do mockup — ícones coloridos.
         const diaperBreakdown=p.tap==="diaper"&&(wetDiapers>0||dirtyDiapers>0)?(<div style={{display:"flex",gap:8,marginTop:3,fontSize:11,fontWeight:700,fontVariantNumeric:"tabular-nums"}}>{wetDiapers>0&&<span style={{display:"inline-flex",alignItems:"center",gap:3,color:"#93c5fd"}}><Icon name="droplet" size={11} color="#93c5fd"/>{wetDiapers}</span>}{dirtyDiapers>0&&<span style={{display:"inline-flex",alignItems:"center",gap:3,color:"#a16b4a"}}><Icon name="poop" size={11} color="#a16b4a"/>{dirtyDiapers}</span>}</div>):null;
-        return<button key={idx} className="home-card" onClick={()=>{if(p.tap==="nap"&&!activeTimer)startTimer("nap");else if(p.tap==="nursing"&&!activeTimer)startTimer("nursing",nextNursingSide);else if(!activeTimer)setFormType(p.tap)}} style={{padding:"10px",borderRadius:12,background:`${p.c}06`,border:`1px solid ${p.c}0a`,textAlign:"left",cursor:"pointer"}}><div style={{display:"flex",alignItems:"center",gap:5,marginBottom:3}}><Icon name={p.i} size={12} color={p.c}/><span style={{fontSize:9,color:T.dim}}>{p.l}</span></div><div style={{fontSize:16,fontWeight:800,color:p.c}}><span key={p.v} className="val-pulse">{p.v}</span>{p.u?<span style={{fontSize:11,opacity:0.6}}>{p.u}</span>:null}</div>{diaperBreakdown}{feedProg?<><div style={{height:3,borderRadius:2,background:`${p.c}1a`,marginTop:7,overflow:"hidden"}}><div style={{height:"100%",width:`${Math.min(100,feedProg.prog*100)}%`,background:feedProg.prog>=0.8?feedProg.barColor:`linear-gradient(90deg,${p.c},${p.c}cc)`,borderRadius:2,transition:"width .4s ease, background .3s ease"}}/></div><div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginTop:4,fontSize:10,fontWeight:600,fontVariantNumeric:"tabular-nums"}}><span style={{color:`${p.c}88`}}>{ago}</span><span style={{color:feedProg.barColor,fontWeight:700}}>{feedProg.prog>=1?`+${feedProg.lateMin}m late`:`→ ${feedProg.nextStr}`}</span></div></>:(ago&&<div style={{fontSize:12,color:`${p.c}88`,fontWeight:600,marginTop:3,fontVariantNumeric:"tabular-nums"}}>{ago}</div>)}</button>})}</div>
+        return<button key={idx} className="home-card" onClick={()=>{if(p.tap==="nap"&&!activeTimer)startTimer("nap");else if(p.tap==="nursing"&&!activeTimer)startTimer("nursing",nextNursingSide);else if(!activeTimer)setFormType(p.tap)}} style={{padding:"10px",borderRadius:12,background:`${p.c}06`,border:`1px solid ${p.c}0a`,textAlign:"left",cursor:"pointer"}}><div style={{display:"flex",alignItems:"center",gap:5,marginBottom:3}}><Icon name={p.i} size={12} color={p.c}/><span style={{fontSize:9,color:T.dim}}>{p.l}</span></div><div style={{fontSize:16,fontWeight:800,color:p.c}}><span key={p.v} className="val-pulse">{p.v}</span>{p.u?<span style={{fontSize:11,opacity:0.6}}>{p.u}</span>:null}{p.tap==="bottle"&&profile.mlGoal>0&&totalMl>0?<span style={{fontSize:10,opacity:0.55,fontWeight:700,marginLeft:5}}>· {Math.round((totalMl/profile.mlGoal)*100)}%</span>:null}</div>{diaperBreakdown}{feedProg?<><div style={{height:3,borderRadius:2,background:`${p.c}1a`,marginTop:7,overflow:"hidden"}}><div style={{height:"100%",width:`${Math.min(100,feedProg.prog*100)}%`,background:feedProg.prog>=0.8?feedProg.barColor:`linear-gradient(90deg,${p.c},${p.c}cc)`,borderRadius:2,transition:"width .4s ease, background .3s ease"}}/></div><div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginTop:4,fontSize:10,fontWeight:600,fontVariantNumeric:"tabular-nums"}}><span style={{color:`${p.c}88`}}>{ago}</span><span style={{color:feedProg.barColor,fontWeight:700}}>{feedProg.prog>=1?`+${feedProg.lateMin}m late`:`→ ${feedProg.nextStr}`}</span></div></>:(ago&&<div style={{fontSize:12,color:`${p.c}88`,fontWeight:600,marginTop:3,fontVariantNumeric:"tabular-nums"}}>{ago}</div>)}</button>})}</div>
         <div style={{padding:"0 20px"}}><div style={{fontSize:11,fontWeight:600,color:T.dim,marginBottom:8,textTransform:"uppercase",letterSpacing:0.8}}>{L("today")}<span style={{opacity:0.5,marginLeft:8,fontWeight:500}}>· {new Date().toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{weekday:"short",day:"numeric"}).replace(".","")}</span></div>{todayE.length===0&&!liveBedtime&&<div style={{textAlign:"center",padding:"32px 20px",color:T.dim}}><Icon name="star" size={32} color={T.dim} fill={T.dim}/><div style={{fontSize:13,marginTop:8}}>{_lang==="en"?"Tap + to add":"Toque + para registrar"}</div></div>}{liveBedtime&&<SleepBlock entry={liveBedtime} entries={entries} isLive={true} activeTimer={activeTimer} onSaveTimer={FB.saveTimer} onSaveEntry={FB.addEntry} onDelete={deleteEntry} onEdit={startEdit}/>}{todayE.filter(e=>{
           // Only hide events linked to the live bedtime if their time actually falls within it.
           // Protects against legacy data where retroactive events got wrongly linked (pre v9.8.1).
@@ -6488,33 +6530,39 @@ function App(){
     {showChangelog&&<ChangelogModal onClose={closeChangelog} lang={lang}/>}
     {showUpdateToast&&!showChangelog&&<UpdateToast fromVersion={profile.lastSeenVersion} toVersion={APP_VERSION} onView={openChangelog} onDismiss={dismissUpdateToast} lang={lang}/>}
     <EditStartModal open={showEditStart} onClose={()=>setShowEditStart(false)} activeTimer={activeTimer} onSave={handleEditStart}/>
-    <NursingSidePicker open={showNursingPicker} onClose={()=>setShowNursingPicker(false)} onSelect={side=>startTimer("nursing",side)}/>
+    {/* Nursing picker agora \u00e9 Modal central (v11.7), consistente com popup do bot\u00e3o +. */}
+    <Modal open={showNursingPicker} onClose={()=>setShowNursingPicker(false)}>
+      <div style={{display:"flex",justifyContent:"center",marginBottom:14}}>
+        <div style={{width:44,height:44,borderRadius:13,background:`linear-gradient(135deg,${T.blue}5c,${T.blue}14)`,border:`1px solid ${T.blue}70`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 1px 0 0 rgba(255,255,255,0.12) inset, 0 4px 12px -4px ${T.blue}60`}}>
+          <Icon name="breast" size={22} color="#7dd3fc"/>
+        </div>
+      </div>
+      <div style={{fontSize:11,fontWeight:700,color:"#7a80a8",letterSpacing:0.5,textTransform:"uppercase",textAlign:"center",marginBottom:14}}>{_lang==="en"?"Which side?":"Qual lado?"}</div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+        {[{k:"left",L:"L",pt:"Esquerdo",en:"Left"},{k:"right",L:"R",pt:"Direito",en:"Right"}].map(s=>(
+          <button key={s.k} onClick={()=>{Haptic.medium();startTimer("nursing",s.k);setShowNursingPicker(false)}} style={{padding:"22px 0",borderRadius:14,background:`linear-gradient(180deg,${T.blue}26,${T.blue}0a)`,border:`1px solid ${T.blue}52`,display:"flex",flexDirection:"column",alignItems:"center",gap:3,cursor:"pointer",boxShadow:`0 1px 0 0 rgba(255,255,255,0.08) inset`}}>
+            <div style={{fontSize:34,fontWeight:800,letterSpacing:-2,lineHeight:0.95,background:"linear-gradient(135deg,#ffffff,#7dd3fc)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>{s.L}</div>
+            <div style={{fontSize:9,color:"#7dd3fc",opacity:0.7,marginTop:3}}>{_lang==="en"?s.en:s.pt}</div>
+          </button>
+        ))}
+      </div>
+    </Modal>
 
     {/* TimerBar + Nav via React Portal — vivem fora do scroll container (App root com overflow:auto)
         e fora do #root (com overflow:hidden) para que position:fixed funcione corretamente
         em iOS Safari PWA standalone. Veja #nav-host no <body>. */}
     {ReactDOM.createPortal(<><TimerBar activeTimer={activeTimer} onStop={stopTimer} onSwitch={switchSide} onPause={pauseNursing} onEditStart={()=>setShowEditStart(true)} hidden={showAdd||!!formType||showProfile||showInbox||showChangelog||showEditStart||showNursingPicker||showSleepInfo}/>
-    {showProfile?<nav style={{position:"fixed",bottom:"calc(8px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",width:profileIsDirty?"calc(100% - 32px)":"auto",maxWidth:profileIsDirty?448:"none",opacity:1,display:"flex",alignItems:"center",gap:8,padding:profileIsDirty?"10px":"0",pointerEvents:"auto",background:profileIsDirty?"linear-gradient(180deg,rgba(28,22,60,0.97),rgba(22,18,52,0.98))":"transparent",backdropFilter:profileIsDirty?"blur(16px)":"none",WebkitBackdropFilter:profileIsDirty?"blur(16px)":"none",borderRadius:profileIsDirty?22:999,border:profileIsDirty?"1px solid rgba(139,124,246,0.35)":"none",boxShadow:profileIsDirty?"0 1px 0 0 rgba(255,255,255,0.1) inset, 0 0 0 1px rgba(139,124,246,0.15), 0 12px 36px -8px rgba(139,124,246,0.4)":"none",zIndex:250,animation:profileIsDirty?"slideUpCentered 0.3s cubic-bezier(0.22,1,0.36,1)":"none"}}>
-      {profileIsDirty?<>
-        <button onClick={()=>{Haptic.medium();setProfileCancelSignal(s=>s+1)}} style={{flex:"0 0 42%",padding:13,borderRadius:14,background:"rgba(14,18,48,0.7)",color:"#8b90b8",fontSize:14,fontWeight:700,border:"1px solid rgba(255,255,255,0.08)",cursor:"pointer",letterSpacing:-0.2,display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
-          <Icon name="x" size={14} color="#8b90b8"/>{_lang==="en"?"Cancel":"Cancelar"}
-        </button>
-        <button onClick={()=>{setProfileSaveSignal(s=>s+1)}} style={{flex:1,padding:13,borderRadius:14,background:"linear-gradient(180deg,#9b8df8,#7c3aed)",color:"#fff",fontSize:14,fontWeight:700,border:"1px solid rgba(139,124,246,0.55)",boxShadow:"0 1px 0 0 rgba(255,255,255,0.2) inset, 0 6px 16px -4px rgba(139,124,246,0.5)",cursor:"pointer",letterSpacing:-0.2,display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
-          <span style={{width:6,height:6,borderRadius:"50%",background:"#fbbf24",animation:"pulse 1.4s ease-in-out infinite"}}/>
-          <Icon name="check" size={14} color="#fff"/>{_lang==="en"?"Save":"Salvar"}
-        </button>
-      </>:<div style={{position:"relative",width:60,height:60,display:"flex",alignItems:"center",justifyContent:"center"}}>
-        {/* Mercury ring — continuous spinning conic gradient, GPU-accelerated */}
+    {/* Profile: bottom nav agora \u00e9 s\u00f3 o Home circle (v11.7). Cancelar/Salvar migraram pro
+        header top do ProfilePage pra n\u00e3o ficar atr\u00e1s do teclado. */}
+    {showProfile?<nav style={{position:"fixed",bottom:"calc(8px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",width:"auto",maxWidth:"none",opacity:1,display:"flex",alignItems:"center",gap:8,padding:"0",pointerEvents:"auto",background:"transparent",border:"none",boxShadow:"none",zIndex:250}}>
+      <div style={{position:"relative",width:60,height:60,display:"flex",alignItems:"center",justifyContent:"center"}}>
         <div style={{position:"absolute",inset:0,borderRadius:"50%",background:"conic-gradient(from 0deg, #8b7cf6 0%, #e0d4ff 15%, #ffffff 22%, #c4b5fd 35%, #8b7cf6 50%, #5b4aaf 65%, #ffffff 78%, #a78bfa 92%, #8b7cf6 100%)",animation:"mercurySpin 3s linear infinite",willChange:"transform",transformOrigin:"center center"}}/>
-        {/* Ring glow layer — separate static element so the spinning layer isn't weighed down */}
         <div style={{position:"absolute",inset:-4,borderRadius:"50%",boxShadow:"0 0 20px rgba(139,124,246,0.55)",pointerEvents:"none"}}/>
-        {/* Inner mask — the dark disc that reveals the ring as a border */}
         <div style={{position:"absolute",inset:2.5,borderRadius:"50%",background:"linear-gradient(180deg,rgba(14,18,48,0.98),rgba(8,10,28,0.99))"}}/>
-        {/* Actual clickable button on top */}
-        <button onClick={()=>{setShowProfile(false);setProfileIsDirty(false)}} style={{position:"relative",zIndex:2,width:55,height:55,borderRadius:"50%",background:"transparent",color:"#c4b5fd",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}>
-        <Icon name="home" size={20} color="#c4b5fd"/>
-      </button>
-      </div>}
+        <button aria-label={L("home")} onClick={()=>{setShowProfile(false);setProfileIsDirty(false)}} style={{position:"relative",zIndex:2,width:55,height:55,borderRadius:"50%",background:"transparent",color:"#c4b5fd",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}>
+          <Icon name="home" size={20} color="#c4b5fd"/>
+        </button>
+      </div>
     </nav>:<nav style={{position:"absolute",bottom:"calc(8px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 24px)",maxWidth:420,pointerEvents:"auto",display:"flex",alignItems:"center",justifyContent:"space-around",gap:2,padding:"7px 8px",background:"linear-gradient(180deg,rgba(38,44,90,0.38),rgba(14,18,48,0.58))",backdropFilter:"blur(18px) saturate(180%)",WebkitBackdropFilter:"blur(18px) saturate(180%)",borderRadius:34,border:"1px solid rgba(255,255,255,0.14)",boxShadow:"0 1px 0 0 rgba(255,255,255,0.24) inset, 0 -1px 2px 0 rgba(0,0,0,0.18) inset, 0 10px 32px -8px rgba(0,0,0,0.55), 0 0 48px -18px rgba(139,124,246,0.3)"}}>
       {[{icon:"home",label:L("home"),active:page==="home"&&!showAdd,action:()=>goTo("home")},{icon:"clock",label:L("history"),active:page==="history",action:()=>goTo("history")}].map(n=><button key={n.icon} aria-label={n.label} className="navbtn" onClick={n.action} style={{display:"flex",alignItems:"center",justifyContent:"center",width:48,height:44,borderRadius:22,background:n.active?"rgba(139,124,246,0.22)":"transparent",border:"none",padding:0}}><Icon name={n.icon} size={n.active?22:20} color={n.active?"#ffffff":T.dim}/></button>)}
       <button aria-label={showAdd?L("close"):L("addEvent")} className="navfab" onClick={()=>{setShowAdd(!showAdd);setFormType(null);setPage("home")}} style={{width:48,height:44,borderRadius:22,background:`linear-gradient(180deg,#9b8df8,#7c3aed)`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 1px 0 0 rgba(255,255,255,0.22) inset, 0 4px 14px -2px ${T.accent}70`,transform:showAdd?"rotate(45deg)":"rotate(0deg)",margin:"0 2px",border:"none",padding:0}}><Icon name="plus" size={22} color="#fff"/></button>
