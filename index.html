@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.7.4 Profile: header deixa de ser sticky (rolava feio). Volta a ser normal no topo, some ao scrollar
   v11.7.3 AddForm save: fechamento otimista (modal fecha imediato) + double-submit guard + shake na validacao + spinner no botao
   v11.7.2 Profile: AUTO-SAVE 900ms depois da ultima edicao, sem mais botao Save/Cancel. Header mostra indicador sutil Editando -> Salvando -> Salvo
   v11.7.1 Fix Profile v11.7.0: header vira sticky (Save/Cancel acompanha scroll) + bg com gradient proprio + Starfield (antes mostrava a aba atras)
@@ -481,8 +482,23 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.7.3";
+const APP_VERSION = "11.7.4";
 const CHANGELOG = [
+  {
+    v: "11.7.4", date: "2026-04-20",
+    pt: {
+      title: "Profile: header volta a ser normal (sticky foi ruim)",
+      bullets: [
+        'Header do Profile deixa de ser `position: sticky`. Agora some normalmente ao scrollar, como qualquer p\u00e1gina. Com auto-save (v11.7.2) n\u00e3o precisa mais manter bot\u00e3o Save vis\u00edvel.',
+      ],
+    },
+    en: {
+      title: "Profile: header back to normal (sticky was ugly)",
+      bullets: [
+        'Profile header is no longer `position: sticky`. Scrolls away like any normal page. With auto-save (v11.7.2) there\'s no Save button to keep visible.',
+      ],
+    },
+  },
   {
     v: "11.7.3", date: "2026-04-20",
     pt: {
@@ -4752,7 +4768,7 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
         making content look dimmed/buggy rather than giving a clean melt effect. Simple solid scroll. */}
     {/* Header (v11.7.2): back + title + indicador sutil de auto-save.
         Sem bot\u00f5es Save/Cancel \u2014 grava sozinho 900ms depois da \u00faltima edi\u00e7\u00e3o. */}
-    <div style={{position:"sticky",top:0,zIndex:10,display:"flex",alignItems:"center",gap:10,padding:"16px 14px 16px 20px",background:"rgba(7,11,30,0.72)",backdropFilter:"blur(14px)",WebkitBackdropFilter:"blur(14px)",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
+    <div style={{display:"flex",alignItems:"center",gap:10,padding:"16px 14px 16px 20px"}}>
       <button aria-label={_lang==="en"?"Back":"Voltar"} onClick={onBack} style={{width:36,height:36,borderRadius:10,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name="back" size={18} color={T.sub}/></button>
       <span style={{flex:1,fontSize:17,fontWeight:700,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{L("profile")}</span>
       {autoState!=="idle"&&<span style={{display:"inline-flex",alignItems:"center",gap:5,padding:"6px 10px",borderRadius:20,fontSize:11,fontWeight:700,letterSpacing:-0.1,transition:"all .25s ease",background:autoState==="saved"?"rgba(52,211,153,0.12)":"rgba(139,124,246,0.1)",border:`1px solid ${autoState==="saved"?"rgba(52,211,153,0.3)":"rgba(139,124,246,0.22)"}`,color:autoState==="saved"?"#6ee7b7":"#c4b5fd"}}>
