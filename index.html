@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.7.2 Profile: AUTO-SAVE 900ms depois da ultima edicao, sem mais botao Save/Cancel. Header mostra indicador sutil Editando -> Salvando -> Salvo
   v11.7.1 Fix Profile v11.7.0: header vira sticky (Save/Cancel acompanha scroll) + bg com gradient proprio + Starfield (antes mostrava a aba atras)
   v11.7.0 Profile polish: Save/Cancel no topo (so quando editando) + Nursing picker vira Modal + birth aceita virgula/ponto + background transparente + % na meta de ml
   v11.6.0 Auto-backup na primeira abertura do dia (1x por dia calendario, nao mais 24h rolling)
@@ -477,8 +478,29 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.7.1";
+const APP_VERSION = "11.7.2";
 const CHANGELOG = [
+  {
+    v: "11.7.2", date: "2026-04-20",
+    pt: {
+      title: "Profile: auto-save (bot\u00e3o Save/Cancel aposentado)",
+      bullets: [
+        '\u2605 **Grava sozinho 900ms depois da \u00faltima edi\u00e7\u00e3o** em qualquer campo. Sem mais bot\u00e3o Save/Cancel \u2014 mexeu, foi. Se voc\u00ea fechar a p\u00e1gina no meio, o \u00faltimo valor digitado j\u00e1 foi pro Firestore.',
+        'Indicador sutil no header mostra o estado: `Editando\u2026` (ponto pulsando) \u2192 `Salvando\u2026` \u2192 `\u2713 Salvo` (verde, some em 1.4s).',
+        'Foto salva imediatamente (0ms delay). Texto espera os 900ms pra n\u00e3o disparar uma request por keystroke.',
+        'Mesma l\u00f3gica delta-only + merge de v10.5.0, ent\u00e3o zero risco de stale-state sobrescrever name/photo de outro device.',
+      ],
+    },
+    en: {
+      title: "Profile: auto-save (Save/Cancel button retired)",
+      bullets: [
+        '\u2605 **Saves itself 900ms after your last edit** on any field. No more Save/Cancel \u2014 you type, it goes. Close the page mid-edit and your last typed value already hit Firestore.',
+        'Subtle header indicator shows state: `Editing\u2026` (pulsing dot) \u2192 `Saving\u2026` \u2192 `\u2713 Saved` (green, fades in 1.4s).',
+        'Photo saves instantly (0ms delay). Text waits 900ms so we don\'t fire a request per keystroke.',
+        'Same delta-only + merge logic from v10.5.0, so zero risk of stale state overwriting name/photo from another device.',
+      ],
+    },
+  },
   {
     v: "11.7.1", date: "2026-04-20",
     pt: {
@@ -4656,9 +4678,33 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
       await saveFeedReminder({intervalMin:clamped});
       if(clamped!==fdMinutes)setFdMinutes(clamped);
     }
-    Haptic.success();
   };
   saveRef.current=doSave;
+  // v11.7.2: AUTO-SAVE. Em vez de bot\u00e3o Save/Cancel, grava sozinho 900ms depois da \u00faltima
+  // edi\u00e7\u00e3o em qualquer campo. Mostra "Salvando..." -> "\u2713 Salvo" no header durante a janela.
+  // Sem debounce curto demais (n\u00e3o gasta requests por keystroke) nem longo demais (usu\u00e1ria
+  // pode sair da p\u00e1gina antes). Photo salva imediatamente (0ms) porque n\u00e3o d\u00e1 pra editar.
+  const[autoState,setAutoState]=useState("idle"); // idle | pending | saving | saved
+  const saveTimerRef=useRef(null);
+  const savedFlashRef=useRef(null);
+  useEffect(()=>{
+    if(!isDirty){return}
+    setAutoState("pending");
+    if(saveTimerRef.current)clearTimeout(saveTimerRef.current);
+    // Photo change = save imediato. Campos de texto = 900ms debounce.
+    const delay=photo!==(profile.photo||"")?0:900;
+    saveTimerRef.current=setTimeout(async()=>{
+      setAutoState("saving");
+      try{
+        await doSave();
+        setAutoState("saved");
+        if(savedFlashRef.current)clearTimeout(savedFlashRef.current);
+        savedFlashRef.current=setTimeout(()=>setAutoState("idle"),1400);
+      }catch(e){setAutoState("idle")}
+    },delay);
+    return()=>{if(saveTimerRef.current)clearTimeout(saveTimerRef.current)};
+  },[isDirty,name,birth,photo,mlGoal,birthWeight,birthLength,birthHead,fdMinutes]);
+  useEffect(()=>()=>{if(saveTimerRef.current)clearTimeout(saveTimerRef.current);if(savedFlashRef.current)clearTimeout(savedFlashRef.current)},[]);
   const inp={width:"100%",maxWidth:"100%",boxSizing:"border-box",WebkitAppearance:"none",appearance:"none",padding:"17px 18px",background:"rgba(20,26,60,0.55)",border:`1px solid ${T.gBSoft}`,borderRadius:16,color:T.text,fontSize:17,fontWeight:600,letterSpacing:-0.2,outline:"none",boxShadow:T.insetTop};
   // v11.7.1: Profile usa o MESMO gradient do body + Starfield interno pra compartilhar
   // a identidade visual do app — antes (v11.7) era transparent e mostrava a aba atr\u00e1s.
@@ -4666,20 +4712,14 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
     <Starfield/>
     {/* Fade overlays removed — both top and bottom gradient strips were visually distracting,
         making content look dimmed/buggy rather than giving a clean melt effect. Simple solid scroll. */}
-    {/* Header (v11.7): back + title + conditional Cancelar/Salvar \u00e0 direita quando isDirty.
-        Migrado do bottom pill flutuante (que ficava atr\u00e1s do teclado). */}
-    <div style={{position:"sticky",top:0,zIndex:10,display:"flex",alignItems:"center",gap:10,padding:"16px 14px 16px 20px",background:"rgba(7,11,30,0.72)",backdropFilter:"blur(14px)",WebkitBackdropFilter:"blur(14px)",borderBottom:isDirty?"1px solid rgba(139,124,246,0.18)":"1px solid rgba(255,255,255,0.04)"}}>
+    {/* Header (v11.7.2): back + title + indicador sutil de auto-save.
+        Sem bot\u00f5es Save/Cancel \u2014 grava sozinho 900ms depois da \u00faltima edi\u00e7\u00e3o. */}
+    <div style={{position:"sticky",top:0,zIndex:10,display:"flex",alignItems:"center",gap:10,padding:"16px 14px 16px 20px",background:"rgba(7,11,30,0.72)",backdropFilter:"blur(14px)",WebkitBackdropFilter:"blur(14px)",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
       <button aria-label={_lang==="en"?"Back":"Voltar"} onClick={onBack} style={{width:36,height:36,borderRadius:10,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name="back" size={18} color={T.sub}/></button>
       <span style={{flex:1,fontSize:17,fontWeight:700,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{L("profile")}</span>
-      {isDirty&&<>
-        <button onClick={()=>{Haptic.medium();if(revertAllRef.current)revertAllRef.current()}} style={{padding:"8px 12px",borderRadius:10,background:"rgba(14,18,48,0.6)",border:"1px solid rgba(255,255,255,0.08)",color:"#a3aac8",fontSize:12,fontWeight:700,letterSpacing:-0.1,display:"flex",alignItems:"center",gap:4}}>
-          <Icon name="x" size={12} color="#a3aac8"/>{_lang==="en"?"Cancel":"Cancelar"}
-        </button>
-        <button onClick={()=>{if(saveRef.current)saveRef.current()}} style={{padding:"8px 14px",borderRadius:10,background:"linear-gradient(180deg,#9b8df8,#7c3aed)",color:"#fff",fontSize:12,fontWeight:800,letterSpacing:-0.1,border:"1px solid rgba(139,124,246,0.55)",boxShadow:"0 4px 12px -4px rgba(139,124,246,0.5), 0 1px 0 0 rgba(255,255,255,0.2) inset",display:"flex",alignItems:"center",gap:5}}>
-          <span style={{width:5,height:5,borderRadius:"50%",background:"#fbbf24",animation:"pulse 1.4s ease-in-out infinite"}}/>
-          {_lang==="en"?"Save":"Salvar"}
-        </button>
-      </>}
+      {autoState!=="idle"&&<span style={{display:"inline-flex",alignItems:"center",gap:5,padding:"6px 10px",borderRadius:20,fontSize:11,fontWeight:700,letterSpacing:-0.1,transition:"all .25s ease",background:autoState==="saved"?"rgba(52,211,153,0.12)":"rgba(139,124,246,0.1)",border:`1px solid ${autoState==="saved"?"rgba(52,211,153,0.3)":"rgba(139,124,246,0.22)"}`,color:autoState==="saved"?"#6ee7b7":"#c4b5fd"}}>
+        {autoState==="saved"?<><Icon name="check" size={11} color="#6ee7b7"/>{_lang==="en"?"Saved":"Salvo"}</>:<><span style={{width:5,height:5,borderRadius:"50%",background:"#c4b5fd",animation:"pulse 1.2s ease-in-out infinite"}}/>{autoState==="saving"?(_lang==="en"?"Saving\u2026":"Salvando\u2026"):(_lang==="en"?"Editing\u2026":"Editando\u2026")}</>}
+      </span>}
     </div>
     <div style={{padding:"0 20px"}}>
       <div style={{display:"flex",flexDirection:"column",alignItems:"center",marginBottom:24}}><button onClick={()=>fr.current?.click()} style={{width:88,height:88,borderRadius:"50%",overflow:"hidden",background:T.glass,border:`2px solid ${T.accent}33`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 4px 20px rgba(0,0,0,0.3)"}}>{photo?<img src={photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<Icon name="sun" size={32} color={T.sub}/>}</button><input ref={fr} type="file" accept="image/*" style={{display:"none"}} onChange={handlePhoto}/><span style={{fontSize:11,color:T.dim,marginTop:8}}>{_lang==="en"?"Tap to change":"Toque para alterar"}</span></div>
