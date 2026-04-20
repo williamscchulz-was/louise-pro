@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.7.6 Feeding reminder: intervalo do push (pushIntervalMin) separado do intervalo da barra (intervalMin). Backend precisa ler pushIntervalMin com fallback pro intervalMin
   v11.7.5 Profile: pill Salvando/Salvo vira floating (fixed top center), sempre visivel sem precisar header sticky
   v11.7.4 Profile: header deixa de ser sticky (rolava feio). Volta a ser normal no topo, some ao scrollar
   v11.7.3 AddForm save: fechamento otimista (modal fecha imediato) + double-submit guard + shake na validacao + spinner no botao
@@ -484,8 +485,27 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.7.5";
+const APP_VERSION = "11.7.6";
 const CHANGELOG = [
+  {
+    v: "11.7.6", date: "2026-04-20",
+    pt: {
+      title: "Feeding reminder: dois prazos separados (barra + push)",
+      bullets: [
+        '\u2605 Agora d\u00e1 pra **configurar prazo do push independente do prazo da barra**. Caso de uso: barra em 2h (expectativa de 2h entre mamadas) mas push s\u00f3 em 2h30min pra n\u00e3o notificar toda vez que atrasa um pouco.',
+        'Novo campo `pushIntervalMin` no doc do reminder (`config/reminders/feedingInterval`). **Backward compat**: se o doc n\u00e3o tem esse campo, fallback pro `intervalMin` (comportamento id\u00eantico ao anterior).',
+        '\u26a0\ufe0f **A\u00e7\u00e3o no backend necess\u00e1ria**: a Cloud Function que dispara o push precisa ser atualizada pra ler `pushIntervalMin` com fallback pra `intervalMin`. At\u00e9 o backend mudar, o push continua usando o valor antigo \u2014 sem quebrar nada.',
+      ],
+    },
+    en: {
+      title: "Feeding reminder: two separate intervals (bar + push)",
+      bullets: [
+        '\u2605 You can now **set the push interval independent of the bar interval**. Use case: bar at 2h (expected feeding window) but push only fires at 2h30 so you don\'t get notified on every small delay.',
+        'New `pushIntervalMin` field in the reminder doc (`config/reminders/feedingInterval`). **Backward compat**: if absent, falls back to `intervalMin` (behavior unchanged).',
+        '\u26a0\ufe0f **Backend action required**: the Cloud Function that fires the push needs updating to read `pushIntervalMin` with fallback to `intervalMin`. Until the backend changes, push uses the old value \u2014 nothing breaks.',
+      ],
+    },
+  },
   {
     v: "11.7.5", date: "2026-04-20",
     pt: {
@@ -4645,18 +4665,24 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
   const medList=(reminders||[]).filter(r=>r.tipo!=="feedingInterval");
   const[fdEnabled,setFdEnabled]=useState(feedReminder?.ativo===true);
   const[fdMinutes,setFdMinutes]=useState(feedReminder?.intervalMin||120);
+  // v11.7.6: prazo do push separado do prazo da barra. Backward compat: se o doc n\u00e3o
+  // tem `pushIntervalMin`, fallback pro `intervalMin`. Backend Cloud Function precisa ler
+  // `pushIntervalMin` (com fallback pra `intervalMin`) pra disparar o push no momento certo.
+  const[fdPushMinutes,setFdPushMinutes]=useState(feedReminder?.pushIntervalMin||feedReminder?.intervalMin||120);
   const[fdBusy,setFdBusy]=useState(false);
-  // Human-readable conversion of fdMinutes (e.g. 120 → "2h")
-  const fdConverted=(()=>{const v=fdMinutes||0;const h=Math.floor(v/60);const m=v%60;if(h===0)return`${m}min`;if(m===0)return`${h}h`;return`${h}h ${m}min`})();
+  const fmtMin=(v)=>{const h=Math.floor(v/60);const m=v%60;if(h===0)return`${m}min`;if(m===0)return`${h}h`;return`${h}h ${m}min`};
+  const fdConverted=fmtMin(fdMinutes||0);
+  const fdPushConverted=fmtMin(fdPushMinutes||0);
   // Sync local state when the prop changes (Firestore push from another device)
   useEffect(()=>{
     const r=(reminders||[]).find(x=>x.tipo==="feedingInterval");
-    if(r){setFdEnabled(r.ativo===true);setFdMinutes(r.intervalMin||120)}
+    if(r){setFdEnabled(r.ativo===true);setFdMinutes(r.intervalMin||120);setFdPushMinutes(r.pushIntervalMin||r.intervalMin||120)}
   },[reminders]);
   // Save handler — upserts the single feedingInterval reminder
   const saveFeedReminder=async(overrides={})=>{
     const enabled=overrides.ativo!==undefined?overrides.ativo:fdEnabled;
     const minutes=overrides.intervalMin!==undefined?overrides.intervalMin:fdMinutes;
+    const pushMinutes=overrides.pushIntervalMin!==undefined?overrides.pushIntervalMin:fdPushMinutes;
     const existing=(reminders||[]).find(r=>r.tipo==="feedingInterval");
     setFdBusy(true);
     Haptic.medium();
@@ -4666,6 +4692,7 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
         tipo:"feedingInterval",
         ativo:enabled,
         intervalMin:minutes,
+        pushIntervalMin:pushMinutes,
         createdAt:existing?.createdAt||new Date().toISOString()
       });
       Haptic.success();
@@ -4690,7 +4717,8 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
     birthWeight!==String(profile.birthWeight||"")||
     birthLength!==String(profile.birthLength||"")||
     birthHead!==String(profile.birthHead||"")||
-    fdMinutes!==(feedReminder?.intervalMin||120)
+    fdMinutes!==(feedReminder?.intervalMin||120)||
+    fdPushMinutes!==(feedReminder?.pushIntervalMin||feedReminder?.intervalMin||120)
   );
   useEffect(()=>{if(onDirtyChange)onDirtyChange(isDirty)},[isDirty]);
   // Populate revertAllRef with function that resets all tracked fields
@@ -4703,6 +4731,7 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
     setBirthLength(String(profile.birthLength||""));
     setBirthHead(String(profile.birthHead||""));
     setFdMinutes(feedReminder?.intervalMin||120);
+    setFdPushMinutes(feedReminder?.pushIntervalMin||feedReminder?.intervalMin||120);
     Haptic.medium();
   };
   // Persists a single toggle change immediately to Firestore (no need to tap Save).
@@ -4747,11 +4776,15 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
     // v11.7: parse com comma OR ponto (BRT keyboard usa v\u00edrgula por default).
     const pFloat=v=>parseFloat(String(v||"").replace(",","."))||0;
     await onSave({name:name.trim(),birthDate:birth,photo,mlGoal:parseInt(mlGoal)||0,birthWeight:pFloat(birthWeight),birthLength:pFloat(birthLength),birthHead:pFloat(birthHead),lang:langSel,keepScreenOn,hapticEnabled,pushEnabled});
-    // Also persist feeding reminder interval if it changed
-    if(fdMinutes!==(feedReminder?.intervalMin||120)){
-      const clamped=Math.max(30,Math.min(720,fdMinutes||120));
-      await saveFeedReminder({intervalMin:clamped});
-      if(clamped!==fdMinutes)setFdMinutes(clamped);
+    // Also persist feeding reminder intervals if they changed (barra OR push).
+    const barraChanged=fdMinutes!==(feedReminder?.intervalMin||120);
+    const pushChanged=fdPushMinutes!==(feedReminder?.pushIntervalMin||feedReminder?.intervalMin||120);
+    if(barraChanged||pushChanged){
+      const clampedBarra=Math.max(30,Math.min(720,fdMinutes||120));
+      const clampedPush=Math.max(30,Math.min(720,fdPushMinutes||120));
+      await saveFeedReminder({intervalMin:clampedBarra,pushIntervalMin:clampedPush});
+      if(clampedBarra!==fdMinutes)setFdMinutes(clampedBarra);
+      if(clampedPush!==fdPushMinutes)setFdPushMinutes(clampedPush);
     }
   };
   saveRef.current=doSave;
@@ -4778,7 +4811,7 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
       }catch(e){setAutoState("idle")}
     },delay);
     return()=>{if(saveTimerRef.current)clearTimeout(saveTimerRef.current)};
-  },[isDirty,name,birth,photo,mlGoal,birthWeight,birthLength,birthHead,fdMinutes]);
+  },[isDirty,name,birth,photo,mlGoal,birthWeight,birthLength,birthHead,fdMinutes,fdPushMinutes]);
   useEffect(()=>()=>{if(saveTimerRef.current)clearTimeout(saveTimerRef.current);if(savedFlashRef.current)clearTimeout(savedFlashRef.current)},[]);
   const inp={width:"100%",maxWidth:"100%",boxSizing:"border-box",WebkitAppearance:"none",appearance:"none",padding:"17px 18px",background:"rgba(20,26,60,0.55)",border:`1px solid ${T.gBSoft}`,borderRadius:16,color:T.text,fontSize:17,fontWeight:600,letterSpacing:-0.2,outline:"none",boxShadow:T.insetTop};
   // v11.7.1: Profile usa o MESMO gradient do body + Starfield interno pra compartilhar
@@ -4981,15 +5014,33 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
           </button>
         </div>
 
-        {/* Interval input */}
-        <div style={{padding:14,borderRadius:14,background:"rgba(14,18,48,0.5)",border:`1px dashed ${T.gBSoft}`,opacity:fdEnabled?1:0.5,transition:"opacity .25s",pointerEvents:fdEnabled?"auto":"none"}}>
-          <div style={{fontSize:11,fontWeight:600,color:"#7a80a8",marginBottom:10,letterSpacing:-0.05}}>{langSel==="en"?"Interval":"Intervalo"}</div>
-          <div style={{display:"flex",gap:8,alignItems:"stretch"}}>
-            <input type="number" inputMode="numeric" min="30" max="720" value={fdMinutes} onChange={e=>{const n=parseInt(e.target.value)||0;setFdMinutes(n)}} onBlur={()=>{const clamped=Math.max(30,Math.min(720,fdMinutes||120));if(clamped!==fdMinutes)setFdMinutes(clamped)}} style={{flex:1,minWidth:0,padding:"14px 16px",background:"rgba(20,26,60,0.55)",border:`1px solid ${T.gBSoft}`,borderRadius:14,color:T.text,fontSize:17,fontWeight:700,textAlign:"center",fontVariantNumeric:"tabular-nums",letterSpacing:-0.2,outline:"none",boxShadow:T.insetTop,WebkitAppearance:"none",appearance:"none"}}/>
-            <div style={{display:"flex",alignItems:"center",padding:"0 16px",background:"rgba(20,26,60,0.55)",border:`1px solid ${T.gBSoft}`,borderRadius:14,fontSize:13,color:"#8b90b8",fontWeight:600,boxShadow:T.insetTop,whiteSpace:"nowrap"}}>{langSel==="en"?"minutes":"minutos"}</div>
+        {/* v11.7.6: dois prazos separados \u2014 barra do card e push noti. */}
+        <div style={{display:"flex",flexDirection:"column",gap:10,opacity:fdEnabled?1:0.5,transition:"opacity .25s",pointerEvents:fdEnabled?"auto":"none"}}>
+          {/* Intervalo da barra */}
+          <div style={{padding:14,borderRadius:14,background:"rgba(14,18,48,0.5)",border:`1px dashed ${T.gBSoft}`}}>
+            <div style={{fontSize:11,fontWeight:600,color:"#7a80a8",marginBottom:10,letterSpacing:-0.05,display:"flex",alignItems:"center",gap:6}}>
+              <Icon name="clock" size={11} color="#7a80a8"/>{langSel==="en"?"Card progress interval":"Intervalo da barra"}
+            </div>
+            <div style={{display:"flex",gap:8,alignItems:"stretch"}}>
+              <input type="number" inputMode="numeric" min="30" max="720" value={fdMinutes} onChange={e=>{const n=parseInt(e.target.value)||0;setFdMinutes(n)}} onBlur={()=>{const clamped=Math.max(30,Math.min(720,fdMinutes||120));if(clamped!==fdMinutes)setFdMinutes(clamped)}} style={{flex:1,minWidth:0,padding:"14px 16px",background:"rgba(20,26,60,0.55)",border:`1px solid ${T.gBSoft}`,borderRadius:14,color:T.text,fontSize:17,fontWeight:700,textAlign:"center",fontVariantNumeric:"tabular-nums",letterSpacing:-0.2,outline:"none",boxShadow:T.insetTop,WebkitAppearance:"none",appearance:"none"}}/>
+              <div style={{display:"flex",alignItems:"center",padding:"0 16px",background:"rgba(20,26,60,0.55)",border:`1px solid ${T.gBSoft}`,borderRadius:14,fontSize:13,color:"#8b90b8",fontWeight:600,boxShadow:T.insetTop,whiteSpace:"nowrap"}}>{langSel==="en"?"minutes":"minutos"}</div>
+            </div>
+            <div style={{marginTop:8,textAlign:"center",fontSize:11,color:"#c4b5fd",fontWeight:600,letterSpacing:-0.1}}>
+              <strong style={{fontVariantNumeric:"tabular-nums",color:"#e0d4ff"}}>{fdConverted}</strong> \u00b7 {langSel==="en"?"bar on Home card":"barra do card Home"}
+            </div>
           </div>
-          <div style={{marginTop:10,textAlign:"center",fontSize:12,color:"#c4b5fd",fontWeight:600,letterSpacing:-0.1}}>
-            <strong style={{fontVariantNumeric:"tabular-nums",color:"#e0d4ff"}}>{fdConverted}</strong> {langSel==="en"?"between feedings":"entre mamadas"}
+          {/* Intervalo do push */}
+          <div style={{padding:14,borderRadius:14,background:"rgba(14,18,48,0.5)",border:`1px dashed ${T.gBSoft}`}}>
+            <div style={{fontSize:11,fontWeight:600,color:"#7a80a8",marginBottom:10,letterSpacing:-0.05,display:"flex",alignItems:"center",gap:6}}>
+              <Icon name="bell" size={11} color="#7a80a8"/>{langSel==="en"?"Push notification interval":"Intervalo do push"}
+            </div>
+            <div style={{display:"flex",gap:8,alignItems:"stretch"}}>
+              <input type="number" inputMode="numeric" min="30" max="720" value={fdPushMinutes} onChange={e=>{const n=parseInt(e.target.value)||0;setFdPushMinutes(n)}} onBlur={()=>{const clamped=Math.max(30,Math.min(720,fdPushMinutes||120));if(clamped!==fdPushMinutes)setFdPushMinutes(clamped)}} style={{flex:1,minWidth:0,padding:"14px 16px",background:"rgba(20,26,60,0.55)",border:`1px solid ${T.gBSoft}`,borderRadius:14,color:T.text,fontSize:17,fontWeight:700,textAlign:"center",fontVariantNumeric:"tabular-nums",letterSpacing:-0.2,outline:"none",boxShadow:T.insetTop,WebkitAppearance:"none",appearance:"none"}}/>
+              <div style={{display:"flex",alignItems:"center",padding:"0 16px",background:"rgba(20,26,60,0.55)",border:`1px solid ${T.gBSoft}`,borderRadius:14,fontSize:13,color:"#8b90b8",fontWeight:600,boxShadow:T.insetTop,whiteSpace:"nowrap"}}>{langSel==="en"?"minutes":"minutos"}</div>
+            </div>
+            <div style={{marginTop:8,textAlign:"center",fontSize:11,color:"#c4b5fd",fontWeight:600,letterSpacing:-0.1}}>
+              <strong style={{fontVariantNumeric:"tabular-nums",color:"#e0d4ff"}}>{fdPushConverted}</strong> \u00b7 {langSel==="en"?"push fires after this":"push dispara depois disso"}
+            </div>
           </div>
         </div>
 
@@ -5000,7 +5051,7 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
             {langSel==="en"?"How it works":"Como funciona"}
           </div>
           <div style={{fontSize:11.5,color:"#a0a6cf",lineHeight:1.55}}>
-            {langSel==="en"?<span>The push fires <strong style={{color:"#d4ccff",fontWeight:700}}>once</strong>, when the interval since the last bottle is exceeded. Only between <strong style={{color:"#d4ccff",fontWeight:700}}>07:00 and 22:00</strong> — silent at night. Each new bottle resets the counter. Nursing does not count.</span>:<span>O push é enviado <strong style={{color:"#d4ccff",fontWeight:700}}>uma vez</strong>, quando passa o intervalo desde a última mamadeira. Só entre <strong style={{color:"#d4ccff",fontWeight:700}}>07:00 e 22:00</strong> — à noite o app fica em silêncio. Cada nova mamadeira reseta o contador. Amamentação não conta.</span>}
+            {langSel==="en"?<span>Two intervals: the <strong style={{color:"#d4ccff",fontWeight:700}}>card bar</strong> tracks visual progress on Home, the <strong style={{color:"#d4ccff",fontWeight:700}}>push</strong> fires once when its own interval is exceeded. Push only between <strong style={{color:"#d4ccff",fontWeight:700}}>07:00 and 22:00</strong> \u2014 silent at night. Each new bottle resets both counters. Nursing does not count.</span>:<span>Dois prazos: a <strong style={{color:"#d4ccff",fontWeight:700}}>barra do card</strong> mostra o progresso visual na Home, o <strong style={{color:"#d4ccff",fontWeight:700}}>push</strong> \u00e9 enviado uma vez quando passa do pr\u00f3prio intervalo. Push s\u00f3 entre <strong style={{color:"#d4ccff",fontWeight:700}}>07:00 e 22:00</strong> \u2014 \u00e0 noite silencia. Cada nova mamadeira reseta os dois contadores. Amamenta\u00e7\u00e3o n\u00e3o conta.</span>}
           </div>
         </div>
 
