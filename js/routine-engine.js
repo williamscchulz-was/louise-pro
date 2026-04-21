@@ -1,5 +1,5 @@
 // ╔═══════════════════════════════════════════════════════════════╗
-// ║  ROUTINE ENGINE v2.2.1                                       ║
+// ║  ROUTINE ENGINE v2.2.2                                       ║
 // ║  Full-day routine intelligence for Louise Pro                ║
 // ║  Replaces Sleep Engine v1 — backward compatible              ║
 // ║                                                              ║
@@ -48,7 +48,7 @@
 (function(root) {
   "use strict";
 
-  var VERSION = "2.2.1";
+  var VERSION = "2.2.2";
 
   // ════════════════════════════════════════════════════════
   // HELPERS
@@ -288,10 +288,24 @@
       var baths = de.filter(function(e) { return e.type === "bath"; });
 
       // Bedtime — v10.8.0: filtrar IDs terminando em "_b" para não contar metade pós-midnight
-      // de um bedtime cross-midnight como noite separada. Isso elimina o bug de "Night pattern"
-      // aparecer duplicado (ex: "5 nights" + "4 nights" pra mesma análise de 7 dias).
-      // Wakings pós-midnight são ignoradas no count por simplicidade — aceito trade-off.
+      // de um bedtime cross-midnight como noite separada (cada noite só entra uma vez no dayData).
+      // v11.7.9: MERGE as duas metades antes de analisar, senão wakings pós-meia-noite somem.
+      // Era bug silencioso pra newborns (bedtime 21h-06h → TODAS as wakings reais acontecem
+      // pós-midnight → engine reportava "Avg 1 waking/night" quando na real eram 2-3).
       var bed = de.find(function(e) { return e.type === "sleep" && !(e.id||"").endsWith("_b"); });
+      if (bed) {
+        var bedSibling = null;
+        for (var sbi = 0; sbi < allEntries.length; sbi++) {
+          if (allEntries[sbi] && allEntries[sbi].id === bed.id + "_b") { bedSibling = allEntries[sbi]; break; }
+        }
+        if (bedSibling) {
+          var mergedBed = {};
+          for (var bkK in bed) mergedBed[bkK] = bed[bkK];
+          mergedBed.durationMin = (bed.durationMin || 0) + (bedSibling.durationMin || 0);
+          mergedBed.wakings = (bed.wakings || []).concat(bedSibling.wakings || []);
+          bed = mergedBed;
+        }
+      }
       var bedMin = bed ? toMinutes(bed.time) : null;
       var nightTimeInBed = bed && bed.durationMin ? bed.durationMin : null;
       // Extract wakings and compute real sleep (time in bed minus awake time).
@@ -1401,7 +1415,9 @@
     // Day-balance hints → only show in end-of-day window (after 22h)
     var _nowD = new Date();
     var _nowMin = _nowD.getHours() * 60 + _nowD.getMinutes();
-    var isMorning = _nowMin >= 6 * 60 && _nowMin < 10 * 60;   // 06:00-09:59
+    // v11.7.9: era 06:00-09:59. Mudou pra 10:00-10:59 porque 6h-10h o bebê ainda pode
+    // acordar/mamar — o dado fica stale em minutos. 10h-11h garante noite fechada.
+    var isMorning = _nowMin >= 10 * 60 && _nowMin < 11 * 60;   // 10:00-10:59
     var isEndOfDay = _nowMin >= 22 * 60;                       // 22:00+
 
     var naps = todayE.filter(function(e) { return e.type === "nap" && e.durationMin > 0; });
