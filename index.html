@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.8.0 Medicine event: multi-select (Floripa + VitD + Colicaliv em 1 save) + drops picker 1-6 pra meds sem dose (simeticona, paracetamol) + notes removido
   v11.7.9 Night pattern: 3 bugs - merge split-midnight (wakings pos-meia-noite somiam), janela 10h-11h (era 6h-10h), gate em bedtime ativo
   v11.7.8 fix literal \\u00b7 aparecendo no Profile (escape nao funciona em JSX text fora de string)
   v11.7.7 Feeding reminder (revisto): intervalMin fica sendo o prazo do push (cloud unchanged), barIntervalMin e novo campo client-only da barra. Nenhuma mudanca no backend
@@ -488,8 +489,33 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.7.9";
+const APP_VERSION = "11.8.0";
 const CHANGELOG = [
+  {
+    v: "11.8.0", date: "2026-04-21",
+    pt: {
+      title: "Medicine redesenhado: multi-select + drops picker + sem notes",
+      bullets: [
+        '\u2605 **Multi-select** de medicamentos. Combo da manh\u00e3 (Floripa + Vit. D + C\u00f3licaliv) registra tudo em um clique \u2014 N entries com mesmo timestamp.',
+        '\u2605 **Drops picker** pra meds sem dose (Simeticona, Paracetamol): Save \u2192 abre tela com 6 bot\u00f5es grandes (1-6 gotas) \u2192 tap auto-salva.',
+        'Chips com \ud83d\udca7 indicam que o med **pede gotas** ao salvar. Meds com dose fixa gravam direto.',
+        'Bot\u00e3o "+ Outro" agora **persiste** o med na lista com o nome digitado (dose opcional \u2014 vazia = pede gotas) pra pr\u00f3xima vez ser 1-tap.',
+        'Campo **notes removido** de medicine (nunca foi usado).',
+        'Edit mode de medicine mant\u00e9m comportamento antigo single-med (compat com entries legadas).',
+      ],
+    },
+    en: {
+      title: "Medicine redesign: multi-select + drops picker + no notes",
+      bullets: [
+        '\u2605 **Multi-select** medicines. Morning combo (Floripa + Vit. D + C\u00f3licaliv) logs all in one tap \u2014 N entries same timestamp.',
+        '\u2605 **Drops picker** for dose-less meds (Simethicone, Paracetamol): Save \u2192 opens screen with 6 big buttons (1-6 drops) \u2192 tap auto-saves.',
+        'Chips with \ud83d\udca7 mark meds that **ask drops** on save. Meds with a fixed dose save immediately.',
+        '"+ Other" button now **persists** the med to the list (dose optional \u2014 empty = asks drops) so next time is 1-tap.',
+        '**Notes field removed** from medicine (never used).',
+        'Medicine edit mode keeps old single-med behavior (back-compat with legacy entries).',
+      ],
+    },
+  },
   {
     v: "11.7.9", date: "2026-04-21",
     pt: {
@@ -4463,7 +4489,7 @@ const EntryRow = React.memo(function EntryRow({entry,onDelete,onEdit,napNum,nigh
   <div style={{textAlign:"right",flexShrink:0}}>{(entry.type==="sleep"||entry.type==="nap")&&entry.durationMin?(()=>{const endMs=new Date(`${entry.date}T${entry.time}`).getTime()+entry.durationMin*60000;const endD=new Date(endMs);const endT=`${String(endD.getHours()).padStart(2,"0")}:${String(endD.getMinutes()).padStart(2,"0")}`;const endDt=`${endD.getFullYear()}-${String(endD.getMonth()+1).padStart(2,"0")}-${String(endD.getDate()).padStart(2,"0")}`;return<><div style={{fontSize:16,fontWeight:700,color:"#f0f2ff",fontVariantNumeric:"tabular-nums",letterSpacing:-0.4}}>{entry.time}–{endT}</div><div style={{fontSize:12,color:T.sub,fontWeight:500,marginTop:3}}>{timeSince(endDt,endT)}</div></>})():<><div style={{fontSize:16,fontWeight:700,color:"#f0f2ff",fontVariantNumeric:"tabular-nums",letterSpacing:-0.4}}>{entry.time}</div><div style={{fontSize:12,color:T.sub,fontWeight:500,marginTop:3}}>{timeSince(entry.date,entry.time)}</div></>}</div>
 </div></div>)});
 
-function AddForm({type,onSave,savedMeds,onSaveMeds,editEntry,lastBottleMl,topMl,onStartTimer}){const cfg=TYPES[type];const ed=editEntry||{};
+function AddForm({type,onSave,onSaveBatch,savedMeds,onSaveMeds,editEntry,lastBottleMl,topMl,onStartTimer}){const cfg=TYPES[type];const ed=editEntry||{};
   const[date,setDate]=useState(ed.date||todayStr());
   const[time,setTime]=useState(ed.time||nowTime());
   const[ml,setMl]=useState(ed.ml?String(ed.ml):(type==="bottle"&&lastBottleMl&&!editEntry?String(lastBottleMl):""));const[durH,setDurH]=useState(ed.durationMin?String(Math.floor(ed.durationMin/60)):"");const[durM,setDurM]=useState(ed.durationMin?String(ed.durationMin%60):"");
@@ -4476,6 +4502,21 @@ function AddForm({type,onSave,savedMeds,onSaveMeds,editEntry,lastBottleMl,topMl,
   const[endTime,setEndTime]=useState("");const[durMode,setDurMode]=useState("dur");
   const[nMN,setNMN]=useState("");const[nMD,setNMD]=useState("");const mRef=useRef(null);
   const isEdit=!!editEntry;
+  // v11.8.0: medicine multi-select + drops picker. Em edit mode mantem single-select
+  // (edita s\u00f3 uma entry por vez). No add mode, usu\u00e1rio pode marcar varios meds de
+  // uma vez (combo manh\u00e3: Floripa+VitD+C\u00f3licaliv). Meds sem dose abrem drops picker 1-6.
+  const[selectedMeds,setSelectedMeds]=useState(()=>{
+    // Em edit, pre-seleciona o med da entry sendo editada
+    if(type==="medicine"&&editEntry&&editEntry.name)return new Set([editEntry.name]);
+    return new Set();
+  });
+  const[medStage,setMedStage]=useState("select"); // "select" | "drops"
+  // Fila de meds sem dose + meds fixos separados pra batch save depois dos drops.
+  const pendingMedsRef=useRef({fixedMeds:[],dropMeds:[],doses:{}});
+  const[currentDropIdx,setCurrentDropIdx]=useState(0);
+  const toggleMed=(name)=>{
+    setSelectedMeds(s=>{const n=new Set(s);if(n.has(name))n.delete(name);else n.add(name);return n});
+  };
   useEffect(()=>{if(type==="bottle"&&mRef.current)mRef.current.focus()},[type]);
   // v11.7.3: double-submit guard + validation feedback. Antes: clique em Save enquanto a
   // Firestore write ainda resolvia criava entry duplicada; valida\u00e7\u00e3o vazia retornava
@@ -4500,7 +4541,30 @@ function AddForm({type,onSave,savedMeds,onSaveMeds,editEntry,lastBottleMl,topMl,
     else if(type==="wakeup"||type==="nightwaking"||type==="bath")payload=b;
     else if(type==="tummytime"){const m=parseInt(tumM)||0;const s=parseInt(tumS)||0;const total=m+s/60;if(total<=0){invalid();return}payload={...b,durationMin:total}}
     else if(type==="diaper")payload={...b,subtype:diaperT};
-    else if(type==="medicine"){if(!medN.trim()){invalid();return}payload={...b,name:medN.trim(),dose:medD.trim()||undefined}}
+    else if(type==="medicine"){
+      // Edit mode: comportamento single-med (mant\u00e9m compat com entries existentes).
+      if(isEdit){if(!medN.trim()){invalid();return}payload={...b,name:medN.trim(),dose:medD.trim()||undefined}}
+      else{
+        // v11.8.0: multi-select + drops picker.
+        const names=Array.from(selectedMeds);
+        if(names.length===0){invalid();return}
+        const picked=names.map(n=>savedMeds.find(m=>m.name===n)).filter(Boolean);
+        const fixedMeds=picked.filter(m=>m.dose&&m.dose.trim());
+        const dropMeds=picked.filter(m=>!m.dose||!m.dose.trim());
+        if(dropMeds.length>0){
+          // Abre drops picker — fica no form (n\u00e3o fecha).
+          pendingMedsRef.current={fixedMeds,dropMeds,doses:{}};
+          setCurrentDropIdx(0);
+          setMedStage("drops");
+          return; // sem onSave ainda
+        }
+        // Todos fixos — batch save e fecha.
+        const entries=fixedMeds.map(m=>({type:"medicine",date,time,name:m.name,dose:m.dose,id:uid()}));
+        savingRef.current=true;setSaving(true);
+        try{await onSaveBatch(entries)}catch(e){}
+        return;
+      }
+    }
     else if(type==="temperature"){if(!tempV){invalid();return}payload={...b,value:parseFloat(tempV)}}
     else if(type==="growth"){payload={...b,weightKg:weightKg?parseFloat(weightKg):undefined,lengthCm:lengthCm?parseFloat(lengthCm):undefined,headCm:headCm?parseFloat(headCm):undefined}}
     if(!payload)return;
@@ -4536,7 +4600,8 @@ function AddForm({type,onSave,savedMeds,onSaveMeds,editEntry,lastBottleMl,topMl,
         {durMode==="end"&&endTime&&time&&<div style={{fontSize:11,color:T.sub,marginBottom:12,textAlign:"center"}}>{(()=>{const[sh,sm]=time.split(":").map(Number);const[eh,em]=endTime.split(":").map(Number);let d=(eh*60+em)-(sh*60+sm);if(d<=0)d+=1440;const lbl=_lang==="en"?"Duration":"Duração";const nextDay=_lang==="en"?" (next day)":" (próximo dia)";return`${lbl}: ${fmtDur(d)}${d>720?nextDay:""}`})()}</div>}
       </>}
       {type==="diaper"&&<Fld label={_lang==="en"?"Type":"Tipo"}><Seg opts={[{v:"wet",l:L("wet")},{v:"dirty",l:L("dirty")},{v:"both",l:L("both")}]} val={diaperT} set={setDiaperT} color={cfg.color}/></Fld>}
-      {type==="medicine"&&<>
+      {type==="medicine"&&isEdit&&<>
+        {/* Edit mode: mantem o layout antigo single-med (compat com entries existentes). */}
         <div style={{display:"flex",flexWrap:"wrap",gap:8,marginBottom:18}}>
           {savedMeds.map((m,i)=><button key={i} onClick={()=>{setMedN(m.name);setMedD(m.dose||"");setShowML(false)}} style={{flex:"1 1 calc(50% - 4px)",padding:"10px 14px",borderRadius:12,background:medN===m.name?`${T.amber}20`:T.glass,border:`1px solid ${medN===m.name?`${T.amber}55`:T.gB}`,textAlign:"left",boxShadow:medN===m.name?`0 0 12px ${T.amber}15`:"none"}}>
             <div style={{fontSize:13,fontWeight:700,color:medN===m.name?T.amber:T.text}}>{m.name}</div>
@@ -4549,11 +4614,83 @@ function AddForm({type,onSave,savedMeds,onSaveMeds,editEntry,lastBottleMl,topMl,
         {showML&&<><Fld label={L("name")}><input type="text" placeholder={L("name")} value={medN} onChange={e=>setMedN(e.target.value)} style={inp}/></Fld>
         <Fld label={L("dose")}><input type="text" placeholder="Ex: 3 gotas" value={medD} onChange={e=>setMedD(e.target.value)} style={inp}/></Fld></>}
       </>}
+      {type==="medicine"&&!isEdit&&medStage==="select"&&<>
+        {/* v11.8.0: multi-select chips. Meds sem dose mostram gota e abrem picker no save. */}
+        <div style={{fontSize:10,fontWeight:700,color:T.dim,letterSpacing:0.4,margin:"0 0 8px 4px",textTransform:"uppercase"}}>{_lang==="en"?"Select (1 or more)":"Selecione (1 ou mais)"}</div>
+        <div style={{display:"flex",flexWrap:"wrap",gap:8,marginBottom:14}}>
+          {savedMeds.map((m,i)=>{
+            const asks=!m.dose||!m.dose.trim();
+            const on=selectedMeds.has(m.name);
+            return(<button key={i} onClick={()=>toggleMed(m.name)} style={{flex:"1 1 calc(50% - 4px)",padding:"10px 30px 10px 14px",borderRadius:12,position:"relative",background:on?`${T.amber}24`:T.glass,border:`1px solid ${on?`${T.amber}88`:T.gB}`,textAlign:"left",boxShadow:on?`0 0 12px ${T.amber}15`:"none",transition:"all .2s"}}>
+              <div style={{fontSize:13,fontWeight:700,color:on?T.amber:T.text,letterSpacing:-0.1}}>{m.name}</div>
+              <div style={{fontSize:10,color:on?`${T.amber}cc`:T.dim,marginTop:2,opacity:asks?0.85:0.7,fontStyle:asks?"italic":"normal"}}>
+                {asks?(_lang==="en"?"asks drops on save":"pergunta ao salvar"):m.dose}
+              </div>
+              {asks&&<span style={{position:"absolute",top:6,right:28,fontSize:10,opacity:on?0.95:0.5}}>\uD83D\uDCA7</span>}
+              <span style={{position:"absolute",top:10,right:10,width:16,height:16,borderRadius:"50%",border:`1.5px solid ${on?T.amber:T.gB}`,background:on?T.amber:"transparent",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:800,color:on?T.bg1:"transparent"}}>{on?"\u2713":""}</span>
+            </button>);
+          })}
+          <button onClick={()=>{setMedN("");setMedD("");setShowML(v=>!v)}} style={{flex:"1 1 calc(50% - 4px)",padding:"10px 14px",borderRadius:12,background:showML?`${T.amber}14`:"transparent",border:`1px dashed ${showML?`${T.amber}55`:T.gB}`,display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
+            <Icon name="plus" size={14} color={T.dim}/><span style={{fontSize:12,fontWeight:600,color:T.dim}}>{_lang==="en"?"Other":"Outro"}</span>
+          </button>
+        </div>
+        {showML&&<div style={{padding:12,borderRadius:12,background:"rgba(20,26,60,0.4)",border:`1px solid ${T.gBSoft}`,marginBottom:12}}>
+          <Fld label={L("name")}><input type="text" placeholder={_lang==="en"?"e.g. Novalgina":"Ex: Novalgina"} value={medN} onChange={e=>setMedN(e.target.value)} style={inp}/></Fld>
+          <Fld label={`${L("dose")} \u00b7 ${_lang==="en"?"leave empty to ask drops":"deixe vazio pra pedir gotas"}`}><input type="text" placeholder={_lang==="en"?"e.g. 3 drops, 2.5ml":"Ex: 3 gotas, 2.5ml"} value={medD} onChange={e=>setMedD(e.target.value)} style={inp}/></Fld>
+          <button onClick={async()=>{
+            const nm=medN.trim();if(!nm){invalid();return}
+            const newList=[...savedMeds.filter(x=>x.name.toLowerCase()!==nm.toLowerCase()),{name:nm,dose:medD.trim()||""}];
+            await onSaveMeds(newList);
+            setSelectedMeds(s=>{const n=new Set(s);n.add(nm);return n});
+            setShowML(false);setMedN("");setMedD("");Haptic.success();
+          }} style={{width:"100%",padding:12,borderRadius:10,background:T.amber,border:"none",color:T.bg1,fontSize:13,fontWeight:800,marginTop:4}}>{_lang==="en"?"Save & select":"Salvar e selecionar"}</button>
+        </div>}
+      </>}
+      {type==="medicine"&&!isEdit&&medStage==="drops"&&(()=>{
+        const pending=pendingMedsRef.current;
+        const cur=pending.dropMeds[currentDropIdx];
+        const totalDrops=pending.dropMeds.length;
+        if(!cur)return null;
+        const pickDrop=async(n)=>{
+          pending.doses[cur.name]=n;
+          const nextIdx=currentDropIdx+1;
+          if(nextIdx<totalDrops){setCurrentDropIdx(nextIdx);Haptic.light();return}
+          // Last drop picked — build entries for everything + batch save.
+          const fixedEntries=pending.fixedMeds.map(m=>({type:"medicine",date,time,name:m.name,dose:m.dose,id:uid()}));
+          const dropEntries=pending.dropMeds.map(m=>{
+            const d=pending.doses[m.name]||1;
+            const doseStr=_lang==="en"?`${d} drop${d>1?"s":""}`:`${d} gota${d>1?"s":""}`;
+            return{type:"medicine",date,time,name:m.name,dose:doseStr,id:uid()};
+          });
+          savingRef.current=true;setSaving(true);
+          try{await onSaveBatch([...fixedEntries,...dropEntries])}catch(e){}
+        };
+        return(<>
+          <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+            <button onClick={()=>{setMedStage("select");setCurrentDropIdx(0)}} style={{width:34,height:34,borderRadius:10,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="back" size={16} color={T.sub}/></button>
+            {totalDrops>1&&<div style={{flex:1,display:"flex",gap:4,alignItems:"center"}}>{pending.dropMeds.map((_,i)=><span key={i} style={{flex:1,height:3,borderRadius:2,background:i<currentDropIdx?T.green:i===currentDropIdx?T.amber:"rgba(139,124,246,0.18)",boxShadow:i===currentDropIdx?`0 0 8px ${T.amber}66`:"none"}}/>)}</div>}
+            {totalDrops>1&&<span style={{fontSize:10,fontWeight:700,color:T.dim,letterSpacing:0.4,textTransform:"uppercase"}}>{currentDropIdx+1}/{totalDrops}</span>}
+          </div>
+          <div style={{textAlign:"center",padding:"18px 0 14px"}}>
+            <div style={{width:60,height:60,borderRadius:20,background:`${T.amber}1a`,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 12px",fontSize:30}}>\uD83D\uDCA7</div>
+            <div style={{fontSize:22,fontWeight:800,letterSpacing:-0.4,marginBottom:4}}>{cur.name}</div>
+            <div style={{fontSize:13,color:T.sub}}>{_lang==="en"?"How many drops?":"Quantas gotas?"}</div>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:10}}>
+            {[1,2,3,4,5,6].map(n=><button key={n} onClick={()=>pickDrop(n)} style={{padding:"20px 0",borderRadius:18,background:`linear-gradient(180deg,rgba(20,26,60,0.8),rgba(14,18,48,0.5))`,border:`1px solid ${T.gB}`,color:T.amber,fontSize:28,fontWeight:800,letterSpacing:-0.5,boxShadow:"0 1px 0 0 rgba(255,255,255,0.05) inset",cursor:"pointer"}}>
+              {n}<span style={{display:"block",fontSize:9,fontWeight:700,color:T.dim,letterSpacing:1.5,marginTop:4,opacity:0.85}}>{_lang==="en"?(n===1?"DROP":"DROPS"):(n===1?"GOTA":"GOTAS")}</span>
+            </button>)}
+          </div>
+          <div style={{fontSize:11,color:T.dim,textAlign:"center",marginTop:6}}>{_lang==="en"?"Tap to register":"Toque para registrar"}</div>
+        </>);
+      })()}
       {type==="temperature"&&<Fld label={`${_lang==="en"?"Temperature":"Temperatura"} (°C)`}><input type="number" inputMode="decimal" step="0.1" placeholder="36.5" value={tempV} onChange={e=>setTempV(e.target.value)} style={{...inp,fontSize:36,fontWeight:800,textAlign:"center"}}/></Fld>}
       {type==="growth"&&<><Fld label={`${L("weight")} (kg)`}><input type="number" inputMode="decimal" step="0.01" placeholder="Ex: 4.5" value={weightKg} onChange={e=>setWeightKg(e.target.value)} style={{...inp,fontSize:28,fontWeight:800,textAlign:"center"}}/></Fld><Fld label={`${_lang==="en"?"Length":"Comprimento"} (cm)`}><input type="number" inputMode="decimal" step="0.1" placeholder="Ex: 55.0" value={lengthCm} onChange={e=>setLengthCm(e.target.value)} style={{...inp,fontSize:28,fontWeight:800,textAlign:"center"}}/></Fld><Fld label={`${L("head")} (cm)`}><input type="number" inputMode="decimal" step="0.1" placeholder="Ex: 37.0" value={headCm} onChange={e=>setHeadCm(e.target.value)} style={{...inp,fontSize:28,fontWeight:800,textAlign:"center"}}/></Fld></>}
-      <Fld label={L("notes")}><textarea placeholder={_lang==="en"?"Note...":"Anotação..."} value={notes} onChange={e=>setNotes(e.target.value)} rows={2} style={{...inp,resize:"vertical"}}/></Fld>
+      {/* v11.8.0: notes removido de medicine. Tambem nao mostra em drops stage. */}
+      {type!=="medicine"&&<Fld label={L("notes")}><textarea placeholder={_lang==="en"?"Note...":"Anotação..."} value={notes} onChange={e=>setNotes(e.target.value)} rows={2} style={{...inp,resize:"vertical"}}/></Fld>}
       {type==="tummytime"&&!isEdit&&onStartTimer&&<button onClick={()=>onStartTimer("tummytime")} style={{width:"100%",padding:16,borderRadius:16,background:`linear-gradient(180deg,${cfg.color}28,${cfg.color}10)`,color:"#fde68a",fontSize:15,fontWeight:700,letterSpacing:-0.2,border:`1px solid ${cfg.color}55`,boxShadow:`0 1px 0 0 rgba(255,255,255,0.1) inset, 0 4px 12px -4px ${cfg.color}35`,marginBottom:10,display:"flex",alignItems:"center",justifyContent:"center",gap:10,cursor:"pointer"}}><Icon name="play" size={14} color="#fde68a"/>{_lang==="en"?"Start timer":"Iniciar timer"}</button>}
-      <button onClick={doSave} disabled={saving} key={shakeFlash} style={{width:"100%",padding:18,borderRadius:18,background:`linear-gradient(180deg,${cfg.color},${cfg.color}dd)`,color:T.bg1,fontSize:17,fontWeight:700,letterSpacing:-0.3,border:"none",boxShadow:`0 1px 0 0 rgba(255,255,255,0.25) inset, 0 0 0 1px rgba(255,255,255,0.06), 0 12px 32px -8px ${cfg.color}55, 0 4px 8px -4px ${cfg.color}33`,transition:"transform 0.2s cubic-bezier(0.22,1,0.36,1)",cursor:saving?"wait":"pointer",opacity:saving?0.75:1,animation:shakeFlash?"shakeX 0.35s ease":"none",display:"flex",alignItems:"center",justifyContent:"center",gap:10}}>{saving&&<span style={{width:14,height:14,borderRadius:"50%",border:"2px solid rgba(7,11,30,0.25)",borderTopColor:T.bg1,animation:"spin 0.7s linear infinite"}}/>}{saving?(_lang==="en"?"Saving\u2026":"Salvando\u2026"):(isEdit?L("update"):L("save"))}</button>
+      {/* Save button: hidden quando medicine + drops stage (auto-save por tap). */}
+      {!(type==="medicine"&&!isEdit&&medStage==="drops")&&<button onClick={doSave} disabled={saving} key={shakeFlash} style={{width:"100%",padding:18,borderRadius:18,background:`linear-gradient(180deg,${cfg.color},${cfg.color}dd)`,color:T.bg1,fontSize:17,fontWeight:700,letterSpacing:-0.3,border:"none",boxShadow:`0 1px 0 0 rgba(255,255,255,0.25) inset, 0 0 0 1px rgba(255,255,255,0.06), 0 12px 32px -8px ${cfg.color}55, 0 4px 8px -4px ${cfg.color}33`,transition:"transform 0.2s cubic-bezier(0.22,1,0.36,1)",cursor:saving?"wait":"pointer",opacity:saving?0.75:1,animation:shakeFlash?"shakeX 0.35s ease":"none",display:"flex",alignItems:"center",justifyContent:"center",gap:10}}>{saving&&<span style={{width:14,height:14,borderRadius:"50%",border:"2px solid rgba(7,11,30,0.25)",borderTopColor:T.bg1,animation:"spin 0.7s linear infinite"}}/>}{saving?(_lang==="en"?"Saving\u2026":"Salvando\u2026"):(isEdit?L("update"):(type==="medicine"&&!isEdit&&selectedMeds.size>0?`${L("save")} (${selectedMeds.size})`:L("save")))}</button>}
     </div>
   </div>);
 }
@@ -6223,6 +6360,25 @@ function App(){
     })();
   },[editEntry,entries,activeTimer]);
 
+  // v11.8.0: batch save pro novo flow de medicine multi-select + drops picker.
+  // Grava N entries com mesmo timestamp, fecha form, mostra toast consolidado.
+  // Mantem fechamento otimista + fire-and-forget consistente com addEntry.
+  const addMedicineBatch=useCallback(async entries=>{
+    if(!entries||entries.length===0)return;
+    Haptic.medium();
+    setFormType(null);setShowAdd(false);setEditEntry(null);
+    setShowOrbit(true);setTimeout(()=>setShowOrbit(false),1200);
+    const n=entries.length;
+    const tmsg=n===1
+      ?`${entries[0].name} ${L("registered")}`
+      :`${n} ${_lang==="en"?"medicines logged":"medicamentos registrados"}`;
+    showToast(tmsg,async()=>{for(const e of entries) await FB.delEntry(e.id)});
+    (async()=>{
+      try{for(const e of entries) await FB.addEntry(e)}
+      catch(err){console.warn("[addMedicineBatch] write failed",err)}
+    })();
+  },[]);
+
   const startEdit=useCallback((entry)=>{
     setEditEntry(entry);
     setFormType(entry.type);
@@ -6780,7 +6936,7 @@ function App(){
         popup e resolve o jank de anim\u00e7\u00e3o no iPhone. prop `wide` deixa um pouco mais largo
         pros campos de data/hora caberem confort\u00e1veis. */}
     <Modal open={!!formType} onClose={()=>{setFormType(null);setEditEntry(null)}} wide>
-      {formType&&<AddForm type={formType} onSave={addEntry} savedMeds={savedMeds} onSaveMeds={async m=>await FB.saveMeds(m)} editEntry={editEntry} lastBottleMl={lastBottleMl} topMl={topMl} onStartTimer={type=>{startTimer(type);setFormType(null);setShowAdd(false)}}/>}
+      {formType&&<AddForm type={formType} onSave={addEntry} onSaveBatch={addMedicineBatch} savedMeds={savedMeds} onSaveMeds={async m=>await FB.saveMeds(m)} editEntry={editEntry} lastBottleMl={lastBottleMl} topMl={topMl} onStartTimer={type=>{startTimer(type);setFormType(null);setShowAdd(false)}}/>}
     </Modal>
 
     {showProfile&&<ProfilePage profile={profile} onSave={async p=>await FB.saveProfile(p)} onBack={()=>{setShowProfile(false);setProfileIsDirty(false)}} onGrowth={()=>{setShowProfile(false);setProfileIsDirty(false);goTo("growth")}} onShowChangelog={()=>setShowChangelog(true)} hasUnreadChangelog={hasUnreadChangelog} reminders={reminders} onAddReminder={async r=>await FB.addReminder(r)} onDelReminder={async id=>await FB.delReminder(id)} onDirtyChange={setProfileIsDirty} cancelSignal={profileCancelSignal} saveSignal={profileSaveSignal}/>}
