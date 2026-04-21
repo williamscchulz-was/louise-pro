@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.8.2 Medicine: fix emoji literal no chip + drops modal + adiciona Colicaliv (5 gotas) default
   v11.8.1 Medicine: drops picker vira Modal popup + auto-migrate Simeticona/Paracetamol pra "pede gotas"
   v11.8.0 Medicine event: multi-select (Floripa + VitD + Colicaliv em 1 save) + drops picker 1-6 pra meds sem dose (simeticona, paracetamol) + notes removido
   v11.7.9 Night pattern: 3 bugs - merge split-midnight (wakings pos-meia-noite somiam), janela 10h-11h (era 6h-10h), gate em bedtime ativo
@@ -490,8 +491,25 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.8.1";
+const APP_VERSION = "11.8.2";
 const CHANGELOG = [
+  {
+    v: "11.8.2", date: "2026-04-21",
+    pt: {
+      title: "Medicine: fix do emoji \ud83d\udca7 + C\u00f3licaliv adicionado (5 gotas)",
+      bullets: [
+        'Fix: \ud83d\udca7 aparecia como texto literal no chip e no popup (JSX fora de string). Envolvido em `{"\\uD83D\\uDCA7"}` pra virar string literal.',
+        '\u2605 C\u00f3licaliv entra na lista com dose fixa **5 gotas**. Migra\u00e7\u00e3o v2 adiciona automaticamente pra quem ainda n\u00e3o tem.',
+      ],
+    },
+    en: {
+      title: "Medicine: fix \ud83d\udca7 glyph + C\u00f3licaliv added (5 drops)",
+      bullets: [
+        'Fix: \ud83d\udca7 was showing as literal text on chip and popup (JSX outside of string). Wrapped in `{"\\uD83D\\uDCA7"}` to make it a string literal.',
+        '\u2605 C\u00f3licaliv joins the default list with a fixed dose of **5 drops**. Migration v2 adds it automatically if missing.',
+      ],
+    },
+  },
   {
     v: "11.8.1", date: "2026-04-21",
     pt: {
@@ -4643,7 +4661,7 @@ function AddForm({type,onSave,onSaveBatch,savedMeds,onSaveMeds,editEntry,lastBot
               <div style={{fontSize:10,color:on?`${T.amber}cc`:T.dim,marginTop:2,opacity:asks?0.85:0.7,fontStyle:asks?"italic":"normal"}}>
                 {asks?(_lang==="en"?"asks drops on save":"pergunta ao salvar"):m.dose}
               </div>
-              {asks&&<span style={{position:"absolute",top:6,right:28,fontSize:10,opacity:on?0.95:0.5}}>\uD83D\uDCA7</span>}
+              {asks&&<span style={{position:"absolute",top:6,right:28,fontSize:10,opacity:on?0.95:0.5}}>{"\uD83D\uDCA7"}</span>}
               <span style={{position:"absolute",top:10,right:10,width:16,height:16,borderRadius:"50%",border:`1.5px solid ${on?T.amber:T.gB}`,background:on?T.amber:"transparent",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:800,color:on?T.bg1:"transparent"}}>{on?"\u2713":""}</span>
             </button>);
           })}
@@ -4687,7 +4705,7 @@ function AddForm({type,onSave,onSaveBatch,savedMeds,onSaveMeds,editEntry,lastBot
           return(<div style={{padding:"8px 4px"}}>
             {totalDrops>1&&<div style={{display:"flex",gap:4,marginBottom:12}}>{pending.dropMeds.map((_,i)=><span key={i} style={{flex:1,height:3,borderRadius:2,background:i<currentDropIdx?T.green:i===currentDropIdx?T.amber:"rgba(139,124,246,0.18)"}}/>)}</div>}
             <div style={{textAlign:"center",padding:"8px 0 14px"}}>
-              <div style={{width:56,height:56,borderRadius:18,background:`${T.amber}1a`,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 10px",fontSize:28}}>\uD83D\uDCA7</div>
+              <div style={{width:56,height:56,borderRadius:18,background:`${T.amber}1a`,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 10px",fontSize:28}}>{"\uD83D\uDCA7"}</div>
               <div style={{fontSize:20,fontWeight:800,letterSpacing:-0.4,marginBottom:4}}>{cur.name}</div>
               <div style={{fontSize:12,color:T.sub}}>{_lang==="en"?"How many drops?":"Quantas gotas?"}</div>
             </div>
@@ -6328,15 +6346,21 @@ function App(){
       // variar de dose ent\u00e3o ficam como "pede gotas" (dose="") pra abrir o picker.
       // Roda 1x por device (flag em localStorage) pra respeitar futuras edi\u00e7\u00f5es manuais.
       const ASK_DROPS=/simet|paracetam|novalgin/i;
-      let list=d||[{name:"Simeticona",dose:""},{name:"Floripa",dose:"6 gotas"},{name:"Vit. D",dose:"2 gotas"},{name:"Paracetamol",dose:""}];
+      let list=d||[{name:"Floripa",dose:"6 gotas"},{name:"Vit. D",dose:"2 gotas"},{name:"C\u00f3licaliv",dose:"5 gotas"},{name:"Simeticona",dose:""},{name:"Paracetamol",dose:""}];
       try{
-        if(!localStorage.getItem("lp_meds_drops_mig_v1")){
+        // v11.8.2: migra\u00e7\u00e3o v2 \u2014 limpa dose de meds de gotas variaveis + adiciona C\u00f3licaliv
+        // se n\u00e3o existir. Roda 1x por device. Respeita edi\u00e7\u00f5es manuais futuras.
+        if(!localStorage.getItem("lp_meds_drops_mig_v2")){
           let changed=false;
           list=list.map(m=>{
             if(m&&m.dose&&ASK_DROPS.test(m.name||"")){changed=true;return{...m,dose:""}}
             return m;
           });
-          localStorage.setItem("lp_meds_drops_mig_v1","1");
+          if(!list.some(m=>m&&/c[o\u00f3]licaliv/i.test(m.name||""))){
+            list=[...list,{name:"C\u00f3licaliv",dose:"5 gotas"}];
+            changed=true;
+          }
+          localStorage.setItem("lp_meds_drops_mig_v2","1");
           if(changed)FB.saveMeds(list);
         }
       }catch(_){}
