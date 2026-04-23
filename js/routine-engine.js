@@ -1,5 +1,5 @@
 // ╔═══════════════════════════════════════════════════════════════╗
-// ║  ROUTINE ENGINE v2.2.2                                       ║
+// ║  ROUTINE ENGINE v2.2.3                                       ║
 // ║  Full-day routine intelligence for Louise Pro                ║
 // ║  Replaces Sleep Engine v1 — backward compatible              ║
 // ║                                                              ║
@@ -48,7 +48,7 @@
 (function(root) {
   "use strict";
 
-  var VERSION = "2.2.2";
+  var VERSION = "2.2.3";
 
   // ════════════════════════════════════════════════════════
   // HELPERS
@@ -327,6 +327,22 @@
             for (var evi = 0; evi < evs.length; evi++) linkedIds[evs[evi]] = true;
           }
           var EXCLUDED_RETRO = { sleep: 1, nap: 1, wakeup: 1, nightwaking: 1, growth: 1 };
+          // v11.8.6: cluster + boundary grace pra n\u00e3o inflar count com eventos que n\u00e3o
+          // s\u00e3o wakings de verdade (mamada right before bedtime acabar, log retroativo sem
+          // tap Night Wake mas pr\u00f3ximo de uma waking explicita, etc).
+          var CLUSTER_MS = 30 * 60 * 1000;       // eventos a <=30min de uma waking j\u00e1 contada: agregam nela
+          var BOUNDARY_GRACE_MS = 15 * 60 * 1000; // 15min near bed start/end: considera wind-down/wake-up feed
+          // Pre-compute absolute timestamps das explicitWakings (cross-midnight aware).
+          var explicitWakingMs = [];
+          for (var ewMi = 0; ewMi < explicitWakings.length; ewMi++) {
+            var ewM = explicitWakings[ewMi];
+            if (!ewM || !ewM.time) continue;
+            var ewMsCandidate = new Date(bed.date + "T" + ewM.time).getTime();
+            if (isNaN(ewMsCandidate)) continue;
+            // Se o horario ta antes do bed.time (ex: waking 01:47 para bed 21:00), rolou pra next day
+            if (ewMsCandidate < bedStartMs) ewMsCandidate += 24 * 60 * 60 * 1000;
+            explicitWakingMs.push(ewMsCandidate);
+          }
           for (var aei = 0; aei < allEntries.length; aei++) {
             var aev = allEntries[aei];
             if (!aev || EXCLUDED_RETRO[aev.type]) continue;
@@ -334,12 +350,26 @@
             if (!aev.date || !aev.time) continue;
             var aevMs = new Date(aev.date + "T" + aev.time).getTime();
             if (isNaN(aevMs)) continue;
-            if (aevMs >= bedStartMs && aevMs <= bedEndMs) {
-              // Synthesize a waking-shaped object. durationMin:0 because we don't
-              // know how long the baby was awake for a retroactive event — it only
-              // affects awakeMin, which we still compute from explicit wakings only.
-              retroWakings.push({ time: aev.time, durationMin: 0, events: [aev.id] });
+            if (aevMs < bedStartMs || aevMs > bedEndMs) continue;
+            // Boundary grace: eventos muito pr\u00f3ximos do inicio/fim do bedtime s\u00e3o wind-down/wake-up feeds.
+            if (aevMs - bedStartMs < BOUNDARY_GRACE_MS) continue;
+            if (bedEndMs - aevMs < BOUNDARY_GRACE_MS) continue;
+            // Cluster: se ja existe uma waking (explicita ou retro) a <=30min, n\u00e3o cria nova.
+            var clustered = false;
+            for (var cwi = 0; cwi < explicitWakingMs.length; cwi++) {
+              if (Math.abs(aevMs - explicitWakingMs[cwi]) <= CLUSTER_MS) { clustered = true; break; }
             }
+            if (!clustered) {
+              for (var rwi = 0; rwi < retroWakings.length; rwi++) {
+                var rwT = retroWakings[rwi].time;
+                var rwMs = new Date(bed.date + "T" + rwT).getTime();
+                if (rwMs < bedStartMs) rwMs += 24 * 60 * 60 * 1000;
+                if (Math.abs(aevMs - rwMs) <= CLUSTER_MS) { clustered = true; break; }
+              }
+            }
+            if (clustered) continue;
+            // Novo retro waking.
+            retroWakings.push({ time: aev.time, durationMin: 0, events: [aev.id] });
           }
         }
       }

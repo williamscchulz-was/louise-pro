@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.8.6 Night pattern: fix over-count (engine v2.2.3) - cluster 30min + boundary 15min em retroWakings
   v11.8.4 Compact UI: cards home + quick buttons em 1 linha (6 col) + EntryRow thin + nav pill slim
   v11.8.3 Home: idade em dias totais (43 dias) + card nursing virou Simeticona (info-only, tap nao faz nada)
   v11.8.2 Medicine: fix emoji literal no chip + drops modal + adiciona Colicaliv (5 gotas) default
@@ -493,8 +494,27 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.8.5";
+const APP_VERSION = "11.8.6";
 const CHANGELOG = [
+  {
+    v: "11.8.6", date: "2026-04-23",
+    pt: {
+      title: "Night pattern: fix de over-count (cluster 30min + boundary 15min)",
+      bullets: [
+        '\u2605 Regress\u00e3o p\u00f3s-merge da v11.7.9: com o range do bedtime cobrindo a noite inteira, `retroWakings` passou a capturar eventos que **n\u00e3o s\u00e3o wakings de verdade** (mamada de wind-down, wake-up feed, log retroativo pr\u00f3ximo de uma waking explicita). Resultado: m\u00e9dia inflada (ex: "3 wakings/night" quando o real \u00e9 2).',
+        '\u2605 **Cluster 30min**: evento retro a at\u00e9 30min de uma waking explicita (ou outro retro j\u00e1 contado) agrega nela em vez de contar separado.',
+        '\u2605 **Boundary grace 15min**: eventos dentro dos primeiros/\u00faltimos 15min do bedtime s\u00e3o tratados como wind-down/wake-up feed \u2014 n\u00e3o contam.',
+      ],
+    },
+    en: {
+      title: "Night pattern: over-count fix (30min cluster + 15min boundary)",
+      bullets: [
+        '\u2605 Regression from v11.7.9 merge: with the bedtime range covering the whole night, `retroWakings` started catching events that **aren\'t real wakings** (wind-down feed, wake-up feed, retro log near an explicit waking). Result: inflated avg (e.g. "3 wakings/night" when actual is 2).',
+        '\u2605 **30min cluster**: a retro event within 30min of an explicit waking (or another already-counted retro) merges into it instead of counting separately.',
+        '\u2605 **15min boundary grace**: events in the first/last 15min of bedtime are treated as wind-down/wake-up feeds \u2014 not counted.',
+      ],
+    },
+  },
   {
     v: "11.8.4", date: "2026-04-21",
     pt: {
