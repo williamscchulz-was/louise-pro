@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.7 Tom noturno automatico (22h-06h): hue -4deg, saturate 0.9, brightness 0.95. Transition 1.2s pra ser sutil.
   v11.9.6 Smart unit fmtMl (>=1000ml -> 1,5L) aplicado em Stats/Weekly + Streak indicator no Profile (dias consecutivos rastreando)
   v11.9.5 Card de Sonecas: metrica principal vira media POR SONECA (nao por dia). Subs mostram count/dia e total/dia
   v11.9.4 Stats ganha "Relatorio semanal" — agregado por semana das ultimas 4 semanas, cards com mini bar charts + trend chips W-1->W
@@ -160,6 +161,16 @@
   document.addEventListener('visibilitychange',function(){
     if(document.body){document.body.classList.toggle('app-hidden',document.hidden);}
   });
+  // v11.9.7: tom noturno automatico. Aplica body.is-night entre 22h e 06h.
+  // Re-checa cada 5min. Transition CSS de 1.2s torna a mudanca quase imperceptivel.
+  function _updateNightClass(){
+    if(!document.body)return;
+    var h=new Date().getHours();
+    var night=h>=22||h<6;
+    document.body.classList.toggle('is-night',night);
+  }
+  _updateNightClass();
+  setInterval(_updateNightClass,5*60*1000);
   // Auto-reload when a newly installed Service Worker takes control.
   // Without this, after a deploy the old SW keeps serving the stale
   // HTML until the user manually refreshes. The `controllerchange`
@@ -239,6 +250,13 @@
     /* Daily summary slide-up sutil */
     @keyframes summarySlide{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
     @keyframes summaryFade{from{opacity:1}to{opacity:0}}
+    /* v11.9.7: tom noturno automatico (22h-06h). Reduz saturacao + leve hue rotate morno.
+       Aplicado via classe body.is-night. Transition de 1.2s pra mudanca ser quase
+       imperceptivel quando vira a meia-noite. Animations nao tocadas (CSS nao aceita
+       multiplicador no animation-duration). */
+    body #root{transition:filter 1.2s ease}
+    body.is-night #root{filter:hue-rotate(-4deg) saturate(0.9) brightness(0.95)}
+    body.is-night .twinkle{opacity:0.4 !important}
     /* v10.7.1 refinements — micro feedback, tabular-nums nos valores, pulse em mudança */
     @keyframes valPulse{0%{transform:scale(1.08);opacity:0.6}60%{transform:scale(1);opacity:1}100%{transform:scale(1);opacity:1}}
     .home-card{transition:transform .14s ease-out;font-variant-numeric:tabular-nums}
@@ -555,8 +573,27 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.6";
+const APP_VERSION = "11.9.7";
 const CHANGELOG = [
+  {
+    v: "11.9.7", date: "2026-04-27",
+    pt: {
+      title: "Tom noturno automático (22h–06h)",
+      bullets: [
+        '★ **Entre 22h e 06h** o app aplica filter sutil no `#root`: `hue-rotate(-4deg) saturate(0.9) brightness(0.95)`. Tom mais quente e levemente menos saturado, melhor pra usar de noite sem ferir os olhos.',
+        '★ **Transition de 1.2s** torna a mudança quase imperceptível quando vira meia-noite. Re-checa a cada 5 minutos pra garantir que a transição rola mesmo se o app fica aberto a noite toda.',
+        'Twinkle das estrelas reduzido pra opacity 0.4 quando is-night. Mantém o cosmos visível mas menos chamativo.',
+      ],
+    },
+    en: {
+      title: "Automatic night tone (10pm–6am)",
+      bullets: [
+        '★ **Between 10pm and 6am** the app applies a subtle filter on `#root`: `hue-rotate(-4deg) saturate(0.9) brightness(0.95)`. Warmer and slightly less saturated tone, easier on the eyes for night use.',
+        '★ **1.2s transition** makes the change almost imperceptible when midnight hits. Re-checks every 5 minutes so the transition still happens if the app stays open all night.',
+        'Star twinkle reduced to opacity 0.4 in is-night mode. Cosmos still visible but less attention-grabbing.',
+      ],
+    },
+  },
   {
     v: "11.9.6", date: "2026-04-27",
     pt: {
