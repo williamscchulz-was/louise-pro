@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.16 Time picker quick chips no AddForm (Agora/-5/-15/-30/-1h/-2h) + valPulse com spring overshoot
   v11.9.15 Smart relative dates: "Hoje", "Ontem", "Anteontem", weekday se <7d, data curta se mais. Aplicado em History header e AddForm date label
   v11.9.14 FIX TDZ - "Cannot access todayE before initialization" no useEffect do daily summary (referencia antes do const). Usa entries direto via useMemo
   v11.9.13 ErrorBoundary mostra erro real + para loop de reload + IIFEs blindadas (Ring detail, Weekly report, Streak) com try/catch
@@ -266,10 +267,12 @@
     body.is-night #root{filter:hue-rotate(-4deg) saturate(0.9) brightness(0.95)}
     body.is-night .twinkle{opacity:0.4 !important}
     /* v10.7.1 refinements — micro feedback, tabular-nums nos valores, pulse em mudança */
-    @keyframes valPulse{0%{transform:scale(1.08);opacity:0.6}60%{transform:scale(1);opacity:1}100%{transform:scale(1);opacity:1}}
+    /* v11.9.16: spring no valPulse — overshoot leve (1.12 → 0.97 → 1) em vez de plain ease.
+       Sensação tátil quando totalMl/totalDiapers/etc muda. ~500ms total. */
+    @keyframes valPulse{0%{transform:scale(1.12);opacity:0.55}40%{transform:scale(0.97);opacity:1}70%{transform:scale(1.02)}100%{transform:scale(1);opacity:1}}
     .home-card{transition:transform .14s ease-out;font-variant-numeric:tabular-nums}
     .home-card:active{transform:scale(0.97)}
-    .val-pulse{display:inline-block;animation:valPulse .4s cubic-bezier(0.22,1,0.36,1)}
+    .val-pulse{display:inline-block;animation:valPulse .5s cubic-bezier(0.34,1.56,0.64,1)}
     .navbtn{transition:transform .12s ease-out, background .18s ease-out, color .18s ease-out}
     .navbtn:active{transform:scale(0.88)}
     .navfab{transition:transform .22s cubic-bezier(0.34,1.56,0.64,1)}
@@ -581,8 +584,27 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.15";
+const APP_VERSION = "11.9.16";
 const CHANGELOG = [
+  {
+    v: "11.9.16", date: "2026-04-27",
+    pt: {
+      title: "Quick time chips no AddForm + spring overshoot no valPulse",
+      bullets: [
+        '★ **Quick time chips no AddForm**: 6 chips abaixo do date/time picker — `Agora`, `−5`, `−15`, `−30`, `−1h`, `−2h`. Tap muda time + date (se cruzar meia-noite). Light haptic. Chip ativa fica destacado na cor do tipo do evento.',
+        '★ **Casos de uso**: registrar uma mamada que aconteceu agora há pouco (10 min atrás), ou uma fralda enquanto o bebê dormiu (2h atrás). Antes precisava abrir o time picker, scrollar, confirmar.',
+        '★ **valPulse com spring overshoot** (cubic-bezier 0.34, 1.56, 0.64, 1): números nos cards do Home e Stats agora dão um pequeno bounce ao mudar (1.12 → 0.97 → 1). Sensação tátil sem ser brega.',
+      ],
+    },
+    en: {
+      title: "Quick time chips in AddForm + spring overshoot on valPulse",
+      bullets: [
+        '★ **Quick time chips in AddForm**: 6 chips under the date/time picker — `Now`, `−5`, `−15`, `−30`, `−1h`, `−2h`. Tap changes time + date (if crosses midnight). Light haptic. Active chip highlighted in the event type color.',
+        '★ **Use cases**: log a bottle that happened 10 min ago, or a diaper while the baby was sleeping (2h ago). Before, you had to open the time picker, scroll, confirm.',
+        '★ **valPulse with spring overshoot** (cubic-bezier 0.34, 1.56, 0.64, 1): numbers on Home and Stats cards now give a small bounce when changing (1.12 → 0.97 → 1). Tactile feel without being kitsch.',
+      ],
+    },
+  },
   {
     v: "11.9.15", date: "2026-04-27",
     pt: {
@@ -5100,9 +5122,21 @@ function AddForm({type,onSave,onSaveBatch,savedMeds,onSaveMeds,editEntry,lastBot
     </div>
     <div style={{padding:"0 20px"}}>
       {/* Date + Time row */}
-      <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr)",gap:10,marginBottom:20}}>
+      <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr)",gap:10,marginBottom:10}}>
         <Fld label={(_lang==="en"?"Day · ":"Dia · ")+dateLbl}><input type="date" value={date} onChange={e=>setDate(e.target.value)} style={{...inp,colorScheme:"dark"}}/></Fld>
         <Fld label={L("time")}><input type="time" value={time} onChange={e=>setTime(e.target.value)} style={{...inp,colorScheme:"dark"}}/></Fld>
+      </div>
+      {/* v11.9.16: quick chips de horário pra registrar rápido sem teclado. */}
+      <div style={{display:"flex",gap:6,marginBottom:18,flexWrap:"wrap"}}>
+        {[{lbl:_lang==="en"?"Now":"Agora",mins:0},{lbl:"−5",mins:5},{lbl:"−15",mins:15},{lbl:"−30",mins:30},{lbl:"−1h",mins:60},{lbl:"−2h",mins:120}].map(opt=>{
+          // Calcula time string (e date se atravessar meia-noite)
+          const ms=Date.now()-opt.mins*60000;
+          const d=new Date(ms);
+          const t=`${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+          const dStr=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+          const active=time===t&&date===dStr;
+          return(<button key={opt.lbl} onClick={()=>{setTime(t);setDate(dStr);Haptic.light()}} style={{flex:"1 1 calc(33% - 4px)",minWidth:0,padding:"8px 0",borderRadius:10,background:active?`${cfg.color}24`:"rgba(20,26,60,0.45)",border:`1px solid ${active?`${cfg.color}55`:T.gBSoft}`,color:active?cfg.color:T.sub,fontSize:12,fontWeight:700,letterSpacing:-0.1,fontVariantNumeric:"tabular-nums"}}>{opt.lbl}</button>);
+        })}
       </div>
       {type==="bottle"&&<><Fld label={_lang==="en"?"Amount (ml)":"Quantidade (ml)"}><input ref={mRef} type="number" inputMode="numeric" placeholder="0" value={ml} onChange={e=>setMl(e.target.value)} style={{...inp,fontSize:36,fontWeight:800,textAlign:"center",padding:"16px"}}/></Fld>
         <div style={{display:"flex",gap:8,marginBottom:20}}>{(topMl&&topMl.length>0?[...new Set([...topMl,lastBottleMl].filter(Boolean))].slice(0,4):[60,90,120]).map((v,i)=><button key={v} onClick={()=>setMl(String(v))} style={{flex:1,padding:"10px 0",borderRadius:10,background:ml===String(v)?T.green:T.glass,color:ml===String(v)?T.bg1:T.text,border:`1px solid ${ml===String(v)?T.green:T.gB}`,textAlign:"center"}}><div style={{fontSize:16,fontWeight:800}}>{v}</div>{i===0&&topMl?.length>0&&<div style={{fontSize:8,color:ml===String(v)?T.bg1:T.dim,marginTop:1}}>{_lang==="en"?"top":"mais"}</div>}</button>)}</div></>}
