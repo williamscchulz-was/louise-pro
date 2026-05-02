@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.5 Card de Sonecas: metrica principal vira media POR SONECA (nao por dia). Subs mostram count/dia e total/dia
   v11.9.4 Stats ganha "Relatorio semanal" — agregado por semana das ultimas 4 semanas, cards com mini bar charts + trend chips W-1->W
   v11.9.3 Stats: poop/dia + tempo das sonecas + janela real ja exposta. Engine v2.2.4 dedupe de wakings (race multi-device). Bottle volta a usar nowTime
   v11.9.2 Tap feedback global em todos os botoes (CSS :where com specificity zero) + firebase-messaging-sw.js paths agnosticos
@@ -553,8 +554,27 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.4";
+const APP_VERSION = "11.9.5";
 const CHANGELOG = [
+  {
+    v: "11.9.5", date: "2026-04-27",
+    pt: {
+      title: "Card de Sonecas: média por soneca vira destaque",
+      bullets: [
+        '★ **Mini-card "Sonecas/dia"** mostra agora `~Xmin/soneca` no subtitle (em vez de tempo total/dia).',
+        '★ **Card "Sonecas" do Relatório Semanal** vira "Por soneca (média)" como métrica principal — fmtDur do tempo médio de uma soneca individual. Bar chart mini também usa esse valor. Sub-rows mantêm sonecas/dia + total/dia + soneca mais longa.',
+        'Cálculo: `total minutos no período / total de sonecas no período`. Reflete melhor a qualidade das sonecas individuais.',
+      ],
+    },
+    en: {
+      title: "Naps card: avg per nap becomes the headline",
+      bullets: [
+        '★ **Mini "Naps/day" card** subtitle now shows `~Xmin/nap` instead of total time/day.',
+        '★ **Weekly report "Naps" card** main metric becomes "Avg per nap" — fmtDur of mean individual nap duration. Mini bar chart uses this value. Sub-rows still show naps/day + total/day + longest nap.',
+        'Math: `total minutes in period / total nap count in period`. Better reflects individual nap quality.',
+      ],
+    },
+  },
   {
     v: "11.9.4", date: "2026-04-27",
     pt: {
@@ -5645,6 +5665,10 @@ const StatsPage = React.memo(function StatsPage({entries,onGrowth}){
   const totalTumInPeriod=data.reduce((s,d)=>s+d.tum,0);
   // v11.9.3: averages adicionais
   const avgNapMin=Math.round(avgData.reduce((s,d)=>s+d.napTotalMin,0)/numComplete);
+  // v11.9.5: media de tempo POR SONECA (total min / total naps), nao por dia.
+  const totalNapMinPeriod=avgData.reduce((s,d)=>s+d.napTotalMin,0);
+  const totalNapCountPeriod=avgData.reduce((s,d)=>s+(entries.filter(e=>e.date===d.date&&e.type==="nap"&&e.durationMin).length),0);
+  const avgNapDur=totalNapCountPeriod>0?Math.round(totalNapMinPeriod/totalNapCountPeriod):0;
   const avgNapMaxMin=Math.round(avgData.reduce((s,d)=>s+d.napMaxMin,0)/numComplete);
   const avgPoop=Math.round((avgData.reduce((s,d)=>s+d.poopCount,0)/numComplete)*10)/10;
   const avgWet=Math.round((avgData.reduce((s,d)=>s+d.wetCount,0)/numComplete)*10)/10;
@@ -5718,7 +5742,7 @@ const StatsPage = React.memo(function StatsPage({entries,onGrowth}){
       <div style={{background:"rgba(20,26,60,0.5)",borderRadius:20,border:`1px solid ${T.gBSoft}`,padding:"14px 8px 12px",textAlign:"center",boxShadow:T.insetTop}}>
         <div style={{fontSize:9,color:"#7a80a8",letterSpacing:-0.05,marginBottom:6,fontWeight:600}}>{_lang==="en"?"Naps/day":"Sonecas/dia"}</div>
         <div style={{fontSize:22,fontWeight:800,color:T.accent,letterSpacing:-0.8,fontVariantNumeric:"tabular-nums",lineHeight:1}}>{avgNaps}</div>
-        <div style={{fontSize:8.5,color:T.dim,marginTop:5,fontVariantNumeric:"tabular-nums",letterSpacing:0.2}}>{avgNapMin>0?fmtDur(avgNapMin)+"/dia":""}</div>
+        <div style={{fontSize:8.5,color:T.dim,marginTop:5,fontVariantNumeric:"tabular-nums",letterSpacing:0.2}}>{avgNapDur>0?`~${fmtDur(avgNapDur)}/soneca`:""}</div>
       </div>
       <div style={{background:"rgba(20,26,60,0.5)",borderRadius:20,border:`1px solid ${T.gBSoft}`,padding:"14px 8px 12px",textAlign:"center",boxShadow:T.insetTop}}>
         <div style={{fontSize:9,color:"#7a80a8",letterSpacing:-0.05,marginBottom:6,fontWeight:600}}>{_lang==="en"?"Tummy/day":"Tummy/dia"}</div>
@@ -5883,6 +5907,7 @@ const StatsPage = React.memo(function StatsPage({entries,onGrowth}){
           avgWakings:Math.round((totalWakings/nightsCount)*10)/10,
           avgNapMin:Math.round(napTotalMin/daysWithData),
           avgNapCount:Math.round((napsW.length/daysWithData)*10)/10,
+          avgNapDur:napsW.length?Math.round(napTotalMin/napsW.length):0,
           avgNapLong:napsW.length?Math.round(Math.max(...napsW.map(e=>e.durationMin))):0,
           avgMl:Math.round(bottlesW.reduce((s,e)=>s+(e.ml||0),0)/daysWithData),
           avgFeeds:Math.round((bottlesW.length/daysWithData)*10)/10,
@@ -5937,8 +5962,10 @@ const StatsPage = React.memo(function StatsPage({entries,onGrowth}){
 
         {sectionH({icon:"cloud",label:_lang==="en"?"Naps":"Sonecas",col:T.accent})}
         <div style={cardStyle}>
-          {topRow("cloud",T.accent,_lang==="en"?"Naps/day":"Sonecas/dia",cur.avgNapCount,<Trend val={pctDiff(cur.avgNapCount,prev.avgNapCount)}/>)}
-          {miniBar(validBuckets.map(b=>b.avgNapCount),T.accent)}
+          {/* v11.9.5: metrica principal vira tempo medio POR SONECA (nao por dia). */}
+          {topRow("cloud",T.accent,_lang==="en"?"Avg per nap":"Por soneca (média)",cur.avgNapDur>0?fmtDur(cur.avgNapDur):"—",<Trend val={pctDiff(cur.avgNapDur,prev.avgNapDur)}/>)}
+          {miniBar(validBuckets.map(b=>b.avgNapDur),T.accent,"dur")}
+          {cur.avgNapCount>0&&subRow(_lang==="en"?"Naps/day":"Sonecas/dia",cur.avgNapCount)}
           {cur.avgNapMin>0&&subRow(_lang==="en"?"Total time/day":"Tempo total/dia",fmtDur(cur.avgNapMin))}
           {cur.avgNapLong>0&&subRow(_lang==="en"?"Longest nap":"Soneca mais longa",fmtDur(cur.avgNapLong))}
         </div>
