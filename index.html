@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.2 Tap feedback global em todos os botoes (CSS :where com specificity zero) + firebase-messaging-sw.js paths agnosticos
   v11.9.1 Polish + animations CSS: smart time default na bottle, empty state contextual, indicador online/offline, confetti em marcos (1m/100d/6m/1ano), animations inline migradas pra classes
   v11.9.0 Perf de leitura: subEntries com janela 90d + backupMeta separado do snapshot + React.memo nos faltantes + Sheet/lastFeed dead code removido
   v11.8.7 Home cards: todos info-only (button -> div). Sem mais click acidental abrindo forms
@@ -243,7 +244,12 @@
     .navbtn:active{transform:scale(0.88)}
     .navfab{transition:transform .22s cubic-bezier(0.34,1.56,0.64,1)}
     .navfab:active{transform:scale(0.92)}
-    /* v11.9.1: tap feedback global pra qualquer button. Sutil — scale(0.97) + curva iOS. */
+    /* v11.9.2: tap feedback global em TODOS os <button> sem precisar adicionar classe.
+       Uso `:where()` pra zerar a specificity — qualquer regra de classe (.navbtn,
+       .navfab, .home-card, etc) sobrescreve. `:disabled` exclui pra UX correta. */
+    button{transition:transform .14s ease-out, opacity .14s ease-out}
+    button:where(:active):where(:not(:disabled)){transform:scale(0.97)}
+    /* Compat: classe explícita continua disponível pra non-button elements. */
     .tap-fb{transition:transform .14s ease-out, opacity .14s ease-out}
     .tap-fb:active{transform:scale(0.97)}
     /* v11.9.1: animations migradas pra classes (regra do CLAUDE.md): inline animation
@@ -545,8 +551,25 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.1";
+const APP_VERSION = "11.9.2";
 const CHANGELOG = [
+  {
+    v: "11.9.2", date: "2026-04-27",
+    pt: {
+      title: "Tap feedback universal + push notification path-agnostic",
+      bullets: [
+        '★ **Tap feedback em todos os botões do app** — pequeno scale(0.97) + transição suave de 140ms. Aplicado via CSS global com `:where()` pra zerar specificity, então qualquer botão com classe própria (`.navbtn`, `.navfab`, `.home-card`) mantém seu comportamento custom.',
+        '★ **`firebase-messaging-sw.js` agora usa scope do SW** em vez de paths hardcoded `/louise-pro/...`. Funciona em GH Pages E em domínio próprio sem alterar código.',
+      ],
+    },
+    en: {
+      title: "Universal tap feedback + push notification path-agnostic",
+      bullets: [
+        '★ **Tap feedback on every button in the app** — small scale(0.97) + smooth 140ms transition. Applied via global CSS with `:where()` to zero out specificity, so any button with its own class (`.navbtn`, `.navfab`, `.home-card`) keeps its custom behavior.',
+        '★ **`firebase-messaging-sw.js` now uses SW scope** instead of hardcoded `/louise-pro/...` paths. Works on GH Pages AND on a custom domain without code changes.',
+      ],
+    },
+  },
   {
     v: "11.9.1", date: "2026-04-27",
     pt: {

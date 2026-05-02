@@ -42,10 +42,14 @@ messaging.onBackgroundMessage(function (payload) {
   const title = (payload && payload.notification && payload.notification.title) || "Louise Pro";
   const body  = (payload && payload.notification && payload.notification.body)  || "Lembrete";
 
+  // v11.9.2: paths relativos ao scope do SW (registration.scope) em vez de
+  // hardcode /louise-pro/. Funciona em GH Pages (subpath) E em domínio próprio.
+  const scope = self.registration && self.registration.scope ? self.registration.scope : self.location.origin + '/';
+  const iconUrl = scope + 'assets/icons/icon-192.png';
   const options = {
     body: body,
-    icon:  '/louise-pro/assets/icons/icon-192.png',
-    badge: '/louise-pro/assets/icons/icon-192.png',
+    icon:  iconUrl,
+    badge: iconUrl,
     tag:   'louise-pro-reminder',
     renotify: true,
     requireInteraction: true,
@@ -59,18 +63,20 @@ messaging.onBackgroundMessage(function (payload) {
 // When user taps the notification, open or focus the app
 self.addEventListener('notificationclick', function (event) {
   event.notification.close();
+  // v11.9.2: usa scope do SW pra match + abrir, em vez de '/louise-pro/' hardcoded.
+  const scope = self.registration && self.registration.scope ? self.registration.scope : self.location.origin + '/';
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (clientList) {
-      // If app already open, focus it
+      // If app already open under our scope, focus it
       for (var i = 0; i < clientList.length; i++) {
         var client = clientList[i];
-        if (client.url.indexOf('/louise-pro/') !== -1 && 'focus' in client) {
+        if (client.url.indexOf(scope) === 0 && 'focus' in client) {
           return client.focus();
         }
       }
       // Otherwise open a new window
       if (self.clients.openWindow) {
-        return self.clients.openWindow('/louise-pro/');
+        return self.clients.openWindow(scope);
       }
     })
   );
