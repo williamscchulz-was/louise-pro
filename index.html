@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.3 Stats: poop/dia + tempo das sonecas + janela real ja exposta. Engine v2.2.4 dedupe de wakings (race multi-device). Bottle volta a usar nowTime
   v11.9.2 Tap feedback global em todos os botoes (CSS :where com specificity zero) + firebase-messaging-sw.js paths agnosticos
   v11.9.1 Polish + animations CSS: smart time default na bottle, empty state contextual, indicador online/offline, confetti em marcos (1m/100d/6m/1ano), animations inline migradas pra classes
   v11.9.0 Perf de leitura: subEntries com janela 90d + backupMeta separado do snapshot + React.memo nos faltantes + Sheet/lastFeed dead code removido
@@ -551,8 +552,33 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.2";
+const APP_VERSION = "11.9.3";
 const CHANGELOG = [
+  {
+    v: "11.9.3", date: "2026-04-27",
+    pt: {
+      title: "Stats com mais granularidade + dedupe de wakings duplicadas",
+      bullets: [
+        '★ **Cocô/dia** ganha gráfico próprio na aba Stats — barras por dia em cor brown, valor em cima de cada barra. Card "Fraldas/dia" mostra agora o split 💧 xixi · 💩 cocô.',
+        '★ **Sonecas com duração**: card "Sonecas/dia" agora mostra tempo total/dia abaixo do contador. Novo gráfico "Sonecas — duração" plota fmtDur por dia.',
+        '★ **Janela real de sono** (tempo acordada dentro do bedtime) já estava exposta no card "Sono real" mas agora destaca melhor com a métrica `Acordada · 35min · 2x` quando há despertares.',
+        '★ **Mamadas/dia** ganha intervalo médio (~3.4h) abaixo do contador.',
+        'Bottle AddForm volta a usar `nowTime()` por default (revertido o smart `last+interval` da v11.9.1 — usuário prefere registrar no horário real).',
+        '★ **Engine v2.2.4: dedupe de wakings duplicadas** (race multi-device). Quando William e esposa pressionam "voltar a dormir" simultaneamente, podia gravar a mesma waking 2x. Engine agora colapsa por `time:durationMin` antes da análise.',
+      ],
+    },
+    en: {
+      title: "Stats granularity + duplicate-waking dedupe",
+      bullets: [
+        '★ **Poop/day** gets its own chart in Stats — daily bars in brown, value on top of each bar. The "Diapers/day" card now shows the split 💧 wet · 💩 poop.',
+        '★ **Naps with duration**: "Naps/day" card now shows total time/day under the count. New "Naps duration" chart plots fmtDur per day.',
+        '★ **Real sleep window** (awake time inside bedtime) was already exposed on "Real sleep" card; now emphasizes with `Awake · 35min · 2x` when wakings present.',
+        '★ **Feeds/day** card now shows average interval (~3.4h) under the count.',
+        'Bottle AddForm reverts to `nowTime()` by default (rolled back smart `last+interval` from v11.9.1 — user prefers logging actual time).',
+        '★ **Engine v2.2.4: duplicate waking dedupe** (multi-device race). When both William and wife tap "back to sleep" at the same time, the same waking could be written 2x. Engine now collapses by `time:durationMin` before analysis.',
+      ],
+    },
+  },
   {
     v: "11.9.2", date: "2026-04-27",
     pt: {
@@ -4639,27 +4665,9 @@ const EntryRow = React.memo(function EntryRow({entry,onDelete,onEdit,napNum,nigh
 
 function AddForm({type,onSave,onSaveBatch,savedMeds,onSaveMeds,editEntry,lastBottleMl,lastBottleEntry,feedingIntervalMin,topMl,onStartTimer}){const cfg=TYPES[type];const ed=editEntry||{};
   const[date,setDate]=useState(ed.date||todayStr());
-  // v11.9.1: smart time default — para bottle (não-edit), sugere last+interval do feeding reminder.
-  // Se o resultado é futuro do nowTime, mantém nowTime (não sugere registro adiantado).
-  const computeSmartTime=()=>{
-    if(ed.time)return ed.time;
-    if(type==="bottle"&&lastBottleEntry&&feedingIntervalMin>0){
-      const lastMs=new Date(`${lastBottleEntry.date}T${lastBottleEntry.time}`).getTime();
-      if(!isNaN(lastMs)){
-        const suggestMs=lastMs+feedingIntervalMin*60000;
-        const nowMs=Date.now();
-        // só usa se já passou o intervalo (a mamada está próxima/atrasada)
-        if(suggestMs<=nowMs+5*60000){
-          // Se a sugestão é "no passado próximo", usar ela. Se é futuro >5min, usar agora.
-          const useMs=suggestMs<nowMs?suggestMs:nowMs;
-          const d=new Date(useMs);
-          return`${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
-        }
-      }
-    }
-    return nowTime();
-  };
-  const[time,setTime]=useState(computeSmartTime());
+  // v11.9.3: Bottle volta a usar nowTime (revertido o smart default da v11.9.1 — usuário
+  // prefere registrar no horário real, não no horário esperado).
+  const[time,setTime]=useState(ed.time||nowTime());
   const[ml,setMl]=useState(ed.ml?String(ed.ml):(type==="bottle"&&lastBottleMl&&!editEntry?String(lastBottleMl):""));const[durH,setDurH]=useState(ed.durationMin?String(Math.floor(ed.durationMin/60)):"");const[durM,setDurM]=useState(ed.durationMin?String(ed.durationMin%60):"");
   const[diaperT,setDiaperT]=useState(ed.subtype||"wet");const[medN,setMedN]=useState(ed.name||"");const[medD,setMedD]=useState(ed.dose||"");
   const[tempV,setTempV]=useState(ed.value?String(ed.value):"");const[side,setSide]=useState(ed.side||"left");const[nurseM,setNurseM]=useState(ed.durationMin&&type==="nursing"?String(ed.durationMin):"");
@@ -5558,16 +5566,24 @@ const StatsPage = React.memo(function StatsPage({entries,onGrowth}){
     const simetCount=de.filter(e=>e.type==="medicine"&&e.name&&/simet/i.test(e.name)).length;
     const tumEntries=de.filter(e=>e.type==="tummytime"&&e.durationMin);
     const tumMin=Math.round(tumEntries.reduce((s,e)=>s+(e.durationMin||0),0));
+    // v11.9.3: granularidade extra — naps duration, poop/wet split, ww (wake window).
+    const napsOnly=de.filter(e=>e.type==="nap"&&e.durationMin);
+    const napTotalMin=Math.round(napsOnly.reduce((s,e)=>s+e.durationMin,0));
+    const napMaxMin=napsOnly.length?Math.round(Math.max(...napsOnly.map(e=>e.durationMin))):0;
+    const diapers=de.filter(e=>e.type==="diaper");
+    const poopCount=diapers.filter(e=>e.subtype==="dirty"||e.subtype==="both").length;
+    const wetCount=diapers.filter(e=>e.subtype==="wet"||e.subtype==="both").length;
     return{
       date:dt,isToday:dt===today,
       label:numDays<=14?new Date(dt+"T12:00").toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{weekday:"short"}).replace(".",""):new Date(dt+"T12:00").toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{day:"numeric",month:"numeric"}).replace(/\/\d{4}/,""),
       ml:de.filter(e=>e.type==="bottle").reduce((s,e)=>s+(e.ml||0),0),
-      sl:slReal,        // real sleep (was: total bedtime including wakings)
-      slAwake:slAwake,  // night-waking time
-      slBed:slReal+slAwake, // total time in bed
+      sl:slReal,
+      slAwake:slAwake,
+      slBed:slReal+slAwake,
       simet:simetCount,
       tum:tumEntries.length,
-      tumMin:tumMin
+      tumMin:tumMin,
+      napTotalMin,napMaxMin,poopCount,wetCount
     }
   });
   // ─────────────────────────────────────────────────
@@ -5605,6 +5621,12 @@ const StatsPage = React.memo(function StatsPage({entries,onGrowth}){
   const avgTum=Math.round(avgData.reduce((s,d)=>s+d.tum,0)/numComplete*10)/10;
   const mxTumMin=Math.max(...data.map(d=>d.tumMin),1);
   const totalTumInPeriod=data.reduce((s,d)=>s+d.tum,0);
+  // v11.9.3: averages adicionais
+  const avgNapMin=Math.round(avgData.reduce((s,d)=>s+d.napTotalMin,0)/numComplete);
+  const avgNapMaxMin=Math.round(avgData.reduce((s,d)=>s+d.napMaxMin,0)/numComplete);
+  const avgPoop=Math.round((avgData.reduce((s,d)=>s+d.poopCount,0)/numComplete)*10)/10;
+  const avgWet=Math.round((avgData.reduce((s,d)=>s+d.wetCount,0)/numComplete)*10)/10;
+  const mxPoop=Math.max(...data.map(d=>d.poopCount),1);
   // Simeticona stats: doses per day chart + last dose info
   const mxSimet=Math.max(...data.map(d=>d.simet),1);
   const avgSimet=Math.round((avgData.reduce((s,d)=>s+d.simet,0)/numComplete)*10)/10;
@@ -5661,12 +5683,28 @@ const StatsPage = React.memo(function StatsPage({entries,onGrowth}){
       </div>
     </div>
     <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)",gap:8,marginBottom:16}}>
-      <div style={{background:"rgba(20,26,60,0.5)",borderRadius:20,border:`1px solid ${T.gBSoft}`,padding:"16px 8px 14px",textAlign:"center",boxShadow:T.insetTop}}><div style={{fontSize:9,color:"#7a80a8",letterSpacing:-0.05,marginBottom:8,fontWeight:600}}>{_lang==="en"?"Diapers/day":"Fraldas/dia"}</div><div style={{fontSize:22,fontWeight:800,color:T.pink,letterSpacing:-0.8,fontVariantNumeric:"tabular-nums"}}>{avgDiapers}</div></div>
-      <div style={{background:"rgba(20,26,60,0.5)",borderRadius:20,border:`1px solid ${T.gBSoft}`,padding:"16px 8px 14px",textAlign:"center",boxShadow:T.insetTop}}><div style={{fontSize:9,color:"#7a80a8",letterSpacing:-0.05,marginBottom:8,fontWeight:600}}>{_lang==="en"?"Feeds/day":"Mamadas/dia"}</div><div style={{fontSize:22,fontWeight:800,color:T.blue,letterSpacing:-0.8,fontVariantNumeric:"tabular-nums"}}>{avgFeedings}</div></div>
-      <div style={{background:"rgba(20,26,60,0.5)",borderRadius:20,border:`1px solid ${T.gBSoft}`,padding:"16px 8px 14px",textAlign:"center",boxShadow:T.insetTop}}><div style={{fontSize:9,color:"#7a80a8",letterSpacing:-0.05,marginBottom:8,fontWeight:600}}>{_lang==="en"?"Naps/day":"Sonecas/dia"}</div><div style={{fontSize:22,fontWeight:800,color:T.accent,letterSpacing:-0.8,fontVariantNumeric:"tabular-nums"}}>{avgNaps}</div></div>
-      <div style={{background:"rgba(20,26,60,0.5)",borderRadius:20,border:`1px solid ${T.gBSoft}`,padding:"16px 8px 14px",textAlign:"center",boxShadow:T.insetTop}}><div style={{fontSize:9,color:"#7a80a8",letterSpacing:-0.05,marginBottom:8,fontWeight:600}}>{_lang==="en"?"Tummy/day":"Tummy/dia"}</div><div style={{fontSize:22,fontWeight:800,color:T.amber,letterSpacing:-0.8,fontVariantNumeric:"tabular-nums"}}>{avgTum}</div></div>
+      <div style={{background:"rgba(20,26,60,0.5)",borderRadius:20,border:`1px solid ${T.gBSoft}`,padding:"14px 8px 12px",textAlign:"center",boxShadow:T.insetTop}}>
+        <div style={{fontSize:9,color:"#7a80a8",letterSpacing:-0.05,marginBottom:6,fontWeight:600}}>{_lang==="en"?"Diapers/day":"Fraldas/dia"}</div>
+        <div style={{fontSize:22,fontWeight:800,color:T.pink,letterSpacing:-0.8,fontVariantNumeric:"tabular-nums",lineHeight:1}}>{avgDiapers}</div>
+        <div style={{fontSize:8.5,color:T.dim,marginTop:5,fontVariantNumeric:"tabular-nums",letterSpacing:0.2}}>💧 {avgWet} · 💩 {avgPoop}</div>
+      </div>
+      <div style={{background:"rgba(20,26,60,0.5)",borderRadius:20,border:`1px solid ${T.gBSoft}`,padding:"14px 8px 12px",textAlign:"center",boxShadow:T.insetTop}}>
+        <div style={{fontSize:9,color:"#7a80a8",letterSpacing:-0.05,marginBottom:6,fontWeight:600}}>{_lang==="en"?"Feeds/day":"Mamadas/dia"}</div>
+        <div style={{fontSize:22,fontWeight:800,color:T.blue,letterSpacing:-0.8,fontVariantNumeric:"tabular-nums",lineHeight:1}}>{avgFeedings}</div>
+        <div style={{fontSize:8.5,color:T.dim,marginTop:5,fontVariantNumeric:"tabular-nums",letterSpacing:0.2}}>{avgFeedings>0?`~${Math.round(24/avgFeedings*10)/10}h`:""}</div>
+      </div>
+      <div style={{background:"rgba(20,26,60,0.5)",borderRadius:20,border:`1px solid ${T.gBSoft}`,padding:"14px 8px 12px",textAlign:"center",boxShadow:T.insetTop}}>
+        <div style={{fontSize:9,color:"#7a80a8",letterSpacing:-0.05,marginBottom:6,fontWeight:600}}>{_lang==="en"?"Naps/day":"Sonecas/dia"}</div>
+        <div style={{fontSize:22,fontWeight:800,color:T.accent,letterSpacing:-0.8,fontVariantNumeric:"tabular-nums",lineHeight:1}}>{avgNaps}</div>
+        <div style={{fontSize:8.5,color:T.dim,marginTop:5,fontVariantNumeric:"tabular-nums",letterSpacing:0.2}}>{avgNapMin>0?fmtDur(avgNapMin)+"/dia":""}</div>
+      </div>
+      <div style={{background:"rgba(20,26,60,0.5)",borderRadius:20,border:`1px solid ${T.gBSoft}`,padding:"14px 8px 12px",textAlign:"center",boxShadow:T.insetTop}}>
+        <div style={{fontSize:9,color:"#7a80a8",letterSpacing:-0.05,marginBottom:6,fontWeight:600}}>{_lang==="en"?"Tummy/day":"Tummy/dia"}</div>
+        <div style={{fontSize:22,fontWeight:800,color:T.amber,letterSpacing:-0.8,fontVariantNumeric:"tabular-nums",lineHeight:1}}>{avgTum}</div>
+        <div style={{fontSize:8.5,color:T.dim,marginTop:5,fontVariantNumeric:"tabular-nums",letterSpacing:0.2}}>{avgData.reduce((s,d)=>s+d.tumMin,0)>0?fmtDur(Math.round(avgData.reduce((s,d)=>s+d.tumMin,0)/numComplete))+"/dia":""}</div>
+      </div>
     </div>
-    {[{t:_lang==="en"?"Milk (ml)":"Leite (ml)",f:"ml",max:mxMl,c:T.green,stacked:false},{t:_lang==="en"?"Sleep · real + awake":"Sono · real + acordada",f:"sl",max:mxSl,c:T.purple,stacked:true}].map(ch=>(
+    {[{t:_lang==="en"?"Milk (ml)":"Leite (ml)",f:"ml",max:mxMl,c:T.green,stacked:false},{t:_lang==="en"?"Sleep · real + awake":"Sono · real + acordada",f:"sl",max:mxSl,c:T.purple,stacked:true},{t:_lang==="en"?"Naps duration":"Sonecas — duração",f:"napTotalMin",max:Math.max(...data.map(d=>d.napTotalMin),1),c:T.accent,stacked:false,fmt:"dur"},{t:_lang==="en"?"Poop/day":"Cocô/dia",f:"poopCount",max:mxPoop,c:"#a16b4a",stacked:false}].map(ch=>(
       <div key={ch.f} style={{marginBottom:22}}>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
           <span style={{fontSize:12,fontWeight:600,color:T.sub}}>{ch.t}</span>
@@ -5692,7 +5730,7 @@ const StatsPage = React.memo(function StatsPage({entries,onGrowth}){
               </div>
             }else{
               const v=d[ch.f];return<div key={d.date} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2,minWidth:0}}>
-                {numDays<=14&&<span style={{fontSize:10,color:T.sub,fontWeight:600}}>{v>0?v:""}</span>}
+                {numDays<=14&&<span style={{fontSize:10,color:T.sub,fontWeight:600}}>{v>0?(ch.fmt==="dur"?fmtDur(v):v):""}</span>}
                 <div style={{width:"85%",maxWidth:numDays>20?8:20,height:Math.max((v/ch.max)*65,2),borderRadius:numDays>20?2:5,background:v>0?ch.c:T.bg3,transition:"height .5s",opacity:d.isToday?1:0.7}}/>
                 {numDays<=14&&<span style={{fontSize:8,color:d.isToday?T.accent:T.dim,fontWeight:d.isToday?700:400}}>{d.isToday?(_lang==="en"?"Today":"Hoje"):d.label}</span>}
               </div>

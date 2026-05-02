@@ -14,7 +14,7 @@ Este `CLAUDE.md` é lido automaticamente pelo Claude Code no início de toda ses
 - **Localização**: Blumenau, SC, Brasil (BRT, UTC-3)
 - **Repositório**: https://github.com/williamscchulz-was/louise-pro
 - **Live**: https://williamscchulz-was.github.io/louise-pro/
-- **Versão atual**: v11.9.2 (app) / routine-engine v2.2.3
+- **Versão atual**: v11.9.3 (app) / routine-engine v2.2.4
 - **Bilíngue**: Português e Inglês (toda a interface, insights, curiosidades e changelog)
 
 ## Stack
@@ -186,7 +186,7 @@ Filtro complexo que já gerou vários bugs. Estado atual (v10.4.6+):
 
 ### Workflow obrigatório
 
-1. **Preview de mudanças antes de aplicar (v11.9.2):** para qualquer mudança não trivial (i.e. mais que typo/fix imediato), Claude Code apresenta primeiro um **resumo das alterações planejadas** — arquivos tocados, o que muda em cada um, riscos óbvios. Espera autorização explícita do William ("ok", "manda", "segue", "implementa") antes de tocar no código. **Exceções automáticas (não precisa de autorização):** correção de bug crítico/data-loss, fix de typo já claro, retomar trabalho já autorizado e interrompido. Quando em dúvida, pergunta.
+1. **Preview-before-apply é OPT-IN (v11.9.3):** Claude Code segue direto com mudanças solicitadas pelo William. **Só pede autorização** quando: (a) mudança envolve risco real de data-loss/regressão; (b) escopo do pedido é ambíguo e tem 2+ caminhos divergentes; (c) o user explicitamente pede mockup primeiro (ou regra do item 2 dispara). Mockup HTML continua obrigatório pra mudanças visuais novas (item 2). Default é "manda ver".
 2. **Mockup HTML primeiro** sempre que houver mudança visual ou de UI — William revisa e aprova antes de implementar. Salvar em `.claude/mockups/<nome>.html` e abrir via preview server.
 3. **Commits incrementais e focados** — evitar bundling de mudanças não relacionadas
 4. **Bump de versão + changelog** acompanha toda mudança funcional (no formato bilíngue novo)

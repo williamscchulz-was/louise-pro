@@ -1,5 +1,5 @@
 // ╔═══════════════════════════════════════════════════════════════╗
-// ║  ROUTINE ENGINE v2.2.3                                       ║
+// ║  ROUTINE ENGINE v2.2.4                                       ║
 // ║  Full-day routine intelligence for Louise Pro                ║
 // ║  Replaces Sleep Engine v1 — backward compatible              ║
 // ║                                                              ║
@@ -48,7 +48,7 @@
 (function(root) {
   "use strict";
 
-  var VERSION = "2.2.3";
+  var VERSION = "2.2.4";
 
   // ════════════════════════════════════════════════════════
   // HELPERS
@@ -304,6 +304,22 @@
           mergedBed.durationMin = (bed.durationMin || 0) + (bedSibling.durationMin || 0);
           mergedBed.wakings = (bed.wakings || []).concat(bedSibling.wakings || []);
           bed = mergedBed;
+        }
+        // v11.9.3: dedupe de wakings duplicadas. Multi-device race (William + esposa
+        // ambos pressionando "voltar a dormir" simultaneamente) podia gravar a MESMA
+        // waking 2x. Detecta pelo time igual e collapsing pra 1 entry.
+        if (bed.wakings && bed.wakings.length > 1) {
+          var seenW = {};
+          var deduped = [];
+          for (var dwI = 0; dwI < bed.wakings.length; dwI++) {
+            var dwW = bed.wakings[dwI];
+            if (!dwW || !dwW.time) continue;
+            var dwKey = dwW.time + ':' + (dwW.durationMin || 0);
+            if (seenW[dwKey]) continue;
+            seenW[dwKey] = true;
+            deduped.push(dwW);
+          }
+          if (deduped.length !== bed.wakings.length) bed = (function (b, w) { var x = {}; for (var k in b) x[k] = b[k]; x.wakings = w; return x; })(bed, deduped);
         }
       }
       var bedMin = bed ? toMinutes(bed.time) : null;
