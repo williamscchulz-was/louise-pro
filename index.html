@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.15 Smart relative dates: "Hoje", "Ontem", "Anteontem", weekday se <7d, data curta se mais. Aplicado em History header e AddForm date label
   v11.9.14 FIX TDZ - "Cannot access todayE before initialization" no useEffect do daily summary (referencia antes do const). Usa entries direto via useMemo
   v11.9.13 ErrorBoundary mostra erro real + para loop de reload + IIFEs blindadas (Ring detail, Weekly report, Streak) com try/catch
   v11.9.12 hotfix continuacao: u2026 literal na ErrorBoundary + per-entry try em migration + setTimeout defer + e.id null safety
@@ -580,8 +581,27 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.14";
+const APP_VERSION = "11.9.15";
 const CHANGELOG = [
+  {
+    v: "11.9.15", date: "2026-04-27",
+    pt: {
+      title: "Smart relative dates ao longo do app",
+      bullets: [
+        '★ **Novo helper `fmtRelDate(dateStr)`** com saída humanizada: `Hoje`, `Ontem`, `Anteontem`, dia da semana se ≤6 dias atrás (`Domingo passada`), ou `26 abr` se mais antigo. Locale-aware (PT/EN), tz-safe.',
+        '★ **Aplicado no header de data da History**: agora mostra `Ontem · 26 abril` em vez de só `Sábado, 26 de abril`. Mais natural, menos cognitivo.',
+        '★ **AddForm date label** usa relativo também: navegando o date picker pra outro dia mostra `Ontem` / `Anteontem` / weekday.',
+      ],
+    },
+    en: {
+      title: "Smart relative dates throughout the app",
+      bullets: [
+        '★ **New `fmtRelDate(dateStr)` helper** with humanized output: `Today`, `Yesterday`, `2 days ago`, weekday if ≤6 days back (`Last Sunday`), or `Apr 26` for older. Locale-aware (PT/EN), tz-safe.',
+        '★ **Applied to History date header**: now shows `Yesterday · April 26` instead of `Saturday, April 26`. More natural, less cognitive.',
+        '★ **AddForm date label** uses relative too: navigating the date picker shows `Yesterday` / `2 days ago` / weekday.',
+      ],
+    },
+  },
   {
     v: "11.9.14", date: "2026-04-27",
     pt: {
@@ -3753,6 +3773,25 @@ function calcAge(b){if(!b)return null;const p=b.split("-");const bi=new Date(+p[
 function fmtDur(m){if(!m)return"0min";const mi=Math.round(m);const h=Math.floor(mi/60),r=mi%60;return h>0?(r>0?`${h}h${r}m`:`${h}h`):`${r}min`}
 // v11.9.6: smart unit formatting. Volume em ml > 1000 vira L (1,5L em PT, 1.5L em EN).
 function fmtMl(ml){if(!ml||ml<=0)return"0ml";if(ml<1000)return`${ml}ml`;const l=ml/1000;const dec=l<10?1:0;const str=l.toFixed(dec);return _lang==="pt"?`${str.replace(".",",")}L`:`${str}L`}
+// v11.9.15: smart relative date. "Hoje", "Ontem", "Anteontem", weekday se dentro de 7d,
+// "26/4" se mais antigo. Aceita YYYY-MM-DD. Locale-aware.
+function fmtRelDate(dateStr){
+  if(!dateStr)return"";
+  const today=todayStr();
+  if(dateStr===today)return _lang==="en"?"Today":"Hoje";
+  // Calc diff em dias usando local time (tz-safe).
+  const a=new Date(today+"T12:00");
+  const b=new Date(dateStr+"T12:00");
+  if(isNaN(b))return dateStr;
+  const diff=Math.round((a-b)/86400000);
+  if(diff===1)return _lang==="en"?"Yesterday":"Ontem";
+  if(diff===2)return _lang==="en"?"2 days ago":"Anteontem";
+  if(diff>=3&&diff<=6){
+    const wd=b.toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{weekday:"long"}).replace(".","");
+    return _lang==="en"?`Last ${wd}`:wd.charAt(0).toUpperCase()+wd.slice(1)+" passada";
+  }
+  return b.toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{day:"numeric",month:"short"}).replace(".","");
+}
 function fmtTimer(s){return`${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`}
 function timeSince(d,t){if(!d||!t)return"";const diff=Math.floor((new Date()-new Date(`${d}T${t}`))/6e4);if(diff<1)return"now";if(diff<60)return`${diff}min ago`;const h=Math.floor(diff/60),m=diff%60;if(h<24)return m>0?`${h}h${m}m ago`:`${h}h ago`;return`${Math.floor(h/24)}d ago`}
 function minSince(d,t){if(!d||!t)return null;return Math.max(0,Math.floor((new Date()-new Date(`${d}T${t}`))/6e4))}
@@ -5052,7 +5091,8 @@ function AddForm({type,onSave,onSaveBatch,savedMeds,onSaveMeds,editEntry,lastBot
   };
   const inp={width:"100%",maxWidth:"100%",boxSizing:"border-box",WebkitAppearance:"none",appearance:"none",padding:"17px 18px",background:"rgba(20,26,60,0.55)",border:`1px solid ${T.gBSoft}`,borderRadius:16,color:T.text,fontSize:17,fontWeight:600,letterSpacing:-0.2,outline:"none",boxShadow:T.insetTop};
   const isToday=date===todayStr();
-  const dateLbl=isToday?L("today"):new Date(date+"T12:00").toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{weekday:"short",day:"numeric",month:"short"});
+  // v11.9.15: usa fmtRelDate ("Ontem", "Anteontem", weekday, ou data curta) em vez de só short date.
+  const dateLbl=isToday?L("today"):fmtRelDate(date);
   return(<div style={{paddingBottom:20}}>
     <div style={{display:"flex",alignItems:"center",gap:12,padding:"0 20px 16px"}}>
       <div style={{width:32,height:32,borderRadius:10,background:cfg.bg,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name={cfg.icon} size={18} color={cfg.color}/></div>
@@ -6299,7 +6339,10 @@ const HistoryPage = React.memo(function HistoryPage({entries,onDelete,onEdit,act
   const dDiapers=dayE.filter(e=>e.type==="diaper");
   const dWet=dDiapers.filter(e=>e.subtype==="wet"||e.subtype==="both").length;
   const dDirty=dDiapers.filter(e=>e.subtype==="dirty"||e.subtype==="both").length;
-  const dLbl=new Date(viewDate+"T12:00").toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{weekday:"long",day:"numeric",month:"long"});
+  // v11.9.15: header da data em History combina relativo + completo. Ex: "Ontem · 26 abril"
+  const dLong=new Date(viewDate+"T12:00").toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{day:"numeric",month:"long"});
+  const dRel=fmtRelDate(viewDate);
+  const dLbl=dRel===dLong?dLong:`${dRel} · ${dLong}`;
   const isToday=dateIdx===0;
   // Note: live in-progress bedtime is NOT shown here. It only appears in Home.
   // History is reserved for finalized entries.
