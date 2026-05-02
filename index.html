@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.11 fix critico: db undefined em migrateLegacyWakingsOnce (escopo de outro script tag) + literal /u26A0 no ErrorBoundary
   v11.9.10 a11y: aria-labels nos quick buttons + bell + Ring + period switcher. Migration one-shot dedupeLegacyWakings (escreve correcoes no Firestore, 1x por device)
   v11.9.9 Long-press no Ring abre modal com info detalhada (sono ontem, media 7d, sonecas/mamadas hoje, ultimo sono terminou)
   v11.9.8 Daily summary noturno: card sutil 20h-23h com totais do dia (mamadas, sono, sonecas, fraldas). 1x/dia, dismissable
@@ -576,8 +577,25 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.10";
+const APP_VERSION = "11.9.11";
 const CHANGELOG = [
+  {
+    v: "11.9.11", date: "2026-04-27",
+    pt: {
+      title: "Hotfix: db undefined na migration + emoji literal no ErrorBoundary",
+      bullets: [
+        '🚨 **Fix crítico**: `migrateLegacyWakingsOnce` referenciava `db` (firestore) que não está acessível fora do `<script>` tag de init (`const db` é local ao script). Trocado por `firebase.firestore()` inline. Era a causa do crash do app post-deploy v11.9.10.',
+        'Fix do `\\u26A0` aparecendo literal no ErrorBoundary fallback. Mesmo bug dos `\\u00b7` e `\\u2013` já corrigidos antes — JSX text fora de string literal não interpreta escape. Envolvido em `{"\\u26A0"}`.',
+      ],
+    },
+    en: {
+      title: "Hotfix: db undefined in migration + literal emoji in ErrorBoundary",
+      bullets: [
+        '🚨 **Critical fix**: `migrateLegacyWakingsOnce` was referencing `db` (firestore) which is not accessible outside the init `<script>` tag (`const db` is local to that script). Replaced with inline `firebase.firestore()`. This was the cause of the post-deploy v11.9.10 crash.',
+        'Fix `\\u26A0` showing as literal text in ErrorBoundary fallback. Same bug as the `\\u00b7` and `\\u2013` fixed before — JSX text outside string literals doesn\'t interpret escapes. Wrapped in `{"\\u26A0"}`.',
+      ],
+    },
+  },
   {
     v: "11.9.10", date: "2026-04-27",
     pt: {
@@ -3797,14 +3815,16 @@ async function migrateLegacyWakingsOnce(entries){
     try{localStorage.setItem("lp_legacy_wakings_migrated_v1","1")}catch(_){}
     return;
   }
-  // Persist correção pra cada doc
+  // Persist correção pra cada doc. v11.9.11: usa firebase.firestore() em vez de `db`
+  // (que é local ao script tag do init, não acessível daqui).
   try{
+    const fdb=firebase.firestore();
     for(const w of writes){
       const clean=Object.fromEntries(Object.entries(w).filter(([_,v])=>v!==undefined));
       delete clean._docId;
       // Se field wakings é vazio, deletar via FieldValue.delete()
       if(!w.wakings)clean.wakings=firebase.firestore.FieldValue.delete();
-      await db.collection('entries').doc(w.id).set(clean,{merge:true});
+      await fdb.collection('entries').doc(w.id).set(clean,{merge:true});
     }
     localStorage.setItem("lp_legacy_wakings_migrated_v1","1");
     console.log("[migration] dedupeLegacyWakings: "+(writes.length/2)+" pairs corrigidos");
@@ -6705,7 +6725,7 @@ class ErrorBoundary extends React.Component {
   render(){
     if(this.state.hasError){
       return(<div style={{position:"fixed",inset:0,background:"linear-gradient(180deg,#070b1e 0%,#0b1130 100%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"36px 28px",textAlign:"center",color:"#f0f2ff",fontFamily:"'Outfit',sans-serif"}}>
-        <div style={{width:72,height:72,borderRadius:24,background:"rgba(248,113,113,0.1)",border:"1.5px solid rgba(248,113,113,0.25)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:30,color:"#f87171",marginBottom:20,boxShadow:"0 0 32px -8px rgba(248,113,113,0.3)"}}>\u26A0</div>
+        <div style={{width:72,height:72,borderRadius:24,background:"rgba(248,113,113,0.1)",border:"1.5px solid rgba(248,113,113,0.25)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:30,color:"#f87171",marginBottom:20,boxShadow:"0 0 32px -8px rgba(248,113,113,0.3)"}}>{"\u26A0"}</div>
         <div style={{fontSize:22,fontWeight:800,letterSpacing:-0.5,marginBottom:6}}>Oops!</div>
         <div style={{fontSize:13,color:"#a3aac8",lineHeight:1.55,marginBottom:20,maxWidth:240}}>Algo quebrou. Recarregando em 3s\u2026</div>
         <div style={{width:28,height:28,border:"2.5px solid rgba(139,124,246,0.2)",borderTopColor:"#a78bfa",borderRadius:"50%",animation:"spin 0.9s linear infinite"}}/>
