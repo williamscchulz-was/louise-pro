@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.8 Daily summary noturno: card sutil 20h-23h com totais do dia (mamadas, sono, sonecas, fraldas). 1x/dia, dismissable
   v11.9.7 Tom noturno automatico (22h-06h): hue -4deg, saturate 0.9, brightness 0.95. Transition 1.2s pra ser sutil.
   v11.9.6 Smart unit fmtMl (>=1000ml -> 1,5L) aplicado em Stats/Weekly + Streak indicator no Profile (dias consecutivos rastreando)
   v11.9.5 Card de Sonecas: metrica principal vira media POR SONECA (nao por dia). Subs mostram count/dia e total/dia
@@ -573,8 +574,27 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.7";
+const APP_VERSION = "11.9.8";
 const CHANGELOG = [
+  {
+    v: "11.9.8", date: "2026-04-27",
+    pt: {
+      title: "Daily summary noturno — recap do dia entre 20h e 23h",
+      bullets: [
+        '★ **Card sutil "Resumo de hoje"** aparece no topo do Home **entre 20h e 23h**, mostrando totais do dia: mamadas (volume + count), sono total, sonecas (count + tempo), fraldas. Estilo lavanda discreto pra não competir com o Ring.',
+        '★ **1x por dia**: marca em localStorage (`lp_daily_summary_seen`) quando você fecha. Não volta a mostrar até amanhã. Aparece só se já tem ≥3 entries no dia (pra não mostrar resumo vazio).',
+        '★ **Botão x sutil** pro dismiss manual. Ícones em tabular-nums e cor de cada categoria, mantendo paleta do app.',
+      ],
+    },
+    en: {
+      title: "Evening daily summary — today recap between 8pm and 11pm",
+      bullets: [
+        '★ **Subtle "Today recap" card** appears at top of Home **between 8pm and 11pm**, showing today\'s totals: bottles (volume + count), total sleep, naps (count + time), diapers. Discreet lavender style so it doesn\'t compete with the Ring.',
+        '★ **Once per day**: marks localStorage (`lp_daily_summary_seen`) when you dismiss. Won\'t show again until tomorrow. Only appears if today has ≥3 entries (to avoid empty recap).',
+        '★ **Subtle x button** for manual dismiss. Tabular-nums and color-per-category, matching the app palette.',
+      ],
+    },
+  },
   {
     v: "11.9.7", date: "2026-04-27",
     pt: {
@@ -6648,6 +6668,27 @@ function App(){
   const[profileSaveSignal,setProfileSaveSignal]=useState(0);
   const profileSaveRef=useRef(null);
   const[inbox,setInbox]=useState({items:[],lastReset:""});const[showInbox,setShowInbox]=useState(false);
+  // v11.9.8: Daily summary noturno. Mostra 1x/dia entre 20h-23h se ainda não dismissed.
+  const[showDailySummary,setShowDailySummary]=useState(false);
+  useEffect(()=>{
+    if(loading)return;
+    const check=()=>{
+      try{
+        const td=todayStr();
+        const seen=localStorage.getItem("lp_daily_summary_seen");
+        if(seen===td){setShowDailySummary(false);return}
+        const h=new Date().getHours();
+        if(h>=20&&h<23&&todayE.length>=3)setShowDailySummary(true);
+      }catch(_){}
+    };
+    check();
+    const iv=setInterval(check,5*60*1000);
+    return()=>clearInterval(iv);
+  },[loading,todayE.length]);
+  const dismissDailySummary=useCallback(()=>{
+    setShowDailySummary(false);
+    try{localStorage.setItem("lp_daily_summary_seen",todayStr())}catch(_){}
+  },[]);
   // v11.9.1: marcos da Louise (1 mes, 100 dias, 6 meses) — confetti 1x cada.
   const[confettiOn,setConfettiOn]=useState(false);
   useEffect(()=>{
@@ -7035,6 +7076,9 @@ function App(){
   const totalNursing=todayE.filter(e=>e.type==="nursing").length;
   const totalSleep=sumRealSleep(todayE);
   const totalDiapers=todayE.filter(e=>e.type==="diaper").length;
+  const totalBottles=todayE.filter(e=>e.type==="bottle").length;
+  const totalNapMin=todayE.filter(e=>e.type==="nap"&&e.durationMin).reduce((s,e)=>s+e.durationMin,0);
+  const totalNapCount=todayE.filter(e=>e.type==="nap"&&e.durationMin).length;
   // v11.8.3: simeticona count pro card no Home (substitui o card de nursing).
   const totalSimet=todayE.filter(e=>e.type==="medicine"&&e.name&&/simet/i.test(e.name)).length;
   // Breakdown wet/dirty pro card Diaper no Home (v10.8.0). "both" conta em ambos.
@@ -7334,6 +7378,20 @@ function App(){
           <button onClick={()=>setShowInbox(true)} style={{position:"relative",width:34,height:34,borderRadius:11,background:inboxUnreadCount>0?"rgba(139,124,246,0.12)":"rgba(22,28,60,0.6)",border:`1px solid ${inboxUnreadCount>0?"rgba(139,124,246,0.3)":"rgba(139,124,246,0.08)"}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><div style={{animation:inboxUnreadCount>0?"bellWiggle 2.5s ease-in-out infinite":"none",transformOrigin:"top center",display:"flex"}}><Icon name="bell" size={17} color={inboxUnreadCount>0?T.accent:T.dim}/></div>{inboxUnreadCount>0&&<div style={{position:"absolute",top:-5,right:-5,minWidth:18,height:18,borderRadius:9,background:"linear-gradient(135deg,#f87171,#dc2626)",color:"#fff",fontSize:10,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 5px",border:`2px solid ${T.bg1}`,boxShadow:"0 0 10px rgba(239,68,68,0.6)"}}>{inboxUnreadCount}</div>}</button>
         </div>
         <CuriosityCard age={age} lang={lang} tick={tick}/>
+        {/* v11.9.8: Daily summary card (20h-23h, 1x/dia) */}
+        {showDailySummary&&<div style={{margin:"0 20px 12px",padding:"14px 16px",borderRadius:16,background:"linear-gradient(180deg,rgba(167,139,250,0.14),rgba(124,58,237,0.06))",border:"1px solid rgba(167,139,250,0.32)",boxShadow:"0 1px 0 0 rgba(255,255,255,0.06) inset, 0 8px 24px -10px rgba(124,58,237,0.4)",position:"relative",animation:"slideUp .35s cubic-bezier(0.22,1,0.36,1)"}}>
+          <button onClick={dismissDailySummary} aria-label={_lang==="en"?"Dismiss":"Fechar"} style={{position:"absolute",top:8,right:8,width:24,height:24,borderRadius:8,background:"rgba(14,18,48,0.45)",border:"1px solid rgba(139,124,246,0.18)",display:"flex",alignItems:"center",justifyContent:"center",color:T.dim}}><Icon name="x" size={11} color={T.dim}/></button>
+          <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:9}}>
+            <span style={{fontSize:14}}>{"🌙"}</span>
+            <span style={{fontSize:10,fontWeight:800,letterSpacing:0.6,textTransform:"uppercase",color:"#c4b5fd"}}>{_lang==="en"?"Today's recap":"Resumo de hoje"}</span>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,fontSize:11,color:T.sub,fontVariantNumeric:"tabular-nums"}}>
+            <div style={{display:"flex",alignItems:"center",gap:5}}><Icon name="bottle" size={11} color={T.green}/><span style={{color:"#f0f2ff",fontWeight:700}}>{totalMl>=1000?fmtMl(totalMl):`${totalMl}ml`}</span><span>· {totalBottles}x</span></div>
+            <div style={{display:"flex",alignItems:"center",gap:5}}><Icon name="bed" size={11} color={T.purple}/><span style={{color:"#f0f2ff",fontWeight:700}}>{fmtDur(totalSleep)}</span><span>{_lang==="en"?"sleep":"sono"}</span></div>
+            <div style={{display:"flex",alignItems:"center",gap:5}}><Icon name="cloud" size={11} color={T.accent}/><span style={{color:"#f0f2ff",fontWeight:700}}>{totalNapCount}</span><span>{_lang==="en"?"naps":"sonecas"}{totalNapMin>0?` · ${fmtDur(totalNapMin)}`:""}</span></div>
+            <div style={{display:"flex",alignItems:"center",gap:5}}><Icon name="diaper" size={11} color={T.pink}/><span style={{color:"#f0f2ff",fontWeight:700}}>{totalDiapers}</span><span>{_lang==="en"?"diapers":"fraldas"}</span></div>
+          </div>
+        </div>}
         <div style={{padding:"4px 0 0"}}><Ring activeTimer={activeTimer} napSug={napSug} tick={tick} recentEvents={cycleE} lang={lang} showOrbit={showOrbit} screenLockActive={shouldLock}/></div>
         {activeTimer&&activeTimer.type==="sleep"&&<div style={{padding:"0 20px",marginBottom:10}}><button onClick={toggleNightWake} className={activeTimer.nightWake?"":"nw-amber-pulse"} style={{width:"100%",padding:"12px 16px",borderRadius:14,background:activeTimer.nightWake?"linear-gradient(135deg,rgba(96,165,250,0.2),rgba(167,139,250,0.15))":"linear-gradient(135deg,rgba(251,146,60,0.18),rgba(251,191,36,0.12))",border:`1px solid ${activeTimer.nightWake?"rgba(96,165,250,0.6)":"rgba(251,146,60,0.55)"}`,display:"flex",alignItems:"center",gap:12,boxShadow:activeTimer.nightWake?"0 0 20px rgba(96,165,250,0.2)":"0 0 20px rgba(251,146,60,0.15), 0 4px 16px rgba(0,0,0,0.3)",transition:"all 0.3s"}}><div className={activeTimer.nightWake?"pulse-soft":"nw-icon-pulse"} style={{width:36,height:36,borderRadius:12,background:activeTimer.nightWake?"rgba(96,165,250,0.3)":"rgba(251,146,60,0.25)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:activeTimer.nightWake?"none":"0 0 14px rgba(251,146,60,0.3)"}}><Icon name="sun" size={18} color={activeTimer.nightWake?"#60a5fa":"#fbbf24"}/></div><div style={{flex:1,textAlign:"left"}}><div style={{fontSize:13,fontWeight:700,color:activeTimer.nightWake?"#60a5fa":"#fbbf24"}}>{_lang==="en"?"Night Wake":"Despertar"}{activeTimer.nightWake&&` · ${fmtDur(Math.max(1,Math.floor((Date.now()-new Date(activeTimer.nightWake.startTime).getTime())/60000)))}`}</div><div style={{fontSize:9,color:activeTimer.nightWake?T.sub:"rgba(251,191,36,0.75)",marginTop:1}}>{activeTimer.nightWake?(_lang==="en"?"Tap to go back to sleep":"Toque para voltar a dormir"):(_lang==="en"?"Tap if Louise woke up":"Toque se Louise acordou")}</div></div>{activeTimer.nightWake&&<div className="pulse-fast" style={{width:10,height:10,borderRadius:"50%",background:"#60a5fa",boxShadow:"0 0 8px #60a5fa"}}/>}</button></div>}
         {!activeTimer&&<div style={{display:"grid",gridTemplateColumns:"repeat(6, minmax(0,1fr))",gap:5,padding:"0 20px",marginBottom:10}}><button onClick={()=>{setFormType("bottle");setShowAdd(false)}} style={{padding:"9px 0 7px",borderRadius:11,background:`${T.green}08`,border:`1px solid ${T.green}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:3}}><Icon name="bottle" size={15} color={T.green}/><span style={{fontSize:8.5,fontWeight:700,color:T.green}}>{_lang==="en"?"Bottle":"Mam."}</span></button><button onClick={()=>setShowNursingPicker(true)} style={{padding:"9px 0 7px",borderRadius:11,background:`${T.blue}08`,border:`1px solid ${T.blue}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:3}}><Icon name="breast" size={15} color={T.blue}/><span style={{fontSize:8.5,fontWeight:700,color:T.blue}}>{_lang==="en"?"Nurse":"Amam."}</span></button><button onClick={()=>{setFormType("diaper");setShowAdd(false)}} style={{padding:"9px 0 7px",borderRadius:11,background:`${T.pink}08`,border:`1px solid ${T.pink}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:3}}><Icon name="diaper" size={15} color={T.pink}/><span style={{fontSize:8.5,fontWeight:700,color:T.pink}}>{_lang==="en"?"Diaper":"Fralda"}</span></button><button onClick={()=>startTimer("sleep")} style={{padding:"9px 0 7px",borderRadius:11,background:`${T.purple}08`,border:`1px solid ${T.purple}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:3}}><Icon name="bed" size={15} color={T.purple}/><span style={{fontSize:8.5,fontWeight:700,color:T.purple}}>{_lang==="en"?"Sleep":"Sono"}</span></button><button onClick={()=>startTimer("nap")} style={{padding:"9px 0 7px",borderRadius:11,background:`${T.accent}08`,border:`1px solid ${T.accent}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:3}}><Icon name="cloud" size={15} color={T.accent}/><span style={{fontSize:8.5,fontWeight:700,color:T.accent}}>{_lang==="en"?"Nap":"Sonec."}</span></button><button onClick={()=>startTimer("tummytime")} style={{padding:"9px 0 7px",borderRadius:11,background:`${T.amber}08`,border:`1px solid ${T.amber}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:3}}><Icon name="baby" size={15} color={T.amber}/><span style={{fontSize:8.5,fontWeight:700,color:T.amber}}>Tummy</span></button></div>}
