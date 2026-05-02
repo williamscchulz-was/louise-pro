@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.6 Smart unit fmtMl (>=1000ml -> 1,5L) aplicado em Stats/Weekly + Streak indicator no Profile (dias consecutivos rastreando)
   v11.9.5 Card de Sonecas: metrica principal vira media POR SONECA (nao por dia). Subs mostram count/dia e total/dia
   v11.9.4 Stats ganha "Relatorio semanal" — agregado por semana das ultimas 4 semanas, cards com mini bar charts + trend chips W-1->W
   v11.9.3 Stats: poop/dia + tempo das sonecas + janela real ja exposta. Engine v2.2.4 dedupe de wakings (race multi-device). Bottle volta a usar nowTime
@@ -554,8 +555,25 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.5";
+const APP_VERSION = "11.9.6";
 const CHANGELOG = [
+  {
+    v: "11.9.6", date: "2026-04-27",
+    pt: {
+      title: "Smart unit (ml→L) + Streak indicator no Profile",
+      bullets: [
+        '★ **Helper `fmtMl`** novo: ml ≥1000 vira `1,5L` (PT) ou `1.5L` (EN). Aplicado no card "Média leite/dia" da Stats e nas linhas de mamadeira do Relatório semanal. Pra Louise (1 mês) ainda fica em ml; pra bebês maiores escalando, fica natural.',
+        '★ **Streak indicator no Profile**: card sutil com 🔥 mostrando dias consecutivos rastreando a Louise (ex: "12 dias seguidos"). Aparece só quando ≥2 dias. Algoritmo: parte de hoje (ou ontem se hoje vazio) e desce contando dias com pelo menos 1 entry.',
+      ],
+    },
+    en: {
+      title: "Smart unit (ml→L) + Streak indicator on Profile",
+      bullets: [
+        '★ **New `fmtMl` helper**: ml ≥1000 becomes `1.5L`. Applied to Stats "Avg milk/day" and weekly report rows. For Louise (1 month) still ml; for larger babies it scales naturally.',
+        '★ **Streak indicator on Profile**: subtle card with 🔥 showing consecutive days tracking Louise (e.g. "12 days in a row"). Shows only when ≥2 days. Algorithm: starts from today (or yesterday if today empty) and counts down days with at least 1 entry.',
+      ],
+    },
+  },
   {
     v: "11.9.5", date: "2026-04-27",
     pt: {
@@ -3556,6 +3574,8 @@ const todayStr=()=>{const d=new Date();return`${d.getFullYear()}-${String(d.getM
 function nowTime(){const d=new Date();return`${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`}
 function calcAge(b){if(!b)return null;const p=b.split("-");const bi=new Date(+p[0],+p[1]-1,+p[2]);const n=new Date();const n0=new Date(n.getFullYear(),n.getMonth(),n.getDate());let m=(n0.getFullYear()-bi.getFullYear())*12+n0.getMonth()-bi.getMonth(),d=n0.getDate()-bi.getDate();if(d<0){m--;d+=new Date(n0.getFullYear(),n0.getMonth(),0).getDate()}const totalDays=Math.floor((n0-bi)/864e5);return{months:Math.max(0,m),days:Math.max(0,d),totalDays,totalWeeks:Math.floor(totalDays/7)}}
 function fmtDur(m){if(!m)return"0min";const mi=Math.round(m);const h=Math.floor(mi/60),r=mi%60;return h>0?(r>0?`${h}h${r}m`:`${h}h`):`${r}min`}
+// v11.9.6: smart unit formatting. Volume em ml > 1000 vira L (1,5L em PT, 1.5L em EN).
+function fmtMl(ml){if(!ml||ml<=0)return"0ml";if(ml<1000)return`${ml}ml`;const l=ml/1000;const dec=l<10?1:0;const str=l.toFixed(dec);return _lang==="pt"?`${str.replace(".",",")}L`:`${str}L`}
 function fmtTimer(s){return`${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`}
 function timeSince(d,t){if(!d||!t)return"";const diff=Math.floor((new Date()-new Date(`${d}T${t}`))/6e4);if(diff<1)return"now";if(diff<60)return`${diff}min ago`;const h=Math.floor(diff/60),m=diff%60;if(h<24)return m>0?`${h}h${m}m ago`:`${h}h ago`;return`${Math.floor(h/24)}d ago`}
 function minSince(d,t){if(!d||!t)return null;return Math.max(0,Math.floor((new Date()-new Date(`${d}T${t}`))/6e4))}
@@ -4987,7 +5007,7 @@ function InboxPanel({inbox,onClose,onMarkRead,onMarkAllRead,lang,isRead}){
   </div>);
 }
 
-function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadChangelog,reminders,onAddReminder,onDelReminder,onDirtyChange,cancelSignal,saveSignal}){
+function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,hasUnreadChangelog,reminders,onAddReminder,onDelReminder,onDirtyChange,cancelSignal,saveSignal}){
   const[name,setName]=useState(profile.name||"");
   const[birth,setBirth]=useState(profile.birthDate||"");
   const[photo,setPhoto]=useState(profile.photo||"");
@@ -5468,6 +5488,29 @@ function ProfilePage({profile,onSave,onBack,onGrowth,onShowChangelog,hasUnreadCh
       <button onClick={()=>{if(isDirty)doSave();onGrowth()}} style={{width:"100%",padding:14,borderRadius:12,marginBottom:10,background:"rgba(163,230,53,0.08)",border:"1px solid rgba(163,230,53,0.15)",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
         <Icon name="ruler" size={16} color="#a3e635"/><span style={{fontSize:14,fontWeight:700,color:"#a3e635"}}>{L("viewGrowth")}</span>
       </button>
+      {/* v11.9.6: streak indicator — dias consecutivos terminando em hoje (ou ontem se hoje
+          ainda nao tem entry). Conta dias com pelo menos 1 entry. Cap visual em 99 pra UX. */}
+      {(()=>{
+        if(!entries||entries.length===0)return null;
+        const datesWithData=new Set(entries.map(e=>e.date));
+        const today=todayStr();
+        let streak=0;
+        let cursor=today;
+        // Se hoje nao tem entry mas ontem tem, comeca do ontem
+        if(!datesWithData.has(today))cursor=dateOffset(today,-1);
+        while(datesWithData.has(cursor)&&streak<999){
+          streak++;
+          cursor=dateOffset(cursor,-1);
+        }
+        if(streak<2)return null;
+        return(<div style={{marginBottom:14,padding:"12px 14px",borderRadius:14,background:"linear-gradient(180deg,rgba(251,146,60,0.10),rgba(251,191,36,0.04))",border:"1px solid rgba(251,146,60,0.25)",display:"flex",alignItems:"center",gap:12,boxShadow:T.insetTop}}>
+          <div style={{width:36,height:36,borderRadius:11,background:"rgba(251,146,60,0.18)",border:"1px solid rgba(251,146,60,0.35)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>{"🔥"}</div>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontSize:14,fontWeight:800,color:"#fdba74",letterSpacing:-0.2,fontVariantNumeric:"tabular-nums"}}>{streak} {_lang==="en"?(streak===1?"day":"days"):"dias"} {_lang==="en"?"in a row":"seguidos"}</div>
+            <div style={{fontSize:11,color:T.sub,marginTop:1}}>{_lang==="en"?"tracking Louise consistently":"acompanhando a Louise sem pular dia"}</div>
+          </div>
+        </div>);
+      })()}
       <BackupSection/>
       <div style={{marginTop:20}}>
         <button onClick={onShowChangelog} style={{width:"100%",padding:"14px 16px",borderRadius:14,background:"rgba(22,28,60,0.4)",border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",gap:12,textAlign:"left",cursor:"pointer"}}>
@@ -5717,7 +5760,7 @@ const StatsPage = React.memo(function StatsPage({entries,onGrowth}){
       <span>{avgSubtitle}</span>
     </div>
     <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr)",gap:10,marginBottom:12}}>
-      <div style={{background:`${T.green}08`,borderRadius:14,border:`1px solid ${T.green}0a`,padding:12}}><div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}><Icon name="bottle" size={14} color={T.green}/><span style={{fontSize:9,color:T.sub}}>{_lang==="en"?"Avg milk/day":"Média leite/dia"}</span></div><div style={{fontSize:22,fontWeight:800,color:T.green}}>{avgMl} <span style={{fontSize:12,opacity:0.6}}>ml</span></div><TrendBadge val={trendMl}/></div>
+      <div style={{background:`${T.green}08`,borderRadius:14,border:`1px solid ${T.green}0a`,padding:12}}><div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}><Icon name="bottle" size={14} color={T.green}/><span style={{fontSize:9,color:T.sub}}>{_lang==="en"?"Avg milk/day":"Média leite/dia"}</span></div><div style={{fontSize:22,fontWeight:800,color:T.green}}>{avgMl>=1000?fmtMl(avgMl):<>{avgMl} <span style={{fontSize:12,opacity:0.6}}>ml</span></>}</div><TrendBadge val={trendMl}/></div>
       <div style={{background:`${T.purple}08`,borderRadius:14,border:`1px solid ${T.purple}0a`,padding:12}}>
         <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}><Icon name="bed" size={14} color={T.purple}/><span style={{fontSize:9,color:T.sub}}>{_lang==="en"?"Real sleep/day":"Sono real/dia"}</span></div>
         <div style={{fontSize:22,fontWeight:800,color:T.purple}}>{fmtDur(avgSl)}</div>
@@ -5972,10 +6015,10 @@ const StatsPage = React.memo(function StatsPage({entries,onGrowth}){
 
         {sectionH({icon:"bottle",label:_lang==="en"?"Bottles":"Mamadeiras",col:T.green})}
         <div style={cardStyle}>
-          {topRow("bottle",T.green,_lang==="en"?"Volume/day":"Volume/dia",`${cur.avgMl} ml`,<Trend val={pctDiff(cur.avgMl,prev.avgMl)}/>)}
+          {topRow("bottle",T.green,_lang==="en"?"Volume/day":"Volume/dia",fmtMl(cur.avgMl),<Trend val={pctDiff(cur.avgMl,prev.avgMl)}/>)}
           {miniBar(validBuckets.map(b=>b.avgMl),T.green)}
           {cur.avgFeeds>0&&subRow(_lang==="en"?"Feeds/day":"Mamadas/dia",cur.avgFeeds)}
-          {cur.avgFeeds>0&&cur.avgMl>0&&subRow(_lang==="en"?"Avg per feed":"Por mamada (média)",`${Math.round(cur.avgMl/cur.avgFeeds)} ml`)}
+          {cur.avgFeeds>0&&cur.avgMl>0&&subRow(_lang==="en"?"Avg per feed":"Por mamada (média)",fmtMl(Math.round(cur.avgMl/cur.avgFeeds)))}
         </div>
 
         {sectionH({icon:"diaper",label:_lang==="en"?"Diapers":"Fraldas",col:T.pink})}
@@ -7374,7 +7417,7 @@ function App(){
       {formType&&<AddForm type={formType} onSave={addEntry} onSaveBatch={addMedicineBatch} savedMeds={savedMeds} onSaveMeds={async m=>await FB.saveMeds(m)} editEntry={editEntry} lastBottleMl={lastBottleMl} lastBottleEntry={lastBottleEntry} feedingIntervalMin={feedingIntervalMin} topMl={topMl} onStartTimer={type=>{startTimer(type);setFormType(null);setShowAdd(false)}}/>}
     </Modal>
 
-    {showProfile&&<ProfilePage profile={profile} onSave={async p=>await FB.saveProfile(p)} onBack={()=>{setShowProfile(false);setProfileIsDirty(false)}} onGrowth={()=>{setShowProfile(false);setProfileIsDirty(false);goTo("growth")}} onShowChangelog={()=>setShowChangelog(true)} hasUnreadChangelog={hasUnreadChangelog} reminders={reminders} onAddReminder={async r=>await FB.addReminder(r)} onDelReminder={async id=>await FB.delReminder(id)} onDirtyChange={setProfileIsDirty} cancelSignal={profileCancelSignal} saveSignal={profileSaveSignal}/>}
+    {showProfile&&<ProfilePage profile={profile} entries={entries} onSave={async p=>await FB.saveProfile(p)} onBack={()=>{setShowProfile(false);setProfileIsDirty(false)}} onGrowth={()=>{setShowProfile(false);setProfileIsDirty(false);goTo("growth")}} onShowChangelog={()=>setShowChangelog(true)} hasUnreadChangelog={hasUnreadChangelog} reminders={reminders} onAddReminder={async r=>await FB.addReminder(r)} onDelReminder={async id=>await FB.delReminder(id)} onDirtyChange={setProfileIsDirty} cancelSignal={profileCancelSignal} saveSignal={profileSaveSignal}/>}
     {showInbox&&<InboxPanel inbox={inbox} onClose={()=>setShowInbox(false)} onMarkRead={markInboxRead} onMarkAllRead={markAllInboxRead} lang={lang} isRead={isRead}/>}
     {showChangelog&&<ChangelogModal onClose={closeChangelog} lang={lang}/>}
     {showUpdateToast&&!showChangelog&&<UpdateToast fromVersion={profile.lastSeenVersion} toVersion={APP_VERSION} onView={openChangelog} onDismiss={dismissUpdateToast} lang={lang}/>}
