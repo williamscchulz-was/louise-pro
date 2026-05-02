@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.13 ErrorBoundary mostra erro real + para loop de reload + IIFEs blindadas (Ring detail, Weekly report, Streak) com try/catch
   v11.9.12 hotfix continuacao: u2026 literal na ErrorBoundary + per-entry try em migration + setTimeout defer + e.id null safety
   v11.9.11 fix critico: db undefined em migrateLegacyWakingsOnce (escopo de outro script tag) + literal /u26A0 no ErrorBoundary
   v11.9.10 a11y: aria-labels nos quick buttons + bell + Ring + period switcher. Migration one-shot dedupeLegacyWakings (escreve correcoes no Firestore, 1x por device)
@@ -578,8 +579,29 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.12";
+const APP_VERSION = "11.9.13";
 const CHANGELOG = [
+  {
+    v: "11.9.13", date: "2026-04-27",
+    pt: {
+      title: "ErrorBoundary blindado + IIFEs com try/catch (sem mais loop de reload)",
+      bullets: [
+        '🚨 **ErrorBoundary não fica mais em loop infinito**: tenta auto-reload 1 vez (sessionStorage tracking). Se falhar de novo, mostra UI estática com mensagem do erro + stack trace + botão "Copiar erro" e "Tentar de novo" manual.',
+        '★ **3 IIFEs grandes blindadas com try/catch**: Ring detail Modal, Weekly Report (Stats), Streak indicator (Profile). Se uma falhar, retorna null em vez de cascatear pro ErrorBoundary.',
+        '★ **Modal IIFE só executa quando aberto**: antes evaluava em todo render do App, agora `showRingDetail && (()=>{})()`. Garante zero overhead + zero risco quando modal fechado.',
+        '🚨 Erro persiste em `localStorage.lp_last_error` pra usuário poder copiar mesmo após reload.',
+      ],
+    },
+    en: {
+      title: "ErrorBoundary hardened + IIFEs wrapped in try/catch (no more reload loop)",
+      bullets: [
+        '🚨 **ErrorBoundary no longer in infinite loop**: tries auto-reload once (sessionStorage tracking). If still failing, shows static UI with the error message + stack trace + "Copy error" and "Try again" buttons.',
+        '★ **3 large IIFEs wrapped in try/catch**: Ring detail Modal, Weekly Report (Stats), Streak indicator (Profile). If one fails, returns null instead of cascading to ErrorBoundary.',
+        '★ **Modal IIFE only executes when open**: was evaluating on every App render; now `showRingDetail && (()=>{})()`. Zero overhead + zero risk when modal closed.',
+        '🚨 Error persists in `localStorage.lp_last_error` so user can copy it even after reload.',
+      ],
+    },
+  },
   {
     v: "11.9.12", date: "2026-04-27",
     pt: {
@@ -5689,7 +5711,7 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
       </button>
       {/* v11.9.6: streak indicator — dias consecutivos terminando em hoje (ou ontem se hoje
           ainda nao tem entry). Conta dias com pelo menos 1 entry. Cap visual em 99 pra UX. */}
-      {(()=>{
+      {(()=>{try{
         if(!entries||entries.length===0)return null;
         const datesWithData=new Set(entries.map(e=>e.date));
         const today=todayStr();
@@ -5709,7 +5731,7 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
             <div style={{fontSize:11,color:T.sub,marginTop:1}}>{_lang==="en"?"tracking Louise consistently":"acompanhando a Louise sem pular dia"}</div>
           </div>
         </div>);
-      })()}
+      }catch(e){console.warn("[Streak] render error",e);return null}})()}
       <BackupSection/>
       <div style={{marginTop:20}}>
         <button onClick={onShowChangelog} style={{width:"100%",padding:"14px 16px",borderRadius:14,background:"rgba(22,28,60,0.4)",border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",gap:12,textAlign:"left",cursor:"pointer"}}>
@@ -6118,7 +6140,7 @@ const StatsPage = React.memo(function StatsPage({entries,onGrowth}){
         v11.9.4 RELATÓRIO SEMANAL (4 semanas)
         Agregação Mon-Sun de cada semana com tendências.
         ─────────────────────────────────────────────*/}
-    {(()=>{
+    {(()=>{try{
       const buckets=[];
       for(let w=3;w>=0;w--){
         const startD=new Date();startD.setDate(startD.getDate()-(w*7)-6);
@@ -6236,7 +6258,7 @@ const StatsPage = React.memo(function StatsPage({entries,onGrowth}){
           </div>
         </>}
       </div>);
-    })()}
+    }catch(e){console.warn("[WeeklyReport] render error",e);return null}})()}
   </div>);
 });
 
@@ -6741,21 +6763,54 @@ function BackupSection(){
 // em vez de tela branca aparece esse fallback, e o app faz reload em 3s pra
 // tentar recuperar. Logs vão pra console pra debug depois.
 class ErrorBoundary extends React.Component {
-  constructor(props){super(props);this.state={hasError:false,err:null}}
-  static getDerivedStateFromError(err){return{hasError:true,err:err}}
-  componentDidCatch(err,info){console.error("[LP] ErrorBoundary caught:",err,info)}
+  constructor(props){super(props);this.state={hasError:false,err:null,stack:null}}
+  static getDerivedStateFromError(err){return{hasError:true,err:err,stack:(err&&err.stack)||""}}
+  componentDidCatch(err,info){
+    console.error("[LP] ErrorBoundary caught:",err,info);
+    // v11.9.13: persiste o erro em localStorage pra o usu\u00E1rio poder copiar mesmo ap\u00F3s reload.
+    try{localStorage.setItem("lp_last_error",JSON.stringify({msg:String(err&&err.message||err),stack:String(err&&err.stack||""),at:new Date().toISOString()}))}catch(_){}
+  }
   componentDidUpdate(_,prev){
     if(this.state.hasError&&!prev.hasError){
-      setTimeout(function(){window.location.reload()},3000);
+      // v11.9.13: para o loop infinito de reload. Tenta auto-reload 1x; se falhar de novo,
+      // mostra UI est\u00E1tica com erro pra usu\u00E1rio ler/copiar e decidir o que fazer.
+      try{
+        const tries=parseInt(sessionStorage.getItem("lp_eb_tries")||"0",10)+1;
+        sessionStorage.setItem("lp_eb_tries",String(tries));
+        if(tries<=1){
+          setTimeout(function(){window.location.reload()},2500);
+        }
+      }catch(_){}
     }
   }
   render(){
     if(this.state.hasError){
-      return(<div style={{position:"fixed",inset:0,background:"linear-gradient(180deg,#070b1e 0%,#0b1130 100%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"36px 28px",textAlign:"center",color:"#f0f2ff",fontFamily:"'Outfit',sans-serif"}}>
-        <div style={{width:72,height:72,borderRadius:24,background:"rgba(248,113,113,0.1)",border:"1.5px solid rgba(248,113,113,0.25)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:30,color:"#f87171",marginBottom:20,boxShadow:"0 0 32px -8px rgba(248,113,113,0.3)"}}>{"\u26A0"}</div>
-        <div style={{fontSize:22,fontWeight:800,letterSpacing:-0.5,marginBottom:6}}>Oops!</div>
-        <div style={{fontSize:13,color:"#a3aac8",lineHeight:1.55,marginBottom:20,maxWidth:240}}>{"Algo quebrou. Recarregando em 3s\u2026"}</div>
-        <div style={{width:28,height:28,border:"2.5px solid rgba(139,124,246,0.2)",borderTopColor:"#a78bfa",borderRadius:"50%",animation:"spin 0.9s linear infinite"}}/>
+      const msg=String(this.state.err&&this.state.err.message||this.state.err||"unknown");
+      const stack=String(this.state.stack||"").split("\n").slice(0,6).join("\n");
+      let triesShown=0;
+      try{triesShown=parseInt(sessionStorage.getItem("lp_eb_tries")||"0",10)}catch(_){}
+      const willReload=triesShown<=1;
+      const onCopy=()=>{
+        try{
+          navigator.clipboard.writeText("Louise Pro error\n\n"+msg+"\n\n"+stack);
+          alert("Erro copiado pra \u00E1rea de transfer\u00EAncia");
+        }catch(_){alert("N\u00E3o consegui copiar \u2014 tira print da tela")}
+      };
+      const onReset=()=>{try{sessionStorage.removeItem("lp_eb_tries")}catch(_){};window.location.reload()};
+      return(<div style={{position:"fixed",inset:0,background:"linear-gradient(180deg,#070b1e 0%,#0b1130 100%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-start",padding:"calc(env(safe-area-inset-top) + 28px) 22px 28px",overflowY:"auto",WebkitOverflowScrolling:"touch",color:"#f0f2ff",fontFamily:"'Outfit',sans-serif"}}>
+        <div style={{width:64,height:64,borderRadius:20,background:"rgba(248,113,113,0.1)",border:"1.5px solid rgba(248,113,113,0.25)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,color:"#f87171",marginBottom:14,boxShadow:"0 0 32px -8px rgba(248,113,113,0.3)"}}>{"\u26A0"}</div>
+        <div style={{fontSize:20,fontWeight:800,letterSpacing:-0.5,marginBottom:4,textAlign:"center"}}>{"Oops!"}</div>
+        <div style={{fontSize:12.5,color:"#a3aac8",lineHeight:1.55,marginBottom:14,maxWidth:280,textAlign:"center"}}>{willReload?"Algo quebrou. Tentando recarregar\u2026":"Algo quebrou e o reload n\u00E3o resolveu."}</div>
+        {willReload&&<div style={{width:24,height:24,border:"2.5px solid rgba(139,124,246,0.2)",borderTopColor:"#a78bfa",borderRadius:"50%",animation:"spin 0.9s linear infinite",marginBottom:18}}/>}
+        <div style={{width:"100%",maxWidth:380,background:"rgba(20,26,60,0.55)",border:"1px solid rgba(139,124,246,0.18)",borderRadius:12,padding:"12px 14px",marginBottom:14}}>
+          <div style={{fontSize:10,color:"#a78bfa",fontWeight:700,letterSpacing:0.5,textTransform:"uppercase",marginBottom:6}}>{"Erro"}</div>
+          <div style={{fontSize:11.5,color:"#fda4af",fontFamily:"ui-monospace,Menlo,monospace",wordBreak:"break-word",lineHeight:1.5,marginBottom:8}}>{msg}</div>
+          {stack&&<details style={{marginTop:8}}><summary style={{fontSize:10.5,color:"#9099c3",cursor:"pointer"}}>{"Stack trace"}</summary><pre style={{fontSize:9.5,color:"#7a80a8",whiteSpace:"pre-wrap",wordBreak:"break-word",margin:"6px 0 0",lineHeight:1.45,fontFamily:"ui-monospace,Menlo,monospace"}}>{stack}</pre></details>}
+        </div>
+        <div style={{display:"flex",gap:8,width:"100%",maxWidth:380}}>
+          <button onClick={onCopy} style={{flex:1,padding:"12px 0",borderRadius:11,background:"rgba(139,124,246,0.12)",border:"1px solid rgba(139,124,246,0.32)",color:"#c4b5fd",fontSize:13,fontWeight:700}}>{"Copiar erro"}</button>
+          <button onClick={onReset} style={{flex:1,padding:"12px 0",borderRadius:11,background:"linear-gradient(180deg,#9b8df8,#7c3aed)",border:"none",color:"#fff",fontSize:13,fontWeight:800,boxShadow:"0 4px 12px -4px rgba(139,124,246,0.5)"}}>{"Tentar de novo"}</button>
+        </div>
         <style>{"@keyframes spin{to{transform:rotate(360deg)}}"}</style>
       </div>);
     }
@@ -7527,9 +7582,10 @@ function App(){
     <Starfield/>
     {toast&&<Toast message={toast} onUndo={undoRef.current?handleUndo:null} onClose={()=>setToast(null)}/>}
     <Confetti trigger={confettiOn} onDone={()=>setConfettiOn(false)}/>
-    {/* v11.9.9: Ring long-press detail modal */}
+    {/* v11.9.9: Ring long-press detail modal. v11.9.13: IIFE só executa quando modal aberto
+        (antes evaluava em todo render do App, podia crashar com edge-case data). */}
     <Modal open={showRingDetail} onClose={()=>setShowRingDetail(false)}>
-      {(()=>{
+      {showRingDetail&&(()=>{try{
         const ydtt=dateOffset(todayStr(),-1);
         const yE=entries.filter(e=>e.date===ydtt);
         const ySleepEntries=yE.filter(e=>e.type==="sleep"&&e.durationMin);
@@ -7568,7 +7624,7 @@ function App(){
           <Item ic="clock" col={T.blue} k={_lang==="en"?"Last sleep ended":"Último sono terminou"} v={lastSleepEnd?lastSleepEnd.toLocaleTimeString(_lang==="pt"?"pt-BR":"en-US",{hour:"2-digit",minute:"2-digit"}):"—"}/>
           <button onClick={()=>setShowRingDetail(false)} style={{width:"100%",padding:"12px 0",borderRadius:12,background:"rgba(22,28,60,0.5)",border:`1px solid ${T.gBSoft}`,color:T.sub,fontSize:13,fontWeight:700,marginTop:14}}>{_lang==="en"?"Close":"Fechar"}</button>
         </div>);
-      })()}
+      }catch(e){console.warn("[RingDetail] render error",e);return null}})()}
     </Modal>
     <div style={{position:"relative",zIndex:1}}>
       {/* SWIPE CONTAINER (v9.9.2) — Home/Stats/History pre-mounted side-by-side */}

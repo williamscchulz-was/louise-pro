@@ -14,7 +14,7 @@ Este `CLAUDE.md` é lido automaticamente pelo Claude Code no início de toda ses
 - **Localização**: Blumenau, SC, Brasil (BRT, UTC-3)
 - **Repositório**: https://github.com/williamscchulz-was/louise-pro
 - **Live**: https://williamscchulz-was.github.io/louise-pro/
-- **Versão atual**: v11.9.12 (app) / routine-engine v2.2.4
+- **Versão atual**: v11.9.13 (app) / routine-engine v2.2.4
 - **Bilíngue**: Português e Inglês (toda a interface, insights, curiosidades e changelog)
 
 ## Stack
