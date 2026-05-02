@@ -535,7 +535,7 @@ const CHANGELOG = [
     pt: {
       title: "Perf de leitura: corte cirúrgico no custo do Firestore",
       bullets: [
-        '★ **`subEntries` agora carrega janela de 90 dias** (`where('date','>=',cutoff)`). Antes lia a coleção inteira a cada cold start — hoje são ~1650 docs, em 1 ano seriam ~11k. Com a janela: **−80% de reads** depois de 6 meses de uso.',
+        '★ **`subEntries` agora carrega janela de 90 dias** (`where(date,>=,cutoff)`). Antes lia a coleção inteira a cada cold start — hoje são ~1650 docs, em 1 ano seriam ~11k. Com a janela: **−80% de reads** depois de 6 meses de uso.',
         '★ **Novo `FB.loadOlderEntries(beforeDate)`** pra Stats/History puxarem histórico antigo sob demanda quando precisar.',
         '★ **Backup metadata em doc separado** (`config/backupMeta`). Antes, abrir o Profile baixava ~900KB do snapshot só pra mostrar "última backup: X horas atrás". Agora baixa só ~80B. O snapshot full só vai pra rede ao restaurar.',
         '`React.memo` em CuriosityCard, InsightCards e TimerBar — evita re-render quando outros states do App mudam.',
@@ -545,7 +545,7 @@ const CHANGELOG = [
     en: {
       title: "Read perf: surgical cut on Firestore cost",
       bullets: [
-        '★ **`subEntries` now loads a 90-day window** (`where('date','>=',cutoff)`). Used to load the entire collection on every cold start — ~1650 docs today, ~11k after 1 year. With the window: **−80% reads** after 6 months.',
+        '★ **`subEntries` now loads a 90-day window** (`where(date,>=,cutoff)`). Used to load the entire collection on every cold start — ~1650 docs today, ~11k after 1 year. With the window: **−80% reads** after 6 months.',
         '★ **New `FB.loadOlderEntries(beforeDate)`** for Stats/History to lazily pull older history when needed.',
         '★ **Backup metadata in separate doc** (`config/backupMeta`). Opening Profile used to download ~900KB of snapshot just to show "last backup: X hours ago". Now downloads ~80B. Full snapshot only fetched on restore.',
         '`React.memo` on CuriosityCard, InsightCards, TimerBar — avoids re-renders when unrelated App state changes.',
