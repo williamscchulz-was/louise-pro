@@ -186,11 +186,12 @@ Filtro complexo que já gerou vários bugs. Estado atual (v10.4.6+):
 
 ### Workflow obrigatório
 
-1. **Mockup HTML primeiro** sempre que houver mudança visual ou de UI — William revisa e aprova antes de implementar. Salvar em `.claude/mockups/<nome>.html` e abrir via preview server.
-2. **Commits incrementais e focados** — evitar bundling de mudanças não relacionadas
-3. **Bump de versão + changelog** acompanha toda mudança funcional (no formato bilíngue novo)
-4. **Atualizar CLAUDE.md** no mesmo commit sempre que a mudança tiver implicação arquitetônica, descoberta de bug latente, ou alteração de invariante. A versão atual aqui em cima sempre tem que bater com `APP_VERSION` do index.html.
-5. **Validação antes de entregar**: `node build/build.mjs` roda o babel transform — se der erro de sintaxe, aparece aqui. Sempre rodar antes de commitar uma mudança no index.html.
+1. **Preview de mudanças antes de aplicar (v11.9.2):** para qualquer mudança não trivial (i.e. mais que typo/fix imediato), Claude Code apresenta primeiro um **resumo das alterações planejadas** — arquivos tocados, o que muda em cada um, riscos óbvios. Espera autorização explícita do William ("ok", "manda", "segue", "implementa") antes de tocar no código. **Exceções automáticas (não precisa de autorização):** correção de bug crítico/data-loss, fix de typo já claro, retomar trabalho já autorizado e interrompido. Quando em dúvida, pergunta.
+2. **Mockup HTML primeiro** sempre que houver mudança visual ou de UI — William revisa e aprova antes de implementar. Salvar em `.claude/mockups/<nome>.html` e abrir via preview server.
+3. **Commits incrementais e focados** — evitar bundling de mudanças não relacionadas
+4. **Bump de versão + changelog** acompanha toda mudança funcional (no formato bilíngue novo)
+5. **Atualizar CLAUDE.md** no mesmo commit sempre que a mudança tiver implicação arquitetônica, descoberta de bug latente, ou alteração de invariante. A versão atual aqui em cima sempre tem que bater com `APP_VERSION` do index.html.
+6. **Validação antes de entregar**: `node build/build.mjs` roda o babel transform — se der erro de sintaxe, aparece aqui. Sempre rodar antes de commitar uma mudança no index.html.
 
 ### Padrões Babel-safe (evitar travas no Babel Standalone)
 
