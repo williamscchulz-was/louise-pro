@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.14 FIX TDZ - "Cannot access todayE before initialization" no useEffect do daily summary (referencia antes do const). Usa entries direto via useMemo
   v11.9.13 ErrorBoundary mostra erro real + para loop de reload + IIFEs blindadas (Ring detail, Weekly report, Streak) com try/catch
   v11.9.12 hotfix continuacao: u2026 literal na ErrorBoundary + per-entry try em migration + setTimeout defer + e.id null safety
   v11.9.11 fix critico: db undefined em migrateLegacyWakingsOnce (escopo de outro script tag) + literal /u26A0 no ErrorBoundary
@@ -579,8 +580,27 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.13";
+const APP_VERSION = "11.9.14";
 const CHANGELOG = [
+  {
+    v: "11.9.14", date: "2026-04-27",
+    pt: {
+      title: "Fix CRÍTICO: TDZ \"Cannot access \'todayE\' before initialization\"",
+      bullets: [
+        '🚨 **Causa real do crash post-v11.9.10**: o useEffect do Daily Summary (v11.9.8) tinha `todayE.length` no array de dependências, mas `const todayE` é declarado MUITO depois no App component. JavaScript trata `const` em temporal dead zone — quando o useEffect avalia o dep array no primeiro render, `todayE` ainda não existe → ReferenceError, App inteiro crasha, ErrorBoundary fica chamando o reload em loop.',
+        '★ **Fix**: criado `_todayCount` via `useMemo` que calcula o count inline a partir de `entries` (já no escopo). useEffect agora depende de `_todayCount` em vez de `todayE.length`.',
+        'Bug latente desde v11.9.8 mas só apareceu pra usuários que ainda não tinham os bundlers/cache do tipo certo. ErrorBoundary v11.9.13 ajudou a expor a stack trace exata.',
+      ],
+    },
+    en: {
+      title: "CRITICAL fix: TDZ \"Cannot access \'todayE\' before initialization\"",
+      bullets: [
+        '🚨 **Real cause of post-v11.9.10 crash**: the Daily Summary useEffect (v11.9.8) had `todayE.length` in its dependency array, but `const todayE` is declared way later in the App component. JavaScript treats `const` as temporal dead zone — when useEffect evaluates the deps on first render, `todayE` doesn\'t exist yet → ReferenceError, the whole App crashes, ErrorBoundary loops reload.',
+        '★ **Fix**: created `_todayCount` via `useMemo` that computes the count inline from `entries` (already in scope). useEffect now depends on `_todayCount` instead of `todayE.length`.',
+        'Latent bug since v11.9.8 but only showed for users without the right bundler/cache. v11.9.13 ErrorBoundary helped expose the exact stack.',
+      ],
+    },
+  },
   {
     v: "11.9.13", date: "2026-04-27",
     pt: {
@@ -6888,7 +6908,13 @@ function App(){
     if(ringPressRef.current.timer){clearTimeout(ringPressRef.current.timer);ringPressRef.current.timer=null}
   },[]);
   // v11.9.8: Daily summary noturno. Mostra 1x/dia entre 20h-23h se ainda não dismissed.
+  // v11.9.14 fix: usa `entries` direto (já declarado), calcula todayE inline. Antes
+  // referenciava `todayE` que ainda não estava no escopo (TDZ → crash).
   const[showDailySummary,setShowDailySummary]=useState(false);
+  const _todayCount=useMemo(()=>{
+    const td=todayStr();
+    return entries.filter(e=>e.date===td).length;
+  },[entries]);
   useEffect(()=>{
     if(loading)return;
     const check=()=>{
@@ -6897,13 +6923,13 @@ function App(){
         const seen=localStorage.getItem("lp_daily_summary_seen");
         if(seen===td){setShowDailySummary(false);return}
         const h=new Date().getHours();
-        if(h>=20&&h<23&&todayE.length>=3)setShowDailySummary(true);
+        if(h>=20&&h<23&&_todayCount>=3)setShowDailySummary(true);
       }catch(_){}
     };
     check();
     const iv=setInterval(check,5*60*1000);
     return()=>clearInterval(iv);
-  },[loading,todayE.length]);
+  },[loading,_todayCount]);
   const dismissDailySummary=useCallback(()=>{
     setShowDailySummary(false);
     try{localStorage.setItem("lp_daily_summary_seen",todayStr())}catch(_){}
