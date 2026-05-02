@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.10 a11y: aria-labels nos quick buttons + bell + Ring + period switcher. Migration one-shot dedupeLegacyWakings (escreve correcoes no Firestore, 1x por device)
   v11.9.9 Long-press no Ring abre modal com info detalhada (sono ontem, media 7d, sonecas/mamadas hoje, ultimo sono terminou)
   v11.9.8 Daily summary noturno: card sutil 20h-23h com totais do dia (mamadas, sono, sonecas, fraldas). 1x/dia, dismissable
   v11.9.7 Tom noturno automatico (22h-06h): hue -4deg, saturate 0.9, brightness 0.95. Transition 1.2s pra ser sutil.
@@ -575,8 +576,27 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.9";
+const APP_VERSION = "11.9.10";
 const CHANGELOG = [
+  {
+    v: "11.9.10", date: "2026-04-27",
+    pt: {
+      title: "A11y + migration de wakings legados",
+      bullets: [
+        '★ **aria-labels** nos 6 quick action buttons (Mamadeira, Amamentação, Fralda, Sono, Soneca, Tummy), no sino de notificações (com contador), no Ring (com hint de long-press), e no period switcher da Stats (aria-pressed também).',
+        '★ **Migration one-shot do `dedupeLegacyWakings`**: escreve no Firestore as correções que o helper fazia em memória a cada read. Roda 1x por device (flag `lp_legacy_wakings_migrated_v1`). Após confirmado funcionando, runtime dedupe pode ser removido em versão futura.',
+        'Migration usa `FieldValue.delete()` pra limpar `wakings` em halves que devem ficar vazios. Idempotente. Logs no console quantos pares foram corrigidos.',
+      ],
+    },
+    en: {
+      title: "A11y + legacy wakings migration",
+      bullets: [
+        '★ **aria-labels** on the 6 quick action buttons (Bottle, Nurse, Diaper, Sleep, Nap, Tummy), notification bell (with counter), Ring (with long-press hint), and Stats period switcher (aria-pressed too).',
+        '★ **One-shot `dedupeLegacyWakings` migration**: writes Firestore the same fixes the runtime helper does on every read. Runs 1x per device (flag `lp_legacy_wakings_migrated_v1`). Once confirmed working, runtime dedupe can be removed in a future version.',
+        'Migration uses `FieldValue.delete()` to clear `wakings` on halves that should be empty. Idempotent. Console logs how many pairs were fixed.',
+      ],
+    },
+  },
   {
     v: "11.9.9", date: "2026-04-27",
     pt: {
@@ -3735,6 +3755,61 @@ function dedupeLegacyWakings(entries){
   }
   return entries.map(e=>fixedById[e.id]||e);
 }
+// v11.9.10: migration one-shot — escreve no Firestore as correções que dedupeLegacyWakings
+// faria em memória. Roda 1x por device (flag em localStorage). Após confirmar funcionando,
+// dedupeLegacyWakings em runtime pode ser removido em uma versão futura.
+async function migrateLegacyWakingsOnce(entries){
+  if(!entries||!entries.length)return;
+  try{
+    if(localStorage.getItem("lp_legacy_wakings_migrated_v1"))return;
+  }catch(_){return}
+  const baseGroups={};
+  for(const e of entries){
+    if(e.type!=="sleep"||!e.wakings||!e.wakings.length) continue;
+    const baseId=e.id.endsWith("_b")?e.id.slice(0,-2):e.id;
+    if(!baseGroups[baseId])baseGroups[baseId]=[];
+    baseGroups[baseId].push(e);
+  }
+  const writes=[];
+  for(const baseId in baseGroups){
+    const pair=baseGroups[baseId];
+    if(pair.length!==2) continue;
+    const p1=pair.find(e=>!e.id.endsWith("_b"));
+    const p2=pair.find(e=>e.id.endsWith("_b"));
+    if(!p1||!p2) continue;
+    const sameWakings=p1.wakings.length===p2.wakings.length
+      &&p1.wakings.every((w,i)=>w.time===p2.wakings[i].time&&w.durationMin===p2.wakings[i].durationMin);
+    if(!sameWakings) continue;
+    const [h,m]=(p1.time||"00:00").split(":").map(Number);
+    const startMin=h*60+m;
+    const wBefore=[],wAfter=[];
+    for(const w of p1.wakings){
+      const [wh,wm]=(w.time||"00:00").split(":").map(Number);
+      if(wh*60+wm>=startMin) wBefore.push(w);
+      else wAfter.push(w);
+    }
+    const f1={...p1};const f2={...p2};
+    if(wBefore.length>0) f1.wakings=wBefore; else delete f1.wakings;
+    if(wAfter.length>0) f2.wakings=wAfter; else delete f2.wakings;
+    writes.push(f1);writes.push(f2);
+  }
+  if(writes.length===0){
+    try{localStorage.setItem("lp_legacy_wakings_migrated_v1","1")}catch(_){}
+    return;
+  }
+  // Persist correção pra cada doc
+  try{
+    for(const w of writes){
+      const clean=Object.fromEntries(Object.entries(w).filter(([_,v])=>v!==undefined));
+      delete clean._docId;
+      // Se field wakings é vazio, deletar via FieldValue.delete()
+      if(!w.wakings)clean.wakings=firebase.firestore.FieldValue.delete();
+      await db.collection('entries').doc(w.id).set(clean,{merge:true});
+    }
+    localStorage.setItem("lp_legacy_wakings_migrated_v1","1");
+    console.log("[migration] dedupeLegacyWakings: "+(writes.length/2)+" pairs corrigidos");
+  }catch(e){console.warn("[migration] failed",e)}
+}
 function dateOffset(b,o){const d=new Date(b+"T12:00:00");d.setDate(d.getDate()+o);return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
 
 // ── CURIOSITIES + MILESTONES (loaded from curiosities.js) ──
@@ -5829,7 +5904,7 @@ const StatsPage = React.memo(function StatsPage({entries,onGrowth}){
     </div>
     <div style={{background:"rgba(22,28,60,0.4)",borderRadius:14,border:`1px solid ${T.gB}`,padding:4,marginBottom:6}}>
       {[{v:7,l:"7d"},{v:14,l:"14d"},{v:30,l:"30d"},{v:"all",l:L("all")}].map(p=>
-        <button key={p.v} onClick={()=>setPeriod(p.v)} style={{width:"25%",padding:"8px 0",borderRadius:10,fontSize:12,fontWeight:700,background:period===p.v?T.accent:"transparent",color:period===p.v?"#fff":T.sub}}>{p.l}</button>
+        <button key={p.v} aria-label={`${_lang==="en"?"Show period":"Mostrar período"} ${p.l}`} aria-pressed={period===p.v} onClick={()=>setPeriod(p.v)} style={{width:"25%",padding:"8px 0",borderRadius:10,fontSize:12,fontWeight:700,background:period===p.v?T.accent:"transparent",color:period===p.v?"#fff":T.sub}}>{p.l}</button>
       )}
     </div>
     <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:5,marginBottom:14,fontSize:9,color:T.dim,fontWeight:500}}>
@@ -6874,7 +6949,10 @@ function App(){
   useEffect(()=>{
     let ready={e:false,p:false,m:false,a:false};
     const check=()=>{if(Object.values(ready).every(Boolean))setLoading(false)};
-    const u1=FB.subEntries(d=>{setEntries(dedupeLegacyWakings(d));ready.e=true;check()});
+    const u1=FB.subEntries(d=>{setEntries(dedupeLegacyWakings(d));ready.e=true;check();
+      // v11.9.10: dispara migration 1x por device (flag interna). Idempotente, fast-no-op se ja rodou.
+      migrateLegacyWakingsOnce(d);
+    });
     const u2=FB.subProfile(d=>{if(d)setProfile(d);ready.p=true;check()});
     const u3=FB.subMeds(d=>{
       // v11.8.1: auto-migrate meds variaveis. Simeticona/Paracetamol/Novalgina costumam
@@ -7460,7 +7538,7 @@ function App(){
           <div style={{position:"relative"}}><button onClick={()=>setShowProfile(true)} style={{width:52,height:52,borderRadius:16,overflow:"hidden",border:`1.5px solid ${T.accent}20`,background:T.glass,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 2px 12px rgba(0,0,0,0.3)"}}>{profile.photo?<img src={profile.photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<Icon name="sun" size={22} color={T.sub}/>}</button>{daysLeft!==null&&daysLeft>0&&<button onClick={()=>setShowSleepInfo(true)} style={{position:"absolute",top:-5,right:-8,minWidth:24,height:24,borderRadius:12,background:`linear-gradient(135deg,${T.accent},#a78bfa)`,color:"#fff",fontSize:10,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 5px",boxShadow:`0 2px 8px ${T.accent}55`,border:`2px solid ${T.bg1}`}}>{daysLeft}</button>}{sleepRec?.phase===2&&<button onClick={()=>setShowSleepInfo(true)} style={{position:"absolute",top:-2,right:-6,width:20,height:20,borderRadius:10,background:T.green,display:"flex",alignItems:"center",justifyContent:"center",border:`2px solid ${T.bg1}`}}><Icon name="check" size={10} color={T.bg1}/></button>}</div>
           <div style={{flex:1}}><h1 style={{fontSize:17,fontWeight:800,margin:0,letterSpacing:-0.3}}>{babyName}</h1><div style={{display:"flex",alignItems:"center",gap:6,marginTop:3}}><span style={{fontSize:10,color:T.accent,fontWeight:600}}>{age&&<>{age.totalDays} {_lang==="en"?"days":"dias"}</>}</span><span style={{width:3,height:3,borderRadius:"50%",background:T.dim}}/><span style={{fontSize:10,color:T.dim}}>{new Date().toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{day:"numeric",month:"short"})}</span></div></div>
           {!isOnline&&<div title={_lang==="en"?"Offline — changes sync when reconnected":"Offline — mudanças sincronizam ao reconectar"} style={{display:"inline-flex",alignItems:"center",gap:4,marginRight:6,padding:"4px 8px",borderRadius:10,background:"rgba(251,146,60,0.1)",border:"1px solid rgba(251,146,60,0.28)",fontSize:9,color:"#fbbf24",fontWeight:700,letterSpacing:0.3,textTransform:"uppercase",flexShrink:0}}><span style={{width:6,height:6,borderRadius:"50%",background:"#fbbf24",boxShadow:"0 0 6px rgba(251,191,36,0.6)"}}/>off</div>}
-          <button onClick={()=>setShowInbox(true)} style={{position:"relative",width:34,height:34,borderRadius:11,background:inboxUnreadCount>0?"rgba(139,124,246,0.12)":"rgba(22,28,60,0.6)",border:`1px solid ${inboxUnreadCount>0?"rgba(139,124,246,0.3)":"rgba(139,124,246,0.08)"}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><div style={{animation:inboxUnreadCount>0?"bellWiggle 2.5s ease-in-out infinite":"none",transformOrigin:"top center",display:"flex"}}><Icon name="bell" size={17} color={inboxUnreadCount>0?T.accent:T.dim}/></div>{inboxUnreadCount>0&&<div style={{position:"absolute",top:-5,right:-5,minWidth:18,height:18,borderRadius:9,background:"linear-gradient(135deg,#f87171,#dc2626)",color:"#fff",fontSize:10,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 5px",border:`2px solid ${T.bg1}`,boxShadow:"0 0 10px rgba(239,68,68,0.6)"}}>{inboxUnreadCount}</div>}</button>
+          <button aria-label={inboxUnreadCount>0?(_lang==="en"?`${inboxUnreadCount} new notifications`:`${inboxUnreadCount} notificações novas`):(_lang==="en"?"Notifications":"Notificações")} onClick={()=>setShowInbox(true)} style={{position:"relative",width:34,height:34,borderRadius:11,background:inboxUnreadCount>0?"rgba(139,124,246,0.12)":"rgba(22,28,60,0.6)",border:`1px solid ${inboxUnreadCount>0?"rgba(139,124,246,0.3)":"rgba(139,124,246,0.08)"}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><div style={{animation:inboxUnreadCount>0?"bellWiggle 2.5s ease-in-out infinite":"none",transformOrigin:"top center",display:"flex"}}><Icon name="bell" size={17} color={inboxUnreadCount>0?T.accent:T.dim}/></div>{inboxUnreadCount>0&&<div style={{position:"absolute",top:-5,right:-5,minWidth:18,height:18,borderRadius:9,background:"linear-gradient(135deg,#f87171,#dc2626)",color:"#fff",fontSize:10,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 5px",border:`2px solid ${T.bg1}`,boxShadow:"0 0 10px rgba(239,68,68,0.6)"}}>{inboxUnreadCount}</div>}</button>
         </div>
         <CuriosityCard age={age} lang={lang} tick={tick}/>
         {/* v11.9.8: Daily summary card (20h-23h, 1x/dia) */}
@@ -7477,9 +7555,9 @@ function App(){
             <div style={{display:"flex",alignItems:"center",gap:5}}><Icon name="diaper" size={11} color={T.pink}/><span style={{color:"#f0f2ff",fontWeight:700}}>{totalDiapers}</span><span>{_lang==="en"?"diapers":"fraldas"}</span></div>
           </div>
         </div>}
-        <div style={{padding:"4px 0 0"}} onPointerDown={onRingPointerDown} onPointerMove={onRingPointerMove} onPointerUp={onRingPointerUp} onPointerCancel={onRingPointerUp}><Ring activeTimer={activeTimer} napSug={napSug} tick={tick} recentEvents={cycleE} lang={lang} showOrbit={showOrbit} screenLockActive={shouldLock}/></div>
+        <div role="region" aria-label={_lang==="en"?"Ring with current state. Long-press for details":"Anel com estado atual. Pressione e segure para detalhes"} style={{padding:"4px 0 0"}} onPointerDown={onRingPointerDown} onPointerMove={onRingPointerMove} onPointerUp={onRingPointerUp} onPointerCancel={onRingPointerUp}><Ring activeTimer={activeTimer} napSug={napSug} tick={tick} recentEvents={cycleE} lang={lang} showOrbit={showOrbit} screenLockActive={shouldLock}/></div>
         {activeTimer&&activeTimer.type==="sleep"&&<div style={{padding:"0 20px",marginBottom:10}}><button onClick={toggleNightWake} className={activeTimer.nightWake?"":"nw-amber-pulse"} style={{width:"100%",padding:"12px 16px",borderRadius:14,background:activeTimer.nightWake?"linear-gradient(135deg,rgba(96,165,250,0.2),rgba(167,139,250,0.15))":"linear-gradient(135deg,rgba(251,146,60,0.18),rgba(251,191,36,0.12))",border:`1px solid ${activeTimer.nightWake?"rgba(96,165,250,0.6)":"rgba(251,146,60,0.55)"}`,display:"flex",alignItems:"center",gap:12,boxShadow:activeTimer.nightWake?"0 0 20px rgba(96,165,250,0.2)":"0 0 20px rgba(251,146,60,0.15), 0 4px 16px rgba(0,0,0,0.3)",transition:"all 0.3s"}}><div className={activeTimer.nightWake?"pulse-soft":"nw-icon-pulse"} style={{width:36,height:36,borderRadius:12,background:activeTimer.nightWake?"rgba(96,165,250,0.3)":"rgba(251,146,60,0.25)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:activeTimer.nightWake?"none":"0 0 14px rgba(251,146,60,0.3)"}}><Icon name="sun" size={18} color={activeTimer.nightWake?"#60a5fa":"#fbbf24"}/></div><div style={{flex:1,textAlign:"left"}}><div style={{fontSize:13,fontWeight:700,color:activeTimer.nightWake?"#60a5fa":"#fbbf24"}}>{_lang==="en"?"Night Wake":"Despertar"}{activeTimer.nightWake&&` · ${fmtDur(Math.max(1,Math.floor((Date.now()-new Date(activeTimer.nightWake.startTime).getTime())/60000)))}`}</div><div style={{fontSize:9,color:activeTimer.nightWake?T.sub:"rgba(251,191,36,0.75)",marginTop:1}}>{activeTimer.nightWake?(_lang==="en"?"Tap to go back to sleep":"Toque para voltar a dormir"):(_lang==="en"?"Tap if Louise woke up":"Toque se Louise acordou")}</div></div>{activeTimer.nightWake&&<div className="pulse-fast" style={{width:10,height:10,borderRadius:"50%",background:"#60a5fa",boxShadow:"0 0 8px #60a5fa"}}/>}</button></div>}
-        {!activeTimer&&<div style={{display:"grid",gridTemplateColumns:"repeat(6, minmax(0,1fr))",gap:5,padding:"0 20px",marginBottom:10}}><button onClick={()=>{setFormType("bottle");setShowAdd(false)}} style={{padding:"9px 0 7px",borderRadius:11,background:`${T.green}08`,border:`1px solid ${T.green}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:3}}><Icon name="bottle" size={15} color={T.green}/><span style={{fontSize:8.5,fontWeight:700,color:T.green}}>{_lang==="en"?"Bottle":"Mam."}</span></button><button onClick={()=>setShowNursingPicker(true)} style={{padding:"9px 0 7px",borderRadius:11,background:`${T.blue}08`,border:`1px solid ${T.blue}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:3}}><Icon name="breast" size={15} color={T.blue}/><span style={{fontSize:8.5,fontWeight:700,color:T.blue}}>{_lang==="en"?"Nurse":"Amam."}</span></button><button onClick={()=>{setFormType("diaper");setShowAdd(false)}} style={{padding:"9px 0 7px",borderRadius:11,background:`${T.pink}08`,border:`1px solid ${T.pink}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:3}}><Icon name="diaper" size={15} color={T.pink}/><span style={{fontSize:8.5,fontWeight:700,color:T.pink}}>{_lang==="en"?"Diaper":"Fralda"}</span></button><button onClick={()=>startTimer("sleep")} style={{padding:"9px 0 7px",borderRadius:11,background:`${T.purple}08`,border:`1px solid ${T.purple}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:3}}><Icon name="bed" size={15} color={T.purple}/><span style={{fontSize:8.5,fontWeight:700,color:T.purple}}>{_lang==="en"?"Sleep":"Sono"}</span></button><button onClick={()=>startTimer("nap")} style={{padding:"9px 0 7px",borderRadius:11,background:`${T.accent}08`,border:`1px solid ${T.accent}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:3}}><Icon name="cloud" size={15} color={T.accent}/><span style={{fontSize:8.5,fontWeight:700,color:T.accent}}>{_lang==="en"?"Nap":"Sonec."}</span></button><button onClick={()=>startTimer("tummytime")} style={{padding:"9px 0 7px",borderRadius:11,background:`${T.amber}08`,border:`1px solid ${T.amber}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:3}}><Icon name="baby" size={15} color={T.amber}/><span style={{fontSize:8.5,fontWeight:700,color:T.amber}}>Tummy</span></button></div>}
+        {!activeTimer&&<div style={{display:"grid",gridTemplateColumns:"repeat(6, minmax(0,1fr))",gap:5,padding:"0 20px",marginBottom:10}}><button aria-label={_lang==="en"?"Add bottle":"Adicionar mamadeira"} onClick={()=>{setFormType("bottle");setShowAdd(false)}} style={{padding:"9px 0 7px",borderRadius:11,background:`${T.green}08`,border:`1px solid ${T.green}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:3}}><Icon name="bottle" size={15} color={T.green}/><span style={{fontSize:8.5,fontWeight:700,color:T.green}}>{_lang==="en"?"Bottle":"Mam."}</span></button><button aria-label={_lang==="en"?"Start nursing timer":"Iniciar timer de amamentação"} onClick={()=>setShowNursingPicker(true)} style={{padding:"9px 0 7px",borderRadius:11,background:`${T.blue}08`,border:`1px solid ${T.blue}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:3}}><Icon name="breast" size={15} color={T.blue}/><span style={{fontSize:8.5,fontWeight:700,color:T.blue}}>{_lang==="en"?"Nurse":"Amam."}</span></button><button aria-label={_lang==="en"?"Add diaper":"Adicionar fralda"} onClick={()=>{setFormType("diaper");setShowAdd(false)}} style={{padding:"9px 0 7px",borderRadius:11,background:`${T.pink}08`,border:`1px solid ${T.pink}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:3}}><Icon name="diaper" size={15} color={T.pink}/><span style={{fontSize:8.5,fontWeight:700,color:T.pink}}>{_lang==="en"?"Diaper":"Fralda"}</span></button><button aria-label={_lang==="en"?"Start bedtime":"Iniciar bedtime"} onClick={()=>startTimer("sleep")} style={{padding:"9px 0 7px",borderRadius:11,background:`${T.purple}08`,border:`1px solid ${T.purple}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:3}}><Icon name="bed" size={15} color={T.purple}/><span style={{fontSize:8.5,fontWeight:700,color:T.purple}}>{_lang==="en"?"Sleep":"Sono"}</span></button><button aria-label={_lang==="en"?"Start nap":"Iniciar soneca"} onClick={()=>startTimer("nap")} style={{padding:"9px 0 7px",borderRadius:11,background:`${T.accent}08`,border:`1px solid ${T.accent}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:3}}><Icon name="cloud" size={15} color={T.accent}/><span style={{fontSize:8.5,fontWeight:700,color:T.accent}}>{_lang==="en"?"Nap":"Sonec."}</span></button><button aria-label={_lang==="en"?"Start tummy time":"Iniciar tummy time"} onClick={()=>startTimer("tummytime")} style={{padding:"9px 0 7px",borderRadius:11,background:`${T.amber}08`,border:`1px solid ${T.amber}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:3}}><Icon name="baby" size={15} color={T.amber}/><span style={{fontSize:8.5,fontWeight:700,color:T.amber}}>Tummy</span></button></div>}
         {activeTimer&&activeTimer.type==="sleep"&&activeTimer.nightWake&&<div style={{display:"flex",gap:6,padding:"0 20px",marginBottom:12}}><button onClick={()=>{setFormType("bottle");setShowAdd(false)}} style={{flex:1,padding:"12px 0 8px",borderRadius:14,background:`${T.green}16`,border:`1px solid ${T.green}40`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="bottle" size={18} color={T.green}/><span style={{fontSize:9,fontWeight:700,color:T.green}}>{_lang==="en"?"Bottle":"Mamad."}</span></button><button onClick={()=>{setFormType("diaper");setShowAdd(false)}} style={{flex:1,padding:"12px 0 8px",borderRadius:14,background:`${T.pink}16`,border:`1px solid ${T.pink}40`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="diaper" size={18} color={T.pink}/><span style={{fontSize:9,fontWeight:700,color:T.pink}}>{_lang==="en"?"Diaper":"Fralda"}</span></button></div>}
         {napSug&&napSug.state==="opening"&&<div className="pulse-soft" style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:T.amberS,border:`1px solid ${T.amber}22`,display:"flex",alignItems:"center",gap:10}}><Icon name="bell" size={18} color={T.amber}/><div><div style={{fontSize:12,fontWeight:700,color:T.amber}}>{_lang==="en"?"Sleep window opening":"Janela abrindo"}</div><div style={{fontSize:10,color:T.sub}}>{_lang==="en"?"Watch for sleepy cues":"Observe sinais de sono"}{napSug.predictedTime?` · ~${napSug.predictedTime}`:""}</div></div></div>}
         {napSug&&napSug.state==="sweet"&&<div className="pulse-fast" style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:T.greenS,border:`1px solid ${T.green}22`,display:"flex",alignItems:"center",gap:10,boxShadow:`0 0 12px ${T.green}15`}}><Icon name="check" size={18} color={T.green}/><div><div style={{fontSize:12,fontWeight:700,color:T.green}}>{_lang==="en"?"Ideal time":"Hora ideal"}</div><div style={{fontSize:10,color:T.sub}}>{_lang==="en"?"Best moment for nap":"Melhor momento pra soneca"}{napSug.dataPoints>=3?(_lang==="en"?` · ${napSug.dataPoints} days`:` · ${napSug.dataPoints} dias`):""}</div></div></div>}
