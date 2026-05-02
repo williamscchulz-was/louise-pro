@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.18 Tap no header da data em History abre picker nativo pra jump rapido a qualquer data
   v11.9.17 Daily summary 19h-23h59 (mais inclusivo) + confetti com grace de 1 dia + hover desktop em buttons
   v11.9.16 Time picker quick chips no AddForm (Agora/-5/-15/-30/-1h/-2h) + valPulse com spring overshoot
   v11.9.15 Smart relative dates: "Hoje", "Ontem", "Anteontem", weekday se <7d, data curta se mais. Aplicado em History header e AddForm date label
@@ -590,8 +591,27 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.17";
+const APP_VERSION = "11.9.18";
 const CHANGELOG = [
+  {
+    v: "11.9.18", date: "2026-04-27",
+    pt: {
+      title: "Jump rápido em História — tap no header abre picker",
+      bullets: [
+        '★ **Tap no header da data** na aba História agora abre o **date picker nativo do iOS**. Pula direto pra qualquer data passada (max = hoje, futuro bloqueado). Antes precisava tocar na seta voltar várias vezes pra chegar em dias antigos.',
+        'Implementação invisível: input `type="date"` posicionado por cima do label visível com `opacity: 0`. Tap aciona o picker nativo, label visível continua sendo o `dLbl` formatado.',
+        'aria-label "Pular para data" pra leitores de tela.',
+      ],
+    },
+    en: {
+      title: "Quick jump in History — tap the header to open picker",
+      bullets: [
+        '★ **Tap the date header** in the History tab now opens the **native iOS date picker**. Jump straight to any past date (max = today, future blocked). Previously required tapping the back arrow multiple times to reach older days.',
+        'Invisible implementation: `type="date"` input positioned over the visible label with `opacity: 0`. Tap triggers the native picker, visible label stays as the formatted `dLbl`.',
+        'aria-label "Jump to date" for screen readers.',
+      ],
+    },
+  },
   {
     v: "11.9.17", date: "2026-04-27",
     pt: {
@@ -6433,8 +6453,16 @@ const HistoryPage = React.memo(function HistoryPage({entries,onDelete,onEdit,act
     <div style={{background:"linear-gradient(180deg,rgba(22,28,60,0.55),rgba(20,26,60,0.4))",borderRadius:20,border:`1px solid ${T.gBSoft}`,padding:"18px 18px 16px",marginBottom:14,boxShadow:T.insetTop}}>
       <div style={{display:"flex",alignItems:"center",gap:12}}>
         <button onClick={()=>setDateIdx(dateIdx+1)} style={{width:38,height:38,borderRadius:12,background:"rgba(22,28,60,0.6)",border:`1px solid ${T.gBSoft}`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:T.insetTop}}><Icon name="back" size={14} color={T.sub}/></button>
-        <div style={{flex:1,textAlign:"center"}}>
-          <div style={{fontSize:17,fontWeight:800,color:isToday?T.accent:T.text,letterSpacing:-0.3}}>{isToday?L("today"):dLbl}</div>
+        <div style={{flex:1,textAlign:"center",position:"relative"}}>
+          {/* v11.9.18: tap no header da data abre picker pra jump rápido */}
+          <input type="date" value={viewDate} max={todayStr()} onChange={e=>{
+            const v=e.target.value;if(!v)return;
+            const a=new Date(todayStr()+"T12:00");const b=new Date(v+"T12:00");
+            if(isNaN(b))return;
+            const diff=Math.max(0,Math.round((a-b)/86400000));
+            setDateIdx(diff);
+          }} aria-label={_lang==="en"?"Jump to date":"Pular para data"} style={{position:"absolute",inset:0,opacity:0,cursor:"pointer",WebkitAppearance:"none",appearance:"none",border:"none",background:"transparent"}}/>
+          <div style={{fontSize:17,fontWeight:800,color:isToday?T.accent:T.text,letterSpacing:-0.3,pointerEvents:"none"}}>{isToday?L("today"):dLbl}</div>
           <div style={{display:"flex",justifyContent:"center",gap:10,fontSize:11,color:T.sub,marginTop:7,flexWrap:"wrap",alignItems:"center"}}>
             {dMl>0&&<span style={{display:"inline-flex",alignItems:"center",gap:4,fontWeight:600,fontVariantNumeric:"tabular-nums"}}><Icon name="bottle" size={11} color={T.green}/>{dMl}ml</span>}
             {dSl>0&&<><span style={{width:3,height:3,borderRadius:"50%",background:T.dim}}/><span style={{display:"inline-flex",alignItems:"center",gap:4,fontWeight:600,fontVariantNumeric:"tabular-nums"}}><Icon name="bed" size={11} color={T.purple}/>{fmtDur(dSl)}</span></>}
