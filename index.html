@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.1 Polish + animations CSS: smart time default na bottle, empty state contextual, indicador online/offline, confetti em marcos (1m/100d/6m/1ano), animations inline migradas pra classes
   v11.9.0 Perf de leitura: subEntries com janela 90d + backupMeta separado do snapshot + React.memo nos faltantes + Sheet/lastFeed dead code removido
   v11.8.7 Home cards: todos info-only (button -> div). Sem mais click acidental abrindo forms
   v11.8.6 Night pattern: fix over-count (engine v2.2.3) - cluster 30min + boundary 15min em retroWakings
@@ -226,6 +227,13 @@
     @keyframes liveDotPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.85)}}
     @keyframes progressShimmer{0%,100%{opacity:0.7}50%{opacity:1}}
     @keyframes nwIconPulseAmber{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+    /* v11.9.1: confetti pra marcos (1m, 100d, etc). Cada particula com delay/distancia
+       diferente. Anima 1.4s e some. Trigger 1x via localStorage flag. */
+    @keyframes confettiDrop{0%{transform:translate(0,0) rotate(0);opacity:1}100%{transform:translate(var(--cx,0),var(--cy,140px)) rotate(var(--cr,360deg));opacity:0}}
+    .confetti-piece{position:absolute;top:50%;left:50%;width:6px;height:10px;border-radius:1px;pointer-events:none;animation:confettiDrop 1.4s cubic-bezier(0.22,0.6,0.36,1) forwards}
+    /* Daily summary slide-up sutil */
+    @keyframes summarySlide{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+    @keyframes summaryFade{from{opacity:1}to{opacity:0}}
     /* v10.7.1 refinements — micro feedback, tabular-nums nos valores, pulse em mudança */
     @keyframes valPulse{0%{transform:scale(1.08);opacity:0.6}60%{transform:scale(1);opacity:1}100%{transform:scale(1);opacity:1}}
     .home-card{transition:transform .14s ease-out;font-variant-numeric:tabular-nums}
@@ -235,6 +243,15 @@
     .navbtn:active{transform:scale(0.88)}
     .navfab{transition:transform .22s cubic-bezier(0.34,1.56,0.64,1)}
     .navfab:active{transform:scale(0.92)}
+    /* v11.9.1: tap feedback global pra qualquer button. Sutil — scale(0.97) + curva iOS. */
+    .tap-fb{transition:transform .14s ease-out, opacity .14s ease-out}
+    .tap-fb:active{transform:scale(0.97)}
+    /* v11.9.1: animations migradas pra classes (regra do CLAUDE.md): inline animation
+       em elementos que recebem prop tick reseta a cada re-render. CSS class persiste. */
+    .pulse-soft{animation:pulse 2s infinite}
+    .pulse-fast{animation:pulse 1.5s infinite}
+    .nw-amber-pulse{animation:nwPulseAmber 2.4s ease-in-out infinite}
+    .nw-icon-pulse{animation:nwIconPulseAmber 2.4s ease-in-out infinite}
     /* Pause every CSS animation while the app is in background (visibility API).
        Saves battery/CPU on iOS PWA and any browser that doesn't auto-throttle. */
     body.app-hidden *,body.app-hidden *::before,body.app-hidden *::after{animation-play-state:paused !important}
@@ -528,8 +545,31 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.0";
+const APP_VERSION = "11.9.1";
 const CHANGELOG = [
+  {
+    v: "11.9.1", date: "2026-04-27",
+    pt: {
+      title: "Polish: smart defaults, contexto, online/offline, confetti em marcos",
+      bullets: [
+        '★ **Time default inteligente** ao registrar mamadeira: sugere `última + intervalo` em vez de "agora". Se já está atrasado, traz pro horário correto. Edição mantém o horário original.',
+        '★ **Empty state contextual** no Hoje: muda com a hora do dia. Manhã sugere primeira mamada, tarde fala de sonecas, noite menciona bedtime.',
+        '★ **Indicador offline** sutil no header (pill amber `OFF`) quando perde rede. Some ao reconectar — sem banner alarmante.',
+        '★ **Confetti em marcos** da Louise: 1 mês, 100 dias, 6 meses, 1 ano. 1 segundo de festa, 1x cada via localStorage flag.',
+        'Animations inline migradas pra classes CSS (`pulse-soft`, `pulse-fast`, `nw-amber-pulse`, `nw-icon-pulse`). Resolve reset visual a cada tick em elementos que recebem `tick` como prop. Bate a regra dura do CLAUDE.md.',
+      ],
+    },
+    en: {
+      title: "Polish: smart defaults, context, online/offline, milestone confetti",
+      bullets: [
+        '★ **Smart time default** for bottle entry: suggests `last + interval` instead of "now". If overdue, lands on the correct time. Edit mode keeps original time.',
+        '★ **Contextual empty state** on Today: changes with hour of day. Morning prompts first feed, afternoon mentions naps, evening hints at bedtime.',
+        '★ **Subtle offline indicator** in header (amber `OFF` pill) when network drops. Disappears on reconnect — no alarming banner.',
+        '★ **Confetti on milestones**: 1 month, 100 days, 6 months, 1 year. 1-second celebration, once each via localStorage flag.',
+        'Inline animations migrated to CSS classes (`pulse-soft`, `pulse-fast`, `nw-amber-pulse`, `nw-icon-pulse`). Fixes the visual reset on every tick in elements that receive `tick` as a prop. Matches the hard rule in CLAUDE.md.',
+      ],
+    },
+  },
   {
     v: "11.9.0", date: "2026-04-27",
     pt: {
@@ -4131,6 +4171,30 @@ const CuriosityCard = React.memo(function CuriosityCard({age,lang,tick}){
   </div>);
 });
 
+// v11.9.1: confetti minimalista pra marcos (1 mes, 100 dias). Trigger 1x via localStorage.
+// 28 particulas com cores variadas, drop 1.4s, fade out. Cleanup por timeout.
+function Confetti({trigger,onDone}){
+  if(!trigger)return null;
+  const colors=["#a78bfa","#fbbf24","#f472b6","#6ee7b7","#7dd3fc","#fb923c"];
+  const pieces=Array.from({length:28},(_,i)=>{
+    const angle=(i/28)*Math.PI*2+Math.random()*0.4;
+    const dist=120+Math.random()*80;
+    const cx=Math.cos(angle)*dist;
+    const cy=Math.sin(angle)*dist+60;
+    const cr=(Math.random()*720-360);
+    const delay=Math.random()*0.15;
+    const c=colors[i%colors.length];
+    return{key:i,style:{"--cx":`${cx}px`,"--cy":`${cy}px`,"--cr":`${cr}deg`,background:c,animationDelay:`${delay}s`}};
+  });
+  useEffect(()=>{
+    const t=setTimeout(()=>onDone&&onDone(),1700);
+    return()=>clearTimeout(t);
+  },[]);
+  return(<div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:400}}>
+    {pieces.map(p=><span key={p.key} className="confetti-piece" style={p.style}/>)}
+  </div>);
+}
+
 const InsightCards = React.memo(function InsightCards({insights,phase}){
   const[vis,setVis]=useState(false);const[fading,setFading]=useState(false);const shownRef=useRef(null);
   useEffect(()=>{
@@ -4550,9 +4614,29 @@ const EntryRow = React.memo(function EntryRow({entry,onDelete,onEdit,napNum,nigh
   <div style={{textAlign:"right",flexShrink:0,lineHeight:1.1}}>{(entry.type==="sleep"||entry.type==="nap")&&entry.durationMin?(()=>{const endMs=new Date(`${entry.date}T${entry.time}`).getTime()+entry.durationMin*60000;const endD=new Date(endMs);const endT=`${String(endD.getHours()).padStart(2,"0")}:${String(endD.getMinutes()).padStart(2,"0")}`;const endDt=`${endD.getFullYear()}-${String(endD.getMonth()+1).padStart(2,"0")}-${String(endD.getDate()).padStart(2,"0")}`;return<><div style={{fontSize:13,fontWeight:700,color:"#f0f2ff",fontVariantNumeric:"tabular-nums",letterSpacing:-0.3}}>{`${entry.time}\u2013${endT}`}</div><div style={{fontSize:10,color:T.sub,fontWeight:500,marginTop:1}}>{timeSince(endDt,endT)}</div></>})():<><div style={{fontSize:13,fontWeight:700,color:"#f0f2ff",fontVariantNumeric:"tabular-nums",letterSpacing:-0.3}}>{entry.time}</div><div style={{fontSize:10,color:T.sub,fontWeight:500,marginTop:1}}>{timeSince(entry.date,entry.time)}</div></>}</div>
 </div></div>)});
 
-function AddForm({type,onSave,onSaveBatch,savedMeds,onSaveMeds,editEntry,lastBottleMl,topMl,onStartTimer}){const cfg=TYPES[type];const ed=editEntry||{};
+function AddForm({type,onSave,onSaveBatch,savedMeds,onSaveMeds,editEntry,lastBottleMl,lastBottleEntry,feedingIntervalMin,topMl,onStartTimer}){const cfg=TYPES[type];const ed=editEntry||{};
   const[date,setDate]=useState(ed.date||todayStr());
-  const[time,setTime]=useState(ed.time||nowTime());
+  // v11.9.1: smart time default — para bottle (não-edit), sugere last+interval do feeding reminder.
+  // Se o resultado é futuro do nowTime, mantém nowTime (não sugere registro adiantado).
+  const computeSmartTime=()=>{
+    if(ed.time)return ed.time;
+    if(type==="bottle"&&lastBottleEntry&&feedingIntervalMin>0){
+      const lastMs=new Date(`${lastBottleEntry.date}T${lastBottleEntry.time}`).getTime();
+      if(!isNaN(lastMs)){
+        const suggestMs=lastMs+feedingIntervalMin*60000;
+        const nowMs=Date.now();
+        // só usa se já passou o intervalo (a mamada está próxima/atrasada)
+        if(suggestMs<=nowMs+5*60000){
+          // Se a sugestão é "no passado próximo", usar ela. Se é futuro >5min, usar agora.
+          const useMs=suggestMs<nowMs?suggestMs:nowMs;
+          const d=new Date(useMs);
+          return`${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+        }
+      }
+    }
+    return nowTime();
+  };
+  const[time,setTime]=useState(computeSmartTime());
   const[ml,setMl]=useState(ed.ml?String(ed.ml):(type==="bottle"&&lastBottleMl&&!editEntry?String(lastBottleMl):""));const[durH,setDurH]=useState(ed.durationMin?String(Math.floor(ed.durationMin/60)):"");const[durM,setDurM]=useState(ed.durationMin?String(ed.durationMin%60):"");
   const[diaperT,setDiaperT]=useState(ed.subtype||"wet");const[medN,setMedN]=useState(ed.name||"");const[medD,setMedD]=useState(ed.dose||"");
   const[tempV,setTempV]=useState(ed.value?String(ed.value):"");const[side,setSide]=useState(ed.side||"left");const[nurseM,setNurseM]=useState(ed.durationMin&&type==="nursing"?String(ed.durationMin):"");
@@ -6253,6 +6337,37 @@ function App(){
   const[profileSaveSignal,setProfileSaveSignal]=useState(0);
   const profileSaveRef=useRef(null);
   const[inbox,setInbox]=useState({items:[],lastReset:""});const[showInbox,setShowInbox]=useState(false);
+  // v11.9.1: marcos da Louise (1 mes, 100 dias, 6 meses) — confetti 1x cada.
+  const[confettiOn,setConfettiOn]=useState(false);
+  useEffect(()=>{
+    if(loading||!profile.birthDate)return;
+    try{
+      const seenRaw=localStorage.getItem("lp_milestones_seen")||"";
+      const seen=new Set(seenRaw.split(",").filter(Boolean));
+      const bd=new Date(profile.birthDate);
+      if(isNaN(bd))return;
+      const today=new Date();today.setHours(0,0,0,0);
+      const days=Math.floor((today-bd)/86400000);
+      // marcos: 1 mes (~30d), 100 dias, 6 meses (~180d), 1 ano (365)
+      const ms=[{k:"30d",at:30},{k:"100d",at:100},{k:"180d",at:180},{k:"365d",at:365}];
+      const hit=ms.find(m=>days===m.at&&!seen.has(m.k));
+      if(hit){
+        seen.add(hit.k);
+        localStorage.setItem("lp_milestones_seen",[...seen].join(","));
+        setConfettiOn(true);
+        Haptic.success();
+      }
+    }catch(_){}
+  },[loading,profile.birthDate]);
+  // v11.9.1: indicador online/offline sutil. Reflete `navigator.onLine` + listeners.
+  const[isOnline,setIsOnline]=useState(()=>typeof navigator!=="undefined"?navigator.onLine!==false:true);
+  useEffect(()=>{
+    const on=()=>setIsOnline(true);
+    const off=()=>setIsOnline(false);
+    window.addEventListener("online",on);
+    window.addEventListener("offline",off);
+    return()=>{window.removeEventListener("online",on);window.removeEventListener("offline",off)};
+  },[]);
   const[reminders,setReminders]=useState([]);
   const[showChangelog,setShowChangelog]=useState(false);const[showUpdateToast,setShowUpdateToast]=useState(false);
   const[showEditStart,setShowEditStart]=useState(false);
@@ -6593,6 +6708,8 @@ function App(){
   const todayE=useMemo(()=>entries.filter(e=>e.date===today),[entries,today]);
   const totalMl=todayE.filter(e=>e.type==="bottle").reduce((s,e)=>s+(e.ml||0),0);
   const lastBottleMl=useMemo(()=>{const b=entries.find(e=>e.type==="bottle"&&e.ml);return b?b.ml:0},[entries]);
+  // v11.9.1: passa o entry inteiro pra AddForm sugerir time = last+interval
+  const lastBottleEntry=useMemo(()=>entries.find(e=>e.type==="bottle"&&e.ml&&e.date&&e.time)||null,[entries]);
   // Next-feeding progress (for the Bottle quick-stat card on Home). Only computed if the
   // user has the feedingInterval reminder enabled — otherwise the card keeps its plain "ago" row.
   const feedReminder=useMemo(()=>(reminders||[]).find(r=>r.tipo==="feedingInterval"),[reminders]);
@@ -6886,6 +7003,7 @@ function App(){
     {/* Starfield: componente memoizado, renderiza 1x por sessão (v10.5.3). */}
     <Starfield/>
     {toast&&<Toast message={toast} onUndo={undoRef.current?handleUndo:null} onClose={()=>setToast(null)}/>}
+    <Confetti trigger={confettiOn} onDone={()=>setConfettiOn(false)}/>
     <div style={{position:"relative",zIndex:1}}>
       {/* SWIPE CONTAINER (v9.9.2) — Home/Stats/History pre-mounted side-by-side */}
       {isSwipePage?<div style={{overflow:"hidden",width:"100%",touchAction:"pan-y"}}>
@@ -6901,16 +7019,17 @@ function App(){
         <div style={{padding:"calc(12px + env(safe-area-inset-top)) 20px 0",display:"flex",alignItems:"center",gap:12}}>
           <div style={{position:"relative"}}><button onClick={()=>setShowProfile(true)} style={{width:52,height:52,borderRadius:16,overflow:"hidden",border:`1.5px solid ${T.accent}20`,background:T.glass,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 2px 12px rgba(0,0,0,0.3)"}}>{profile.photo?<img src={profile.photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<Icon name="sun" size={22} color={T.sub}/>}</button>{daysLeft!==null&&daysLeft>0&&<button onClick={()=>setShowSleepInfo(true)} style={{position:"absolute",top:-5,right:-8,minWidth:24,height:24,borderRadius:12,background:`linear-gradient(135deg,${T.accent},#a78bfa)`,color:"#fff",fontSize:10,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 5px",boxShadow:`0 2px 8px ${T.accent}55`,border:`2px solid ${T.bg1}`}}>{daysLeft}</button>}{sleepRec?.phase===2&&<button onClick={()=>setShowSleepInfo(true)} style={{position:"absolute",top:-2,right:-6,width:20,height:20,borderRadius:10,background:T.green,display:"flex",alignItems:"center",justifyContent:"center",border:`2px solid ${T.bg1}`}}><Icon name="check" size={10} color={T.bg1}/></button>}</div>
           <div style={{flex:1}}><h1 style={{fontSize:17,fontWeight:800,margin:0,letterSpacing:-0.3}}>{babyName}</h1><div style={{display:"flex",alignItems:"center",gap:6,marginTop:3}}><span style={{fontSize:10,color:T.accent,fontWeight:600}}>{age&&<>{age.totalDays} {_lang==="en"?"days":"dias"}</>}</span><span style={{width:3,height:3,borderRadius:"50%",background:T.dim}}/><span style={{fontSize:10,color:T.dim}}>{new Date().toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{day:"numeric",month:"short"})}</span></div></div>
+          {!isOnline&&<div title={_lang==="en"?"Offline — changes sync when reconnected":"Offline — mudanças sincronizam ao reconectar"} style={{display:"inline-flex",alignItems:"center",gap:4,marginRight:6,padding:"4px 8px",borderRadius:10,background:"rgba(251,146,60,0.1)",border:"1px solid rgba(251,146,60,0.28)",fontSize:9,color:"#fbbf24",fontWeight:700,letterSpacing:0.3,textTransform:"uppercase",flexShrink:0}}><span style={{width:6,height:6,borderRadius:"50%",background:"#fbbf24",boxShadow:"0 0 6px rgba(251,191,36,0.6)"}}/>off</div>}
           <button onClick={()=>setShowInbox(true)} style={{position:"relative",width:34,height:34,borderRadius:11,background:inboxUnreadCount>0?"rgba(139,124,246,0.12)":"rgba(22,28,60,0.6)",border:`1px solid ${inboxUnreadCount>0?"rgba(139,124,246,0.3)":"rgba(139,124,246,0.08)"}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><div style={{animation:inboxUnreadCount>0?"bellWiggle 2.5s ease-in-out infinite":"none",transformOrigin:"top center",display:"flex"}}><Icon name="bell" size={17} color={inboxUnreadCount>0?T.accent:T.dim}/></div>{inboxUnreadCount>0&&<div style={{position:"absolute",top:-5,right:-5,minWidth:18,height:18,borderRadius:9,background:"linear-gradient(135deg,#f87171,#dc2626)",color:"#fff",fontSize:10,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 5px",border:`2px solid ${T.bg1}`,boxShadow:"0 0 10px rgba(239,68,68,0.6)"}}>{inboxUnreadCount}</div>}</button>
         </div>
         <CuriosityCard age={age} lang={lang} tick={tick}/>
         <div style={{padding:"4px 0 0"}}><Ring activeTimer={activeTimer} napSug={napSug} tick={tick} recentEvents={cycleE} lang={lang} showOrbit={showOrbit} screenLockActive={shouldLock}/></div>
-        {activeTimer&&activeTimer.type==="sleep"&&<div style={{padding:"0 20px",marginBottom:10}}><button onClick={toggleNightWake} style={{width:"100%",padding:"12px 16px",borderRadius:14,background:activeTimer.nightWake?"linear-gradient(135deg,rgba(96,165,250,0.2),rgba(167,139,250,0.15))":"linear-gradient(135deg,rgba(251,146,60,0.18),rgba(251,191,36,0.12))",border:`1px solid ${activeTimer.nightWake?"rgba(96,165,250,0.6)":"rgba(251,146,60,0.55)"}`,display:"flex",alignItems:"center",gap:12,boxShadow:activeTimer.nightWake?"0 0 20px rgba(96,165,250,0.2)":"0 0 20px rgba(251,146,60,0.15), 0 4px 16px rgba(0,0,0,0.3)",transition:"all 0.3s",animation:activeTimer.nightWake?"none":"nwPulseAmber 2.4s ease-in-out infinite"}}><div style={{width:36,height:36,borderRadius:12,background:activeTimer.nightWake?"rgba(96,165,250,0.3)":"rgba(251,146,60,0.25)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:activeTimer.nightWake?"none":"0 0 14px rgba(251,146,60,0.3)",animation:activeTimer.nightWake?"pulse 2s ease-in-out infinite":"nwIconPulseAmber 2.4s ease-in-out infinite"}}><Icon name="sun" size={18} color={activeTimer.nightWake?"#60a5fa":"#fbbf24"}/></div><div style={{flex:1,textAlign:"left"}}><div style={{fontSize:13,fontWeight:700,color:activeTimer.nightWake?"#60a5fa":"#fbbf24"}}>{_lang==="en"?"Night Wake":"Despertar"}{activeTimer.nightWake&&` · ${fmtDur(Math.max(1,Math.floor((Date.now()-new Date(activeTimer.nightWake.startTime).getTime())/60000)))}`}</div><div style={{fontSize:9,color:activeTimer.nightWake?T.sub:"rgba(251,191,36,0.75)",marginTop:1}}>{activeTimer.nightWake?(_lang==="en"?"Tap to go back to sleep":"Toque para voltar a dormir"):(_lang==="en"?"Tap if Louise woke up":"Toque se Louise acordou")}</div></div>{activeTimer.nightWake&&<div style={{width:10,height:10,borderRadius:"50%",background:"#60a5fa",boxShadow:"0 0 8px #60a5fa",animation:"pulse 1.5s ease-in-out infinite"}}/>}</button></div>}
+        {activeTimer&&activeTimer.type==="sleep"&&<div style={{padding:"0 20px",marginBottom:10}}><button onClick={toggleNightWake} className={activeTimer.nightWake?"":"nw-amber-pulse"} style={{width:"100%",padding:"12px 16px",borderRadius:14,background:activeTimer.nightWake?"linear-gradient(135deg,rgba(96,165,250,0.2),rgba(167,139,250,0.15))":"linear-gradient(135deg,rgba(251,146,60,0.18),rgba(251,191,36,0.12))",border:`1px solid ${activeTimer.nightWake?"rgba(96,165,250,0.6)":"rgba(251,146,60,0.55)"}`,display:"flex",alignItems:"center",gap:12,boxShadow:activeTimer.nightWake?"0 0 20px rgba(96,165,250,0.2)":"0 0 20px rgba(251,146,60,0.15), 0 4px 16px rgba(0,0,0,0.3)",transition:"all 0.3s"}}><div className={activeTimer.nightWake?"pulse-soft":"nw-icon-pulse"} style={{width:36,height:36,borderRadius:12,background:activeTimer.nightWake?"rgba(96,165,250,0.3)":"rgba(251,146,60,0.25)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:activeTimer.nightWake?"none":"0 0 14px rgba(251,146,60,0.3)"}}><Icon name="sun" size={18} color={activeTimer.nightWake?"#60a5fa":"#fbbf24"}/></div><div style={{flex:1,textAlign:"left"}}><div style={{fontSize:13,fontWeight:700,color:activeTimer.nightWake?"#60a5fa":"#fbbf24"}}>{_lang==="en"?"Night Wake":"Despertar"}{activeTimer.nightWake&&` · ${fmtDur(Math.max(1,Math.floor((Date.now()-new Date(activeTimer.nightWake.startTime).getTime())/60000)))}`}</div><div style={{fontSize:9,color:activeTimer.nightWake?T.sub:"rgba(251,191,36,0.75)",marginTop:1}}>{activeTimer.nightWake?(_lang==="en"?"Tap to go back to sleep":"Toque para voltar a dormir"):(_lang==="en"?"Tap if Louise woke up":"Toque se Louise acordou")}</div></div>{activeTimer.nightWake&&<div className="pulse-fast" style={{width:10,height:10,borderRadius:"50%",background:"#60a5fa",boxShadow:"0 0 8px #60a5fa"}}/>}</button></div>}
         {!activeTimer&&<div style={{display:"grid",gridTemplateColumns:"repeat(6, minmax(0,1fr))",gap:5,padding:"0 20px",marginBottom:10}}><button onClick={()=>{setFormType("bottle");setShowAdd(false)}} style={{padding:"9px 0 7px",borderRadius:11,background:`${T.green}08`,border:`1px solid ${T.green}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:3}}><Icon name="bottle" size={15} color={T.green}/><span style={{fontSize:8.5,fontWeight:700,color:T.green}}>{_lang==="en"?"Bottle":"Mam."}</span></button><button onClick={()=>setShowNursingPicker(true)} style={{padding:"9px 0 7px",borderRadius:11,background:`${T.blue}08`,border:`1px solid ${T.blue}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:3}}><Icon name="breast" size={15} color={T.blue}/><span style={{fontSize:8.5,fontWeight:700,color:T.blue}}>{_lang==="en"?"Nurse":"Amam."}</span></button><button onClick={()=>{setFormType("diaper");setShowAdd(false)}} style={{padding:"9px 0 7px",borderRadius:11,background:`${T.pink}08`,border:`1px solid ${T.pink}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:3}}><Icon name="diaper" size={15} color={T.pink}/><span style={{fontSize:8.5,fontWeight:700,color:T.pink}}>{_lang==="en"?"Diaper":"Fralda"}</span></button><button onClick={()=>startTimer("sleep")} style={{padding:"9px 0 7px",borderRadius:11,background:`${T.purple}08`,border:`1px solid ${T.purple}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:3}}><Icon name="bed" size={15} color={T.purple}/><span style={{fontSize:8.5,fontWeight:700,color:T.purple}}>{_lang==="en"?"Sleep":"Sono"}</span></button><button onClick={()=>startTimer("nap")} style={{padding:"9px 0 7px",borderRadius:11,background:`${T.accent}08`,border:`1px solid ${T.accent}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:3}}><Icon name="cloud" size={15} color={T.accent}/><span style={{fontSize:8.5,fontWeight:700,color:T.accent}}>{_lang==="en"?"Nap":"Sonec."}</span></button><button onClick={()=>startTimer("tummytime")} style={{padding:"9px 0 7px",borderRadius:11,background:`${T.amber}08`,border:`1px solid ${T.amber}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:3}}><Icon name="baby" size={15} color={T.amber}/><span style={{fontSize:8.5,fontWeight:700,color:T.amber}}>Tummy</span></button></div>}
         {activeTimer&&activeTimer.type==="sleep"&&activeTimer.nightWake&&<div style={{display:"flex",gap:6,padding:"0 20px",marginBottom:12}}><button onClick={()=>{setFormType("bottle");setShowAdd(false)}} style={{flex:1,padding:"12px 0 8px",borderRadius:14,background:`${T.green}16`,border:`1px solid ${T.green}40`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="bottle" size={18} color={T.green}/><span style={{fontSize:9,fontWeight:700,color:T.green}}>{_lang==="en"?"Bottle":"Mamad."}</span></button><button onClick={()=>{setFormType("diaper");setShowAdd(false)}} style={{flex:1,padding:"12px 0 8px",borderRadius:14,background:`${T.pink}16`,border:`1px solid ${T.pink}40`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="diaper" size={18} color={T.pink}/><span style={{fontSize:9,fontWeight:700,color:T.pink}}>{_lang==="en"?"Diaper":"Fralda"}</span></button></div>}
-        {napSug&&napSug.state==="opening"&&<div style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:T.amberS,border:`1px solid ${T.amber}22`,display:"flex",alignItems:"center",gap:10,animation:"pulse 2s infinite"}}><Icon name="bell" size={18} color={T.amber}/><div><div style={{fontSize:12,fontWeight:700,color:T.amber}}>{_lang==="en"?"Sleep window opening":"Janela abrindo"}</div><div style={{fontSize:10,color:T.sub}}>{_lang==="en"?"Watch for sleepy cues":"Observe sinais de sono"}{napSug.predictedTime?` · ~${napSug.predictedTime}`:""}</div></div></div>}
-        {napSug&&napSug.state==="sweet"&&<div style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:T.greenS,border:`1px solid ${T.green}22`,display:"flex",alignItems:"center",gap:10,animation:"pulse 1.5s infinite",boxShadow:`0 0 12px ${T.green}15`}}><Icon name="check" size={18} color={T.green}/><div><div style={{fontSize:12,fontWeight:700,color:T.green}}>{_lang==="en"?"Ideal time":"Hora ideal"}</div><div style={{fontSize:10,color:T.sub}}>{_lang==="en"?"Best moment for nap":"Melhor momento pra soneca"}{napSug.dataPoints>=3?(_lang==="en"?` · ${napSug.dataPoints} days`:` · ${napSug.dataPoints} dias`):""}</div></div></div>}
-        {napSug&&(napSug.state==="stretching"||napSug.state==="overdue")&&<div style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:T.orangeS,border:`1px solid ${T.orange}22`,display:"flex",alignItems:"center",gap:10,animation:"pulse 1.5s infinite"}}><Icon name="zap" size={18} color={napSug.state==="overdue"?"#f87171":T.orange}/><div><div style={{fontSize:12,fontWeight:700,color:napSug.state==="overdue"?"#f87171":T.orange}}>{napSug.state==="overdue"?(_lang==="en"?"Past max window":"Passou do maximo"):(_lang==="en"?"Stretching":"Esticando")}</div><div style={{fontSize:10,color:T.sub}}>{napSug.state==="overdue"?(_lang==="en"?`${fmtDur(napSug.el)} awake — risk of overtired`:`${fmtDur(napSug.el)} acordada — risco de overtired`):(_lang==="en"?"Past average, still within range":"Passou da media, ainda dentro do range")}</div></div></div>}
+        {napSug&&napSug.state==="opening"&&<div className="pulse-soft" style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:T.amberS,border:`1px solid ${T.amber}22`,display:"flex",alignItems:"center",gap:10}}><Icon name="bell" size={18} color={T.amber}/><div><div style={{fontSize:12,fontWeight:700,color:T.amber}}>{_lang==="en"?"Sleep window opening":"Janela abrindo"}</div><div style={{fontSize:10,color:T.sub}}>{_lang==="en"?"Watch for sleepy cues":"Observe sinais de sono"}{napSug.predictedTime?` · ~${napSug.predictedTime}`:""}</div></div></div>}
+        {napSug&&napSug.state==="sweet"&&<div className="pulse-fast" style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:T.greenS,border:`1px solid ${T.green}22`,display:"flex",alignItems:"center",gap:10,boxShadow:`0 0 12px ${T.green}15`}}><Icon name="check" size={18} color={T.green}/><div><div style={{fontSize:12,fontWeight:700,color:T.green}}>{_lang==="en"?"Ideal time":"Hora ideal"}</div><div style={{fontSize:10,color:T.sub}}>{_lang==="en"?"Best moment for nap":"Melhor momento pra soneca"}{napSug.dataPoints>=3?(_lang==="en"?` · ${napSug.dataPoints} days`:` · ${napSug.dataPoints} dias`):""}</div></div></div>}
+        {napSug&&(napSug.state==="stretching"||napSug.state==="overdue")&&<div className="pulse-fast" style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:T.orangeS,border:`1px solid ${T.orange}22`,display:"flex",alignItems:"center",gap:10}}><Icon name="zap" size={18} color={napSug.state==="overdue"?"#f87171":T.orange}/><div><div style={{fontSize:12,fontWeight:700,color:napSug.state==="overdue"?"#f87171":T.orange}}>{napSug.state==="overdue"?(_lang==="en"?"Past max window":"Passou do maximo"):(_lang==="en"?"Stretching":"Esticando")}</div><div style={{fontSize:10,color:T.sub}}>{napSug.state==="overdue"?(_lang==="en"?`${fmtDur(napSug.el)} awake — risk of overtired`:`${fmtDur(napSug.el)} acordada — risco de overtired`):(_lang==="en"?"Past average, still within range":"Passou da media, ainda dentro do range")}</div></div></div>}
         {!activeTimer&&sleepRec?.phase===2&&daySchedule.length>0&&daySchedule.filter(s=>s.status==="next").map((s,i)=><div key={"ns"+i} style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:`${T.accent}10`,border:`1px solid ${T.accent}18`,display:"flex",alignItems:"center",gap:10}}><Icon name="star" size={18} color={T.accent} fill={T.accent}/><div><div style={{fontSize:12,fontWeight:700,color:T.accent}}>{s.bed?(_lang==="en"?"Bedtime ~":"Sono ~"):(_lang==="en"?"Next nap ~":"Prox. soneca ~")}{minToTime(s.startMin)}</div><div style={{fontSize:10,color:T.sub}}>{s.bed?"":`${s.pos}${_lang==="en"?["","st","nd","rd"][s.pos]||"th":"a"} · `}WW {fmtDur(s.ww)}{s.durRange?" · "+s.durRange:""}</div></div></div>)}
         <InsightCards insights={dayInsights} phase={sleepRec?.phase}/>
         <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr)",gap:6,padding:"0 20px",marginBottom:14}}>{[{i:"bottle",v:`${totalMl}`,u:"ml",c:T.green,t:["bottle"],tap:"bottle",l:_lang==="en"?"Bottle":"Mamad."},{i:"pill",v:`${totalSimet}`,u:"x",c:T.amber,t:["medicine"],tap:null,l:"Simeticona",filter:e=>e.type==="medicine"&&e.name&&/simet/i.test(e.name)},{i:"moon",v:fmtDur(totalSleep),c:T.purple,t:["sleep","nap"],tap:"nap",l:_lang==="en"?"Sleep":"Sono"},{i:"diaper",v:`${totalDiapers}`,c:T.pink,t:["diaper"],tap:"diaper",l:_lang==="en"?"Diaper":"Fralda"}].map((p,idx)=>{const last=entries.find(e=>p.filter?p.filter(e):p.t.includes(e.type));let ago=null;if(last){if(p.t.includes("sleep")&&last.durationMin){const endMs=new Date(`${last.date}T${last.time}`).getTime()+last.durationMin*60000;const endD=new Date(endMs);const ed=`${endD.getFullYear()}-${String(endD.getMonth()+1).padStart(2,"0")}-${String(endD.getDate()).padStart(2,"0")}`;const et=`${String(endD.getHours()).padStart(2,"0")}:${String(endD.getMinutes()).padStart(2,"0")}`;ago=timeSince(ed,et)}else{ago=timeSince(last.date,last.time)}}
@@ -6930,7 +7049,7 @@ function App(){
         // Diaper breakdown wet/dirty (v10.8.0). Opção C do mockup — ícones coloridos.
         const diaperBreakdown=p.tap==="diaper"&&(wetDiapers>0||dirtyDiapers>0)?(<div style={{display:"flex",gap:8,marginTop:3,fontSize:11,fontWeight:700,fontVariantNumeric:"tabular-nums"}}>{wetDiapers>0&&<span style={{display:"inline-flex",alignItems:"center",gap:3,color:"#93c5fd"}}><Icon name="droplet" size={11} color="#93c5fd"/>{wetDiapers}</span>}{dirtyDiapers>0&&<span style={{display:"inline-flex",alignItems:"center",gap:3,color:"#a16b4a"}}><Icon name="poop" size={11} color="#a16b4a"/>{dirtyDiapers}</span>}</div>):null;
         return<div key={idx} className="home-card" style={{padding:"7px 9px",borderRadius:12,background:`${p.c}06`,border:`1px solid ${p.c}0a`,textAlign:"left",cursor:"default"}}><div style={{display:"flex",alignItems:"center",gap:5,marginBottom:1}}><Icon name={p.i} size={11} color={p.c}/><span style={{fontSize:8.5,color:T.dim}}>{p.l}</span></div><div style={{fontSize:14,fontWeight:800,color:p.c,lineHeight:1.05}}><span key={p.v} className="val-pulse">{p.v}</span>{p.u?<span style={{fontSize:10,opacity:0.6}}>{p.u}</span>:null}{p.tap==="bottle"&&profile.mlGoal>0&&totalMl>0?<span style={{fontSize:9,opacity:0.55,fontWeight:700,marginLeft:5}}>· {Math.round((totalMl/profile.mlGoal)*100)}%</span>:null}</div>{diaperBreakdown}{feedProg?<><div style={{height:3,borderRadius:2,background:`${p.c}1a`,marginTop:6,overflow:"hidden"}}><div style={{height:"100%",width:`${Math.min(100,feedProg.prog*100)}%`,background:feedProg.prog>=0.8?feedProg.barColor:`linear-gradient(90deg,${p.c},${p.c}cc)`,borderRadius:2,transition:"width .4s ease, background .3s ease"}}/></div><div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginTop:3,fontSize:9.5,fontWeight:600,fontVariantNumeric:"tabular-nums"}}><span style={{color:`${p.c}88`}}>{ago}</span><span style={{color:feedProg.barColor,fontWeight:700}}>{feedProg.prog>=1?`+${feedProg.lateMin}m late`:`→ ${feedProg.nextStr}`}</span></div></>:(ago&&<div style={{fontSize:10,color:`${p.c}88`,fontWeight:600,marginTop:1,fontVariantNumeric:"tabular-nums"}}>{ago}</div>)}</div>})}</div>
-        <div style={{padding:"0 20px"}}><div style={{fontSize:11,fontWeight:600,color:T.dim,marginBottom:8,textTransform:"uppercase",letterSpacing:0.8}}>{L("today")}<span style={{opacity:0.5,marginLeft:8,fontWeight:500}}>· {new Date().toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{weekday:"short",day:"numeric"}).replace(".","")}</span></div>{todayE.length===0&&!liveBedtime&&<div style={{textAlign:"center",padding:"32px 20px",color:T.dim}}><Icon name="star" size={32} color={T.dim} fill={T.dim}/><div style={{fontSize:13,marginTop:8}}>{_lang==="en"?"Tap + to add":"Toque + para registrar"}</div></div>}{liveBedtime&&<SleepBlock entry={liveBedtime} entries={entries} isLive={true} activeTimer={activeTimer} onSaveTimer={FB.saveTimer} onSaveEntry={FB.addEntry} onDelete={deleteEntry} onEdit={startEdit}/>}{todayE.filter(e=>{
+        <div style={{padding:"0 20px"}}><div style={{fontSize:11,fontWeight:600,color:T.dim,marginBottom:8,textTransform:"uppercase",letterSpacing:0.8}}>{L("today")}<span style={{opacity:0.5,marginLeft:8,fontWeight:500}}>· {new Date().toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{weekday:"short",day:"numeric"}).replace(".","")}</span></div>{todayE.length===0&&!liveBedtime&&<div style={{textAlign:"center",padding:"32px 20px",color:T.dim}}><Icon name="star" size={32} color={T.dim} fill={T.dim}/><div style={{fontSize:13,marginTop:8}}>{(()=>{const h=new Date().getHours();if(_lang==="en"){if(h<7)return"Quiet morning — first feed soon?";if(h<11)return"Good morning! Log the first bottle";if(h<14)return"Tap + to add";if(h<19)return"Afternoon — track naps and feeds";if(h<22)return"Evening — wind-down soon";return"Night — bedtime starting?"}if(h<7)return"Manhã tranquila — primeira mamada?";if(h<11)return"Bom dia! Registre a primeira mamada";if(h<14)return"Toque + para registrar";if(h<19)return"Tarde — acompanhe sonecas e mamadas";if(h<22)return"Noite chegando — wind-down em breve";return"Noite — hora de dormir?"})()}</div></div>}{liveBedtime&&<SleepBlock entry={liveBedtime} entries={entries} isLive={true} activeTimer={activeTimer} onSaveTimer={FB.saveTimer} onSaveEntry={FB.addEntry} onDelete={deleteEntry} onEdit={startEdit}/>}{todayE.filter(e=>{
           // Only hide events linked to the live bedtime if their time actually falls within it.
           // Protects against legacy data where retroactive events got wrongly linked (pre v9.8.1).
           if(e.nightWake&&liveBedtime){
@@ -7021,7 +7140,7 @@ function App(){
         popup e resolve o jank de anim\u00e7\u00e3o no iPhone. prop `wide` deixa um pouco mais largo
         pros campos de data/hora caberem confort\u00e1veis. */}
     <Modal open={!!formType} onClose={()=>{setFormType(null);setEditEntry(null)}} wide>
-      {formType&&<AddForm type={formType} onSave={addEntry} onSaveBatch={addMedicineBatch} savedMeds={savedMeds} onSaveMeds={async m=>await FB.saveMeds(m)} editEntry={editEntry} lastBottleMl={lastBottleMl} topMl={topMl} onStartTimer={type=>{startTimer(type);setFormType(null);setShowAdd(false)}}/>}
+      {formType&&<AddForm type={formType} onSave={addEntry} onSaveBatch={addMedicineBatch} savedMeds={savedMeds} onSaveMeds={async m=>await FB.saveMeds(m)} editEntry={editEntry} lastBottleMl={lastBottleMl} lastBottleEntry={lastBottleEntry} feedingIntervalMin={feedingIntervalMin} topMl={topMl} onStartTimer={type=>{startTimer(type);setFormType(null);setShowAdd(false)}}/>}
     </Modal>
 
     {showProfile&&<ProfilePage profile={profile} onSave={async p=>await FB.saveProfile(p)} onBack={()=>{setShowProfile(false);setProfileIsDirty(false)}} onGrowth={()=>{setShowProfile(false);setProfileIsDirty(false);goTo("growth")}} onShowChangelog={()=>setShowChangelog(true)} hasUnreadChangelog={hasUnreadChangelog} reminders={reminders} onAddReminder={async r=>await FB.addReminder(r)} onDelReminder={async id=>await FB.delReminder(id)} onDirtyChange={setProfileIsDirty} cancelSignal={profileCancelSignal} saveSignal={profileSaveSignal}/>}
