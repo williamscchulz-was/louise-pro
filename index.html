@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.17 Daily summary 19h-23h59 (mais inclusivo) + confetti com grace de 1 dia + hover desktop em buttons
   v11.9.16 Time picker quick chips no AddForm (Agora/-5/-15/-30/-1h/-2h) + valPulse com spring overshoot
   v11.9.15 Smart relative dates: "Hoje", "Ontem", "Anteontem", weekday se <7d, data curta se mais. Aplicado em History header e AddForm date label
   v11.9.14 FIX TDZ - "Cannot access todayE before initialization" no useEffect do daily summary (referencia antes do const). Usa entries direto via useMemo
@@ -280,8 +281,13 @@
     /* v11.9.2: tap feedback global em TODOS os <button> sem precisar adicionar classe.
        Uso `:where()` pra zerar a specificity — qualquer regra de classe (.navbtn,
        .navfab, .home-card, etc) sobrescreve. `:disabled` exclui pra UX correta. */
-    button{transition:transform .14s ease-out, opacity .14s ease-out}
+    button{transition:transform .14s ease-out, opacity .14s ease-out, filter .14s ease-out}
     button:where(:active):where(:not(:disabled)){transform:scale(0.97)}
+    /* v11.9.17: hover state desktop — apenas em devices com mouse (não touch).
+       hover:hover detecta mouse fino, pointer:fine confirma precisão. */
+    @media (hover:hover) and (pointer:fine){
+      button:where(:hover):where(:not(:disabled)){filter:brightness(1.08)}
+    }
     /* Compat: classe explícita continua disponível pra non-button elements. */
     .tap-fb{transition:transform .14s ease-out, opacity .14s ease-out}
     .tap-fb:active{transform:scale(0.97)}
@@ -584,8 +590,27 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.16";
+const APP_VERSION = "11.9.17";
 const CHANGELOG = [
+  {
+    v: "11.9.17", date: "2026-04-27",
+    pt: {
+      title: "Micro-polish: janela noturna, grace de marcos, hover desktop",
+      bullets: [
+        '★ **Daily summary** agora aparece de 19h em diante (era só 20h–23h). Mais inclusivo pra rotina noturna que varia.',
+        '★ **Confetti em marcos com grace de 1 dia**: se você não abrir o app no dia exato (ex: 100 dias), ele ainda dispara no dia seguinte (101). Não perde mais a celebração por não ter mexido no app aquele dia.',
+        '★ **Hover state em desktop** (browser): botões respondem com `brightness(1.08)` ao passar o mouse — só dispara em devices com mouse fino, não toca em touch (`@media (hover:hover) and (pointer:fine)`).',
+      ],
+    },
+    en: {
+      title: "Micro-polish: evening window, milestone grace, desktop hover",
+      bullets: [
+        '★ **Daily summary** now appears from 7pm onwards (was 8–11pm only). More inclusive of varying evening routines.',
+        '★ **Milestone confetti with 1-day grace**: if you don\'t open the app on the exact milestone day (e.g. 100 days), it still fires the next day (101). No more missing the celebration just because you didn\'t open the app that day.',
+        '★ **Hover state on desktop**: buttons respond with `brightness(1.08)` on mouse hover — only triggers on mouse-precise devices, not touch (`@media (hover:hover) and (pointer:fine)`).',
+      ],
+    },
+  },
   {
     v: "11.9.16", date: "2026-04-27",
     pt: {
@@ -7000,7 +7025,8 @@ function App(){
         const seen=localStorage.getItem("lp_daily_summary_seen");
         if(seen===td){setShowDailySummary(false);return}
         const h=new Date().getHours();
-        if(h>=20&&h<23&&_todayCount>=3)setShowDailySummary(true);
+        // v11.9.17: janela 19h-23h59 (era 20-23). Mais inclusivo pra rotina noturna variada.
+        if(h>=19&&_todayCount>=3)setShowDailySummary(true);
       }catch(_){}
     };
     check();
@@ -7023,8 +7049,9 @@ function App(){
       const today=new Date();today.setHours(0,0,0,0);
       const days=Math.floor((today-bd)/86400000);
       // marcos: 1 mes (~30d), 100 dias, 6 meses (~180d), 1 ano (365)
+      // v11.9.17: grace de 1 dia — se usuário não abriu no dia exato, dispara no dia+1.
       const ms=[{k:"30d",at:30},{k:"100d",at:100},{k:"180d",at:180},{k:"365d",at:365}];
-      const hit=ms.find(m=>days===m.at&&!seen.has(m.k));
+      const hit=ms.find(m=>(days===m.at||days===m.at+1)&&!seen.has(m.k));
       if(hit){
         seen.add(hit.k);
         localStorage.setItem("lp_milestones_seen",[...seen].join(","));
