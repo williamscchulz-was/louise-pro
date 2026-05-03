@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.22 Edit/delete de meds salvos via long-press num chip da AddForm (era so add via "+ Outro")
   v11.9.21 Share button no Relatorio Semanal (Web Share API + clipboard fallback). Texto formatado da semana atual pronto pra mandar pra alguem
   v11.9.20 FIX Weekly Report sleep contava so pre-meia-noite (3h em vez de 9h). Merge halves cross-midnight + ml/feed na Feeds + tempo total na Tummy
   v11.9.19 Search no Histórico: busca por nome, tipo, ml, dose, notes, subtype. Resultados agrupados por dia desc. Novo icone search.
@@ -594,8 +595,29 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.21";
+const APP_VERSION = "11.9.22";
 const CHANGELOG = [
+  {
+    v: "11.9.22", date: "2026-04-27",
+    pt: {
+      title: "Editar e excluir meds salvos via long-press",
+      bullets: [
+        '★ **Long-press num chip de med** abre o form pré-populado com nome e dose. Modo edição ativo: dá pra **trocar nome/dose** ou **excluir** o med dos salvos.',
+        '★ **Botão "Excluir"** confirma antes de remover. Quando exclui, também remove da seleção atual se estava marcado.',
+        'Trocar nome durante edit re-organiza a lista (remove o antigo, adiciona o novo). Mantém a seleção transferida pro novo nome.',
+        'Pequena dica embaixo do form: "Pressione e segure um med pra editar" — ajuda na descoberta do gesto.',
+      ],
+    },
+    en: {
+      title: "Edit and delete saved meds via long-press",
+      bullets: [
+        '★ **Long-press a med chip** opens the form pre-filled with name and dose. Edit mode active: lets you **change name/dose** or **delete** the med from saved.',
+        '★ **"Delete" button** confirms before removing. When deleting, also unmarks selection if it was active.',
+        'Renaming during edit reorganizes the list (removes old, adds new). Selection transfers to the new name.',
+        'Small hint under the form: "Long-press a med to edit" — helps gesture discovery.',
+      ],
+    },
+  },
   {
     v: "11.9.21", date: "2026-04-27",
     pt: {
@@ -5168,8 +5190,30 @@ function AddForm({type,onSave,onSaveBatch,savedMeds,onSaveMeds,editEntry,lastBot
   const[dropsOpen,setDropsOpen]=useState(false);
   const pendingMedsRef=useRef({fixedMeds:[],dropMeds:[],doses:{}});
   const[currentDropIdx,setCurrentDropIdx]=useState(0);
+  // v11.9.22: long-press num chip de med abre form pre-populado pra edit/delete.
+  const[editingMedName,setEditingMedName]=useState(null);
+  const medPressRef=useRef({timer:null,fired:false});
   const toggleMed=(name)=>{
+    if(medPressRef.current.fired){medPressRef.current.fired=false;return}
     setSelectedMeds(s=>{const n=new Set(s);if(n.has(name))n.delete(name);else n.add(name);return n});
+  };
+  const onMedLongPress=(med)=>{
+    setEditingMedName(med.name);
+    setMedN(med.name);
+    setMedD(med.dose||"");
+    setShowML(true);
+    Haptic.medium();
+  };
+  const startMedPress=(med)=>{
+    if(medPressRef.current.timer)clearTimeout(medPressRef.current.timer);
+    medPressRef.current.fired=false;
+    medPressRef.current.timer=setTimeout(()=>{
+      medPressRef.current.fired=true;
+      onMedLongPress(med);
+    },550);
+  };
+  const endMedPress=()=>{
+    if(medPressRef.current.timer){clearTimeout(medPressRef.current.timer);medPressRef.current.timer=null}
   };
   useEffect(()=>{if(type==="bottle"&&mRef.current)mRef.current.focus()},[type]);
   // v11.7.3: double-submit guard + validation feedback. Antes: clique em Save enquanto a
@@ -5288,7 +5332,7 @@ function AddForm({type,onSave,onSaveBatch,savedMeds,onSaveMeds,editEntry,lastBot
           {savedMeds.map((m,i)=>{
             const asks=!m.dose||!m.dose.trim();
             const on=selectedMeds.has(m.name);
-            return(<button key={i} onClick={()=>toggleMed(m.name)} style={{flex:"1 1 calc(50% - 4px)",padding:"10px 30px 10px 14px",borderRadius:12,position:"relative",background:on?`${T.amber}24`:T.glass,border:`1px solid ${on?`${T.amber}88`:T.gB}`,textAlign:"left",boxShadow:on?`0 0 12px ${T.amber}15`:"none",transition:"all .2s"}}>
+            return(<button key={i} onClick={()=>toggleMed(m.name)} onPointerDown={()=>startMedPress(m)} onPointerUp={endMedPress} onPointerCancel={endMedPress} onPointerMove={endMedPress} style={{flex:"1 1 calc(50% - 4px)",padding:"10px 30px 10px 14px",borderRadius:12,position:"relative",background:on?`${T.amber}24`:T.glass,border:`1px solid ${on?`${T.amber}88`:T.gB}`,textAlign:"left",boxShadow:on?`0 0 12px ${T.amber}15`:"none",transition:"all .2s"}}>
               <div style={{fontSize:13,fontWeight:700,color:on?T.amber:T.text,letterSpacing:-0.1}}>{m.name}</div>
               <div style={{fontSize:10,color:on?`${T.amber}cc`:T.dim,marginTop:2,opacity:asks?0.85:0.7,fontStyle:asks?"italic":"normal"}}>
                 {asks?(_lang==="en"?"asks drops on save":"pergunta ao salvar"):m.dose}
@@ -5297,20 +5341,33 @@ function AddForm({type,onSave,onSaveBatch,savedMeds,onSaveMeds,editEntry,lastBot
               <span style={{position:"absolute",top:10,right:10,width:16,height:16,borderRadius:"50%",border:`1.5px solid ${on?T.amber:T.gB}`,background:on?T.amber:"transparent",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:800,color:on?T.bg1:"transparent"}}>{on?"\u2713":""}</span>
             </button>);
           })}
-          <button onClick={()=>{setMedN("");setMedD("");setShowML(v=>!v)}} style={{flex:"1 1 calc(50% - 4px)",padding:"10px 14px",borderRadius:12,background:showML?`${T.amber}14`:"transparent",border:`1px dashed ${showML?`${T.amber}55`:T.gB}`,display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
+          <button onClick={()=>{setMedN("");setMedD("");setEditingMedName(null);setShowML(v=>!v)}} style={{flex:"1 1 calc(50% - 4px)",padding:"10px 14px",borderRadius:12,background:showML&&!editingMedName?`${T.amber}14`:"transparent",border:`1px dashed ${showML&&!editingMedName?`${T.amber}55`:T.gB}`,display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
             <Icon name="plus" size={14} color={T.dim}/><span style={{fontSize:12,fontWeight:600,color:T.dim}}>{_lang==="en"?"Other":"Outro"}</span>
           </button>
         </div>
         {showML&&<div style={{padding:12,borderRadius:12,background:"rgba(20,26,60,0.4)",border:`1px solid ${T.gBSoft}`,marginBottom:12}}>
+          {editingMedName&&<div style={{fontSize:10,color:T.amber,fontWeight:700,letterSpacing:0.5,textTransform:"uppercase",marginBottom:8,padding:"0 4px"}}>{_lang==="en"?`Editing "${editingMedName}"`:`Editando "${editingMedName}"`}</div>}
           <Fld label={L("name")}><input type="text" placeholder={_lang==="en"?"e.g. Novalgina":"Ex: Novalgina"} value={medN} onChange={e=>setMedN(e.target.value)} style={inp}/></Fld>
           <Fld label={`${L("dose")} \u00b7 ${_lang==="en"?"leave empty to ask drops":"deixe vazio pra pedir gotas"}`}><input type="text" placeholder={_lang==="en"?"e.g. 3 drops, 2.5ml":"Ex: 3 gotas, 2.5ml"} value={medD} onChange={e=>setMedD(e.target.value)} style={inp}/></Fld>
-          <button onClick={async()=>{
-            const nm=medN.trim();if(!nm){invalid();return}
-            const newList=[...savedMeds.filter(x=>x.name.toLowerCase()!==nm.toLowerCase()),{name:nm,dose:medD.trim()||""}];
-            await onSaveMeds(newList);
-            setSelectedMeds(s=>{const n=new Set(s);n.add(nm);return n});
-            setShowML(false);setMedN("");setMedD("");Haptic.success();
-          }} style={{width:"100%",padding:12,borderRadius:10,background:T.amber,border:"none",color:T.bg1,fontSize:13,fontWeight:800,marginTop:4}}>{_lang==="en"?"Save & select":"Salvar e selecionar"}</button>
+          <div style={{display:"flex",gap:8,marginTop:4}}>
+            {editingMedName&&<button onClick={async()=>{
+              if(!confirm(_lang==="en"?`Delete "${editingMedName}" from saved meds?`:`Excluir "${editingMedName}" dos meds salvos?`))return;
+              const newList=savedMeds.filter(x=>x.name.toLowerCase()!==editingMedName.toLowerCase());
+              await onSaveMeds(newList);
+              setSelectedMeds(s=>{const n=new Set(s);n.delete(editingMedName);return n});
+              setShowML(false);setMedN("");setMedD("");setEditingMedName(null);Haptic.warning();
+            }} style={{flex:"0 0 auto",padding:"12px 14px",borderRadius:10,background:"rgba(248,113,113,0.12)",border:"1px solid rgba(248,113,113,0.32)",color:"#fca5a5",fontSize:13,fontWeight:700}}>{_lang==="en"?"Delete":"Excluir"}</button>}
+            <button onClick={async()=>{
+              const nm=medN.trim();if(!nm){invalid();return}
+              // Remove old entry if name changed during edit
+              const removeKey=(editingMedName||nm).toLowerCase();
+              const newList=[...savedMeds.filter(x=>x.name.toLowerCase()!==removeKey&&x.name.toLowerCase()!==nm.toLowerCase()),{name:nm,dose:medD.trim()||""}];
+              await onSaveMeds(newList);
+              setSelectedMeds(s=>{const n=new Set(s);if(editingMedName&&editingMedName!==nm)n.delete(editingMedName);n.add(nm);return n});
+              setShowML(false);setMedN("");setMedD("");setEditingMedName(null);Haptic.success();
+            }} style={{flex:1,padding:12,borderRadius:10,background:T.amber,border:"none",color:T.bg1,fontSize:13,fontWeight:800}}>{editingMedName?(_lang==="en"?"Save":"Salvar"):(_lang==="en"?"Save & select":"Salvar e selecionar")}</button>
+          </div>
+          {editingMedName&&<div style={{fontSize:10,color:T.dim,marginTop:8,textAlign:"center",fontStyle:"italic"}}>{_lang==="en"?"Tip: long-press a med chip to edit":"Dica: pressione e segure um med pra editar"}</div>}
         </div>}
       </>}
       {/* v11.8.1: Drops picker agora \u00e9 Modal popup sobre o form. */}
