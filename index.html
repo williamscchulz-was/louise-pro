@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.27 Quick re-log — botao "Repetir" no toast pos-save, re-cria entry com mesmos dados e horario=now (so pra tipos one-shot)
   v11.9.26 importAll com WriteBatch — restore de ~80s vai pra ~5s (loop await por entry vira batches de 500 ops)
   v11.9.25 Auditoria infra: dedupeLegacyWakings skip pos-migration (mata re-render storm) + exportAll cache-first + pushTokens GC 180d + period "all" -> "90d" honesto
   v11.9.24 Design pass: header gradient nome + hairline divider + curiosity pill tag + ring text glow + cards gradient border + today header refinado. Wake prediction minimalista
@@ -641,8 +642,31 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.26";
+const APP_VERSION = "11.9.27";
 const CHANGELOG = [
+  {
+    v: "11.9.27", date: "2026-05-03",
+    pt: {
+      title: "Quick re-log — botão Repetir no toast pós-save",
+      bullets: [
+        '★ **Após registrar bottle/diaper/medicine/temperature/bath**, o toast no topo agora tem dois botões: `↻ Repetir` (verde) e `Desfazer` (lavanda). Clica Repetir → re-cria entry com **mesmos dados** mas horário=now. Útil pra mamadas em sequência rápida ou trocas de fralda em série.',
+        '★ Toast fica **3,5s** quando há Repetir (era 2s) pra dar tempo de clicar.',
+        'Sleep/nap/nursing/tummytime **não** ganham Repetir — esses são timers, repetir significaria iniciar outro timer (UX confuso).',
+        'Edits também não — só faz sentido em new entries.',
+        'Repeat preserva `dose`, `subtype`, `ml`, `name`, `value` etc. Limpa `nightWake` e `_docId`. Novo `id` gerado.',
+      ],
+    },
+    en: {
+      title: "Quick re-log — Repeat button in post-save toast",
+      bullets: [
+        '★ **After logging bottle/diaper/medicine/temperature/bath**, the top toast now has two buttons: `↻ Again` (green) and `Undo` (lavender). Tap Again → re-creates entry with **same data** but time=now. Useful for back-to-back feeds or diaper changes.',
+        '★ Toast persists **3.5s** when Repeat is available (was 2s) to give time to tap.',
+        'Sleep/nap/nursing/tummytime **don\'t** get Repeat — those are timer events, repeating means starting another timer (confusing UX).',
+        'Edits also excluded — only makes sense for new entries.',
+        'Repeat preserves `dose`, `subtype`, `ml`, `name`, `value` etc. Strips `nightWake` and `_docId`. New `id` generated.',
+      ],
+    },
+  },
   {
     v: "11.9.26", date: "2026-05-03",
     pt: {
@@ -4918,7 +4942,15 @@ const InsightCards = React.memo(function InsightCards({insights,phase}){
   </div>})}</>);
 });
 
-function Toast({message,onUndo,onClose}){const closeRef=useRef(onClose);closeRef.current=onClose;useEffect(()=>{const t=setTimeout(()=>closeRef.current(),2000);return()=>clearTimeout(t)},[]);return(<div style={{position:"fixed",top:"calc(20px + env(safe-area-inset-top))",left:"50%",transform:"translateX(-50%)",zIndex:300,padding:"14px 18px",borderRadius:18,background:"linear-gradient(180deg,rgba(20,26,66,0.95),rgba(14,18,52,0.95))",border:`1px solid ${T.gBSoft}`,backdropFilter:"blur(14px)",WebkitBackdropFilter:"blur(14px)",display:"flex",alignItems:"center",gap:12,boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset, 0 12px 32px -8px rgba(0,0,0,0.6)",animation:"slideDown .3s ease"}}><span style={{fontSize:14,color:"#f0f2ff",fontWeight:600,letterSpacing:-0.2}}>{message}</span>{onUndo&&<button onClick={onUndo} style={{padding:"7px 14px",borderRadius:11,background:`linear-gradient(180deg,#9b8df8,#7c3aed)`,color:"#fff",fontSize:13,fontWeight:700,letterSpacing:-0.1,border:"1px solid rgba(139,124,246,0.5)",boxShadow:`0 1px 0 0 rgba(255,255,255,0.18) inset, 0 4px 12px -4px ${T.accent}55`}}>{L("undo")}</button>}</div>)}
+function Toast({message,onUndo,onRepeat,onClose}){const closeRef=useRef(onClose);closeRef.current=onClose;
+  // v11.9.27: timeout maior (3s) quando ha onRepeat, pra dar tempo de clicar
+  const ttl=onRepeat?3500:2000;
+  useEffect(()=>{const t=setTimeout(()=>closeRef.current(),ttl);return()=>clearTimeout(t)},[]);
+  return(<div style={{position:"fixed",top:"calc(20px + env(safe-area-inset-top))",left:"50%",transform:"translateX(-50%)",zIndex:300,padding:"12px 14px",borderRadius:18,background:"linear-gradient(180deg,rgba(20,26,66,0.95),rgba(14,18,52,0.95))",border:`1px solid ${T.gBSoft}`,backdropFilter:"blur(14px)",WebkitBackdropFilter:"blur(14px)",display:"flex",alignItems:"center",gap:8,boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset, 0 12px 32px -8px rgba(0,0,0,0.6)",animation:"slideDown .3s ease",maxWidth:"calc(100vw - 32px)"}}>
+    <span style={{fontSize:13,color:"#f0f2ff",fontWeight:600,letterSpacing:-0.2,flex:"0 1 auto",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{message}</span>
+    {onRepeat&&<button onClick={onRepeat} aria-label={_lang==="en"?"Log another":"Logar outra"} style={{padding:"6px 11px",borderRadius:10,background:"rgba(74,222,128,0.14)",color:"#86efac",fontSize:12,fontWeight:700,letterSpacing:-0.1,border:"1px solid rgba(74,222,128,0.32)",display:"inline-flex",alignItems:"center",gap:4,flexShrink:0}}>↻ {_lang==="en"?"Again":"Repetir"}</button>}
+    {onUndo&&<button onClick={onUndo} style={{padding:"6px 12px",borderRadius:10,background:`linear-gradient(180deg,#9b8df8,#7c3aed)`,color:"#fff",fontSize:12,fontWeight:700,letterSpacing:-0.1,border:"1px solid rgba(139,124,246,0.5)",boxShadow:`0 1px 0 0 rgba(255,255,255,0.18) inset, 0 4px 12px -4px ${T.accent}55`,flexShrink:0}}>{L("undo")}</button>}
+  </div>)}
 
 
 function Modal({open,onClose,children,wide}){const[vis,setVis]=useState(false),[show,setShow]=useState(false);useEffect(()=>{if(open){setVis(true);requestAnimationFrame(()=>requestAnimationFrame(()=>setShow(true)))}else{setShow(false);const t=setTimeout(()=>setVis(false),300);return()=>clearTimeout(t)}},[open]);if(!vis)return null;
@@ -7476,7 +7508,7 @@ function App(){
   const[showEditStart,setShowEditStart]=useState(false);
   const[showNursingPicker,setShowNursingPicker]=useState(false);
   const lang=profile.lang||"en";_lang=lang;
-  const[toast,setToast]=useState(null);const[tick,setTick]=useState(0);const undoRef=useRef(null);
+  const[toast,setToast]=useState(null);const[tick,setTick]=useState(0);const undoRef=useRef(null);const repeatRef=useRef(null);
   const[splash,setSplash]=useState(true);
   useEffect(()=>{const t=setTimeout(()=>setSplash(false),1800);return()=>clearTimeout(t)},[]);
 
@@ -7621,8 +7653,11 @@ function App(){
     return()=>{u1();u2();u3();u4();u5();u6()};
   },[]);
 
-  const showToast=(msg,fn)=>{undoRef.current=fn;setToast(msg)};
+  // v11.9.27: showToast aceita 3o arg `repeatFn` pra Quick re-log. Toast mostra
+  // "Repetir" quando passado — clica e re-cria entry com horario=now.
+  const showToast=(msg,fn,repeatFn)=>{undoRef.current=fn;repeatRef.current=repeatFn||null;setToast(msg)};
   const handleUndo=()=>{if(undoRef.current)undoRef.current();setToast(null)};
+  const handleRepeat=()=>{if(repeatRef.current)repeatRef.current();setToast(null)};
   const addEntry=useCallback(async e=>{
     Haptic.medium();
     // v11.7.3: FECHAMENTO OTIMISTA. Antes: a modal esperava a Firestore write completar
@@ -7654,7 +7689,20 @@ function App(){
       if(e.type==="bottle"){const ml2=ta.filter(x=>x.type==="bottle").reduce((s,x)=>s+(x.ml||0),0)+(e.ml||0);tmsg=`${_lang==="en"?"Bottle logged!":"Mamadeira registrada!"} ${ml2}ml ${_lang==="en"?"today":"hoje"}`}
       if(e.type==="diaper"){const dc=ta.filter(x=>x.type==="diaper").length+1;tmsg=`${_lang==="en"?"Diaper logged!":"Fralda registrada!"} ${dc}x ${_lang==="en"?"today":"hoje"}`}
     }
-    showToast(tmsg,async()=>{for(const p of parts) await FB.delEntry(p.id)});
+    // v11.9.27: repeatFn pra Quick re-log. Disponivel pra tipos one-shot (sem timer).
+    // Sleep/nap/nursing/tummytime sao via timer entao "repeat" nao faz sentido aqui.
+    const REPEATABLE={bottle:1,diaper:1,medicine:1,temperature:1,bath:1,wakeup:1,nightwaking:1};
+    let repeatFn=null;
+    if(!wasEdit&&REPEATABLE[e.type]){
+      repeatFn=()=>{
+        const nowD=new Date();
+        const newE={...e,id:uid(),date:`${nowD.getFullYear()}-${String(nowD.getMonth()+1).padStart(2,"0")}-${String(nowD.getDate()).padStart(2,"0")}`,time:`${String(nowD.getHours()).padStart(2,"0")}:${String(nowD.getMinutes()).padStart(2,"0")}`};
+        delete newE.nightWake;
+        delete newE._docId;
+        addEntry(newE);
+      };
+    }
+    showToast(tmsg,async()=>{for(const p of parts) await FB.delEntry(p.id)},repeatFn);
     // Fire-and-forget writes. Se falhar, log mas n\u00e3o bloqueia UI \u2014 offline persistence
     // re-tenta quando voltar a rede.
     (async()=>{
@@ -8112,7 +8160,7 @@ function App(){
   return(<div style={{background:"transparent",height:"var(--phys-h, 100dvh)",overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch",overscrollBehavior:"none",color:T.text,maxWidth:480,margin:"0 auto",position:"relative"}}>
     {/* Starfield: componente memoizado, renderiza 1x por sessão (v10.5.3). */}
     <Starfield/>
-    {toast&&<Toast message={toast} onUndo={undoRef.current?handleUndo:null} onClose={()=>setToast(null)}/>}
+    {toast&&<Toast message={toast} onUndo={undoRef.current?handleUndo:null} onRepeat={repeatRef.current?handleRepeat:null} onClose={()=>setToast(null)}/>}
     <Confetti trigger={confettiOn} onDone={()=>setConfettiOn(false)}/>
     {/* v11.9.9: Ring long-press detail modal. v11.9.13: IIFE só executa quando modal aberto
         (antes evaluava em todo render do App, podia crashar com edge-case data). */}
