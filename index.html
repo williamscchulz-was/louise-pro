@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.23 Wake-up prediction durante bedtime ativo: chip com horario esperado baseado na media 7d. Mostra +Xmin se passou da media
   v11.9.22 Edit/delete de meds salvos via long-press num chip da AddForm (era so add via "+ Outro")
   v11.9.21 Share button no Relatorio Semanal (Web Share API + clipboard fallback). Texto formatado da semana atual pronto pra mandar pra alguem
   v11.9.20 FIX Weekly Report sleep contava so pre-meia-noite (3h em vez de 9h). Merge halves cross-midnight + ml/feed na Feeds + tempo total na Tummy
@@ -595,8 +596,29 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.22";
+const APP_VERSION = "11.9.23";
 const CHANGELOG = [
+  {
+    v: "11.9.23", date: "2026-04-27",
+    pt: {
+      title: "Predição de acordar durante o bedtime ativo",
+      bullets: [
+        '★ **Chip durante bedtime ativo** mostra o horário esperado de acordar baseado na **média de duração das últimas 7 noites** (do `nightSleepAnalysis` do engine). Ex: `Acordar esperado ~06:15 · 9h média`.',
+        '★ Se o bedtime já passou da média por mais de 5min, o chip muda pra **`+25min da média`** em amber, indicando que tá rolando uma noite mais longa que o normal.',
+        'Renderiza só quando `nightSleep.avgDuration` > 0 (precisa de pelo menos 2-3 noites de dado pra ser confiável). Sem dado, fica invisível.',
+        'Posição: entre o Ring e o botão Night Wake. Visual integrado com gradient azul-lavanda.',
+      ],
+    },
+    en: {
+      title: "Wake-up prediction during active bedtime",
+      bullets: [
+        '★ **Chip during active bedtime** shows expected wake time based on the **7-day duration average** (from the engine\'s `nightSleepAnalysis`). E.g. `Expected wake ~06:15 · 9h avg`.',
+        '★ If the bedtime is past the average by more than 5min, the chip switches to **`+25min past avg`** in amber, indicating tonight is running longer than usual.',
+        'Renders only when `nightSleep.avgDuration` > 0 (needs at least 2-3 nights of data to be reliable). Without data, hidden.',
+        'Position: between the Ring and the Night Wake button. Integrated visual with blue-lavender gradient.',
+      ],
+    },
+  },
   {
     v: "11.9.22", date: "2026-04-27",
     pt: {
@@ -8042,6 +8064,27 @@ function App(){
           </div>
         </div>}
         <div role="region" aria-label={_lang==="en"?"Ring with current state. Long-press for details":"Anel com estado atual. Pressione e segure para detalhes"} style={{padding:"4px 0 0"}} onPointerDown={onRingPointerDown} onPointerMove={onRingPointerMove} onPointerUp={onRingPointerUp} onPointerCancel={onRingPointerUp}><Ring activeTimer={activeTimer} napSug={napSug} tick={tick} recentEvents={cycleE} lang={lang} showOrbit={showOrbit} screenLockActive={shouldLock}/></div>
+        {/* v11.9.23: predição de wake-up baseada na média 7d. Aparece dentro do bedtime ativo. */}
+        {activeTimer&&activeTimer.type==="sleep"&&sleepPattern?.fullPattern?.sleep?.nightSleep?.avgDuration>0&&(()=>{
+          const avgMin=sleepPattern.fullPattern.sleep.nightSleep.avgDuration;
+          const startMs=new Date(activeTimer.startTime).getTime();
+          if(isNaN(startMs))return null;
+          const predMs=startMs+avgMin*60000;
+          const nowMs=Date.now();
+          const elapsedMin=Math.max(0,Math.floor((nowMs-startMs)/60000));
+          const predD=new Date(predMs);
+          const predLabel=`${String(predD.getHours()).padStart(2,"0")}:${String(predD.getMinutes()).padStart(2,"0")}`;
+          const overshoot=Math.floor((nowMs-predMs)/60000);
+          const inPast=overshoot>5;
+          return(<div style={{margin:"0 20px 10px",padding:"10px 14px",borderRadius:12,background:`linear-gradient(135deg,rgba(96,165,250,0.10),rgba(167,139,250,0.06))`,border:"1px solid rgba(96,165,250,0.22)",display:"flex",alignItems:"center",gap:10,fontSize:11.5,color:T.sub}}>
+            <Icon name="clock" size={14} color="#60a5fa"/>
+            <span style={{flex:1,fontVariantNumeric:"tabular-nums",letterSpacing:-0.1}}>
+              {inPast
+                ?<span><strong style={{color:"#fdba74",fontWeight:700}}>{_lang==="en"?`+${overshoot}min past avg`:`+${overshoot}min da média`}</strong> <span style={{color:T.dim}}>· {_lang==="en"?"7d avg":"média 7d"} {fmtDur(avgMin)}</span></span>
+                :<span><span style={{color:T.dim}}>{_lang==="en"?"Expected wake":"Acordar esperado"}</span> <strong style={{color:"#7dd3fc",fontWeight:700,fontSize:13}}>~{predLabel}</strong> <span style={{color:T.dim}}>· {fmtDur(avgMin)} {_lang==="en"?"avg":"média"}</span></span>}
+            </span>
+          </div>);
+        })()}
         {activeTimer&&activeTimer.type==="sleep"&&<div style={{padding:"0 20px",marginBottom:10}}><button onClick={toggleNightWake} className={activeTimer.nightWake?"":"nw-amber-pulse"} style={{width:"100%",padding:"12px 16px",borderRadius:14,background:activeTimer.nightWake?"linear-gradient(135deg,rgba(96,165,250,0.2),rgba(167,139,250,0.15))":"linear-gradient(135deg,rgba(251,146,60,0.18),rgba(251,191,36,0.12))",border:`1px solid ${activeTimer.nightWake?"rgba(96,165,250,0.6)":"rgba(251,146,60,0.55)"}`,display:"flex",alignItems:"center",gap:12,boxShadow:activeTimer.nightWake?"0 0 20px rgba(96,165,250,0.2)":"0 0 20px rgba(251,146,60,0.15), 0 4px 16px rgba(0,0,0,0.3)",transition:"all 0.3s"}}><div className={activeTimer.nightWake?"pulse-soft":"nw-icon-pulse"} style={{width:36,height:36,borderRadius:12,background:activeTimer.nightWake?"rgba(96,165,250,0.3)":"rgba(251,146,60,0.25)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:activeTimer.nightWake?"none":"0 0 14px rgba(251,146,60,0.3)"}}><Icon name="sun" size={18} color={activeTimer.nightWake?"#60a5fa":"#fbbf24"}/></div><div style={{flex:1,textAlign:"left"}}><div style={{fontSize:13,fontWeight:700,color:activeTimer.nightWake?"#60a5fa":"#fbbf24"}}>{_lang==="en"?"Night Wake":"Despertar"}{activeTimer.nightWake&&` · ${fmtDur(Math.max(1,Math.floor((Date.now()-new Date(activeTimer.nightWake.startTime).getTime())/60000)))}`}</div><div style={{fontSize:9,color:activeTimer.nightWake?T.sub:"rgba(251,191,36,0.75)",marginTop:1}}>{activeTimer.nightWake?(_lang==="en"?"Tap to go back to sleep":"Toque para voltar a dormir"):(_lang==="en"?"Tap if Louise woke up":"Toque se Louise acordou")}</div></div>{activeTimer.nightWake&&<div className="pulse-fast" style={{width:10,height:10,borderRadius:"50%",background:"#60a5fa",boxShadow:"0 0 8px #60a5fa"}}/>}</button></div>}
         {!activeTimer&&<div style={{display:"grid",gridTemplateColumns:"repeat(6, minmax(0,1fr))",gap:5,padding:"0 20px",marginBottom:10}}><button aria-label={_lang==="en"?"Add bottle":"Adicionar mamadeira"} onClick={()=>{setFormType("bottle");setShowAdd(false)}} style={{padding:"9px 0 7px",borderRadius:11,background:`${T.green}08`,border:`1px solid ${T.green}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:3}}><Icon name="bottle" size={15} color={T.green}/><span style={{fontSize:8.5,fontWeight:700,color:T.green}}>{_lang==="en"?"Bottle":"Mam."}</span></button><button aria-label={_lang==="en"?"Start nursing timer":"Iniciar timer de amamentação"} onClick={()=>setShowNursingPicker(true)} style={{padding:"9px 0 7px",borderRadius:11,background:`${T.blue}08`,border:`1px solid ${T.blue}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:3}}><Icon name="breast" size={15} color={T.blue}/><span style={{fontSize:8.5,fontWeight:700,color:T.blue}}>{_lang==="en"?"Nurse":"Amam."}</span></button><button aria-label={_lang==="en"?"Add diaper":"Adicionar fralda"} onClick={()=>{setFormType("diaper");setShowAdd(false)}} style={{padding:"9px 0 7px",borderRadius:11,background:`${T.pink}08`,border:`1px solid ${T.pink}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:3}}><Icon name="diaper" size={15} color={T.pink}/><span style={{fontSize:8.5,fontWeight:700,color:T.pink}}>{_lang==="en"?"Diaper":"Fralda"}</span></button><button aria-label={_lang==="en"?"Start bedtime":"Iniciar bedtime"} onClick={()=>startTimer("sleep")} style={{padding:"9px 0 7px",borderRadius:11,background:`${T.purple}08`,border:`1px solid ${T.purple}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:3}}><Icon name="bed" size={15} color={T.purple}/><span style={{fontSize:8.5,fontWeight:700,color:T.purple}}>{_lang==="en"?"Sleep":"Sono"}</span></button><button aria-label={_lang==="en"?"Start nap":"Iniciar soneca"} onClick={()=>startTimer("nap")} style={{padding:"9px 0 7px",borderRadius:11,background:`${T.accent}08`,border:`1px solid ${T.accent}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:3}}><Icon name="cloud" size={15} color={T.accent}/><span style={{fontSize:8.5,fontWeight:700,color:T.accent}}>{_lang==="en"?"Nap":"Sonec."}</span></button><button aria-label={_lang==="en"?"Start tummy time":"Iniciar tummy time"} onClick={()=>startTimer("tummytime")} style={{padding:"9px 0 7px",borderRadius:11,background:`${T.amber}08`,border:`1px solid ${T.amber}14`,display:"flex",flexDirection:"column",alignItems:"center",gap:3}}><Icon name="baby" size={15} color={T.amber}/><span style={{fontSize:8.5,fontWeight:700,color:T.amber}}>Tummy</span></button></div>}
         {activeTimer&&activeTimer.type==="sleep"&&activeTimer.nightWake&&<div style={{display:"flex",gap:6,padding:"0 20px",marginBottom:12}}><button onClick={()=>{setFormType("bottle");setShowAdd(false)}} style={{flex:1,padding:"12px 0 8px",borderRadius:14,background:`${T.green}16`,border:`1px solid ${T.green}40`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="bottle" size={18} color={T.green}/><span style={{fontSize:9,fontWeight:700,color:T.green}}>{_lang==="en"?"Bottle":"Mamad."}</span></button><button onClick={()=>{setFormType("diaper");setShowAdd(false)}} style={{flex:1,padding:"12px 0 8px",borderRadius:14,background:`${T.pink}16`,border:`1px solid ${T.pink}40`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="diaper" size={18} color={T.pink}/><span style={{fontSize:9,fontWeight:700,color:T.pink}}>{_lang==="en"?"Diaper":"Fralda"}</span></button></div>}
