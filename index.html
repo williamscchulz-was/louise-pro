@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.19 Search no Histórico: busca por nome, tipo, ml, dose, notes, subtype. Resultados agrupados por dia desc. Novo icone search.
   v11.9.18 Tap no header da data em History abre picker nativo pra jump rapido a qualquer data
   v11.9.17 Daily summary 19h-23h59 (mais inclusivo) + confetti com grace de 1 dia + hover desktop em buttons
   v11.9.16 Time picker quick chips no AddForm (Agora/-5/-15/-30/-1h/-2h) + valPulse com spring overshoot
@@ -591,8 +592,31 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.18";
+const APP_VERSION = "11.9.19";
 const CHANGELOG = [
+  {
+    v: "11.9.19", date: "2026-04-27",
+    pt: {
+      title: "Busca no histórico",
+      bullets: [
+        '★ **Novo botão de busca** no canto direito do header da aba História. Toque pra abrir uma barra de busca; toque de novo (ou X) pra fechar e limpar.',
+        '★ **Filtra por**: nome do medicamento, tipo do evento, valor em ml, dose, subtype (xixi/cocô/both), notes (em entries antigas que ainda têm).',
+        '★ **Resultados agrupados por dia**, ordenados do mais recente pro mais antigo. Header de cada grupo usa `fmtRelDate` (Hoje/Ontem/Anteontem/weekday/data) + count de itens.',
+        '★ **Empty state** quando nenhum resultado: ícone search + dica "Tente um termo diferente".',
+        'Novo ícone `search` (lupa) adicionado ao Icon component.',
+      ],
+    },
+    en: {
+      title: "History search",
+      bullets: [
+        '★ **New search button** on the right of the History tab header. Tap to open a search bar; tap again (or X) to close and clear.',
+        '★ **Searches by**: medicine name, event type, ml value, dose, subtype (wet/dirty/both), notes (in older entries that still have them).',
+        '★ **Results grouped by day**, sorted most recent first. Each group header uses `fmtRelDate` (Today/Yesterday/2 days ago/weekday/date) + item count.',
+        '★ **Empty state** when no matches: search icon + hint "Try a different term".',
+        'New `search` icon (magnifying glass) added to the Icon component.',
+      ],
+    },
+  },
   {
     v: "11.9.18", date: "2026-04-27",
     pt: {
@@ -4141,6 +4165,7 @@ function Icon({name,size=20,color="currentColor",fill="none"}){
     poop:<svg {...p}>{grad}<ellipse cx="12" cy="19" rx="8" ry="3" fill={gFill}/><ellipse cx="11" cy="14" rx="6" ry="2.5" fill={gFill}/><ellipse cx="12" cy="10" rx="4.5" ry="2.2" fill={gFill}/><ellipse cx="11" cy="6" rx="2.8" ry="1.8" fill={gFill}/></svg>,
     baby:<svg {...p}>{grad}<path d="M19.38 6.813A9 9 0 0 1 20.8 10.2a2 2 0 0 1 0 3.6a9 9 0 0 1-17.6 0a2 2 0 0 1 0-3.6A9 9 0 0 1 12 3c2 0 3.5 1.1 3.5 2.5s-.9 2.5-2 2.5c-.8 0-1.5-.4-1.5-1m-3 5h.01" fill={gFill}/><path d="M10 16c.5.3 1.2.5 2 .5s1.5-.2 2-.5m1-4h.01" strokeWidth="2"/></svg>,
     pencil:<svg {...pu}><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>,
+    search:<svg {...pu}><circle cx="11" cy="11" r="7"/><line x1="20" y1="20" x2="16" y2="16"/></svg>,
   };
   return icons[name]||<svg {...p}><circle cx="12" cy="12" r="8"/></svg>;
 }
@@ -6405,6 +6430,10 @@ const StatsPage = React.memo(function StatsPage({entries,onGrowth}){
 const HistoryPage = React.memo(function HistoryPage({entries,onDelete,onEdit,activeTimer}){
   const[dateIdx,setDateIdx]=useState(0);
   const[filter,setFilter]=useState("all");
+  // v11.9.19: search no historico. searchOpen toggla a barra; query string filtra entries.
+  const[searchOpen,setSearchOpen]=useState(false);
+  const[searchQuery,setSearchQuery]=useState("");
+  const searchActive=searchOpen&&searchQuery.trim().length>=1;
   const viewDate=dateOffset(todayStr(),-dateIdx);
   const dayE=entries.filter(e=>e.date===viewDate);
   const filtered=filter==="all"?dayE:dayE.filter(e=>{
@@ -6447,8 +6476,49 @@ const HistoryPage = React.memo(function HistoryPage({entries,onDelete,onEdit,act
       }
       return true;
     }).map(e=>(e.type==="sleep"&&e.wakings&&e.wakings.length>0)?<SleepBlock key={e.id} entry={e} onDelete={onDelete} onEdit={onEdit} entries={entries} activeTimer={activeTimer} onSaveTimer={FB.saveTimer} onSaveEntry={FB.addEntry}/>:<EntryRow key={e.id} entry={e} onDelete={onDelete} onEdit={onEdit}/>);
+  // v11.9.19: search results agregados por dia, ordenados desc.
+  const searchResults=searchActive?(()=>{
+    const q=searchQuery.trim().toLowerCase();
+    const matches=entries.filter(e=>{
+      if(!e)return false;
+      const t=(e.type||"").toLowerCase();
+      const n=(e.name||"").toLowerCase();
+      const d=(e.dose||"").toLowerCase();
+      const sub=(e.subtype||"").toLowerCase();
+      const notes=(e.notes||"").toLowerCase();
+      const ml=e.ml?String(e.ml):"";
+      const tLabel=(typeLabel(e.type,_lang)||"").toLowerCase();
+      return t.includes(q)||n.includes(q)||d.includes(q)||sub.includes(q)||notes.includes(q)||ml.includes(q)||tLabel.includes(q);
+    });
+    // Group by date
+    const byDate={};
+    for(const e of matches){if(!byDate[e.date])byDate[e.date]=[];byDate[e.date].push(e)}
+    return Object.keys(byDate).sort((a,b)=>b.localeCompare(a)).map(d=>({date:d,items:byDate[d].sort((a,b)=>(b.time||"").localeCompare(a.time||""))}));
+  })():null;
   return(<div style={{padding:"calc(16px + env(safe-area-inset-top)) 20px 0"}}>
-    <h2 style={{fontSize:17,fontWeight:700,marginBottom:12}}>{L("history")}</h2>
+    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
+      <h2 style={{fontSize:17,fontWeight:700,margin:0}}>{L("history")}</h2>
+      <button aria-label={searchOpen?(_lang==="en"?"Close search":"Fechar busca"):(_lang==="en"?"Search":"Buscar")} onClick={()=>{const v=!searchOpen;setSearchOpen(v);if(!v)setSearchQuery("")}} style={{width:34,height:34,borderRadius:11,background:searchOpen?"rgba(139,124,246,0.15)":"rgba(22,28,60,0.6)",border:`1px solid ${searchOpen?"rgba(139,124,246,0.32)":T.gBSoft}`,display:"flex",alignItems:"center",justifyContent:"center"}}>
+        <Icon name={searchOpen?"x":"search"} size={15} color={searchOpen?T.accent:T.sub}/>
+      </button>
+    </div>
+    {searchOpen&&<div style={{marginBottom:14}}>
+      <div style={{position:"relative"}}>
+        <input type="search" autoFocus inputMode="search" placeholder={_lang==="en"?"Search by name, type, ml, dose…":"Buscar por nome, tipo, ml, dose…"} value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} style={{width:"100%",padding:"14px 40px 14px 16px",borderRadius:14,background:"rgba(20,26,60,0.55)",border:`1px solid ${searchActive?"rgba(139,124,246,0.4)":T.gBSoft}`,color:T.text,fontSize:15,fontWeight:500,outline:"none",WebkitAppearance:"none",appearance:"none",boxShadow:T.insetTop}}/>
+        {searchQuery&&<button aria-label={_lang==="en"?"Clear":"Limpar"} onClick={()=>setSearchQuery("")} style={{position:"absolute",right:8,top:"50%",transform:"translateY(-50%)",width:28,height:28,borderRadius:8,background:"rgba(14,18,48,0.6)",border:"none",display:"flex",alignItems:"center",justifyContent:"center",color:T.dim}}><Icon name="x" size={12} color={T.dim}/></button>}
+      </div>
+      {searchActive&&<div style={{fontSize:11,color:T.dim,marginTop:8,padding:"0 4px",fontWeight:600,letterSpacing:0.2}}>{searchResults.reduce((s,g)=>s+g.items.length,0)} {_lang==="en"?"results across":"resultados em"} {searchResults.length} {_lang==="en"?"days":"dias"}</div>}
+    </div>}
+    {searchActive?(<div>
+      {searchResults.length===0?<div style={{textAlign:"center",padding:"50px 20px",color:T.dim}}>
+        <Icon name="search" size={28} color={T.dim}/>
+        <div style={{fontSize:13,marginTop:10,fontWeight:600}}>{_lang==="en"?"No matches":"Nenhum resultado"}</div>
+        <div style={{fontSize:11,color:T.dim,marginTop:4}}>{_lang==="en"?"Try a different term":"Tente um termo diferente"}</div>
+      </div>:searchResults.map(g=>(<div key={g.date} style={{marginBottom:18}}>
+        <div style={{fontSize:11,fontWeight:700,color:T.dim,letterSpacing:0.6,textTransform:"uppercase",marginBottom:8,padding:"0 4px"}}>{fmtRelDate(g.date)} <span style={{color:T.sub,fontWeight:500,letterSpacing:0,textTransform:"none",marginLeft:4}}>· {g.items.length} {_lang==="en"?(g.items.length===1?"item":"items"):(g.items.length===1?"item":"itens")}</span></div>
+        {g.items.map(e=>(e.type==="sleep"&&e.wakings&&e.wakings.length>0)?<SleepBlock key={e.id} entry={e} onDelete={onDelete} onEdit={onEdit} entries={entries} activeTimer={activeTimer} onSaveTimer={FB.saveTimer} onSaveEntry={FB.addEntry}/>:<EntryRow key={e.id} entry={e} onDelete={onDelete} onEdit={onEdit}/>)}
+      </div>))}
+    </div>):(<>
     {/* Date navigator card */}
     <div style={{background:"linear-gradient(180deg,rgba(22,28,60,0.55),rgba(20,26,60,0.4))",borderRadius:20,border:`1px solid ${T.gBSoft}`,padding:"18px 18px 16px",marginBottom:14,boxShadow:T.insetTop}}>
       <div style={{display:"flex",alignItems:"center",gap:12}}>
@@ -6483,6 +6553,7 @@ const HistoryPage = React.memo(function HistoryPage({entries,onDelete,onEdit,act
       <div style={{fontSize:15,fontWeight:700,color:"#f0f2ff",letterSpacing:-0.2,marginBottom:6}}>{_lang==="en"?"No events this day":"Nenhum evento neste dia"}</div>
       <div style={{fontSize:12,color:T.sub,lineHeight:1.55,maxWidth:240,margin:"0 auto"}}>{filter!=="all"?(_lang==="en"?"Try changing the filter or switching to another day.":"Tente mudar o filtro ou ir para outro dia."):(_lang==="en"?"Tap + below to register the first.":"Toque + abaixo para registrar o primeiro.")}</div>
     </div>):listItems}
+    </>)}
   </div>);
 });
 
