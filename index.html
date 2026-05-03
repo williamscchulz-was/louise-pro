@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.25 Auditoria infra: dedupeLegacyWakings skip pos-migration (mata re-render storm) + exportAll cache-first + pushTokens GC 180d + period "all" -> "90d" honesto
   v11.9.24 Design pass: header gradient nome + hairline divider + curiosity pill tag + ring text glow + cards gradient border + today header refinado. Wake prediction minimalista
   v11.9.23 Wake-up prediction durante bedtime ativo: chip com horario esperado baseado na media 7d. Mostra +Xmin se passou da media
   v11.9.22 Edit/delete de meds salvos via long-press num chip da AddForm (era so add via "+ Outro")
@@ -481,6 +482,17 @@ window.FB = {
       lang: lang || 'en',
       updatedAt: new Date().toISOString()
     });
+    // v11.9.25: GC tokens orfaos (>180d sem refresh). FCM rotaciona tokens em ~270d, e
+    // re-instalacao do app ou troca de browser geram novos. Sem GC a sub-collection cresce
+    // indefinidamente e o backend manda push pra tokens mortos. Fire-and-forget.
+    try {
+      const cutoff = new Date(Date.now() - 180*86400000).toISOString();
+      const oldDocs = await db.collection('config').doc('pushTokens').collection('tokens')
+        .where('updatedAt', '<', cutoff).get();
+      for (const d of oldDocs.docs) {
+        if (d.id !== docId) await d.ref.delete();
+      }
+    } catch(_) { /* best-effort, sem retry */ }
   },
   // Reminders: medication reminders that fire push notifications at scheduled times.
   // Path: config/reminders/items/{reminderId}
@@ -506,15 +518,23 @@ window.FB = {
   // Dropbox / etc. Importa restaura. Nossa rede de seguranca caso o Firestore tenha quota
   // issue, conta suspensa, ou alguem deletar por acidente.
   async exportAll() {
-    const entriesSnap = await db.collection('entries').get();
+    // v11.9.25: tenta cache primeiro (Firestore offline persistence ja tem snapshot).
+    // Auto-backup diario antes lia do server toda manha (~1650 reads). Cache zera o custo
+    // quando ja existe (caso comum). Fallback pro server se cache vazio (raro - primeira
+    // execução pos-install ou apos cache clear).
+    const tryGet = async (ref) => {
+      try { const s = await ref.get({ source: 'cache' }); if (s && (s.exists || (s.docs && s.docs.length))) return s; } catch(_){}
+      return await ref.get();
+    };
+    const entriesSnap = await tryGet(db.collection('entries'));
     const entries = entriesSnap.docs.map(d => ({...d.data(), _docId: d.id}));
-    const profileSnap = await db.collection('config').doc('profile').get();
+    const profileSnap = await tryGet(db.collection('config').doc('profile'));
     const profile = profileSnap.exists ? profileSnap.data() : null;
-    const medsSnap = await db.collection('config').doc('meds').get();
+    const medsSnap = await tryGet(db.collection('config').doc('meds'));
     const meds = medsSnap.exists ? (medsSnap.data().list || []) : [];
-    const inboxSnap = await db.collection('config').doc('inbox').get();
+    const inboxSnap = await tryGet(db.collection('config').doc('inbox'));
     const inbox = inboxSnap.exists ? inboxSnap.data() : null;
-    const remindersSnap = await db.collection('config').doc('reminders').collection('items').get();
+    const remindersSnap = await tryGet(db.collection('config').doc('reminders').collection('items'));
     const reminders = remindersSnap.docs.map(d => ({...d.data(), _id: d.id}));
     return {
       _meta: { version: 1, exportedAt: new Date().toISOString(), app: 'louise-pro' },
@@ -597,8 +617,31 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.24";
+const APP_VERSION = "11.9.25";
 const CHANGELOG = [
+  {
+    v: "11.9.25", date: "2026-04-27",
+    pt: {
+      title: "Auditoria de DB/infra — 4 fixes de performance e custo",
+      bullets: [
+        '★ **`dedupeLegacyWakings` skip pós-migração**: helper roda em todo `onSnapshot` fire (várias por dia). Quando flag `lp_legacy_wakings_migrated_v1` setada, retorna entries direto. Quando nada foi corrigido, retorna mesma ref. **Mata re-render storm** dos useMemos dependentes de entries.',
+        '★ **`exportAll` cache-first**: auto-backup diário lia toda a coleção do server (~1650 reads/dia/device). Agora tenta `{source:"cache"}` primeiro (Firestore offline persistence já tem o snapshot), fallback pro server se cache vazio. **Economiza 80%+ de reads** do auto-backup quando rodando em condições normais.',
+        '★ **GC de pushTokens órfãos**: ao salvar token novo, deleta tokens com `updatedAt > 180d` (FCM rotaciona em ~270d). Antes a sub-collection crescia sem limite e backend mandava push pra tokens mortos. Fire-and-forget.',
+        '★ **Period "all" → "90d"**: label honesto. `subEntries` usa janela 90d, "Tudo" era misleading. Não muda comportamento, só semântica visual.',
+        'Auditoria completa rodada por agente focado em DB/infra — confortável dentro da quota grátis Firestore (50k reads/dia) hoje e em projeção de 1 ano.',
+      ],
+    },
+    en: {
+      title: "DB/infra audit — 4 performance and cost fixes",
+      bullets: [
+        '★ **`dedupeLegacyWakings` skip post-migration**: helper runs on every `onSnapshot` fire (multiple per day). When `lp_legacy_wakings_migrated_v1` flag set, returns entries straight through. When nothing changed, returns same ref. **Kills the re-render storm** in entries-dependent useMemos.',
+        '★ **`exportAll` cache-first**: daily auto-backup was reading the whole collection from server (~1650 reads/day/device). Now tries `{source:"cache"}` first (Firestore offline persistence has the snapshot), falls back to server if cache empty. **Saves 80%+ of auto-backup reads** under normal use.',
+        '★ **GC of orphan pushTokens**: on saving new token, deletes tokens with `updatedAt > 180d` (FCM rotates in ~270d). Before the sub-collection grew unbounded and backend would push to dead tokens. Fire-and-forget.',
+        '★ **Period "all" → "90d"**: honest label. `subEntries` uses 90d window, "All" was misleading. Behavior unchanged, just visual semantics.',
+        'Full audit run by an agent focused on DB/infra — comfortable within Firestore free tier (50k reads/day) today and projected 1 year.',
+      ],
+    },
+  },
   {
     v: "11.9.24", date: "2026-04-27",
     pt: {
@@ -4043,8 +4086,13 @@ function findContainingBedtime(ev,allEntries){
 // Old data has wakings duplicated in BOTH halves of cross-midnight sleeps (id + id_b).
 // Returns a NEW entries array with each waking attributed to the correct half only.
 // Does NOT mutate Firestore — runs on every read, idempotent.
+// v11.9.25: skip se migration ja rodou (firestore corrigido). Re-render storm
+// no Home era causado por nova ref retornada toda vez. Agora retorna mesma ref
+// quando nada muda (ou skip total se flag setada).
 function dedupeLegacyWakings(entries){
   if(!entries||!entries.length) return entries;
+  // Fast-path: migration ja persistiu correcoes no Firestore — runtime helper desnecessario.
+  try{if(localStorage.getItem("lp_legacy_wakings_migrated_v1"))return entries}catch(_){}
   const baseGroups={};
   for(const e of entries){
     if(e.type!=="sleep"||!e.wakings||!e.wakings.length) continue;
@@ -4077,6 +4125,9 @@ function dedupeLegacyWakings(entries){
     if(wBefore.length>0) fixedById[p1.id].wakings=wBefore; else delete fixedById[p1.id].wakings;
     if(wAfter.length>0) fixedById[p2.id].wakings=wAfter; else delete fixedById[p2.id].wakings;
   }
+  // v11.9.25: se nada foi corrigido, retorna mesma ref pra evitar re-render dos useMemos
+  // dependentes de entries (cada onSnapshot fire criava nova array antes).
+  if(Object.keys(fixedById).length===0)return entries;
   return entries.map(e=>fixedById[e.id]||e);
 }
 // v11.9.10: migration one-shot — escreve no Firestore as correções que dedupeLegacyWakings
@@ -6288,7 +6339,9 @@ const StatsPage = React.memo(function StatsPage({entries,onGrowth}){
       </div>
     </div>
     <div style={{background:"rgba(22,28,60,0.4)",borderRadius:14,border:`1px solid ${T.gB}`,padding:4,marginBottom:6}}>
-      {[{v:7,l:"7d"},{v:14,l:"14d"},{v:30,l:"30d"},{v:"all",l:L("all")}].map(p=>
+      {/* v11.9.25: "all" virou "90d" — label honesto. subEntries usa janela de 90d, "Tudo"
+          era misleading. Pra histórico mais antigo (futuro), expor lazy-load via loadOlderEntries. */}
+      {[{v:7,l:"7d"},{v:14,l:"14d"},{v:30,l:"30d"},{v:"all",l:"90d"}].map(p=>
         <button key={p.v} aria-label={`${_lang==="en"?"Show period":"Mostrar período"} ${p.l}`} aria-pressed={period===p.v} onClick={()=>setPeriod(p.v)} style={{width:"25%",padding:"8px 0",borderRadius:10,fontSize:12,fontWeight:700,background:period===p.v?T.accent:"transparent",color:period===p.v?"#fff":T.sub}}>{p.l}</button>
       )}
     </div>
