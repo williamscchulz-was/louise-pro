@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.20 FIX Weekly Report sleep contava so pre-meia-noite (3h em vez de 9h). Merge halves cross-midnight + ml/feed na Feeds + tempo total na Tummy
   v11.9.19 Search no Histórico: busca por nome, tipo, ml, dose, notes, subtype. Resultados agrupados por dia desc. Novo icone search.
   v11.9.18 Tap no header da data em History abre picker nativo pra jump rapido a qualquer data
   v11.9.17 Daily summary 19h-23h59 (mais inclusivo) + confetti com grace de 1 dia + hover desktop em buttons
@@ -592,8 +593,29 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.19";
+const APP_VERSION = "11.9.20";
 const CHANGELOG = [
+  {
+    v: "11.9.20", date: "2026-04-27",
+    pt: {
+      title: "Bug do sono no Relatório Semanal + cards 4-grid mais úteis",
+      bullets: [
+        '🚨 **Bug crítico no Relatório Semanal**: "Sono real/noite" mostrava só ~3h porque considerava apenas a metade pré-meia-noite do bedtime (cross-midnight bedtimes ficam divididos em duas entries no Firestore). Era o mesmo bug que o engine teve em v11.7.9. Aplicada a mesma correção: merge das duas metades antes de somar (durationMin + wakings).',
+        '★ **Card "Mamadas/dia"** agora mostra `120ml · ~2h45` (média ml/mamada + intervalo) em vez de só intervalo. Mais útil pra checar se a mamada média está crescendo.',
+        '★ **Card "Tummy time"** mudou de count pra **tempo total/dia** como destaque (`12min`). Sub-line mostra count de sessões. Mais relevante (pediatras pedem total, não count).',
+        '`avgNapLong` no Relatório Semanal também usa duração merged (sonecas que cruzam meia-noite — raro mas possível).',
+      ],
+    },
+    en: {
+      title: "Weekly Report sleep bug + 4-grid cards more useful",
+      bullets: [
+        '🚨 **Critical bug in Weekly Report**: "Real sleep/night" showed only ~3h because it counted only the pre-midnight half of the bedtime (cross-midnight bedtimes are split into two entries in Firestore). Same bug the engine had in v11.7.9. Same fix applied: merge halves before summing (durationMin + wakings).',
+        '★ **"Feeds/day" card** now shows `120ml · ~2h45` (avg ml/feed + interval) instead of just interval. More useful for checking if avg feed volume is growing.',
+        '★ **"Tummy time" card** changed from count to **total time/day** as headline (`12min`). Sub-line shows session count. More relevant (pediatricians ask for total, not count).',
+        '`avgNapLong` in Weekly Report also uses merged duration (naps that cross midnight — rare but possible).',
+      ],
+    },
+  },
   {
     v: "11.9.19", date: "2026-04-27",
     pt: {
@@ -6165,7 +6187,8 @@ const StatsPage = React.memo(function StatsPage({entries,onGrowth}){
       <div style={{background:"rgba(20,26,60,0.5)",borderRadius:20,border:`1px solid ${T.gBSoft}`,padding:"14px 8px 12px",textAlign:"center",boxShadow:T.insetTop}}>
         <div style={{fontSize:9,color:"#7a80a8",letterSpacing:-0.05,marginBottom:6,fontWeight:600}}>{_lang==="en"?"Feeds/day":"Mamadas/dia"}</div>
         <div style={{fontSize:22,fontWeight:800,color:T.blue,letterSpacing:-0.8,fontVariantNumeric:"tabular-nums",lineHeight:1}}>{avgFeedings}</div>
-        <div style={{fontSize:8.5,color:T.dim,marginTop:5,fontVariantNumeric:"tabular-nums",letterSpacing:0.2}}>{avgFeedings>0?`~${Math.round(24/avgFeedings*10)/10}h`:""}</div>
+        {/* v11.9.20: ml/feed médio + intervalo */}
+        <div style={{fontSize:8.5,color:T.dim,marginTop:5,fontVariantNumeric:"tabular-nums",letterSpacing:0.2}}>{avgFeedings>0&&avgMl>0?`${Math.round(avgMl/avgFeedings)}ml · ~${Math.round(24/avgFeedings*10)/10}h`:(avgFeedings>0?`~${Math.round(24/avgFeedings*10)/10}h`:"")}</div>
       </div>
       <div style={{background:"rgba(20,26,60,0.5)",borderRadius:20,border:`1px solid ${T.gBSoft}`,padding:"14px 8px 12px",textAlign:"center",boxShadow:T.insetTop}}>
         <div style={{fontSize:9,color:"#7a80a8",letterSpacing:-0.05,marginBottom:6,fontWeight:600}}>{_lang==="en"?"Naps/day":"Sonecas/dia"}</div>
@@ -6173,9 +6196,10 @@ const StatsPage = React.memo(function StatsPage({entries,onGrowth}){
         <div style={{fontSize:8.5,color:T.dim,marginTop:5,fontVariantNumeric:"tabular-nums",letterSpacing:0.2}}>{avgNapDur>0?`~${fmtDur(avgNapDur)}/soneca`:""}</div>
       </div>
       <div style={{background:"rgba(20,26,60,0.5)",borderRadius:20,border:`1px solid ${T.gBSoft}`,padding:"14px 8px 12px",textAlign:"center",boxShadow:T.insetTop}}>
-        <div style={{fontSize:9,color:"#7a80a8",letterSpacing:-0.05,marginBottom:6,fontWeight:600}}>{_lang==="en"?"Tummy/day":"Tummy/dia"}</div>
-        <div style={{fontSize:22,fontWeight:800,color:T.amber,letterSpacing:-0.8,fontVariantNumeric:"tabular-nums",lineHeight:1}}>{avgTum}</div>
-        <div style={{fontSize:8.5,color:T.dim,marginTop:5,fontVariantNumeric:"tabular-nums",letterSpacing:0.2}}>{avgData.reduce((s,d)=>s+d.tumMin,0)>0?fmtDur(Math.round(avgData.reduce((s,d)=>s+d.tumMin,0)/numComplete))+"/dia":""}</div>
+        <div style={{fontSize:9,color:"#7a80a8",letterSpacing:-0.05,marginBottom:6,fontWeight:600}}>{_lang==="en"?"Tummy time":"Tummy time"}</div>
+        {/* v11.9.20: tempo TOTAL/dia vira destaque (mais útil que count). Count fica em sub. */}
+        <div style={{fontSize:22,fontWeight:800,color:T.amber,letterSpacing:-0.8,fontVariantNumeric:"tabular-nums",lineHeight:1}}>{(()=>{const tt=avgData.reduce((s,d)=>s+d.tumMin,0)/numComplete;return tt>=1?fmtDur(Math.round(tt)):avgTum})()}</div>
+        <div style={{fontSize:8.5,color:T.dim,marginTop:5,fontVariantNumeric:"tabular-nums",letterSpacing:0.2}}>{avgTum>0?`${avgTum}${_lang==="en"?" sessions":" sessões"}/dia`:""}</div>
       </div>
     </div>
     {[{t:_lang==="en"?"Milk (ml)":"Leite (ml)",f:"ml",max:mxMl,c:T.green,stacked:false},{t:_lang==="en"?"Sleep · real + awake":"Sono · real + acordada",f:"sl",max:mxSl,c:T.purple,stacked:true},{t:_lang==="en"?"Naps duration":"Sonecas — duração",f:"napTotalMin",max:Math.max(...data.map(d=>d.napTotalMin),1),c:T.accent,stacked:false,fmt:"dur"},{t:_lang==="en"?"Poop/day":"Cocô/dia",f:"poopCount",max:mxPoop,c:"#a16b4a",stacked:false}].map(ch=>(
@@ -6314,16 +6338,35 @@ const StatsPage = React.memo(function StatsPage({entries,onGrowth}){
         const wSet=new Set(wDates);
         const wEntries=entries.filter(e=>wSet.has(e.date));
         const sleepsMain=wEntries.filter(e=>e.type==="sleep"&&e.durationMin&&!(e.id||"").endsWith("_b"));
-        const napsW=wEntries.filter(e=>e.type==="nap"&&e.durationMin);
+        const napsRawW=wEntries.filter(e=>e.type==="nap"&&e.durationMin&&!(e.id||"").endsWith("_b"));
         const bottlesW=wEntries.filter(e=>e.type==="bottle");
         const diapersW=wEntries.filter(e=>e.type==="diaper");
         const simetW=wEntries.filter(e=>e.type==="medicine"&&e.name&&/simet/i.test(e.name));
         const daysWithData=new Set(wEntries.map(e=>e.date)).size||1;
-        const nightsCount=new Set(sleepsMain.map(e=>e.date)).size||1;
-        const totalSleepMin=sleepsMain.reduce((s,e)=>s+sumRealSleep([e]),0);
-        const totalAwakeMin=sleepsMain.reduce((s,e)=>s+sumAwakeInSleep([e]),0);
-        const totalWakings=sleepsMain.reduce((s,e)=>s+((e.wakings&&e.wakings.length)||0),0);
-        const napTotalMin=napsW.reduce((s,e)=>s+e.durationMin,0);
+        const nightsCount=sleepsMain.length||1;
+        // v11.9.20 fix: merge halves cross-midnight ANTES de somar.
+        // Antes só contava pré-meia-noite (`_b` filtrado), perdendo o resto da noite.
+        // Mesma lógica do engine v11.7.9. Sibling pode estar em entries fora do bucket
+        // (next-day quando noite cruza fronteira de semana).
+        const mergeSleep=(e)=>{
+          const sibling=entries.find(x=>x&&x.id===e.id+"_b");
+          if(!sibling)return{dur:e.durationMin||0,wakings:e.wakings||[]};
+          return{
+            dur:(e.durationMin||0)+(sibling.durationMin||0),
+            wakings:(e.wakings||[]).concat(sibling.wakings||[])
+          };
+        };
+        const mergedSleeps=sleepsMain.map(mergeSleep);
+        const totalSleepMin=mergedSleeps.reduce((s,m)=>{
+          const awake=m.wakings.reduce((a,w)=>a+(w.durationMin||0),0);
+          return s+Math.max(0,m.dur-awake);
+        },0);
+        const totalAwakeMin=mergedSleeps.reduce((s,m)=>s+m.wakings.reduce((a,w)=>a+(w.durationMin||0),0),0);
+        const totalWakings=mergedSleeps.reduce((s,m)=>s+m.wakings.length,0);
+        // Naps: same merge mas raro cruzar meia-noite. napsW expandido pra incluir merged.
+        const napsMerged=napsRawW.map(mergeSleep);
+        const napsW=napsRawW; // mantido pra count
+        const napTotalMin=napsMerged.reduce((s,m)=>s+m.dur,0);
         buckets.push({
           weekIdx:4-w,
           isCurrent:w===0,
@@ -6336,7 +6379,7 @@ const StatsPage = React.memo(function StatsPage({entries,onGrowth}){
           avgNapMin:Math.round(napTotalMin/daysWithData),
           avgNapCount:Math.round((napsW.length/daysWithData)*10)/10,
           avgNapDur:napsW.length?Math.round(napTotalMin/napsW.length):0,
-          avgNapLong:napsW.length?Math.round(Math.max(...napsW.map(e=>e.durationMin))):0,
+          avgNapLong:napsMerged.length?Math.round(Math.max(...napsMerged.map(m=>m.dur))):0,
           avgMl:Math.round(bottlesW.reduce((s,e)=>s+(e.ml||0),0)/daysWithData),
           avgFeeds:Math.round((bottlesW.length/daysWithData)*10)/10,
           avgDiapers:Math.round((diapersW.length/daysWithData)*10)/10,
