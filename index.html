@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.28 Wake prediction polish: requer >=3 noites de dado (confiabilidade) + cap overshoot >60min vira "alem da media" (nao alarmante)
   v11.9.27 Quick re-log — botao "Repetir" no toast pos-save, re-cria entry com mesmos dados e horario=now (so pra tipos one-shot)
   v11.9.26 importAll com WriteBatch — restore de ~80s vai pra ~5s (loop await por entry vira batches de 500 ops)
   v11.9.25 Auditoria infra: dedupeLegacyWakings skip pos-migration (mata re-render storm) + exportAll cache-first + pushTokens GC 180d + period "all" -> "90d" honesto
@@ -642,8 +643,25 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.27";
+const APP_VERSION = "11.9.28";
 const CHANGELOG = [
+  {
+    v: "11.9.28", date: "2026-05-03",
+    pt: {
+      title: "Wake prediction polish — confiabilidade + cap overshoot",
+      bullets: [
+        '★ **Threshold elevado de 1 → 3 noites** pra média ser confiável. Antes mostrava com `pts>=2`, levando a previsões instáveis nos primeiros dias. Agora só aparece com pelo menos 3 noites de dado.',
+        '★ **Cap visual no overshoot**: se passou da média por mais de 60min, em vez de `+200min` (que soa alarmante e impreciso), mostra simplesmente `além da média · 8h média`. Decisão de UX: > 1h, o número absoluto é menos útil que sinalizar "fora do padrão".',
+      ],
+    },
+    en: {
+      title: "Wake prediction polish — reliability + overshoot cap",
+      bullets: [
+        '★ **Threshold raised from 1 → 3 nights** for the average to be reliable. Before it showed with `pts>=2`, leading to unstable predictions in early days. Now only appears with at least 3 nights of data.',
+        '★ **Visual cap on overshoot**: if past avg by more than 60min, instead of `+200min` (which sounds alarming and imprecise), simply shows `well past avg · 8h avg`. UX decision: above 1h, the absolute number is less useful than signaling "off-pattern".',
+      ],
+    },
+  },
   {
     v: "11.9.27", date: "2026-05-03",
     pt: {
@@ -8243,22 +8261,25 @@ function App(){
           </div>
         </div>}
         <div role="region" aria-label={_lang==="en"?"Ring with current state. Long-press for details":"Anel com estado atual. Pressione e segure para detalhes"} style={{padding:"4px 0 0"}} onPointerDown={onRingPointerDown} onPointerMove={onRingPointerMove} onPointerUp={onRingPointerUp} onPointerCancel={onRingPointerUp}><Ring activeTimer={activeTimer} napSug={napSug} tick={tick} recentEvents={cycleE} lang={lang} showOrbit={showOrbit} screenLockActive={shouldLock}/></div>
-        {/* v11.9.23: predição de wake-up baseada na média 7d. Aparece dentro do bedtime ativo. */}
-        {activeTimer&&activeTimer.type==="sleep"&&sleepPattern?.fullPattern?.sleep?.nightSleep?.avgDuration>0&&(()=>{
+        {/* v11.9.23: predição de wake-up baseada na média 7d. Aparece dentro do bedtime ativo.
+            v11.9.28: requer pts>=3 (confiabilidade) + cap de overshoot na exibição. */}
+        {activeTimer&&activeTimer.type==="sleep"&&sleepPattern?.fullPattern?.sleep?.nightSleep?.avgDuration>0&&sleepPattern?.fullPattern?.sleep?.nightSleep?.pts>=3&&(()=>{
           const avgMin=sleepPattern.fullPattern.sleep.nightSleep.avgDuration;
           const startMs=new Date(activeTimer.startTime).getTime();
           if(isNaN(startMs))return null;
           const predMs=startMs+avgMin*60000;
           const nowMs=Date.now();
-          const elapsedMin=Math.max(0,Math.floor((nowMs-startMs)/60000));
           const predD=new Date(predMs);
           const predLabel=`${String(predD.getHours()).padStart(2,"0")}:${String(predD.getMinutes()).padStart(2,"0")}`;
           const overshoot=Math.floor((nowMs-predMs)/60000);
           const inPast=overshoot>5;
-          // v11.9.24: minimalista — sem caixa, só texto centralizado abaixo do Ring.
+          // Cap visual: overshoot >60min vira "muito além da média" pra não soar alarmante.
+          const farPast=overshoot>60;
           return(<div style={{margin:"-4px 20px 10px",padding:"0 6px",fontSize:11,color:T.dim,textAlign:"center",letterSpacing:0.3,fontVariantNumeric:"tabular-nums"}}>
             {inPast
-              ?<span>{_lang==="en"?"past avg by":"+"}<span style={{color:"#fdba74",fontWeight:600,margin:"0 2px"}}>{overshoot}min</span><span style={{opacity:0.7}}>{_lang==="en"?` · ${fmtDur(avgMin)} avg`:` da média 7d (${fmtDur(avgMin)})`}</span></span>
+              ?(farPast
+                ?<span style={{opacity:0.85}}>{_lang==="en"?"well past avg":"além da média"}<span style={{opacity:0.7}}> · {fmtDur(avgMin)} {_lang==="en"?"avg":"média"}</span></span>
+                :<span>{_lang==="en"?"past avg by":"+"}<span style={{color:"#fdba74",fontWeight:600,margin:"0 2px"}}>{overshoot}min</span><span style={{opacity:0.7}}>{_lang==="en"?` · ${fmtDur(avgMin)} avg`:` da média 7d (${fmtDur(avgMin)})`}</span></span>)
               :<span style={{opacity:0.85}}>{_lang==="en"?"~ wake":"~ acordar"} <span style={{color:T.sub,fontWeight:600}}>{predLabel}</span><span style={{opacity:0.7}}> · {fmtDur(avgMin)} {_lang==="en"?"avg":"média"}</span></span>}
           </div>);
         })()}
