@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.26 importAll com WriteBatch — restore de ~80s vai pra ~5s (loop await por entry vira batches de 500 ops)
   v11.9.25 Auditoria infra: dedupeLegacyWakings skip pos-migration (mata re-render storm) + exportAll cache-first + pushTokens GC 180d + period "all" -> "90d" honesto
   v11.9.24 Design pass: header gradient nome + hairline divider + curiosity pill tag + ring text glow + cards gradient border + today header refinado. Wake prediction minimalista
   v11.9.23 Wake-up prediction durante bedtime ativo: chip com horario esperado baseado na media 7d. Mostra +Xmin se passou da media
@@ -543,21 +544,44 @@ window.FB = {
   },
   async importAll(data) {
     if (!data || !data._meta || data._meta.app !== 'louise-pro') throw new Error('Invalid backup file');
-    // Entries: set each (merge:false — replaces; import overwrites what was there)
+    // v11.9.26: WriteBatch — antes era loop com await por doc (1650 entries × ~50ms = ~80s
+    // de roundtrips). Batches agrupam até 500 ops/round-trip — ~4 batches pra 1650 entries.
+    // Restore vai de ~80s pra ~5s. Limite Firestore: 500 ops por commit.
+    const BATCH_MAX = 500;
+    const allOps = [];
     if (Array.isArray(data.entries)) {
       for (const e of data.entries) {
-        const clean = {...e}; delete clean._docId;
-        await db.collection('entries').doc(e.id || e._docId).set(clean);
+        const clean = { ...e }; delete clean._docId;
+        const id = e.id || e._docId;
+        if (!id) continue;
+        allOps.push({ ref: db.collection('entries').doc(id), data: clean, opts: null });
       }
     }
-    if (data.profile) await db.collection('config').doc('profile').set(data.profile, {merge: false});
-    if (Array.isArray(data.meds)) await db.collection('config').doc('meds').set({list: data.meds});
-    if (data.inbox) await db.collection('config').doc('inbox').set(data.inbox, {merge: false});
+    if (data.profile) {
+      allOps.push({ ref: db.collection('config').doc('profile'), data: data.profile, opts: { merge: false } });
+    }
+    if (Array.isArray(data.meds)) {
+      allOps.push({ ref: db.collection('config').doc('meds'), data: { list: data.meds }, opts: null });
+    }
+    if (data.inbox) {
+      allOps.push({ ref: db.collection('config').doc('inbox'), data: data.inbox, opts: { merge: false } });
+    }
     if (Array.isArray(data.reminders)) {
       for (const r of data.reminders) {
-        const clean = {...r}; delete clean._id;
-        await db.collection('config').doc('reminders').collection('items').doc(r._id).set(clean);
+        const clean = { ...r }; delete clean._id;
+        if (!r._id) continue;
+        allOps.push({ ref: db.collection('config').doc('reminders').collection('items').doc(r._id), data: clean, opts: null });
       }
+    }
+    // Chunk + commit
+    for (let i = 0; i < allOps.length; i += BATCH_MAX) {
+      const chunk = allOps.slice(i, i + BATCH_MAX);
+      const batch = db.batch();
+      for (const op of chunk) {
+        if (op.opts) batch.set(op.ref, op.data, op.opts);
+        else batch.set(op.ref, op.data);
+      }
+      await batch.commit();
     }
   },
   // Backup em Firestore (v11.4): salva snapshot num doc \u00fanico `config/backups/latest` que \u00e9
@@ -617,8 +641,31 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.25";
+const APP_VERSION = "11.9.26";
 const CHANGELOG = [
+  {
+    v: "11.9.26", date: "2026-05-03",
+    pt: {
+      title: "Restore de backup ~16x mais rápido (WriteBatch)",
+      bullets: [
+        '★ **`importAll` agora usa Firestore WriteBatch** em vez de loop com `await` por doc. Antes: 1650 entries × ~50ms de round-trip = **~80s** pra restaurar tudo. Agora: agrupado em batches de 500 ops, ~4 batches × 1 round-trip = **~5s**.',
+        'Mesma semântica preservada: entries com merge implícito false (overwrite), profile/inbox `{merge:false}` explícito, meds substitui lista inteira.',
+        'Limite Firestore de 500 ops por commit respeitado via chunking automático.',
+        'Skip silencioso de docs sem ID (proteção contra dados corrompidos).',
+        'Item #5 do TOP 5 ROI da auditoria de infra (v11.9.25). Hot-path raro mas dói quando precisa.',
+      ],
+    },
+    en: {
+      title: "Backup restore ~16x faster (WriteBatch)",
+      bullets: [
+        '★ **`importAll` now uses Firestore WriteBatch** instead of per-doc `await` loop. Before: 1650 entries × ~50ms round-trip = **~80s** to restore. Now: chunked in batches of 500 ops, ~4 batches × 1 round-trip = **~5s**.',
+        'Same semantics preserved: entries with implicit merge false (overwrite), profile/inbox `{merge:false}` explicit, meds replaces whole list.',
+        'Firestore 500-ops-per-commit limit respected via auto-chunking.',
+        'Silent skip of docs without IDs (protection against corrupted data).',
+        'Item #5 of TOP 5 ROI from infra audit (v11.9.25). Rare hot-path but painful when needed.',
+      ],
+    },
+  },
   {
     v: "11.9.25", date: "2026-04-27",
     pt: {
