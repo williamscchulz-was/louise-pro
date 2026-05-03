@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.21 Share button no Relatorio Semanal (Web Share API + clipboard fallback). Texto formatado da semana atual pronto pra mandar pra alguem
   v11.9.20 FIX Weekly Report sleep contava so pre-meia-noite (3h em vez de 9h). Merge halves cross-midnight + ml/feed na Feeds + tempo total na Tummy
   v11.9.19 Search no Histórico: busca por nome, tipo, ml, dose, notes, subtype. Resultados agrupados por dia desc. Novo icone search.
   v11.9.18 Tap no header da data em History abre picker nativo pra jump rapido a qualquer data
@@ -593,8 +594,29 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.20";
+const APP_VERSION = "11.9.21";
 const CHANGELOG = [
+  {
+    v: "11.9.21", date: "2026-04-27",
+    pt: {
+      title: "Compartilhar Relatório Semanal",
+      bullets: [
+        '★ **Botão de share** no header do Relatório Semanal. Tap abre o sheet nativo do iOS pra mandar via WhatsApp, Mensagens, e-mail pra família ou pediatra.',
+        '★ **Texto formatado** com emojis: `🌙 Sono: 8h12m/noite · 1.4 despertares`, `☁️ Sonecas: 25min × 4.3/dia (1h45 total)`, `🍼 Mamadeiras: 630ml/dia (85ml × 7.4/dia)`, `🧷 Fraldas: 6.4/dia (💧5 💩1)`, `💊 Simeticona: 3x`. Só inclui categorias que têm dado.',
+        'Fallback automático: se Web Share API não tá disponível, copia pra clipboard com toast de confirmação.',
+        'Novo ícone `share` (upload arrow) no Icon component.',
+      ],
+    },
+    en: {
+      title: "Share weekly report",
+      bullets: [
+        '★ **Share button** in the Weekly Report header. Tap opens the native iOS share sheet to send via WhatsApp, Messages, email, etc — to family or pediatrician.',
+        '★ **Formatted text** with emojis: `🌙 Sleep: 8h12m/night · 1.4 wakings`, `☁️ Naps: 25min × 4.3/day (1h45 total)`, `🍼 Bottles: 630ml/day (85ml × 7.4/day)`, `🧷 Diapers: 6.4/day (💧5 💩1)`, `💊 Simethicone: 3x`. Only includes categories with data.',
+        'Automatic fallback: if Web Share API unavailable, copies to clipboard with confirmation alert.',
+        'New `share` icon (upload arrow) in the Icon component.',
+      ],
+    },
+  },
   {
     v: "11.9.20", date: "2026-04-27",
     pt: {
@@ -4188,6 +4210,7 @@ function Icon({name,size=20,color="currentColor",fill="none"}){
     baby:<svg {...p}>{grad}<path d="M19.38 6.813A9 9 0 0 1 20.8 10.2a2 2 0 0 1 0 3.6a9 9 0 0 1-17.6 0a2 2 0 0 1 0-3.6A9 9 0 0 1 12 3c2 0 3.5 1.1 3.5 2.5s-.9 2.5-2 2.5c-.8 0-1.5-.4-1.5-1m-3 5h.01" fill={gFill}/><path d="M10 16c.5.3 1.2.5 2 .5s1.5-.2 2-.5m1-4h.01" strokeWidth="2"/></svg>,
     pencil:<svg {...pu}><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>,
     search:<svg {...pu}><circle cx="11" cy="11" r="7"/><line x1="20" y1="20" x2="16" y2="16"/></svg>,
+    share:<svg {...pu}><path d="M12 4v12"/><polyline points="7 9 12 4 17 9"/><path d="M5 15v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3"/></svg>,
   };
   return icons[name]||<svg {...p}><circle cx="12" cy="12" r="8"/></svg>;
 }
@@ -6416,10 +6439,40 @@ const StatsPage = React.memo(function StatsPage({entries,onGrowth}){
         <span style={{marginLeft:"auto",fontSize:14,fontWeight:800,color:col,fontVariantNumeric:"tabular-nums",letterSpacing:-0.2}}>{val}{trend}</span>
       </div>;
       const subRow=(k,v)=><div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",fontSize:11,color:T.sub,fontVariantNumeric:"tabular-nums",marginTop:3}}><span style={{fontWeight:600}}>{k}</span><span style={{fontWeight:700,color:T.text}}>{v}</span></div>;
+      // v11.9.21: gera texto compartilhável da semana atual.
+      const buildShareText=()=>{
+        const lines=[];
+        lines.push(_lang==="en"?`Louise · this week (${cur.range})`:`Louise · esta semana (${cur.range})`);
+        lines.push("");
+        if(cur.avgSleep>0)lines.push(`🌙 ${_lang==="en"?"Sleep":"Sono"}: ${fmtDur(cur.avgSleep)}/${_lang==="en"?"night":"noite"}${cur.avgWakings>0?` · ${cur.avgWakings} ${_lang==="en"?"wakings":"despertares"}`:""}`);
+        if(cur.avgNapDur>0)lines.push(`☁️ ${_lang==="en"?"Naps":"Sonecas"}: ${fmtDur(cur.avgNapDur)} × ${cur.avgNapCount}/${_lang==="en"?"day":"dia"} (${fmtDur(cur.avgNapMin)} ${_lang==="en"?"total":"total"})`);
+        if(cur.avgMl>0)lines.push(`🍼 ${_lang==="en"?"Bottles":"Mamadeiras"}: ${fmtMl(cur.avgMl)}/${_lang==="en"?"day":"dia"} (${fmtMl(Math.round(cur.avgMl/Math.max(1,cur.avgFeeds)))} × ${cur.avgFeeds}/${_lang==="en"?"day":"dia"})`);
+        if(cur.avgDiapers>0)lines.push(`🧷 ${_lang==="en"?"Diapers":"Fraldas"}: ${cur.avgDiapers}/${_lang==="en"?"day":"dia"} (💧${cur.avgWet} 💩${cur.avgPoop})`);
+        if(cur.totalSimet>0)lines.push(`💊 ${_lang==="en"?"Simethicone":"Simeticona"}: ${cur.totalSimet}x`);
+        return lines.join("\n");
+      };
+      const onShare=async()=>{
+        const text=buildShareText();
+        const title=_lang==="en"?"Louise weekly":"Louise · semana";
+        try{
+          if(navigator.share){
+            await navigator.share({title,text});
+            Haptic.success();
+            return;
+          }
+        }catch(_){/* user cancelled or unsupported */}
+        try{
+          await navigator.clipboard.writeText(text);
+          alert(_lang==="en"?"Copied to clipboard":"Copiado pra área de transferência");
+        }catch(_){alert(_lang==="en"?"Couldn't copy — please screenshot":"Não consegui copiar — tira print")}
+      };
       return(<div style={{marginTop:24,marginBottom:8}}>
-        <div style={{display:"flex",alignItems:"baseline",gap:8,padding:"6px 4px 4px",borderTop:`1px solid ${T.gBSoft}`,paddingTop:18}}>
+        <div style={{display:"flex",alignItems:"center",gap:8,padding:"6px 4px 4px",borderTop:`1px solid ${T.gBSoft}`,paddingTop:18}}>
           <h2 style={{fontSize:15,fontWeight:800,margin:0,letterSpacing:-0.3}}>{_lang==="en"?"Weekly report":"Relatório semanal"}</h2>
           <span style={{fontSize:10,color:T.dim,fontWeight:600,letterSpacing:0.3}}>{validBuckets.length} {_lang==="en"?"weeks":"semanas"}</span>
+          <button aria-label={_lang==="en"?"Share this week":"Compartilhar semana"} onClick={onShare} style={{marginLeft:"auto",width:32,height:32,borderRadius:10,background:"rgba(139,124,246,0.12)",border:"1px solid rgba(139,124,246,0.28)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+            <Icon name="share" size={14} color={T.accent}/>
+          </button>
         </div>
         <div style={{fontSize:10,color:T.dim,padding:"0 4px 12px"}}>{_lang==="en"?"Average per day, weekly buckets":"Média por dia, fechado por semana"} · {cur.range}</div>
 
