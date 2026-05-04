@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.29 Removidos os quick chips de tempo (Now/-5/-15/-30/-1h/-2h) do AddForm — pedido do usuario, ocupavam espaco sem ROI claro
   v11.9.28 Wake prediction polish: requer >=3 noites de dado (confiabilidade) + cap overshoot >60min vira "alem da media" (nao alarmante)
   v11.9.27 Quick re-log — botao "Repetir" no toast pos-save, re-cria entry com mesmos dados e horario=now (so pra tipos one-shot)
   v11.9.26 importAll com WriteBatch — restore de ~80s vai pra ~5s (loop await por entry vira batches de 500 ops)
@@ -643,8 +644,25 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.28";
+const APP_VERSION = "11.9.29";
 const CHANGELOG = [
+  {
+    v: "11.9.29", date: "2026-05-04",
+    pt: {
+      title: "Removidos os quick chips de tempo do AddForm",
+      bullets: [
+        '★ Removidos os 6 chips `Agora / −5 / −15 / −30 / −1h / −2h` que apareciam abaixo do date+time picker. Decisão do usuário — ocupavam espaço sem ROI claro (o time picker nativo já cobria todos os casos com 2 toques).',
+        'marginBottom da row date+time ajustado de 10 → 18 pra preservar o spacing rítmico das outras linhas do form.',
+      ],
+    },
+    en: {
+      title: "Removed the quick time chips from AddForm",
+      bullets: [
+        '★ Removed the 6 chips `Now / −5 / −15 / −30 / −1h / −2h` that appeared below the date+time picker. User decision — they took up space without clear ROI (the native time picker already covered all cases in 2 taps).',
+        'Date+time row marginBottom adjusted from 10 → 18 to preserve the rhythmic spacing of other form rows.',
+      ],
+    },
+  },
   {
     v: "11.9.28", date: "2026-05-03",
     pt: {
@@ -5479,21 +5497,9 @@ function AddForm({type,onSave,onSaveBatch,savedMeds,onSaveMeds,editEntry,lastBot
     </div>
     <div style={{padding:"0 20px"}}>
       {/* Date + Time row */}
-      <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr)",gap:10,marginBottom:10}}>
+      <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr)",gap:10,marginBottom:18}}>
         <Fld label={(_lang==="en"?"Day · ":"Dia · ")+dateLbl}><input type="date" value={date} onChange={e=>setDate(e.target.value)} style={{...inp,colorScheme:"dark"}}/></Fld>
         <Fld label={L("time")}><input type="time" value={time} onChange={e=>setTime(e.target.value)} style={{...inp,colorScheme:"dark"}}/></Fld>
-      </div>
-      {/* v11.9.16: quick chips de horário pra registrar rápido sem teclado. */}
-      <div style={{display:"flex",gap:6,marginBottom:18,flexWrap:"wrap"}}>
-        {[{lbl:_lang==="en"?"Now":"Agora",mins:0},{lbl:"−5",mins:5},{lbl:"−15",mins:15},{lbl:"−30",mins:30},{lbl:"−1h",mins:60},{lbl:"−2h",mins:120}].map(opt=>{
-          // Calcula time string (e date se atravessar meia-noite)
-          const ms=Date.now()-opt.mins*60000;
-          const d=new Date(ms);
-          const t=`${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
-          const dStr=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
-          const active=time===t&&date===dStr;
-          return(<button key={opt.lbl} onClick={()=>{setTime(t);setDate(dStr);Haptic.light()}} style={{flex:"1 1 calc(33% - 4px)",minWidth:0,padding:"8px 0",borderRadius:10,background:active?`${cfg.color}24`:"rgba(20,26,60,0.45)",border:`1px solid ${active?`${cfg.color}55`:T.gBSoft}`,color:active?cfg.color:T.sub,fontSize:12,fontWeight:700,letterSpacing:-0.1,fontVariantNumeric:"tabular-nums"}}>{opt.lbl}</button>);
-        })}
       </div>
       {type==="bottle"&&<><Fld label={_lang==="en"?"Amount (ml)":"Quantidade (ml)"}><input ref={mRef} type="number" inputMode="numeric" placeholder="0" value={ml} onChange={e=>setMl(e.target.value)} style={{...inp,fontSize:36,fontWeight:800,textAlign:"center",padding:"16px"}}/></Fld>
         <div style={{display:"flex",gap:8,marginBottom:20}}>{(topMl&&topMl.length>0?[...new Set([...topMl,lastBottleMl].filter(Boolean))].slice(0,4):[60,90,120]).map((v,i)=><button key={v} onClick={()=>setMl(String(v))} style={{flex:1,padding:"10px 0",borderRadius:10,background:ml===String(v)?T.green:T.glass,color:ml===String(v)?T.bg1:T.text,border:`1px solid ${ml===String(v)?T.green:T.gB}`,textAlign:"center"}}><div style={{fontSize:16,fontWeight:800}}>{v}</div>{i===0&&topMl?.length>0&&<div style={{fontSize:8,color:ml===String(v)?T.bg1:T.dim,marginTop:1}}>{_lang==="en"?"top":"mais"}</div>}</button>)}</div></>}
