@@ -5,7 +5,7 @@
   "theme_color": "#070b1e",
   "background_color": "#070b1e",
   "display": "standalone",
-  "orientation": "portrait",
+  "orientation": "portrait-primary",
   "start_url": "./index.html",
   "categories": ["health", "lifestyle", "utilities"],
   "icons": [

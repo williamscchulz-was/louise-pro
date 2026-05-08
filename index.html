@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.30 Trava de orientacao portrait: manifest portrait-primary + screen.orientation.lock + overlay landscape em mobile <=932px
   v11.9.29 Removidos os quick chips de tempo (Now/-5/-15/-30/-1h/-2h) do AddForm — pedido do usuario, ocupavam espaco sem ROI claro
   v11.9.28 Wake prediction polish: requer >=3 noites de dado (confiabilidade) + cap overshoot >60min vira "alem da media" (nao alarmante)
   v11.9.27 Quick re-log — botao "Repetir" no toast pos-save, re-cria entry com mesmos dados e horario=now (so pra tipos one-shot)
@@ -193,6 +194,14 @@
   }
   _updateNightClass();
   setInterval(_updateNightClass,5*60*1000);
+  // v11.9.30: trava orientacao em portrait. Manifest ja tem "portrait-primary"
+  // (funciona em PWA standalone), mas chamar .lock() ajuda em browsers que suportam
+  // (Chromium). iOS Safari NAO suporta lock — fallback é o overlay CSS abaixo.
+  try{
+    if(screen&&screen.orientation&&screen.orientation.lock){
+      screen.orientation.lock('portrait').catch(function(){});
+    }
+  }catch(_){}
   // Auto-reload when a newly installed Service Worker takes control.
   // Without this, after a deploy the old SW keeps serving the stale
   // HTML until the user manually refreshes. The `controllerchange`
@@ -323,6 +332,21 @@
         transition-duration:0.01ms !important;
       }
     }
+    /* v11.9.30: bloqueio de landscape em mobile (≤932px largura, threshold do iPhone Pro Max).
+       Manifest já trava em portrait pra PWA standalone. Quando usuário força landscape
+       (auto-rotate ON + celular deitado), mostra overlay com pedido de rotacionar.
+       Não bloqueia desktop (>932px) nem iPad em landscape (largura >932). */
+    #rotate-lock{position:fixed;inset:0;z-index:99999;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px;background:linear-gradient(180deg,#070b1e 0%,#10153d 100%);color:#e4e6f4;font-family:'Outfit',sans-serif;-webkit-user-select:none;user-select:none}
+    #rotate-lock .ic{width:80px;height:80px;border-radius:24px;background:rgba(167,139,250,0.12);border:1.5px solid rgba(167,139,250,0.3);display:flex;align-items:center;justify-content:center;margin-bottom:22px;animation:rotateHint 2.4s ease-in-out infinite}
+    #rotate-lock .ic svg{width:42px;height:42px;color:#a78bfa}
+    #rotate-lock h2{font-size:18px;font-weight:800;letter-spacing:-.4px;margin:0 0 6px;color:#f0f2ff}
+    #rotate-lock p{font-size:13px;color:#9099c3;line-height:1.55;max-width:260px;margin:0}
+    @keyframes rotateHint{0%,100%{transform:rotate(0deg)}30%{transform:rotate(-12deg)}60%{transform:rotate(0deg)}}
+    @media screen and (orientation:landscape) and (max-width:932px){
+      #rotate-lock{display:flex}
+      /* Pausa animações do app por trás pra não custar CPU enquanto invisível */
+      #root *{animation-play-state:paused !important}
+    }
     /* Focus-visible outline for keyboard nav (desktop + iPad bluetooth kb).
        Only shows when user arrived via keyboard, not mouse/touch. */
     button:focus-visible,input:focus-visible,textarea:focus-visible,a:focus-visible,[tabindex]:focus-visible{
@@ -343,6 +367,14 @@
      containing block de referência pros filhos com position:fixed. Children que
      precisam clique (a nav, o TimerBar) restauram pointer-events:auto. -->
 <div id="nav-host" style="position:fixed;inset:0;pointer-events:none;z-index:300"></div>
+<!-- v11.9.30: overlay de bloqueio de landscape em mobile. Visível só via @media CSS. -->
+<div id="rotate-lock" aria-hidden="true">
+  <div class="ic">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
+  </div>
+  <h2>Gire o celular</h2>
+  <p>Louise Pro funciona melhor na vertical. Volte pra retrato pra continuar.</p>
+</div>
 <!-- Publica --phys-h com screen.height pra que html/body/App container estendam até
      o fim FÍSICO da tela (não só innerHeight). Assim o scroll container pode
      escorrer conteúdo até atrás do home indicator, simetricamente ao que já
@@ -644,8 +676,29 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.29";
+const APP_VERSION = "11.9.30";
 const CHANGELOG = [
+  {
+    v: "11.9.30", date: "2026-05-04",
+    pt: {
+      title: "Trava de orientação retrato — 3 camadas",
+      bullets: [
+        '★ **Manifest** atualizado pra `orientation: "portrait-primary"` (mais estrito que `portrait`). Funciona em PWA standalone (instalado).',
+        '★ **`screen.orientation.lock("portrait")`** chamado no boot — funciona em browsers Chromium (silencioso fallback no iOS Safari, que não suporta).',
+        '★ **Overlay CSS** em landscape pra mobile (≤932px largura): tela cheia com ícone girando e mensagem "Gire o celular pra continuar". `#root` pausa animações por trás. Quando volta pro retrato, overlay some automaticamente.',
+        'iPad/desktop em landscape continua funcionando normalmente (threshold 932px = iPhone 16 Pro Max). Só mobile que recebe o block.',
+      ],
+    },
+    en: {
+      title: "Portrait orientation lock — 3 layers",
+      bullets: [
+        '★ **Manifest** updated to `orientation: "portrait-primary"` (stricter than `portrait`). Works in installed PWA standalone mode.',
+        '★ **`screen.orientation.lock("portrait")`** called at boot — works on Chromium browsers (silent fallback on iOS Safari, which doesn\'t support it).',
+        '★ **CSS overlay** in landscape for mobile (≤932px width): full-screen with rotating icon and "Rotate your phone" message. `#root` pauses animations behind. When back to portrait, overlay disappears automatically.',
+        'iPad/desktop in landscape keeps working normally (932px threshold = iPhone 16 Pro Max). Only mobile gets the block.',
+      ],
+    },
+  },
   {
     v: "11.9.29", date: "2026-05-04",
     pt: {
