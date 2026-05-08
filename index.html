@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.31 Lock de orientacao reforcado: re-tenta screen.orientation.lock em todo orientationchange (iOS PWA Safari 16.4+ honra)
   v11.9.30 Trava de orientacao portrait: manifest portrait-primary + screen.orientation.lock + overlay landscape em mobile <=932px
   v11.9.29 Removidos os quick chips de tempo (Now/-5/-15/-30/-1h/-2h) do AddForm — pedido do usuario, ocupavam espaco sem ROI claro
   v11.9.28 Wake prediction polish: requer >=3 noites de dado (confiabilidade) + cap overshoot >60min vira "alem da media" (nao alarmante)
@@ -194,12 +195,25 @@
   }
   _updateNightClass();
   setInterval(_updateNightClass,5*60*1000);
-  // v11.9.30: trava orientacao em portrait. Manifest ja tem "portrait-primary"
-  // (funciona em PWA standalone), mas chamar .lock() ajuda em browsers que suportam
-  // (Chromium). iOS Safari NAO suporta lock — fallback é o overlay CSS abaixo.
+  // v11.9.30+v11.9.31: trava orientacao em portrait. Manifest ja tem "portrait-primary"
+  // (PWA standalone respeita). iOS PWA Safari 16.4+ suporta lock(); versoes antigas e
+  // browser tab fallam silently — overlay CSS abaixo cobre. Re-tenta em orientationchange
+  // pra pegar momentos onde iOS solta o lock.
+  function _tryLockPortrait(){
+    try{
+      if(screen&&screen.orientation&&screen.orientation.lock){
+        screen.orientation.lock('portrait').catch(function(){});
+      }
+    }catch(_){}
+  }
+  _tryLockPortrait();
+  // Listener: re-tenta lock toda vez que a tela rotaciona. Em PWA standalone iOS 16.4+
+  // isso forca a volta pro portrait quase imediato. Em browser tab, no-op silencioso.
   try{
-    if(screen&&screen.orientation&&screen.orientation.lock){
-      screen.orientation.lock('portrait').catch(function(){});
+    if(screen&&screen.orientation&&screen.orientation.addEventListener){
+      screen.orientation.addEventListener('change',_tryLockPortrait);
+    }else if(window.addEventListener){
+      window.addEventListener('orientationchange',_tryLockPortrait);
     }
   }catch(_){}
   // Auto-reload when a newly installed Service Worker takes control.
@@ -676,8 +690,27 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.30";
+const APP_VERSION = "11.9.31";
 const CHANGELOG = [
+  {
+    v: "11.9.31", date: "2026-05-04",
+    pt: {
+      title: "PWA portrait lock reforçado",
+      bullets: [
+        '★ **`orientationchange` listener** chama `screen.orientation.lock("portrait")` toda vez que a tela rotaciona. Em **PWA iOS standalone (Safari 16.4+)**, iOS aceita o lock e força volta pro retrato quase instantaneamente. Em iOS antigo ou browser tab, no-op silencioso (overlay CSS cobre).',
+        '★ Função `_tryLockPortrait` extraída pra reuso. Chamada no boot + em todo evento.',
+        '⚠️ Se você instalou o PWA antes da v11.9.30 (manifest tinha `portrait` em vez de `portrait-primary`), iOS pode estar usando manifest cacheada. **Pra forçar refresh**: apague o app da tela inicial → abra a URL no Safari → toque em compartilhar → "Adicionar à tela de início". O novo manifest é lido na hora da instalação.',
+      ],
+    },
+    en: {
+      title: "Reinforced PWA portrait lock",
+      bullets: [
+        '★ **`orientationchange` listener** calls `screen.orientation.lock("portrait")` every time the screen rotates. On **iOS PWA standalone (Safari 16.4+)**, iOS accepts the lock and forces back to portrait almost instantly. On older iOS or browser tab, silent no-op (CSS overlay covers).',
+        '★ `_tryLockPortrait` function extracted for reuse. Called at boot + on every event.',
+        '⚠️ If you installed the PWA before v11.9.30 (manifest had `portrait` instead of `portrait-primary`), iOS may be using cached manifest. **To force refresh**: delete app from home screen → open URL in Safari → tap share → "Add to Home Screen". New manifest is read at install time.',
+      ],
+    },
+  },
   {
     v: "11.9.30", date: "2026-05-04",
     pt: {
