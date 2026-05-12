@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.34 Auditoria DB cleanup: loadOlderEntries dead code removida + inbox trim a 30 items
   v11.9.33 Landscape lock reforcado: threshold 932->1180px + aspect-ratio fallback + esconde root/nav atras do overlay (era so display:none)
   v11.9.32 Quick button Tummy substituido por Medicine — Louise toma med diariamente (combo manha), tummy raramente
   v11.9.31 Lock de orientacao reforcado: re-tenta screen.orientation.lock em todo orientationchange (iOS PWA Safari 16.4+ honra)
@@ -486,7 +487,7 @@ db.enablePersistence({synchronizeTabs: true}).catch(()=>{});
 window.FB = {
   // v11.9.0: window de N dias (default 90). Antes lia TODA a colleção no cold start —
   // ~1650 reads hoje, escalando pra 22k/ano. 90d janela cobre engine (7d), stats curtos
-  // (4-30d) e history visivível. Para histórico antigo, use loadOlderEntries() sob demanda.
+  // (4-30d) e history visivível. Janela 90d é fixa; pra ver >90d, re-adicionar lazy load.
   subEntries(cb, daysBack=90) {
     let query = db.collection('entries').orderBy('date','desc');
     if (daysBack && daysBack > 0) {
@@ -504,13 +505,10 @@ window.FB = {
       cb(data);
     });
   },
-  // Para Stats/History que precisam acessar histórico mais antigo que a janela do
-  // subEntries. One-time get (não cria listener), retorna entries do range.
-  async loadOlderEntries(beforeDate /* YYYY-MM-DD */) {
-    const snap = await db.collection('entries').where('date','<',beforeDate).orderBy('date','desc').get();
-    return snap.docs.map(d => ({...d.data(), _docId: d.id}));
-  },
-  async addEntry(e) { 
+  // v11.9.34: loadOlderEntries removido — dead code (auditoria DB v11.9.25). Era idea
+  // legítima pra Stats/History antigos, nunca foi conectado na UI. Se um dia precisar,
+  // re-adicionar é trivial. Por hora, app mais enxuto.
+  async addEntry(e) {
     // Remove undefined values (Firestore rejects them)
     const clean = Object.fromEntries(Object.entries(e).filter(([_,v]) => v !== undefined));
     await db.collection('entries').doc(e.id).set(clean); 
@@ -698,8 +696,27 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.33";
+const APP_VERSION = "11.9.34";
 const CHANGELOG = [
+  {
+    v: "11.9.34", date: "2026-05-04",
+    pt: {
+      title: "Limpeza pós-auditoria — dead code + inbox trim",
+      bullets: [
+        '🧹 **`FB.loadOlderEntries` removido** — função declarada em v11.9.0 pra puxar histórico >90d sob demanda, mas nunca foi conectada na UI. Hoje era dead code. Re-adicionar é trivial se algum dia precisar.',
+        '🧹 **Inbox auto-trim a 30 itens** ao gravar. Reset diário à meia-noite já zera, mas se o app fica fechado por dias os hints acumulam. 30 é mais que suficiente pra qualquer dia. Evita doc crescer silenciosamente.',
+        'Auditoria de DB/infra de v11.9.25 agora está 100% endereçada — restos eram cosméticos.',
+      ],
+    },
+    en: {
+      title: "Post-audit cleanup — dead code + inbox trim",
+      bullets: [
+        '🧹 **`FB.loadOlderEntries` removed** — function declared in v11.9.0 to lazy-load history >90d on demand, but never wired up in the UI. It was dead code. Re-adding is trivial if needed someday.',
+        '🧹 **Inbox auto-trim to 30 items** on save. Midnight daily reset already clears, but if the app stays closed for days the hints accumulate. 30 is more than enough for any single day. Prevents silent doc growth.',
+        'The v11.9.25 DB/infra audit is now 100% addressed — leftovers were cosmetic.',
+      ],
+    },
+  },
   {
     v: "11.9.33", date: "2026-05-04",
     pt: {
@@ -6577,7 +6594,7 @@ const StatsPage = React.memo(function StatsPage({entries,onGrowth}){
     </div>
     <div style={{background:"rgba(22,28,60,0.4)",borderRadius:14,border:`1px solid ${T.gB}`,padding:4,marginBottom:6}}>
       {/* v11.9.25: "all" virou "90d" — label honesto. subEntries usa janela de 90d, "Tudo"
-          era misleading. Pra histórico mais antigo (futuro), expor lazy-load via loadOlderEntries. */}
+          era misleading. Pra histórico mais antigo (futuro), re-adicionar lazy load. */}
       {[{v:7,l:"7d"},{v:14,l:"14d"},{v:30,l:"30d"},{v:"all",l:"90d"}].map(p=>
         <button key={p.v} aria-label={`${_lang==="en"?"Show period":"Mostrar período"} ${p.l}`} aria-pressed={period===p.v} onClick={()=>setPeriod(p.v)} style={{width:"25%",padding:"8px 0",borderRadius:10,fontSize:12,fontWeight:700,background:period===p.v?T.accent:"transparent",color:period===p.v?"#fff":T.sub}}>{p.l}</button>
       )}
@@ -8145,7 +8162,10 @@ function App(){
     if(!changed)return;
     // Sort by timestamp desc and persist
     merged.sort((a,b)=>(b.timestamp||0)-(a.timestamp||0));
-    FB.saveInbox({items:merged,lastReset:inbox.lastReset||td});
+    // v11.9.34: trim a 30 items. Reset diario ja zera, mas se app fica fechado por dias
+    // os items acumulam. 30 e mais que suficiente pra qualquer dia normal.
+    const trimmed=merged.slice(0,30);
+    FB.saveInbox({items:trimmed,lastReset:inbox.lastReset||td});
   },[dayInsights,inbox.items,inbox.lastReset]);
 
   // ── INBOX MIDNIGHT RESET ──
