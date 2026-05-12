@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.33 Landscape lock reforcado: threshold 932->1180px + aspect-ratio fallback + esconde root/nav atras do overlay (era so display:none)
   v11.9.32 Quick button Tummy substituido por Medicine — Louise toma med diariamente (combo manha), tummy raramente
   v11.9.31 Lock de orientacao reforcado: re-tenta screen.orientation.lock em todo orientationchange (iOS PWA Safari 16.4+ honra)
   v11.9.30 Trava de orientacao portrait: manifest portrait-primary + screen.orientation.lock + overlay landscape em mobile <=932px
@@ -347,20 +348,26 @@
         transition-duration:0.01ms !important;
       }
     }
-    /* v11.9.30: bloqueio de landscape em mobile (≤932px largura, threshold do iPhone Pro Max).
-       Manifest já trava em portrait pra PWA standalone. Quando usuário força landscape
-       (auto-rotate ON + celular deitado), mostra overlay com pedido de rotacionar.
-       Não bloqueia desktop (>932px) nem iPad em landscape (largura >932). */
+    /* v11.9.30 + v11.9.33: bloqueio de landscape em mobile.
+       Manifest tem "portrait-primary" e JS tenta screen.orientation.lock, mas iOS PWA
+       Safari pode ignorar dependendo da versão / cache. Este overlay é o garante final:
+       aparece em QUALQUER landscape de mobile (≤1180px largura, cobre iPad mini também
+       quando deitado, mas iPad em PWA raro). */
     #rotate-lock{position:fixed;inset:0;z-index:99999;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px;background:linear-gradient(180deg,#070b1e 0%,#10153d 100%);color:#e4e6f4;font-family:'Outfit',sans-serif;-webkit-user-select:none;user-select:none}
     #rotate-lock .ic{width:80px;height:80px;border-radius:24px;background:rgba(167,139,250,0.12);border:1.5px solid rgba(167,139,250,0.3);display:flex;align-items:center;justify-content:center;margin-bottom:22px;animation:rotateHint 2.4s ease-in-out infinite}
     #rotate-lock .ic svg{width:42px;height:42px;color:#a78bfa}
     #rotate-lock h2{font-size:18px;font-weight:800;letter-spacing:-.4px;margin:0 0 6px;color:#f0f2ff}
     #rotate-lock p{font-size:13px;color:#9099c3;line-height:1.55;max-width:260px;margin:0}
     @keyframes rotateHint{0%,100%{transform:rotate(0deg)}30%{transform:rotate(-12deg)}60%{transform:rotate(0deg)}}
-    @media screen and (orientation:landscape) and (max-width:932px){
-      #rotate-lock{display:flex}
-      /* Pausa animações do app por trás pra não custar CPU enquanto invisível */
-      #root *{animation-play-state:paused !important}
+    /* v11.9.33: bumped threshold 932 → 1180 (cobre iPhone Pro Max sem ambiguidade
+       no limite + iPad mini portrait). Tambem detecta via aspect-ratio pra extra robustez. */
+    @media screen and (orientation:landscape) and (max-width:1180px),
+           screen and (orientation:landscape) and (max-aspect-ratio:13/9){
+      #rotate-lock{display:flex !important}
+      /* Esconde TUDO atras do overlay — alguns devices Safari deixam scroll passar */
+      #root{visibility:hidden !important}
+      #nav-host{display:none !important}
+      body{overflow:hidden !important}
     }
     /* Focus-visible outline for keyboard nav (desktop + iPad bluetooth kb).
        Only shows when user arrived via keyboard, not mouse/touch. */
@@ -691,8 +698,31 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.32";
+const APP_VERSION = "11.9.33";
 const CHANGELOG = [
+  {
+    v: "11.9.33", date: "2026-05-04",
+    pt: {
+      title: "Landscape lock reforçado — sempre dispara",
+      bullets: [
+        '🚨 Bug reportado: PWA ainda rotacionava. Causa: threshold de `932px` ficava no limite exato do iPhone Pro Max em landscape (também = 932) — algumas implementações Safari não consideram `≤932` como match.',
+        '★ **Threshold bumped 932 → 1180px** (cobre todos iPhones em landscape com margem).',
+        '★ **Aspect-ratio fallback** `max-aspect-ratio:13/9` — pega qualquer device em landscape que NÃO seja claramente tablet/desktop.',
+        '★ **Esconde mais agressivamente**: `#root{visibility:hidden}` + `#nav-host{display:none}` + `body{overflow:hidden}`. Antes podia ter conteúdo passando por trás do overlay em algumas situações.',
+        '⚠️ Ainda assim, iOS PWA standalone pode ignorar a manifest portrait-primary se o app foi instalado antes da v11.9.30 — re-instalar pega o manifest novo.',
+      ],
+    },
+    en: {
+      title: "Reinforced landscape lock — always triggers",
+      bullets: [
+        '🚨 Reported bug: PWA still rotated. Cause: `932px` threshold sat exactly at iPhone Pro Max landscape width (also = 932) — some Safari implementations don\'t count `≤932` as a match.',
+        '★ **Threshold bumped 932 → 1180px** (covers all iPhones in landscape with margin).',
+        '★ **Aspect-ratio fallback** `max-aspect-ratio:13/9` — catches any device in landscape that\'s clearly not a tablet/desktop.',
+        '★ **Hides more aggressively**: `#root{visibility:hidden}` + `#nav-host{display:none}` + `body{overflow:hidden}`. Before, content could leak behind the overlay in some situations.',
+        '⚠️ Even so, iOS PWA standalone may ignore the portrait-primary manifest if the app was installed before v11.9.30 — re-installing picks up the new manifest.',
+      ],
+    },
+  },
   {
     v: "11.9.32", date: "2026-05-04",
     pt: {
