@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.37 SleepBlock refinado: sai ribbon/box-shadow/stripe/eyebrow, fica ponto pulse no icone + duracao headline + stats em colunas + timeline 22px + pills "start->end"
   v11.9.36 Auditoria UX #4: discoverability hints — chevron na data do History (revela picker) + ••• sutil no Ring (revela long-press)
   v11.9.35 Auditoria UX TOP 3: quick buttons 6x1->3x2 legivel + touch targets Apple HIG (bell 40, nav 46x44, FAB 44) + confirm 2-step inline (sem confirm() nativo)
   v11.9.34 Auditoria DB cleanup: loadOlderEntries dead code removida + inbox trim a 30 items
@@ -291,6 +292,8 @@
     @keyframes nwPulseAmber{0%,100%{box-shadow:0 0 20px rgba(251,146,60,0.15), 0 4px 16px rgba(0,0,0,0.3)}50%{box-shadow:0 0 32px rgba(251,146,60,0.32), 0 4px 16px rgba(0,0,0,0.3)}}
     @keyframes livePulse{0%,100%{opacity:0.35;box-shadow:0 0 12px rgba(96,165,250,0.18)}50%{opacity:0.8;box-shadow:0 0 24px rgba(96,165,250,0.4)}}
     @keyframes liveDotPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.85)}}
+    /* v11.9.37: pulse sutil de brilho no waking band ativo da timeline refinada */
+    @keyframes liveBandPulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.25)}}
     @keyframes progressShimmer{0%,100%{opacity:0.7}50%{opacity:1}}
     @keyframes nwIconPulseAmber{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
     /* v11.9.1: confetti pra marcos (1m, 100d, etc). Cada particula com delay/distancia
@@ -698,8 +701,39 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.36";
+const APP_VERSION = "11.9.37";
 const CHANGELOG = [
+  {
+    v: "11.9.37", date: "2026-05-13",
+    pt: {
+      title: "SleepBlock refinado — menos chrome, mais hierarquia",
+      bullets: [
+        '★ **Indicador "live" único:** sai a ribbon "EM ANDAMENTO" + box-shadow azul pulsante + animação livePulse. Fica só um **ponto lavanda piscando no canto do ícone de cama** + sufixo discreto "· ao vivo" do lado da duração. Mesma clareza, sem 3 sinais redundantes.',
+        '★ **Hierarquia visual reescrita:** a duração total ("9h 36m") virou headline em 20px bold. Range de horas + número de despertares foram pra linha 2 em cinza. Sumiu o eyebrow "SONO NOTURNO" (redundante com o ícone). Stripe lateral lavanda removida.',
+        '★ **Stats em colunas:** "Sono real" + "Acordada" agora vivem numa **stat-row** abaixo da timeline com labels uppercase + valores tabulares. Antes eram 3 stats coloridos disputando atenção na mesma linha do header.',
+        '★ **Timeline maior e mais clara:** 14px → **22px de altura**, bands com gradient azul (closed) e âmbar (ativo). Active waking ganha pulse sutil de brilho via `liveBandPulse`. Hour marks mais sutis (alpha 0.04 vs 0.06).',
+        '★ **Wakings sem separador tracejado:** cada waking virou **section com border-top sólida ultra-sutil**. Pill agora mostra "00:50 → 01:18" (range explícito) em vez de "00:50 · 28min" — duração foi pra fora do pill em label cinza. Sai o título "ATIVIDADE DA NOITE" (era ruído).',
+        'Cores cyan (#7dd3fc) substituem azul (#60a5fa) nas pills de waking pra contrastar melhor com o âmbar do ativo. Border + bg mais cleans.',
+        'Foot do live: "Consolida quando o bedtime terminar" — sem emoji, sem itálico, peso normal.',
+        'Comportamento idêntico: tap no pill abre editor inline, edit/delete dos eventos aninhados, swipe na EntryRow, lógica de wakings e retroactive events — tudo preserved.',
+        '**Como funciona:** mockup criado em `.claude/mockups/bedtime-refined.html` antes de implementar. Mudança é puramente visual/hierárquica.',
+      ],
+    },
+    en: {
+      title: "SleepBlock refined — less chrome, more hierarchy",
+      bullets: [
+        '★ **Single "live" indicator:** the "IN PROGRESS" ribbon + blue pulsating box-shadow + livePulse animation are gone. Just a **pulsing lavender dot at the corner of the bed icon** + a subtle "· live" suffix next to the duration. Same clarity, no 3 redundant signals.',
+        '★ **Visual hierarchy rewritten:** total duration ("9h 36m") is now the 20px bold headline. Time range + waking count moved to line 2 in gray. The "BEDTIME" eyebrow is gone (redundant with the bed icon). Side stripe removed.',
+        '★ **Stats in columns:** "Real sleep" + "Awake" now live in a **stat-row** below the timeline with uppercase labels + tabular values. Before, 3 colored stats were competing on the same header line.',
+        '★ **Bigger, clearer timeline:** 14px → **22px tall**, bands with blue gradient (closed) and amber (active). Active waking gets a subtle brightness pulse via `liveBandPulse`. Hour marks subtler (alpha 0.04 vs 0.06).',
+        '★ **Wakings without dashed separators:** each waking became a **section with a solid ultra-subtle top border**. The pill now shows "00:50 → 01:18" (explicit range) instead of "00:50 · 28min" — duration moved out to a gray label. The "NIGHT ACTIVITY" title is gone (was noise).',
+        'Cyan (#7dd3fc) replaces blue (#60a5fa) on waking pills for better contrast with active amber. Borders + bg are cleaner.',
+        'Live footer: "Saved when bedtime ends" — no emoji, no italic, regular weight.',
+        'Behavior identical: tap on pill opens inline editor, edit/delete of nested events, EntryRow swipe, wakings + retroactive events logic — all preserved.',
+        '**How it works:** mockup created at `.claude/mockups/bedtime-refined.html` before implementing. Change is purely visual/hierarchical.',
+      ],
+    },
+  },
   {
     v: "11.9.36", date: "2026-05-04",
     pt: {
@@ -5247,13 +5281,13 @@ const SleepBlock = React.memo(function SleepBlock({entry,onDelete,onEdit,entries
     else if(le.type==="temperature")txt=`${le.value||"?"}°C`;
     else if(le.type==="bath")txt=_lang==="en"?"Bath":"Banho";
     else txt=TL(le.type);
-    return(<div style={{display:"flex",alignItems:"center",gap:9,padding:"6px 0"}}>
+    return(<div style={{display:"flex",alignItems:"center",gap:10,padding:"5px 0"}}>
       <button aria-label={_lang==="en"?"Edit":"Editar"} onClick={ev=>{ev.stopPropagation();onEdit&&onEdit(le)}} style={{width:24,height:24,borderRadius:7,background:cfg.bg,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,cursor:"pointer",border:"none",padding:0}}>
         <Icon name={cfg.icon} size={13} color={cfg.color}/>
       </button>
-      <button onClick={ev=>{ev.stopPropagation();onEdit&&onEdit(le)}} style={{flex:1,fontSize:11,color:T.text,fontWeight:500,cursor:"pointer",textAlign:"left",background:"transparent",border:"none",padding:0}}>{txt}</button>
-      <div style={{fontSize:10,color:T.sub,fontWeight:600,fontVariantNumeric:"tabular-nums"}}>{le.time}</div>
-      <button onClick={ev=>{ev.stopPropagation();if(confirm(_lang==="en"?`Delete this ${TL(le.type)||le.type}?`:`Excluir ${TL(le.type)||le.type}?`)){onDelete&&onDelete(le.id)}}} style={{width:22,height:22,borderRadius:6,background:"transparent",border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginLeft:2}}>
+      <button onClick={ev=>{ev.stopPropagation();onEdit&&onEdit(le)}} style={{flex:1,fontSize:12,color:T.text,fontWeight:500,letterSpacing:-0.1,cursor:"pointer",textAlign:"left",background:"transparent",border:"none",padding:0}}>{txt}</button>
+      <div style={{fontSize:10.5,color:T.sub,fontWeight:600,fontVariantNumeric:"tabular-nums"}}>{le.time}</div>
+      <button aria-label={_lang==="en"?"Delete":"Excluir"} onClick={ev=>{ev.stopPropagation();if(confirm(_lang==="en"?`Delete this ${TL(le.type)||le.type}?`:`Excluir ${TL(le.type)||le.type}?`)){onDelete&&onDelete(le.id)}}} style={{width:24,height:24,borderRadius:7,background:"transparent",border:"none",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,opacity:0.55,cursor:"pointer",padding:0}}>
         <Icon name="trash" size={11} color={T.dim}/>
       </button>
     </div>);
@@ -5281,45 +5315,31 @@ const SleepBlock = React.memo(function SleepBlock({entry,onDelete,onEdit,entries
 
   // Live mode: end label is "agora / now" instead of computed end time
   const endLabel=isLive?(_lang==="en"?"now":"agora"):endT;
-  return(<div style={{position:"relative",marginBottom:8,borderRadius:20,background:"linear-gradient(180deg,rgba(167,139,250,0.08),rgba(167,139,250,0.03))",border:`1px solid ${isLive?"rgba(96,165,250,0.4)":T.gBSoft}`,overflow:"hidden",animation:isLive?"livePulse 2.5s ease-in-out infinite":"none",boxShadow:isLive?"0 0 16px rgba(96,165,250,0.18), "+T.insetTop:T.insetTop,contain:"layout paint"}}>
-    {/* Colored stripe (matches new EntryRow style) */}
-    <div style={{position:"absolute",left:0,top:0,bottom:0,width:4,background:"linear-gradient(180deg,#a78bfa,rgba(167,139,250,0.3))",borderRadius:"0 2px 2px 0",pointerEvents:"none",zIndex:1}}/>
-    {/* Live ribbon (only when isLive) */}
-    {isLive&&<div style={{display:"flex",alignItems:"center",gap:8,padding:"8px 16px 8px 22px",background:"linear-gradient(90deg,rgba(96,165,250,0.18),rgba(167,139,250,0.10))",borderBottom:"1px solid rgba(96,165,250,0.25)",position:"relative"}}>
-      <span style={{width:8,height:8,borderRadius:"50%",background:"#60a5fa",boxShadow:"0 0 8px #60a5fa",animation:"liveDotPulse 1.5s ease-in-out infinite"}}/>
-      <span style={{fontSize:9,fontWeight:800,color:"#60a5fa",textTransform:"uppercase",letterSpacing:1.5,flex:1}}>{_lang==="en"?"In progress":"Em andamento"}</span>
-      <span style={{fontSize:10,color:T.sub,fontWeight:600,fontVariantNumeric:"tabular-nums"}}>{_lang==="en"?"for ":"há "}{fmtDur(totalMin)}</span>
-    </div>}
-    {/* Header */}
-    <button onClick={()=>setExpanded(!expanded)} style={{width:"100%",padding:"18px 20px 18px 24px",display:"flex",alignItems:"center",gap:14,textAlign:"left",background:"transparent",position:"relative"}}>
-      <div style={{width:50,height:50,borderRadius:15,background:"linear-gradient(135deg,rgba(167,139,250,0.28),rgba(167,139,250,0.08))",border:"1px solid rgba(167,139,250,0.4)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset"}}>
-        <Icon name="bed" size={24} color="#c4b5fd"/>
+  return(<div style={{position:"relative",marginBottom:8,borderRadius:18,background:"rgba(20,26,60,0.32)",border:`1px solid ${isLive?"rgba(139,124,246,0.4)":T.gBSoft}`,overflow:"hidden",contain:"layout paint"}}>
+    {/* Header (refinado v11.9.37: duracao como headline, ponto pulsante no canto do icone) */}
+    <button onClick={()=>setExpanded(!expanded)} style={{width:"100%",padding:"14px 18px",display:"flex",alignItems:"center",gap:13,textAlign:"left",background:"transparent",border:"none",position:"relative",cursor:"pointer"}}>
+      <div style={{position:"relative",width:42,height:42,borderRadius:13,background:"rgba(167,139,250,0.16)",border:"1px solid rgba(167,139,250,0.22)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+        <Icon name="bed" size={20} color="#c4b5fd"/>
+        {isLive&&<span style={{position:"absolute",top:-2,right:-2,width:9,height:9,borderRadius:"50%",background:"#a78bfa",boxShadow:"0 0 6px #a78bfa, 0 0 0 2px rgba(7,11,30,0.95)",animation:"liveDotPulse 1.6s ease-in-out infinite"}}/>}
       </div>
       <div style={{flex:1,minWidth:0}}>
-        <div style={{fontSize:10,fontWeight:700,color:"rgba(196,181,253,0.85)",textTransform:"uppercase",letterSpacing:0.5,marginBottom:3}}>{_lang==="en"?"Bedtime":"Sono noturno"}{isLive&&<span style={{marginLeft:6,opacity:0.7}}>{_lang==="en"?"· live":"· ao vivo"}</span>}</div>
-        <div style={{fontSize:18,fontWeight:800,color:"#f0f2ff",letterSpacing:-0.4,fontVariantNumeric:"tabular-nums",marginBottom:5}}>{entry.time} — {endLabel}</div>
-        <div style={{display:"flex",gap:8,fontSize:12,color:T.sub,alignItems:"center",flexWrap:"wrap"}}>
-          <span style={{color:T.purple,fontWeight:700,fontVariantNumeric:"tabular-nums"}}>{fmtDur(realMin)} {_lang==="en"?"sleep":"sono"}</span>
-          {awakeMin>0&&<>
-            <span style={{width:3,height:3,borderRadius:"50%",background:T.dim}}/>
-            <span style={{color:"#60a5fa",fontWeight:700,fontVariantNumeric:"tabular-nums"}}>{fmtDur(awakeMin)} {_lang==="en"?"awake":"acordada"}</span>
-          </>}
-          {wakings.length>0&&<>
-            <span style={{width:3,height:3,borderRadius:"50%",background:T.dim}}/>
-            <span>{wakings.length} {wakings.length===1?(_lang==="en"?"waking":"despertar"):(_lang==="en"?"wakings":"despertares")}</span>
-          </>}
+        <div style={{fontSize:20,fontWeight:800,color:"#f0f2ff",letterSpacing:-0.5,fontVariantNumeric:"tabular-nums",lineHeight:1.1}}>
+          {fmtDur(totalMin)}
+          {isLive&&<span style={{fontSize:11,color:"#c4b5fd",fontWeight:600,marginLeft:6,letterSpacing:0.2,opacity:0.85}}>{_lang==="en"?"· live":"· ao vivo"}</span>}
+        </div>
+        <div style={{fontSize:12,color:T.sub,marginTop:3,fontVariantNumeric:"tabular-nums",fontWeight:500}}>
+          {entry.time} → {endLabel}
+          {wakings.length>0&&` · ${wakings.length} ${wakings.length===1?(_lang==="en"?"waking":"despertar"):(_lang==="en"?"wakings":"despertares")}`}
         </div>
       </div>
-      <div style={{width:24,height:24,display:"flex",alignItems:"center",justifyContent:"center",color:T.sub,flexShrink:0,transform:expanded?"rotate(180deg)":"rotate(0deg)",transition:"transform .2s"}}>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6"/></svg>
+      <div style={{width:22,height:22,display:"flex",alignItems:"center",justifyContent:"center",color:T.dim,flexShrink:0,transform:expanded?"rotate(180deg)":"rotate(0deg)",transition:"transform .2s"}}>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M6 9l6 6 6-6"/></svg>
       </div>
     </button>
-    {/* Visual timeline (hour marks + waking bands) */}
+    {/* Visual timeline refinada (22px, gradient bands, pulse sutil no ativo) */}
     {wakings.length>0&&<>
-      <div style={{margin:"0 16px 4px",position:"relative",height:14,background:"linear-gradient(180deg,rgba(167,139,250,0.18),rgba(124,58,237,0.10))",borderRadius:7,overflow:"hidden",border:"1px solid rgba(167,139,250,0.15)"}}>
-        {/* Hour marks every hour */}
-        {(()=>{const marks=[];const totalH=totalMin/60;for(let h=1;h<totalH;h++){const pct=(h*60/totalMin)*100;marks.push(<div key={h} style={{position:"absolute",top:0,bottom:0,left:`${pct}%`,width:1,background:"rgba(255,255,255,0.06)"}}/>)}return marks})()}
-        {/* Waking bands — active waking is amber, closed wakings are blue */}
+      <div style={{margin:"0 18px 4px",position:"relative",height:22,borderRadius:11,background:"linear-gradient(180deg,rgba(124,58,237,0.16),rgba(124,58,237,0.06))",border:"1px solid rgba(139,124,246,0.14)",overflow:"hidden"}}>
+        {(()=>{const marks=[];const totalH=totalMin/60;for(let h=1;h<totalH;h++){const pct=(h*60/totalMin)*100;marks.push(<div key={h} style={{position:"absolute",top:0,bottom:0,left:`${pct}%`,width:1,background:"rgba(255,255,255,0.04)"}}/>)}return marks})()}
         {wakings.map((w,i)=>{
           const[wh,wm]=w.time.split(":").map(Number);
           let wMin=wh*60+wm;
@@ -5327,24 +5347,28 @@ const SleepBlock = React.memo(function SleepBlock({entry,onDelete,onEdit,entries
           const leftPct=Math.max(0,Math.min(100,((wMin-startMin)/totalMin)*100));
           const widthPct=Math.max(2,(w.durationMin/totalMin)*100);
           const isActive=w.isActive;
-          return<div key={i} style={{position:"absolute",top:0,bottom:0,left:`${leftPct}%`,width:`${widthPct}%`,background:isActive?"rgba(251,191,36,0.7)":"rgba(96,165,250,0.7)",borderLeft:`2px solid ${isActive?"#fbbf24":"#60a5fa"}`,borderRight:`2px solid ${isActive?"#fbbf24":"#60a5fa"}`}}/>
+          return<div key={i} style={{position:"absolute",top:0,bottom:0,left:`${leftPct}%`,width:`${widthPct}%`,background:isActive?"linear-gradient(180deg,#fbbf24,#d97706)":"linear-gradient(180deg,#6ea8ff,#3b82f6)",boxShadow:"inset 0 0 0 1px rgba(255,255,255,0.12)",animation:isActive?"liveBandPulse 2s ease-in-out infinite":"none"}}/>
         })}
       </div>
-      {/* Hour labels (start, mid, end) */}
-      <div style={{display:"flex",justifyContent:"space-between",padding:"0 16px 10px",fontSize:8,color:T.dim,fontWeight:600}}>
+      <div style={{display:"flex",justifyContent:"space-between",padding:"0 18px 14px",fontSize:9,color:T.dim,fontWeight:600,fontVariantNumeric:"tabular-nums",letterSpacing:0.3}}>
         <span>{entry.time}</span>
         <span>{(()=>{const midMs=new Date(`${entry.date}T${entry.time}`).getTime()+(totalMin/2)*60000;const md=new Date(midMs);return`${String(md.getHours()).padStart(2,"0")}:${String(md.getMinutes()).padStart(2,"0")}`})()}</span>
         <span>{endLabel}</span>
       </div>
     </>}
-    {/* Expanded: nested events list (flat with separators) */}
-    {expanded&&wakings.length>0&&<div style={{borderTop:"1px solid rgba(167,139,250,0.12)",padding:"10px 0",background:"rgba(14,18,48,0.3)"}}>
-      <div style={{fontSize:9,fontWeight:800,color:"rgba(96,165,250,0.85)",textTransform:"uppercase",letterSpacing:1,padding:"4px 16px 6px",display:"flex",alignItems:"center",gap:8}}>
-        <span style={{flex:"0 0 14px",height:1,background:"rgba(96,165,250,0.3)"}}/>
-        <span>{_lang==="en"?"Night activity":"Atividade da noite"}</span>
-        <span style={{flex:1,height:1,background:"rgba(96,165,250,0.15)"}}/>
+    {/* Stats row (refinado v11.9.37: Sono real / Acordada em colunas) */}
+    {expanded&&wakings.length>0&&<div style={{padding:"0 18px 14px",display:"flex",gap:14}}>
+      <div style={{flex:1}}>
+        <div style={{color:T.dim,fontSize:10,fontWeight:600,textTransform:"uppercase",letterSpacing:0.4,marginBottom:2}}>{_lang==="en"?"Real sleep":"Sono real"}</div>
+        <div style={{color:"#c4b5fd",fontWeight:700,fontSize:13,fontVariantNumeric:"tabular-nums"}}>{fmtDur(realMin)}</div>
       </div>
-      <div style={{padding:"0 16px"}}>
+      {awakeMin>0&&<div style={{flex:1,borderLeft:"1px solid rgba(139,124,246,0.1)",paddingLeft:14}}>
+        <div style={{color:T.dim,fontSize:10,fontWeight:600,textTransform:"uppercase",letterSpacing:0.4,marginBottom:2}}>{_lang==="en"?"Awake":"Acordada"}</div>
+        <div style={{color:"#7dd3fc",fontWeight:700,fontSize:13,fontVariantNumeric:"tabular-nums"}}>{fmtDur(awakeMin)}</div>
+      </div>}
+    </div>}
+    {/* Wakings sections (refinado: cada waking = secao com border-top sutil, pill mostra "start → end" + duracao a direita) */}
+    {expanded&&wakings.length>0&&<div>
         {wakings.map((w,i)=>{
           // Filter linked events to only those with time inside bedtime range —
           // defense against legacy data where events got wrongly linked via addEntry
@@ -5360,15 +5384,21 @@ const SleepBlock = React.memo(function SleepBlock({entry,onDelete,onEdit,entries
           const allEventsForWaking=[...linkedEvents,...retroForWaking[i]]
             .sort((a,b)=>(a.time||"").localeCompare(b.time||""));
           const isActive=w.isActive;
-          return<div key={i}>
-            {/* Waking separator with pill — amber if active, blue if closed. Tap to edit. */}
-            <div style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0 4px",marginTop:i>0?6:0,borderTop:i>0?`1px dashed ${isActive?"rgba(251,191,36,0.25)":"rgba(96,165,250,0.18)"}`:"none"}}>
-              <button onClick={e=>{e.stopPropagation();const didx=editingIdx===i?null:i;setEditingIdx(didx);if(didx!==null){setEditStart(w.time||"");const dur=w.durationMin||0;if(isActive){const now=new Date();setEditEnd(`${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`)}else{const[sh,sm]=(w.time||"00:00").split(":").map(Number);const endTot=sh*60+sm+dur;const eh=Math.floor(endTot/60)%24;const em=endTot%60;setEditEnd(`${String(eh).padStart(2,"0")}:${String(em).padStart(2,"0")}`)}}}} style={{display:"inline-flex",alignItems:"center",gap:6,fontSize:10,fontWeight:700,color:isActive?"#fbbf24":"#60a5fa",padding:"3px 9px",borderRadius:8,background:isActive?"rgba(251,191,36,0.18)":"rgba(96,165,250,0.15)",border:`1px solid ${editingIdx===i?"rgba(139,124,246,0.6)":(isActive?"rgba(251,191,36,0.4)":"rgba(96,165,250,0.3)")}`,fontVariantNumeric:"tabular-nums",cursor:"pointer"}}>
-                <Icon name="sun" size={9} color={isActive?"#fbbf24":"#60a5fa"}/>
-                {w.time} · {fmtDur(w.durationMin)}{isActive?` · ${_lang==="en"?"live":"ao vivo"}`:""}
-                <svg viewBox="0 0 24 24" style={{width:9,height:9,stroke:isActive?"#fbbf24":"#60a5fa",fill:"none",strokeWidth:2.5,opacity:0.65,marginLeft:2}}><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          // Compute end string for waking range "start → end"
+          const[_swh,_swm]=(w.time||"00:00").split(":").map(Number);
+          const _wEndTot=_swh*60+_swm+(w.durationMin||0);
+          const _weh=Math.floor(_wEndTot/60)%24;
+          const _wem=_wEndTot%60;
+          const wakingEndStr=isActive?(_lang==="en"?"now":"agora"):`${String(_weh).padStart(2,"0")}:${String(_wem).padStart(2,"0")}`;
+          return<div key={i} style={{borderTop:"1px solid rgba(139,124,246,0.10)",padding:"10px 18px"}}>
+            {/* Waking header: tappable pill (start → end) + duration tag */}
+            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:allEventsForWaking.length>0?6:0,flexWrap:"wrap"}}>
+              <button onClick={e=>{e.stopPropagation();const didx=editingIdx===i?null:i;setEditingIdx(didx);if(didx!==null){setEditStart(w.time||"");const dur=w.durationMin||0;if(isActive){const now=new Date();setEditEnd(`${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`)}else{const[sh,sm]=(w.time||"00:00").split(":").map(Number);const endTot=sh*60+sm+dur;const eh=Math.floor(endTot/60)%24;const em=endTot%60;setEditEnd(`${String(eh).padStart(2,"0")}:${String(em).padStart(2,"0")}`)}}}} style={{display:"inline-flex",alignItems:"center",gap:6,fontSize:11,fontWeight:700,color:isActive?"#fbbf24":"#7dd3fc",padding:"4px 10px",borderRadius:9,background:isActive?"rgba(251,191,36,0.13)":"rgba(59,130,246,0.13)",border:`1px solid ${editingIdx===i?"rgba(139,124,246,0.55)":(isActive?"rgba(251,191,36,0.32)":"rgba(59,130,246,0.25)")}`,fontVariantNumeric:"tabular-nums",cursor:"pointer"}}>
+                {isActive?<span style={{width:6,height:6,borderRadius:"50%",background:"#fbbf24",boxShadow:"0 0 6px #fbbf24",animation:"liveDotPulse 1.5s ease-in-out infinite"}}/>:<Icon name="sun" size={9} color="#7dd3fc"/>}
+                <span>{w.time} → {wakingEndStr}</span>
+                <svg viewBox="0 0 24 24" style={{width:9,height:9,stroke:isActive?"#fbbf24":"#7dd3fc",fill:"none",strokeWidth:2.5,opacity:0.55,marginLeft:2}}><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
               </button>
-              <span style={{flex:1,height:1,background:isActive?"rgba(251,191,36,0.15)":"rgba(96,165,250,0.12)"}}/>
+              <span style={{fontSize:10.5,color:T.dim,fontWeight:600,fontVariantNumeric:"tabular-nums"}}>{fmtDur(w.durationMin)}{isActive?` · ${_lang==="en"?"live":"ao vivo"}`:""}</span>
             </div>
             {/* Inline waking editor */}
             {editingIdx===i&&(()=>{
@@ -5432,30 +5462,32 @@ const SleepBlock = React.memo(function SleepBlock({entry,onDelete,onEdit,entries
                 </div>
               </div>
             })()}
-            {/* All events for this waking (explicit + retroactive merged) */}
-            {allEventsForWaking.length>0?allEventsForWaking.map((le,j)=><EventMini key={le.id||j} le={le}/>):<div style={{fontSize:10,color:T.dim,fontStyle:"italic",padding:"6px 0"}}>{_lang==="en"?"No events recorded":"Nenhum evento registrado"}</div>}
+            {/* Events for this waking (explicit + retroactive merged) */}
+            {allEventsForWaking.length>0&&<div style={{paddingLeft:6}}>
+              {allEventsForWaking.map((le,j)=><EventMini key={le.id||j} le={le}/>)}
+            </div>}
           </div>
         })}
-        {/* Orphan events: inside bedtime but outside any waking range */}
-        {orphanRetro.length>0&&<div>
-          <div style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0 4px",marginTop:6,borderTop:"1px dashed rgba(167,139,250,0.18)"}}>
-            <span style={{display:"inline-flex",alignItems:"center",gap:4,fontSize:10,fontWeight:700,color:"#a78bfa",padding:"3px 9px",borderRadius:8,background:"rgba(167,139,250,0.12)",border:"1px solid rgba(167,139,250,0.28)"}}>
+        {/* Orphan events: inside bedtime but outside any waking range (refinado: secao limpa) */}
+        {orphanRetro.length>0&&<div style={{borderTop:"1px solid rgba(139,124,246,0.10)",padding:"10px 18px"}}>
+          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
+            <span style={{display:"inline-flex",alignItems:"center",fontSize:11,fontWeight:700,color:"#a78bfa",padding:"4px 10px",borderRadius:9,background:"rgba(167,139,250,0.13)",border:"1px solid rgba(167,139,250,0.28)"}}>
               {_lang==="en"?"Other events":"Outros eventos"}
             </span>
-            <span style={{flex:1,height:1,background:"rgba(167,139,250,0.12)"}}/>
           </div>
-          {orphanRetro.slice().sort((a,b)=>(a.time||"").localeCompare(b.time||"")).map((le,j)=><EventMini key={le.id||j} le={le}/>)}
+          <div style={{paddingLeft:6}}>
+            {orphanRetro.slice().sort((a,b)=>(a.time||"").localeCompare(b.time||"")).map((le,j)=><EventMini key={le.id||j} le={le}/>)}
+          </div>
         </div>}
-      </div>
     </div>}
-    {/* Footer hint (only when isLive) */}
-    {isLive&&<div style={{padding:"10px 16px",background:"rgba(14,18,48,0.4)",borderTop:"1px solid rgba(167,139,250,0.1)",fontSize:10,color:T.dim,textAlign:"center",fontStyle:"italic"}}>
-      {_lang==="en"?"✨ Will be saved when the bedtime ends":"✨ Será consolidado quando o bedtime terminar"}
+    {/* Footer hint (refinado: sem emoji, sem italico) */}
+    {isLive&&<div style={{padding:"10px 18px 12px",borderTop:"1px solid rgba(139,124,246,0.10)",fontSize:10.5,color:T.dim,textAlign:"center",fontWeight:500}}>
+      {_lang==="en"?"Saved when bedtime ends":"Consolida quando o bedtime terminar"}
     </div>}
-    {/* Actions (only when expanded AND not live) */}
-    {expanded&&!isLive&&<div style={{padding:"10px 14px 12px",display:"flex",gap:8,borderTop:"1px solid rgba(167,139,250,0.1)"}}>
-      <button onClick={e=>{e.stopPropagation();onEdit&&onEdit(entry)}} style={{flex:1,padding:"7px 10px",borderRadius:8,background:"rgba(167,139,250,0.08)",fontSize:10,fontWeight:600,color:"#a78bfa"}}>{_lang==="en"?"Edit":"Editar"}</button>
-      <button onClick={e=>{e.stopPropagation();onDelete&&onDelete(entry.id)}} style={{padding:"7px 12px",borderRadius:8,background:"rgba(248,113,113,0.08)",fontSize:10,fontWeight:600,color:T.red}}><Icon name="trash" size={12} color={T.red}/></button>
+    {/* Actions (only when expanded AND not live) — refinado */}
+    {expanded&&!isLive&&<div style={{padding:"10px 14px 12px",display:"flex",gap:8,borderTop:"1px solid rgba(139,124,246,0.10)"}}>
+      <button onClick={e=>{e.stopPropagation();onEdit&&onEdit(entry)}} style={{flex:1,padding:"8px 10px",borderRadius:9,background:"rgba(167,139,250,0.07)",fontSize:11,fontWeight:600,color:"#a78bfa",border:"none",cursor:"pointer",letterSpacing:0.1}}>{_lang==="en"?"Edit":"Editar"}</button>
+      <button aria-label={_lang==="en"?"Delete bedtime":"Excluir bedtime"} onClick={e=>{e.stopPropagation();onDelete&&onDelete(entry.id)}} style={{padding:"8px 14px",borderRadius:9,background:"rgba(248,113,113,0.07)",fontSize:11,fontWeight:600,color:T.red,border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="trash" size={12} color={T.red}/></button>
     </div>}
   </div>);
 });
