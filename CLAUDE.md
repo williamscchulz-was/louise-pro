@@ -14,7 +14,7 @@ Este `CLAUDE.md` é lido automaticamente pelo Claude Code no início de toda ses
 - **Localização**: Blumenau, SC, Brasil (BRT, UTC-3)
 - **Repositório**: https://github.com/williamscchulz-was/louise-pro
 - **Live**: https://williamscchulz-was.github.io/louise-pro/
-- **Versão atual**: v11.9.38 (app) / routine-engine v2.2.4
+- **Versão atual**: v11.9.39 (app) / routine-engine v2.2.4
 - **Bilíngue**: Português e Inglês (toda a interface, insights, curiosidades e changelog)
 
 ## Stack
@@ -119,6 +119,24 @@ Descoberta dolorosa na v10.4.4 que vale tatuar:
 - Ring: SVG puro com arcs, sem disco central, sem background. Text center flutua sobre starfield.
 - Regra geral: quando em dúvida, menos > mais. O cosmos atrás é a identidade.
 
+### Sistema tipográfico (v11.9.39)
+
+Escala fixa de 7 níveis em `T`. **Toda nova label/texto inline deve usar uma dessas constantes.** Magic-numbers tipo `fontSize:14` viram débito técnico — corrigir on-the-fly se topar com um:
+
+| Constante | Valor | Uso típico |
+|-----------|-------|------------|
+| `T.fXS`   | 9     | Eyebrow, caption, hour marks, micro labels |
+| `T.fSM`   | 11    | Labels, body small, badges, chip text |
+| `T.fMD`   | 13    | Body, list primary, detail |
+| `T.fLG`   | 15    | Sub-heading, card title |
+| `T.fXL`   | 17    | Heading, modal title |
+| `T.f2XL`  | 22    | Display small (Ring center, duration headlines) |
+| `T.f3XL`  | 28    | Display (big numbers no Home/Stats) |
+
+Hero displays raros (34, 36, 52) ficam inline — usar só pra splash, conquista, momento especial. Não criar constante pra menos de 5 usos.
+
+Mudar a escala = mudar valor da constante em 1 lugar — reflete em todos os ~390 usos automaticamente. Por isso a escala não cresce: 7 níveis é o limite. Se quiser um valor "no meio" (ex: 14), pensar duas vezes — provavelmente um dos níveis já serve.
+
 ### Helper `edgeGlow()` — dormindo
 
 O helper `edgeGlow(hex, scale, intensity)` + constantes `EDGE_GLOW_BG`/`EDGE_GLOW_BG_SOFT` continuam em index.html (logo após TYPES). Foram usados na v10.6.x (Beautiful Shadow style — 4 inner shadows em camadas) e REVERTIDOS na v10.7.0 por sobrecarregar visualmente. Deixados como ferramenta caso queira aplicar em algo isolado no futuro (app icon, conquista, etc). Não usar em vários elementos simultâneos.
@@ -138,7 +156,7 @@ Bugs de perf descobertos e corrigidos durante as auditorias. Valem tatuar:
 - **backdrop-filter é QUADRÁTICO no raio**: blur(26px) não custa 2x blur(13px), custa ~4x. Em elementos sempre visíveis (nav pill), usar no máximo blur(18-20px) com saturate(180%). Evitar empilhar mais de 2 blurs visíveis ao mesmo tempo.
 - **body.app-hidden pausa animações**: `body.app-hidden *{animation-play-state:paused !important}` implementado no CSS. PWA em background não gasta CPU com mercury ring spinning, twinkle, pulse. NÃO remover.
 - **Firestore offline persistence ON desde v10.5.2**: `db.enablePersistence({synchronizeTabs: true})` chamado logo após `firebase.firestore()`. O SDK cacheia tudo no IndexedDB — cold start PWA é instantâneo (serve cache + sync em background). App também funciona offline. NÃO remover esse call. `synchronizeTabs: true` é essencial pra não dar lock conflict quando Safari + PWA standalone abertos simultaneamente.
-- **Firestore subEntries carrega TUDO**: sem date-window, depois de 1 ano de uso entries passa de 1000 rows. Próxima otimização planejada: adicionar `where('date', '>=', today-90d)` em subEntries e carregar history sob demanda. Não feito ainda (v10.5.2) — offline persistence mitiga o problema a curto prazo.
+- **Firestore subEntries com janela de 90d desde v11.9.0**: `FB.subEntries(cb, daysBack=90)` aplica `where('date','>=',cutoff)` automaticamente. Cutoff é calculado no setup (estático até o app reabrir; entries de hoje continuam aparecendo pq today >= cutoff). Reduziu reads em ~80% pra usuários com >6 meses de uso. **NÃO existe "load older"** — `loadOlderEntries` foi removido na v11.9.34 como dead code (nunca foi conectado na UI). Se um dia precisar ver >90d no History, re-adicionar é trivial: nova função `loadOlderEntries(beforeDate)` + state slice separada + botão "Carregar mais" no fim do scroll do History.
 
 -----
 
