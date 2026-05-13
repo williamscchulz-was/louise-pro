@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.36 Auditoria UX #4: discoverability hints — chevron na data do History (revela picker) + ••• sutil no Ring (revela long-press)
   v11.9.35 Auditoria UX TOP 3: quick buttons 6x1->3x2 legivel + touch targets Apple HIG (bell 40, nav 46x44, FAB 44) + confirm 2-step inline (sem confirm() nativo)
   v11.9.34 Auditoria DB cleanup: loadOlderEntries dead code removida + inbox trim a 30 items
   v11.9.33 Landscape lock reforcado: threshold 932->1180px + aspect-ratio fallback + esconde root/nav atras do overlay (era so display:none)
@@ -697,8 +698,27 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.35";
+const APP_VERSION = "11.9.36";
 const CHANGELOG = [
+  {
+    v: "11.9.36", date: "2026-05-04",
+    pt: {
+      title: "Discoverability hints — chevron na data + ••• no Ring",
+      bullets: [
+        '★ **Chevron ▾ ao lado da data** no header da aba História. Sinaliza que o label é tappável (abre date picker pra jump rápido a qualquer dia). Antes o picker era invisível (input com opacity:0).',
+        '★ **••• sutil no canto do Ring** (top-right, opacity 0.32). Hint visual de que o Ring tem **long-press → modal de detalhes**. Sem ocupar layout, sem competir com o conteúdo. Apenas presença sugerindo "tem mais aqui".',
+        'Resolve 2 dos 5 gaps de discoverability identificados na auditoria UX. Os restantes (long-press em chip de med, swipe horizontal entre páginas, swipe-right na EntryRow) podem entrar com onboarding mini-tour no futuro.',
+      ],
+    },
+    en: {
+      title: "Discoverability hints — chevron on date + ••• on Ring",
+      bullets: [
+        '★ **Chevron ▾ next to the date** in the History tab header. Signals that the label is tappable (opens date picker for quick jump to any day). Before, the picker was invisible (input with opacity:0).',
+        '★ **Subtle ••• in the Ring corner** (top-right, opacity 0.32). Visual hint that the Ring has **long-press → detail modal**. Doesn\'t take layout space, doesn\'t compete with content. Just presence suggesting "there\'s more here".',
+        'Resolves 2 of 5 discoverability gaps identified in the UX audit. The rest (long-press on med chip, horizontal swipe between pages, swipe-right on EntryRow) can come with an onboarding mini-tour in the future.',
+      ],
+    },
+  },
   {
     v: "11.9.35", date: "2026-05-04",
     pt: {
@@ -7072,7 +7092,11 @@ const HistoryPage = React.memo(function HistoryPage({entries,onDelete,onEdit,act
             const diff=Math.max(0,Math.round((a-b)/86400000));
             setDateIdx(diff);
           }} aria-label={_lang==="en"?"Jump to date":"Pular para data"} style={{position:"absolute",inset:0,opacity:0,cursor:"pointer",WebkitAppearance:"none",appearance:"none",border:"none",background:"transparent"}}/>
-          <div style={{fontSize:17,fontWeight:800,color:isToday?T.accent:T.text,letterSpacing:-0.3,pointerEvents:"none"}}>{isToday?L("today"):dLbl}</div>
+          {/* v11.9.36: chevron sutil revela que o header é tappable (date picker) */}
+          <div style={{fontSize:17,fontWeight:800,color:isToday?T.accent:T.text,letterSpacing:-0.3,pointerEvents:"none",display:"inline-flex",alignItems:"center",gap:5}}>
+            <span>{isToday?L("today"):dLbl}</span>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{opacity:0.45}}><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
           <div style={{display:"flex",justifyContent:"center",gap:10,fontSize:11,color:T.sub,marginTop:7,flexWrap:"wrap",alignItems:"center"}}>
             {dMl>0&&<span style={{display:"inline-flex",alignItems:"center",gap:4,fontWeight:600,fontVariantNumeric:"tabular-nums"}}><Icon name="bottle" size={11} color={T.green}/>{dMl}ml</span>}
             {dSl>0&&<><span style={{width:3,height:3,borderRadius:"50%",background:T.dim}}/><span style={{display:"inline-flex",alignItems:"center",gap:4,fontWeight:600,fontVariantNumeric:"tabular-nums"}}><Icon name="bed" size={11} color={T.purple}/>{fmtDur(dSl)}</span></>}
@@ -8450,7 +8474,16 @@ function App(){
             <div style={{display:"flex",alignItems:"center",gap:5}}><Icon name="diaper" size={11} color={T.pink}/><span style={{color:"#f0f2ff",fontWeight:700}}>{totalDiapers}</span><span>{_lang==="en"?"diapers":"fraldas"}</span></div>
           </div>
         </div>}
-        <div role="region" aria-label={_lang==="en"?"Ring with current state. Long-press for details":"Anel com estado atual. Pressione e segure para detalhes"} style={{padding:"4px 0 0"}} onPointerDown={onRingPointerDown} onPointerMove={onRingPointerMove} onPointerUp={onRingPointerUp} onPointerCancel={onRingPointerUp}><Ring activeTimer={activeTimer} napSug={napSug} tick={tick} recentEvents={cycleE} lang={lang} showOrbit={showOrbit} screenLockActive={shouldLock}/></div>
+        {/* v11.9.36: "•••" sutil no canto do Ring sinaliza long-press. Opacity baixa,
+            position absolute, sem alterar layout. Fade in/out elegante. */}
+        <div role="region" aria-label={_lang==="en"?"Ring with current state. Long-press for details":"Anel com estado atual. Pressione e segure para detalhes"} style={{padding:"4px 0 0",position:"relative"}} onPointerDown={onRingPointerDown} onPointerMove={onRingPointerMove} onPointerUp={onRingPointerUp} onPointerCancel={onRingPointerUp}>
+          <Ring activeTimer={activeTimer} napSug={napSug} tick={tick} recentEvents={cycleE} lang={lang} showOrbit={showOrbit} screenLockActive={shouldLock}/>
+          <div style={{position:"absolute",top:14,right:18,display:"flex",gap:2.5,opacity:0.32,pointerEvents:"none"}}>
+            <span style={{width:3,height:3,borderRadius:"50%",background:T.sub}}/>
+            <span style={{width:3,height:3,borderRadius:"50%",background:T.sub}}/>
+            <span style={{width:3,height:3,borderRadius:"50%",background:T.sub}}/>
+          </div>
+        </div>
         {/* v11.9.23: predição de wake-up baseada na média 7d. Aparece dentro do bedtime ativo.
             v11.9.28: requer pts>=3 (confiabilidade) + cap de overshoot na exibição. */}
         {activeTimer&&activeTimer.type==="sleep"&&sleepPattern?.fullPattern?.sleep?.nightSleep?.avgDuration>0&&sleepPattern?.fullPattern?.sleep?.nightSleep?.pts>=3&&(()=>{
