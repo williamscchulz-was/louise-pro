@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.45 Rotina tolerancia +-60min (era +-20/30) + Ring meio termo 270px (era 200, original 340). Soneca 40min atrasada conta como feito.
   v11.9.44 Fix: "Acordada" verde de volta no Ring (era roxo lavanda errado de v11.9.42). State=null agora cai no default green, mesma cor de antes.
   v11.9.43 Ring 340 -> 200 (compact). Libera ~140px no Home, KPI cards bottle/sono/diaper sobem above-the-fold no iPhone 14/15.
   v11.9.42 Rotina fixa: napSug 100% silencioso. Esconde "Nap 3 ~XX:XX" dentro do arco + banners overdue/stretching/sweet/opening. Ring neutro lavanda.
@@ -708,8 +709,31 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.44";
+const APP_VERSION = "11.9.45";
 const CHANGELOG = [
+  {
+    v: "11.9.45", date: "2026-05-13",
+    pt: {
+      title: "Tolerância de rotina ±60min + Ring meio termo (270px)",
+      bullets: [
+        '★ **Soneca/banho/bedtime: tolerância subiu de ±20-30min pra ±60min.** Cenário real: 4ª soneca alvo 16:00, deitou de fato 16:40 — 40min de atraso, mas ainda é "a 4ª soneca". Agora conta como ✓ verde em vez de ! laranja.',
+        'Wake fica em ±20min (time-sensitive — acordar 1h depois do alvo é caso diferente, não conta como o mesmo "wake").',
+        '★ **Ring 270px** — meio termo entre os 200 da v11.9.43 e os 340 originais. ~20% redução vs original. Mantém presença visual + ainda libera ~70px no Home.',
+        'Big font 32 → 42, dotSz 32 → 40, sleepSz 36 → 40, strokes proporcionalmente bumpadas (16/24/19/13). Sub-label "Acordada/etc" voltou pro T.fMD (era T.fSM em v11.9.43).',
+        'Duração inline do sleep arc volta pro T.fXS (estava 8px inline), respira melhor com sleepSz 40.',
+      ],
+    },
+    en: {
+      title: "Routine tolerance ±60min + middle-ground Ring (270px)",
+      bullets: [
+        '★ **Nap/bath/bedtime tolerance bumped from ±20-30min to ±60min.** Real-world scenario: 4th nap target 16:00, actually slept at 16:40 — 40min late, but still "the 4th nap". Now counts as ✓ green instead of ! orange.',
+        'Wake stays at ±20min (time-sensitive — waking 1h late is a different scenario, not the same "wake").',
+        '★ **Ring 270px** — middle ground between v11.9.43\'s 200 and original 340. ~20% reduction vs original. Keeps visual presence + still frees ~70px on Home.',
+        'Big font 32 → 42, dotSz 32 → 40, sleepSz 36 → 40, strokes proportionally bumped (16/24/19/13). Sub-label "Awake/etc" back to T.fMD (was T.fSM in v11.9.43).',
+        'Inline duration on sleep arc back to T.fXS (was 8px inline), breathes better with sleepSz 40.',
+      ],
+    },
+  },
   {
     v: "11.9.44", date: "2026-05-13",
     pt: {
@@ -4947,16 +4971,15 @@ function TL(type){return typeLabel(type,_lang)}
 const Ring = React.memo(function Ring({activeTimer,napSug,tick,recentEvents,lang,showOrbit,screenLockActive}){
   const[tip,setTip]=useState(null);
   useEffect(()=>{if(tip!==null){const t=setTimeout(()=>setTip(null),3000);return()=>clearTimeout(t)}},[tip]);
-  // v11.9.43: Ring compacto — 340 → 200 (~41% redução). KPI cards (bottle/sono/diaper)
-  // sobem above-the-fold em iPhone 14/15. Proporções internas escaladas pra manter
-  // legibilidade e tap targets ≥ 32px (Apple HIG).
-  const sz=200,cx=sz/2,cy=sz/2,R=78;
+  // v11.9.45: Ring meio termo — 340 → 270 (~20% redução, era 200 em v11.9.43).
+  // Equilíbrio entre dominância visual do anel e KPI cards above-the-fold.
+  const sz=270,cx=sz/2,cy=sz/2,R=113;
   const gapDeg=55,startAng=90+gapDeg/2,totalArc=360-gapDeg;
-  const dotSz=32,sleepSz=36;
-  const bigFont=32;
-  const arcStrokeBg=12,arcStrokeFill=18,arcStrokeInset=14,arcStrokeDashed=10,arcStrokeIconBlur=22;
-  const anchorSz=30,anchorIconSz=14,dotIconSz=16,sleepIconSz=14;
-  const MIN_GAP=15;
+  const dotSz=40,sleepSz=40;
+  const bigFont=42;
+  const arcStrokeBg=16,arcStrokeFill=24,arcStrokeInset=19,arcStrokeDashed=13,arcStrokeIconBlur=29;
+  const anchorSz=36,anchorIconSz=16,dotIconSz=18,sleepIconSz=16;
+  const MIN_GAP=18;
   let lbl="",sub="",col1=T.dim,col2=T.dim,isBedtime=false;
   if(activeTimer){
     const el=Math.max(0,Math.floor((Date.now()-new Date(activeTimer.startTime).getTime())/1000));const mins=Math.floor(el/60);
@@ -5058,7 +5081,7 @@ const Ring = React.memo(function Ring({activeTimer,napSug,tick,recentEvents,lang
         {timerArc&&<g><path d={timerArc.path} fill="none" stroke={timerArc.col} strokeWidth={arcStrokeIconBlur} strokeLinecap="round" opacity={0.08} filter="url(#slpG)"/><path d={timerArc.path} fill="none" stroke={timerArc.col} strokeWidth={arcStrokeFill} strokeLinecap="round" opacity={0.5}/><path d={timerArc.path} fill="none" stroke="rgba(16,12,40,0.85)" strokeWidth={arcStrokeInset} strokeLinecap="round"/>{/* Dashed flow on active timer arc */}<path d={timerArc.path} fill="none" stroke={timerArc.col} strokeWidth={arcStrokeDashed} strokeLinecap="round" strokeDasharray="6 9" opacity={0.35} style={{animation:"dashFlow 2s linear infinite"}}/></g>}
       </svg>
       {/* Sleep icons centered on pills */}
-      {sleepArcs.map((sa,i)=>{const isLastSleep=i===lastSleepArcIdx&&!activeTimer;return<div key={"si"+i} style={{position:"absolute",left:sa.mx-sleepSz/2,top:sa.my-sleepSz/2,width:sleepSz,height:sleepSz,borderRadius:"50%",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",zIndex:3,filter:`drop-shadow(0 0 ${isLastSleep?10:4}px ${sa.col}${isLastSleep?"aa":"55"})`,animation:isLastSleep?"glowBreathe 2s ease-in-out infinite":"none"}}><Icon name={sa.ev.type==="nap"?"cloud":"moon"} size={isLastSleep?sleepIconSz+2:sleepIconSz} color={sa.col}/><span style={{fontSize:8,fontWeight:700,color:`${sa.col}88`,marginTop:0,lineHeight:1}}>{fmtDur(sa.ev.durationMin)}</span></div>})}
+      {sleepArcs.map((sa,i)=>{const isLastSleep=i===lastSleepArcIdx&&!activeTimer;return<div key={"si"+i} style={{position:"absolute",left:sa.mx-sleepSz/2,top:sa.my-sleepSz/2,width:sleepSz,height:sleepSz,borderRadius:"50%",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",zIndex:3,filter:`drop-shadow(0 0 ${isLastSleep?12:5}px ${sa.col}${isLastSleep?"aa":"55"})`,animation:isLastSleep?"glowBreathe 2s ease-in-out infinite":"none"}}><Icon name={sa.ev.type==="nap"?"cloud":"moon"} size={isLastSleep?sleepIconSz+2:sleepIconSz} color={sa.col}/><span style={{fontSize:T.fXS,fontWeight:700,color:`${sa.col}88`,marginTop:1,lineHeight:1}}>{fmtDur(sa.ev.durationMin)}</span></div>})}
       {/* Live timer icon — strong glow breathing */}
       {timerArc&&<>
         <div style={{position:"absolute",left:timerArc.mx-sleepSz/2,top:timerArc.my-sleepSz/2,width:sleepSz,height:sleepSz,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",zIndex:4,filter:`drop-shadow(0 0 10px ${timerArc.col}aa)`,animation:"glowBreathe 2s ease-in-out infinite"}}><Icon name={activeTimer.type==="nap"?"cloud":activeTimer.type==="tummytime"?"baby":"bed"} size={sleepIconSz+2} color={timerArc.col}/></div>
@@ -5079,7 +5102,7 @@ const Ring = React.memo(function Ring({activeTimer,napSug,tick,recentEvents,lang
       </div>)})}
       {anchorSun&&<div style={{position:"absolute",left:anchorSun.x-anchorSz/2,top:anchorSun.y-anchorSz/2,display:"flex",flexDirection:"column",alignItems:"center",zIndex:5,pointerEvents:"none"}}><div style={{width:anchorSz,height:anchorSz,borderRadius:"50%",background:"radial-gradient(circle at 40% 30%,rgba(251,191,36,0.28),rgba(251,146,60,0.08))",border:"2px solid rgba(251,191,36,0.55)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 14px rgba(251,191,36,0.3)"}}><Icon name="sun" size={anchorIconSz} color="#fbbf24"/></div><span style={{fontSize:T.fXS,fontWeight:700,color:"#fbbf24",marginTop:2,textShadow:"0 1px 4px rgba(0,0,0,0.8)"}}>{anchorSun.time}</span></div>}
       {anchorMoon&&<div style={{position:"absolute",left:anchorMoon.x-anchorSz/2,top:anchorMoon.y-anchorSz/2,display:"flex",flexDirection:"column",alignItems:"center",zIndex:5,pointerEvents:"none"}}><div style={{width:anchorSz,height:anchorSz,borderRadius:"50%",background:"radial-gradient(circle at 40% 30%,rgba(167,139,250,0.28),rgba(139,124,246,0.08))",border:"2px solid rgba(167,139,250,0.55)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 14px rgba(167,139,250,0.3)"}}><Icon name="moon" size={anchorIconSz} color="#a78bfa"/></div><span style={{fontSize:T.fXS,fontWeight:700,color:"#a78bfa",marginTop:2,textShadow:"0 1px 4px rgba(0,0,0,0.8)"}}>{anchorMoon.time}</span></div>}
-      <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}><span style={{fontSize:T.fSM,color:isBedtime?"#c084fc":T.sub,fontWeight:600,letterSpacing:1.2,textTransform:"uppercase",display:"flex",alignItems:"center",gap:4}}>{isBedtime&&<Icon name="bed" size={11} color="#c084fc"/>}{sub}{screenLockActive&&<span title={lang==="en"?"Screen on":"Tela ligada"} style={{display:"inline-flex",alignItems:"center",gap:3,marginLeft:4,padding:"2px 6px",borderRadius:8,background:"rgba(251,191,36,0.12)",border:"1px solid rgba(251,191,36,0.3)"}}><span style={{width:4,height:4,borderRadius:"50%",background:"#fbbf24",boxShadow:"0 0 6px #fbbf24",animation:"pulse 1.5s ease-in-out infinite"}}/><span style={{fontSize:T.fXS,fontWeight:700,color:"#fbbf24",letterSpacing:0.5,textTransform:"uppercase"}}>{lang==="en"?"On":"On"}</span></span>}</span><span style={{fontSize:bigFont,fontWeight:800,letterSpacing:-1.4,marginTop:3,background:hasProgress?`linear-gradient(135deg,${col2},${col1})`:`linear-gradient(180deg,#ffffff 0%,#a78bfa 95%)`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",filter:hasProgress?`drop-shadow(0 0 16px ${col1}55)`:"drop-shadow(0 0 20px rgba(167,139,250,0.32))",fontVariantNumeric:"tabular-nums"}}>{lbl}</span>{napSug&&napSug.predictedTime&&!activeTimer&&<span style={{fontSize:T.fXS,fontWeight:600,color:col1,opacity:0.7,marginTop:2}}>{lang==="en"?"Nap":"Nap"} {napSug.napPos||""} ~{napSug.predictedTime}</span>}</div>
+      <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}><span style={{fontSize:T.fMD,color:isBedtime?"#c084fc":T.sub,fontWeight:600,letterSpacing:1.5,textTransform:"uppercase",display:"flex",alignItems:"center",gap:5}}>{isBedtime&&<Icon name="bed" size={13} color="#c084fc"/>}{sub}{screenLockActive&&<span title={lang==="en"?"Screen on":"Tela ligada"} style={{display:"inline-flex",alignItems:"center",gap:3,marginLeft:4,padding:"2px 6px",borderRadius:8,background:"rgba(251,191,36,0.12)",border:"1px solid rgba(251,191,36,0.3)"}}><span style={{width:5,height:5,borderRadius:"50%",background:"#fbbf24",boxShadow:"0 0 6px #fbbf24",animation:"pulse 1.5s ease-in-out infinite"}}/><span style={{fontSize:T.fXS,fontWeight:700,color:"#fbbf24",letterSpacing:0.5,textTransform:"uppercase"}}>{lang==="en"?"On":"On"}</span></span>}</span><span style={{fontSize:bigFont,fontWeight:800,letterSpacing:-1.8,marginTop:4,background:hasProgress?`linear-gradient(135deg,${col2},${col1})`:`linear-gradient(180deg,#ffffff 0%,#a78bfa 95%)`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",filter:hasProgress?`drop-shadow(0 0 20px ${col1}55)`:"drop-shadow(0 0 24px rgba(167,139,250,0.32))",fontVariantNumeric:"tabular-nums"}}>{lbl}</span>{napSug&&napSug.predictedTime&&!activeTimer&&<span style={{fontSize:T.fSM,fontWeight:600,color:col1,opacity:0.7,marginTop:2}}>{lang==="en"?"Nap":"Nap"} {napSug.napPos||""} ~{napSug.predictedTime}</span>}</div>
       {tip!==null&&<div onClick={()=>setTip(null)} style={{position:"absolute",inset:0,zIndex:1}}/>}
       {showOrbit&&<div key={Date.now()} style={{position:"absolute",left:cx-3,top:cy-3,width:6,height:6,zIndex:10,pointerEvents:"none",animation:"orbitComet 1.2s cubic-bezier(0.25,0.1,0.25,1) forwards"}}><div style={{width:6,height:6,borderRadius:"50%",background:"#fff",boxShadow:"0 0 8px #fff, 0 0 20px rgba(139,124,246,0.6), -8px 0 12px rgba(139,124,246,0.3), -16px 0 8px rgba(139,124,246,0.15)",transform:`translateY(${-R}px)`}}/></div>}
     </div>
@@ -8497,14 +8520,16 @@ function App(){
     const nowMin=now.getHours()*60+now.getMinutes();
     const slots=[];
     const findMatch=(types,tMin,tolMin)=>todayE.find(e=>types.includes(e.type)&&Math.abs(toMinutes(e.time)-tMin)<=tolMin);
+    // v11.9.45: tolerância mais generosa (40-50min late ainda conta como "feito").
+    // Wake fica em ±20min (time-sensitive). Naps/banho/bed sobem pra ±60min.
     if(r.wakeTime){const tMin=toMinutes(r.wakeTime);slots.push({key:"wake",type:"wake",icon:"sun",col:T.amber,target:r.wakeTime,targetMin:tMin,tolMin:20,match:findMatch(["wakeup"],tMin,20),lbl:_lang==="en"?"Wake up":"Acordar",chip:_lang==="en"?"Wake":"Wake"})}
     (r.naps||[]).forEach((nap,i)=>{
       if(!nap?.time)return;
       const tMin=toMinutes(nap.time);
-      slots.push({key:"nap"+i,type:"nap",icon:"cloud",col:T.accent,target:nap.time,targetMin:tMin,tolMin:20,num:i+1,match:findMatch(["nap"],tMin,20),lbl:`${i+1}${_lang==="en"?["st","nd","rd","th"][i]||"th":"ª"} ${_lang==="en"?"Nap":"Soneca"}`,chip:`${i+1}${_lang==="en"?"a":"ª"} S`})
+      slots.push({key:"nap"+i,type:"nap",icon:"cloud",col:T.accent,target:nap.time,targetMin:tMin,tolMin:60,num:i+1,match:findMatch(["nap"],tMin,60),lbl:`${i+1}${_lang==="en"?["st","nd","rd","th"][i]||"th":"ª"} ${_lang==="en"?"Nap":"Soneca"}`,chip:`${i+1}${_lang==="en"?"a":"ª"} S`})
     });
-    if(r.bathTime){const tMin=toMinutes(r.bathTime);slots.push({key:"bath",type:"bath",icon:"bath",col:T.cyan,target:r.bathTime,targetMin:tMin,tolMin:30,match:findMatch(["bath"],tMin,30),lbl:_lang==="en"?"Bath":"Banho",chip:_lang==="en"?"Bath":"Banho"})}
-    if(r.bedtime){const tMin=toMinutes(r.bedtime);slots.push({key:"bedtime",type:"bedtime",icon:"bed",col:T.purple,target:r.bedtime,targetMin:tMin,tolMin:30,match:findMatch(["sleep"],tMin,30),lbl:_lang==="en"?"Bedtime":"Bedtime",chip:_lang==="en"?"Bed":"Bed"})}
+    if(r.bathTime){const tMin=toMinutes(r.bathTime);slots.push({key:"bath",type:"bath",icon:"bath",col:T.cyan,target:r.bathTime,targetMin:tMin,tolMin:60,match:findMatch(["bath"],tMin,60),lbl:_lang==="en"?"Bath":"Banho",chip:_lang==="en"?"Bath":"Banho"})}
+    if(r.bedtime){const tMin=toMinutes(r.bedtime);slots.push({key:"bedtime",type:"bedtime",icon:"bed",col:T.purple,target:r.bedtime,targetMin:tMin,tolMin:60,match:findMatch(["sleep"],tMin,60),lbl:_lang==="en"?"Bedtime":"Bedtime",chip:_lang==="en"?"Bed":"Bed"})}
     slots.sort((a,b)=>a.targetMin-b.targetMin);
     // Atribui status: done | late | next | pending
     let nextAssigned=false;
