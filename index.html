@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.49 Bedtime counter ganha shimmer sweep horizontal (era apenas breath) — gradient roxo->branco->roxo passando pelo numero cada 4s.
   v11.9.48 Bedtime ambient refeito sem lua (era loud demais): glow lavanda sutil ao redor do Ring + texto/contador respirando + bg mais escuro/lavanda.
   v11.9.47 Rotina completa = divisor invisivel minimal (era card verde grande) + bedtime ambient: lua emoji + halo lavanda respirando atras do Ring.
   v11.9.46 Fix: timer ativo (nap/sleep iniciado) conta como check verde na rotina imediatamente — sem esperar terminar a entry.
@@ -305,10 +306,10 @@
     @keyframes liveDotPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.85)}}
     /* v11.9.37: pulse sutil de brilho no waking band ativo da timeline refinada */
     @keyframes liveBandPulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.25)}}
-    /* v11.9.48: bedtime ambient — sutil glow ao redor do Ring + texto respirando.
-       Removida a lua emoji (loud demais conforme feedback). Agora 100% discreto. */
+    /* v11.9.48-49: bedtime ambient — glow no Ring + shimmer sweep no counter + sub-label respirando */
     @keyframes bedtimeRingHalo{0%,100%{box-shadow:0 0 30px -10px rgba(167,139,250,0.30)}50%{box-shadow:0 0 60px -10px rgba(167,139,250,0.55)}}
-    @keyframes bedtimeTextBreath{0%,100%{filter:drop-shadow(0 0 12px rgba(167,139,250,0.45))}50%{filter:drop-shadow(0 0 24px rgba(167,139,250,0.85))}}
+    /* v11.9.49: shimmer sweep — gradient que passa horizontalmente pelo counter "2h14m" */
+    @keyframes bedtimeShimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
     @keyframes bedtimeSubBreath{0%,100%{opacity:0.85}50%{opacity:1}}
     html body.bedtime-active{
       background:
@@ -724,8 +725,27 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.48";
+const APP_VERSION = "11.9.49";
 const CHANGELOG = [
+  {
+    v: "11.9.49", date: "2026-05-13",
+    pt: {
+      title: "Bedtime counter ganha shimmer sweep (não respirando)",
+      bullets: [
+        '★ **"2h 14m" durante bedtime agora tem um gradient passando pelo número** em vez de só respirar de tamanho. Sweep horizontal de roxo → branco → roxo a cada 4s. Sensação cinemática "fluindo".',
+        'Background do texto é uma `linear-gradient(110deg, #7c3aed, #8b5cf6, #e9d5ff, #ffffff, #e9d5ff, #8b5cf6, #7c3aed)` com 300% de largura, e a `background-position` anima de 200% pra -200% em loop linear de 4s.',
+        'Mantida: glow lavanda ao redor do Ring (5s), sub-label "Bedtime/Boa noite" respirando opacidade, body bg mais escuro/lavanda. Trocou-se SÓ a animação do counter — não breath mais.',
+      ],
+    },
+    en: {
+      title: "Bedtime counter gets shimmer sweep (not breath)",
+      bullets: [
+        '★ **"2h 14m" during bedtime now has a gradient passing through the number** instead of just breathing in size. Horizontal sweep purple → white → purple every 4s. Cinematic "flowing" feel.',
+        'Text background is `linear-gradient(110deg, #7c3aed, #8b5cf6, #e9d5ff, #ffffff, #e9d5ff, #8b5cf6, #7c3aed)` with 300% width, and `background-position` animates from 200% to -200% in a linear 4s loop.',
+        'Kept: lavender glow around the Ring (5s), "Bedtime/Goodnight" sub-label opacity breathing, darker/lavender body bg. Only swapped the counter animation — no breath anymore.',
+      ],
+    },
+  },
   {
     v: "11.9.48", date: "2026-05-13",
     pt: {
@@ -5182,7 +5202,7 @@ const Ring = React.memo(function Ring({activeTimer,napSug,tick,recentEvents,lang
       </div>)})}
       {anchorSun&&<div style={{position:"absolute",left:anchorSun.x-anchorSz/2,top:anchorSun.y-anchorSz/2,display:"flex",flexDirection:"column",alignItems:"center",zIndex:5,pointerEvents:"none"}}><div style={{width:anchorSz,height:anchorSz,borderRadius:"50%",background:"radial-gradient(circle at 40% 30%,rgba(251,191,36,0.28),rgba(251,146,60,0.08))",border:"2px solid rgba(251,191,36,0.55)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 14px rgba(251,191,36,0.3)"}}><Icon name="sun" size={anchorIconSz} color="#fbbf24"/></div><span style={{fontSize:T.fXS,fontWeight:700,color:"#fbbf24",marginTop:2,textShadow:"0 1px 4px rgba(0,0,0,0.8)"}}>{anchorSun.time}</span></div>}
       {anchorMoon&&<div style={{position:"absolute",left:anchorMoon.x-anchorSz/2,top:anchorMoon.y-anchorSz/2,display:"flex",flexDirection:"column",alignItems:"center",zIndex:5,pointerEvents:"none"}}><div style={{width:anchorSz,height:anchorSz,borderRadius:"50%",background:"radial-gradient(circle at 40% 30%,rgba(167,139,250,0.28),rgba(139,124,246,0.08))",border:"2px solid rgba(167,139,250,0.55)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 14px rgba(167,139,250,0.3)"}}><Icon name="moon" size={anchorIconSz} color="#a78bfa"/></div><span style={{fontSize:T.fXS,fontWeight:700,color:"#a78bfa",marginTop:2,textShadow:"0 1px 4px rgba(0,0,0,0.8)"}}>{anchorMoon.time}</span></div>}
-      <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}><span style={{fontSize:T.fMD,color:isBedtime?"#c084fc":T.sub,fontWeight:600,letterSpacing:1.5,textTransform:"uppercase",display:"flex",alignItems:"center",gap:5,animation:isBedtime?"bedtimeSubBreath 5s ease-in-out infinite":"none"}}>{isBedtime&&<Icon name="bed" size={13} color="#c084fc"/>}{sub}{screenLockActive&&<span title={lang==="en"?"Screen on":"Tela ligada"} style={{display:"inline-flex",alignItems:"center",gap:3,marginLeft:4,padding:"2px 6px",borderRadius:8,background:"rgba(251,191,36,0.12)",border:"1px solid rgba(251,191,36,0.3)"}}><span style={{width:5,height:5,borderRadius:"50%",background:"#fbbf24",boxShadow:"0 0 6px #fbbf24",animation:"pulse 1.5s ease-in-out infinite"}}/><span style={{fontSize:T.fXS,fontWeight:700,color:"#fbbf24",letterSpacing:0.5,textTransform:"uppercase"}}>{lang==="en"?"On":"On"}</span></span>}</span><span style={{fontSize:bigFont,fontWeight:800,letterSpacing:-1.8,marginTop:4,background:hasProgress?`linear-gradient(135deg,${col2},${col1})`:`linear-gradient(180deg,#ffffff 0%,#a78bfa 95%)`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",filter:isBedtime?undefined:(hasProgress?`drop-shadow(0 0 20px ${col1}55)`:"drop-shadow(0 0 24px rgba(167,139,250,0.32))"),animation:isBedtime?"bedtimeTextBreath 5s ease-in-out infinite":"none",fontVariantNumeric:"tabular-nums"}}>{lbl}</span>{napSug&&napSug.predictedTime&&!activeTimer&&<span style={{fontSize:T.fSM,fontWeight:600,color:col1,opacity:0.7,marginTop:2}}>{lang==="en"?"Nap":"Nap"} {napSug.napPos||""} ~{napSug.predictedTime}</span>}</div>
+      <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}><span style={{fontSize:T.fMD,color:isBedtime?"#c084fc":T.sub,fontWeight:600,letterSpacing:1.5,textTransform:"uppercase",display:"flex",alignItems:"center",gap:5,animation:isBedtime?"bedtimeSubBreath 5s ease-in-out infinite":"none"}}>{isBedtime&&<Icon name="bed" size={13} color="#c084fc"/>}{sub}{screenLockActive&&<span title={lang==="en"?"Screen on":"Tela ligada"} style={{display:"inline-flex",alignItems:"center",gap:3,marginLeft:4,padding:"2px 6px",borderRadius:8,background:"rgba(251,191,36,0.12)",border:"1px solid rgba(251,191,36,0.3)"}}><span style={{width:5,height:5,borderRadius:"50%",background:"#fbbf24",boxShadow:"0 0 6px #fbbf24",animation:"pulse 1.5s ease-in-out infinite"}}/><span style={{fontSize:T.fXS,fontWeight:700,color:"#fbbf24",letterSpacing:0.5,textTransform:"uppercase"}}>{lang==="en"?"On":"On"}</span></span>}</span><span style={{fontSize:bigFont,fontWeight:800,letterSpacing:-1.8,marginTop:4,background:isBedtime?"linear-gradient(110deg, #7c3aed 0%, #8b5cf6 25%, #e9d5ff 48%, #ffffff 50%, #e9d5ff 52%, #8b5cf6 75%, #7c3aed 100%)":(hasProgress?`linear-gradient(135deg,${col2},${col1})`:`linear-gradient(180deg,#ffffff 0%,#a78bfa 95%)`),backgroundSize:isBedtime?"300% 100%":"100% 100%",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",filter:isBedtime?"drop-shadow(0 0 18px rgba(167,139,250,0.55))":(hasProgress?`drop-shadow(0 0 20px ${col1}55)`:"drop-shadow(0 0 24px rgba(167,139,250,0.32))"),animation:isBedtime?"bedtimeShimmer 4s linear infinite":"none",fontVariantNumeric:"tabular-nums"}}>{lbl}</span>{napSug&&napSug.predictedTime&&!activeTimer&&<span style={{fontSize:T.fSM,fontWeight:600,color:col1,opacity:0.7,marginTop:2}}>{lang==="en"?"Nap":"Nap"} {napSug.napPos||""} ~{napSug.predictedTime}</span>}</div>
       {tip!==null&&<div onClick={()=>setTip(null)} style={{position:"absolute",inset:0,zIndex:1}}/>}
       {showOrbit&&<div key={Date.now()} style={{position:"absolute",left:cx-3,top:cy-3,width:6,height:6,zIndex:10,pointerEvents:"none",animation:"orbitComet 1.2s cubic-bezier(0.25,0.1,0.25,1) forwards"}}><div style={{width:6,height:6,borderRadius:"50%",background:"#fff",boxShadow:"0 0 8px #fff, 0 0 20px rgba(139,124,246,0.6), -8px 0 12px rgba(139,124,246,0.3), -16px 0 8px rgba(139,124,246,0.15)",transform:`translateY(${-R}px)`}}/></div>}
     </div>
