@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.50 Night Wake button: bye banner amber pulsando, vira pill minimal centrado. Default lavanda (in-theme), tap = amber "ACORDADA · Xmin".
   v11.9.49 Bedtime counter ganha shimmer sweep horizontal (era apenas breath) — gradient roxo->branco->roxo passando pelo numero cada 4s.
   v11.9.48 Bedtime ambient refeito sem lua (era loud demais): glow lavanda sutil ao redor do Ring + texto/contador respirando + bg mais escuro/lavanda.
   v11.9.47 Rotina completa = divisor invisivel minimal (era card verde grande) + bedtime ambient: lua emoji + halo lavanda respirando atras do Ring.
@@ -725,8 +726,29 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.49";
+const APP_VERSION = "11.9.50";
 const CHANGELOG = [
+  {
+    v: "11.9.50", date: "2026-05-13",
+    pt: {
+      title: "Night Wake button virou pill minimal centrado",
+      bullets: [
+        '★ **Bye banner amber pulsando.** O botão Night Wake era um banner full-width com box-shadow amber animado, ícone 36×36 + título + subtítulo de 2 linhas. Destoava do tema bedtime calmo (especialmente com a v11.9.48 que escureceu o bg).',
+        '★ **Agora:** pill centrado de ~7×14px padding, borda lavanda sutil, texto "DESPERTAR?" caps. Tap → vira amber pill com "ACORDADA · 8min". Cor amber só no estado ATIVO (alarminho real), default lavanda (in-theme com bedtime).',
+        'Bedtime quick button (no grid 3×2 do Home) **fica intacto** — você pediu pra manter como tá.',
+        'Mesma lógica de toggle (toggleNightWake). Mesmo timer interno do night wake. Só visual minimalist.',
+      ],
+    },
+    en: {
+      title: "Night Wake button became a minimal centered pill",
+      bullets: [
+        '★ **Bye amber-pulsing banner.** The Night Wake button was a full-width banner with animated amber box-shadow, 36×36 icon + title + 2-line subtitle. Out of place with the calm bedtime theme (especially after v11.9.48 darkened the bg).',
+        '★ **Now:** centered pill ~7×14px padding, subtle lavender border, "WAKE?" caps text. Tap → amber pill with "AWAKE · 8min". Amber only on ACTIVE state (real alarm), default lavender (in-theme with bedtime).',
+        'Bedtime quick button (in Home\'s 3×2 grid) **stays intact** — you asked to keep as-is.',
+        'Same toggle logic (toggleNightWake). Same internal night wake timer. Just minimalist visuals.',
+      ],
+    },
+  },
   {
     v: "11.9.49", date: "2026-05-13",
     pt: {
@@ -9036,7 +9058,15 @@ function App(){
               :<span style={{opacity:0.85}}>{_lang==="en"?"~ wake":"~ acordar"} <span style={{color:T.sub,fontWeight:600}}>{predLabel}</span><span style={{opacity:0.7}}> · {fmtDur(avgMin)} {_lang==="en"?"avg":"média"}</span></span>}
           </div>);
         })()}
-        {activeTimer&&activeTimer.type==="sleep"&&<div style={{padding:"0 20px",marginBottom:10}}><button onClick={toggleNightWake} className={activeTimer.nightWake?"":"nw-amber-pulse"} style={{width:"100%",padding:"12px 16px",borderRadius:14,background:activeTimer.nightWake?"linear-gradient(135deg,rgba(96,165,250,0.2),rgba(167,139,250,0.15))":"linear-gradient(135deg,rgba(251,146,60,0.18),rgba(251,191,36,0.12))",border:`1px solid ${activeTimer.nightWake?"rgba(96,165,250,0.6)":"rgba(251,146,60,0.55)"}`,display:"flex",alignItems:"center",gap:12,boxShadow:activeTimer.nightWake?"0 0 20px rgba(96,165,250,0.2)":"0 0 20px rgba(251,146,60,0.15), 0 4px 16px rgba(0,0,0,0.3)",transition:"all 0.3s"}}><div className={activeTimer.nightWake?"pulse-soft":"nw-icon-pulse"} style={{width:36,height:36,borderRadius:12,background:activeTimer.nightWake?"rgba(96,165,250,0.3)":"rgba(251,146,60,0.25)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:activeTimer.nightWake?"none":"0 0 14px rgba(251,146,60,0.3)"}}><Icon name="sun" size={18} color={activeTimer.nightWake?"#60a5fa":"#fbbf24"}/></div><div style={{flex:1,textAlign:"left"}}><div style={{fontSize:T.fMD,fontWeight:700,color:activeTimer.nightWake?"#60a5fa":"#fbbf24"}}>{_lang==="en"?"Night Wake":"Despertar"}{activeTimer.nightWake&&` · ${fmtDur(Math.max(1,Math.floor((Date.now()-new Date(activeTimer.nightWake.startTime).getTime())/60000)))}`}</div><div style={{fontSize:T.fXS,color:activeTimer.nightWake?T.sub:"rgba(251,191,36,0.75)",marginTop:1}}>{activeTimer.nightWake?(_lang==="en"?"Tap to go back to sleep":"Toque para voltar a dormir"):(_lang==="en"?"Tap if Louise woke up":"Toque se Louise acordou")}</div></div>{activeTimer.nightWake&&<div className="pulse-fast" style={{width:10,height:10,borderRadius:"50%",background:"#60a5fa",boxShadow:"0 0 8px #60a5fa"}}/>}</button></div>}
+        {/* v11.9.50: Night Wake virou pill minimal centrado (mockup variant D).
+            Substitui o banner full-width amber-pulsing que destoava do tema bedtime.
+            Default lavanda (Louise dormindo), tap → vira amber (Louise acordada) com timer. */}
+        {activeTimer&&activeTimer.type==="sleep"&&<div style={{display:"flex",justifyContent:"center",marginBottom:10,padding:"0 20px"}}>
+          <button onClick={toggleNightWake} style={{padding:"7px 14px",borderRadius:20,background:activeTimer.nightWake?"rgba(251,146,60,0.10)":"rgba(20,26,60,0.55)",border:`1px solid ${activeTimer.nightWake?"rgba(251,146,60,0.42)":"rgba(139,124,246,0.24)"}`,display:"flex",alignItems:"center",gap:7,fontSize:T.fSM,fontWeight:700,color:activeTimer.nightWake?"#fbbf24":"#c4b5fd",letterSpacing:0.3,textTransform:"uppercase",cursor:"pointer",transition:"all .25s ease",boxShadow:activeTimer.nightWake?"0 0 14px rgba(251,146,60,0.18)":"none"}}>
+            <Icon name="sun" size={13} color={activeTimer.nightWake?"#fbbf24":"#c4b5fd"}/>
+            {activeTimer.nightWake?`${_lang==="en"?"Awake":"Acordada"} · ${fmtDur(Math.max(1,Math.floor((Date.now()-new Date(activeTimer.nightWake.startTime).getTime())/60000)))}`:(_lang==="en"?"Wake?":"Despertar?")}
+          </button>
+        </div>}
         {/* v11.9.35: quick buttons 6×1 → 3×2 com fonte legivel + touch target 50×50+. */}
         {!activeTimer&&<div style={{display:"grid",gridTemplateColumns:"repeat(3,minmax(0,1fr))",gap:8,padding:"0 20px",marginBottom:12}}>
           {[
