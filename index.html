@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.41 Rotina nova suprime predicao antiga: "Prox. soneca ~XX:XX" engine-driven some quando routine.enabled (evita 2 cards competindo). napSug + InsightCards mantem.
   v11.9.40 Rotina diaria (pediatra): config no perfil (wake/banho/bedtime/4 sonecas/mamadas) + card "Proximo" no Home com chips de progresso e pips de mamadas
   v11.9.39 Sistema tipografico: 7 niveis (T.fXS/SM/MD/LG/XL/f2XL/f3XL), ~390 valores migrados, fim do magic-number caos
   v11.9.38 Confirm 2-step inline no SleepBlock: sem confirm() nativo no delete de evento aninhado + no remover waking do editor (consistencia com v11.9.35)
@@ -704,8 +705,29 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.40";
+const APP_VERSION = "11.9.41";
 const CHANGELOG = [
+  {
+    v: "11.9.41", date: "2026-05-13",
+    pt: {
+      title: "Rotina nova suprime predição antiga (engine de pattern)",
+      bullets: [
+        '★ **Esconde "Próx. soneca ~13:42 · WW 2h" quando a rotina da pediatra está ativa.** Era engine-predicted, baseado nos dias anteriores. Agora com horário alvo fixo da pediatra, esse card ficava lado a lado com "Próximo na rotina · alvo 13:30" — competição de sinal, ruído visual.',
+        'Engine continua rodando em background — `napSug` (alertas bio "Janela abrindo / Hora ideal / Esticando / Overdue") MANTÉM, porque são sinais biológicos da Louise (cansaço real-time), complementam a rotina fixa em vez de competir.',
+        'InsightCards (padrões e médias) MANTÉM — info histórica/agregada, não duplica a rotina.',
+        'Se `profile.routine.enabled = false` ou inexistente, app volta a mostrar a predição engine-driven (comportamento pré-v11.9.40).',
+      ],
+    },
+    en: {
+      title: "New routine supersedes the old prediction (pattern engine)",
+      bullets: [
+        '★ **Hides "Next nap ~13:42 · WW 2h" when the pediatrician\'s routine is enabled.** Was engine-predicted from previous days. With a fixed target now, this card sat right next to "Next in routine · target 13:30" — competing signals, visual noise.',
+        'Engine still runs in the background — `napSug` (bio alerts "Window opening / Ideal time / Stretching / Overdue") STAYS, because they\'re biological signals (real-time tiredness), complementing the fixed routine instead of competing.',
+        'InsightCards (patterns and averages) STAYS — historical/aggregated info, doesn\'t duplicate routine.',
+        'If `profile.routine.enabled = false` or missing, the app falls back to engine-driven prediction (pre-v11.9.40 behavior).',
+      ],
+    },
+  },
   {
     v: "11.9.40", date: "2026-05-13",
     pt: {
@@ -8793,7 +8815,8 @@ function App(){
         {napSug&&napSug.state==="opening"&&<div className="pulse-soft" style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:T.amberS,border:`1px solid ${T.amber}22`,display:"flex",alignItems:"center",gap:10}}><Icon name="bell" size={18} color={T.amber}/><div><div style={{fontSize:T.fMD,fontWeight:700,color:T.amber}}>{_lang==="en"?"Sleep window opening":"Janela abrindo"}</div><div style={{fontSize:T.fSM,color:T.sub}}>{_lang==="en"?"Watch for sleepy cues":"Observe sinais de sono"}{napSug.predictedTime?` · ~${napSug.predictedTime}`:""}</div></div></div>}
         {napSug&&napSug.state==="sweet"&&<div className="pulse-fast" style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:T.greenS,border:`1px solid ${T.green}22`,display:"flex",alignItems:"center",gap:10,boxShadow:`0 0 12px ${T.green}15`}}><Icon name="check" size={18} color={T.green}/><div><div style={{fontSize:T.fMD,fontWeight:700,color:T.green}}>{_lang==="en"?"Ideal time":"Hora ideal"}</div><div style={{fontSize:T.fSM,color:T.sub}}>{_lang==="en"?"Best moment for nap":"Melhor momento pra soneca"}{napSug.dataPoints>=3?(_lang==="en"?` · ${napSug.dataPoints} days`:` · ${napSug.dataPoints} dias`):""}</div></div></div>}
         {napSug&&(napSug.state==="stretching"||napSug.state==="overdue")&&<div className="pulse-fast" style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:T.orangeS,border:`1px solid ${T.orange}22`,display:"flex",alignItems:"center",gap:10}}><Icon name="zap" size={18} color={napSug.state==="overdue"?"#f87171":T.orange}/><div><div style={{fontSize:T.fMD,fontWeight:700,color:napSug.state==="overdue"?"#f87171":T.orange}}>{napSug.state==="overdue"?(_lang==="en"?"Past max window":"Passou do maximo"):(_lang==="en"?"Stretching":"Esticando")}</div><div style={{fontSize:T.fSM,color:T.sub}}>{napSug.state==="overdue"?(_lang==="en"?`${fmtDur(napSug.el)} awake — risk of overtired`:`${fmtDur(napSug.el)} acordada — risco de overtired`):(_lang==="en"?"Past average, still within range":"Passou da media, ainda dentro do range")}</div></div></div>}
-        {!activeTimer&&sleepRec?.phase===2&&daySchedule.length>0&&daySchedule.filter(s=>s.status==="next").map((s,i)=><div key={"ns"+i} style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:`${T.accent}10`,border:`1px solid ${T.accent}18`,display:"flex",alignItems:"center",gap:10}}><Icon name="star" size={18} color={T.accent} fill={T.accent}/><div><div style={{fontSize:T.fMD,fontWeight:700,color:T.accent}}>{s.bed?(_lang==="en"?"Bedtime ~":"Sono ~"):(_lang==="en"?"Next nap ~":"Prox. soneca ~")}{minToTime(s.startMin)}</div><div style={{fontSize:T.fSM,color:T.sub}}>{s.bed?"":`${s.pos}${_lang==="en"?["","st","nd","rd"][s.pos]||"th":"a"} · `}WW {fmtDur(s.ww)}{s.durRange?" · "+s.durRange:""}</div></div></div>)}
+        {/* v11.9.41: predição "Próx. soneca ~XX:XX" só aparece se a rotina (pediatra) NÃO estiver ativa. Com rotina on, o card "Próximo na rotina" assume — engine-prediction vira redundante. */}
+        {!routineState&&!activeTimer&&sleepRec?.phase===2&&daySchedule.length>0&&daySchedule.filter(s=>s.status==="next").map((s,i)=><div key={"ns"+i} style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:`${T.accent}10`,border:`1px solid ${T.accent}18`,display:"flex",alignItems:"center",gap:10}}><Icon name="star" size={18} color={T.accent} fill={T.accent}/><div><div style={{fontSize:T.fMD,fontWeight:700,color:T.accent}}>{s.bed?(_lang==="en"?"Bedtime ~":"Sono ~"):(_lang==="en"?"Next nap ~":"Prox. soneca ~")}{minToTime(s.startMin)}</div><div style={{fontSize:T.fSM,color:T.sub}}>{s.bed?"":`${s.pos}${_lang==="en"?["","st","nd","rd"][s.pos]||"th":"a"} · `}WW {fmtDur(s.ww)}{s.durRange?" · "+s.durRange:""}</div></div></div>)}
         <InsightCards insights={dayInsights} phase={sleepRec?.phase}/>
         {/* v11.9.40: Card de rotina diária — só renderiza se profile.routine.enabled === true */}
         {routineState&&<div style={{margin:"0 20px 14px"}}>
