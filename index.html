@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.43 Ring 340 -> 200 (compact). Libera ~140px no Home, KPI cards bottle/sono/diaper sobem above-the-fold no iPhone 14/15.
   v11.9.42 Rotina fixa: napSug 100% silencioso. Esconde "Nap 3 ~XX:XX" dentro do arco + banners overdue/stretching/sweet/opening. Ring neutro lavanda.
   v11.9.41 Rotina nova suprime predicao antiga: "Prox. soneca ~XX:XX" engine-driven some quando routine.enabled (evita 2 cards competindo). napSug + InsightCards mantem.
   v11.9.40 Rotina diaria (pediatra): config no perfil (wake/banho/bedtime/4 sonecas/mamadas) + card "Proximo" no Home com chips de progresso e pips de mamadas
@@ -706,8 +707,31 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.42";
+const APP_VERSION = "11.9.43";
 const CHANGELOG = [
+  {
+    v: "11.9.43", date: "2026-05-13",
+    pt: {
+      title: "Ring compacto (opção A do mockup) — KPI cards above-the-fold",
+      bullets: [
+        '★ **Ring 340px → 200px** (~41% redução). Mantém identidade (anel circular dominante, dots tappáveis, anchors sun/moon, arcs de soneca), mas libera ~140px de altura vertical no Home.',
+        '★ **Consequência:** os 4 cards de KPI (mamadas/ml, simet, sono, fraldas) agora ficam **acima da fold do iPhone 14/15** — sem scroll pra ver. Antes ficavam parcialmente cortados.',
+        '**Tudo escalado proporcionalmente:** tamanho da fonte central 52 → 32, dotSz 46 → 32 (mantém ≥ 32 pra Apple HIG tap target), sleepSz 44 → 36, strokes dos arcos 20/30/24 → 12/18/14, anchor circle 40 → 30, MIN_GAP entre dots 22 → 15.',
+        'Mantida a sparkle animation no fim do último arco de soneca, o glow breathing dos ícones, o sub-label "Acordada / Napping / Bedtime", o star icon (orbit comet) ao logar evento.',
+        'Sub-label da Ring (Mercúrio / Acordada / Bedtime) reduzida de T.fMD pra T.fSM, letter-spacing 1.8 → 1.2 — mais discreta, dá espaço pro número grande respirar.',
+      ],
+    },
+    en: {
+      title: "Compact Ring (mockup option A) — KPI cards above-the-fold",
+      bullets: [
+        '★ **Ring 340px → 200px** (~41% reduction). Keeps identity (dominant circular ring, tappable dots, sun/moon anchors, nap arcs), but frees up ~140px of vertical height on Home.',
+        '★ **Result:** the 4 KPI cards (bottles/ml, simet, sleep, diapers) are now **above the iPhone 14/15 fold** — no scroll needed. Before, they were partially cut off.',
+        '**Everything scaled proportionally:** central font size 52 → 32, dotSz 46 → 32 (kept ≥ 32 for Apple HIG tap target), sleepSz 44 → 36, arc strokes 20/30/24 → 12/18/14, anchor circle 40 → 30, MIN_GAP between dots 22 → 15.',
+        'Kept the sparkle animation at the end of the last nap arc, the glow breathing on icons, the sub-label "Awake / Napping / Bedtime", the star icon (orbit comet) when logging an event.',
+        'Ring sub-label (Mercury / Awake / Bedtime) reduced from T.fMD to T.fSM, letter-spacing 1.8 → 1.2 — more discreet, giving the big number room to breathe.',
+      ],
+    },
+  },
   {
     v: "11.9.42", date: "2026-05-13",
     pt: {
@@ -4903,9 +4927,16 @@ function TL(type){return typeLabel(type,_lang)}
 const Ring = React.memo(function Ring({activeTimer,napSug,tick,recentEvents,lang,showOrbit,screenLockActive}){
   const[tip,setTip]=useState(null);
   useEffect(()=>{if(tip!==null){const t=setTimeout(()=>setTip(null),3000);return()=>clearTimeout(t)}},[tip]);
-  const sz=340,cx=sz/2,cy=sz/2,R=148;
+  // v11.9.43: Ring compacto — 340 → 200 (~41% redução). KPI cards (bottle/sono/diaper)
+  // sobem above-the-fold em iPhone 14/15. Proporções internas escaladas pra manter
+  // legibilidade e tap targets ≥ 32px (Apple HIG).
+  const sz=200,cx=sz/2,cy=sz/2,R=78;
   const gapDeg=55,startAng=90+gapDeg/2,totalArc=360-gapDeg;
-  const dotSz=46,sleepSz=44;
+  const dotSz=32,sleepSz=36;
+  const bigFont=32;
+  const arcStrokeBg=12,arcStrokeFill=18,arcStrokeInset=14,arcStrokeDashed=10,arcStrokeIconBlur=22;
+  const anchorSz=30,anchorIconSz=14,dotIconSz=16,sleepIconSz=14;
+  const MIN_GAP=15;
   let lbl="",sub="",col1=T.dim,col2=T.dim,isBedtime=false;
   if(activeTimer){
     const el=Math.max(0,Math.floor((Date.now()-new Date(activeTimer.startTime).getTime())/1000));const mins=Math.floor(el/60);
@@ -4951,7 +4982,7 @@ const Ring = React.memo(function Ring({activeTimer,napSug,tick,recentEvents,lang
     const midAng=(a1+a2)/2;const midRad=midAng*Math.PI/180;
     return{ev,path:descArc(a1,a2),mx:cx+R*Math.cos(midRad),my:cy+R*Math.sin(midRad),col:TYPES[ev.type]?.color||T.purple};
   }).filter(Boolean);
-  const MIN_GAP=22;
+  // MIN_GAP definido lá em cima junto com sz (v11.9.43)
   const rawDots=dotEvs.map(ev=>{
     const cfg=TYPES[ev.type];if(!cfg)return null;
     const mins=toMin(ev.time);
@@ -4993,32 +5024,32 @@ const Ring = React.memo(function Ring({activeTimer,napSug,tick,recentEvents,lang
   return(<div style={{position:"relative",width:sz,margin:"0 auto"}}>
     <div style={{position:"relative",width:sz,height:sz}}>
       <svg width={sz} height={sz} style={{overflow:"visible"}}>
-        <defs><filter id="slpG"><feGaussianBlur stdDeviation="8" result="b"/><feFlood floodColor={T.purple} floodOpacity="0.35" result="c"/><feComposite in="c" in2="b" operator="in" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
-        <path d={descArc(startAng,startAng+totalArc)} fill="none" stroke="rgba(40,55,120,0.18)" strokeWidth={20} strokeLinecap="round"/>
+        <defs><filter id="slpG"><feGaussianBlur stdDeviation="5" result="b"/><feFlood floodColor={T.purple} floodOpacity="0.35" result="c"/><feComposite in="c" in2="b" operator="in" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+        <path d={descArc(startAng,startAng+totalArc)} fill="none" stroke="rgba(40,55,120,0.18)" strokeWidth={arcStrokeBg} strokeLinecap="round"/>
         {/* Sleep pills */}
-        {sleepArcs.map((sa,i)=><path key={"sg"+i} d={sa.path} fill="none" stroke={sa.col} strokeWidth={36} strokeLinecap="round" opacity={0.08} filter="url(#slpG)"/>)}
-        {sleepArcs.map((sa,i)=><path key={"sb"+i} d={sa.path} fill="none" stroke={sa.col} strokeWidth={30} strokeLinecap="round" opacity={0.4}/>)}
-        {sleepArcs.map((sa,i)=><path key={"sf"+i} d={sa.path} fill="none" stroke="rgba(16,12,40,0.85)" strokeWidth={24} strokeLinecap="round"/>)}
+        {sleepArcs.map((sa,i)=><path key={"sg"+i} d={sa.path} fill="none" stroke={sa.col} strokeWidth={arcStrokeIconBlur} strokeLinecap="round" opacity={0.08} filter="url(#slpG)"/>)}
+        {sleepArcs.map((sa,i)=><path key={"sb"+i} d={sa.path} fill="none" stroke={sa.col} strokeWidth={arcStrokeFill} strokeLinecap="round" opacity={0.4}/>)}
+        {sleepArcs.map((sa,i)=><path key={"sf"+i} d={sa.path} fill="none" stroke="rgba(16,12,40,0.85)" strokeWidth={arcStrokeInset} strokeLinecap="round"/>)}
         {/* Dashed flow on last sleep arc */}
-        {lastSleepArcIdx>=0&&!activeTimer&&sleepArcs[lastSleepArcIdx]&&<path d={sleepArcs[lastSleepArcIdx].path} fill="none" stroke={sleepArcs[lastSleepArcIdx].col} strokeWidth={16} strokeLinecap="round" strokeDasharray="8 12" opacity={0.35} style={{animation:"dashFlow 2s linear infinite"}}/>}
+        {lastSleepArcIdx>=0&&!activeTimer&&sleepArcs[lastSleepArcIdx]&&<path d={sleepArcs[lastSleepArcIdx].path} fill="none" stroke={sleepArcs[lastSleepArcIdx].col} strokeWidth={arcStrokeDashed} strokeLinecap="round" strokeDasharray="6 9" opacity={0.35} style={{animation:"dashFlow 2s linear infinite"}}/>}
         {/* Sparkle na ponta do arco de sono mais recente (v10.7.1) — indica "isso foi há pouco". */}
         {lastSleepArcIdx>=0&&!activeTimer&&sleepEvs[lastSleepArcIdx]&&(()=>{const ev=sleepEvs[lastSleepArcIdx];const endMin=Math.min(toMin(ev.time)+ev.durationMin,dayStart+daySpan);const endRad=toAng(endMin)*Math.PI/180;const tx=cx+R*Math.cos(endRad),ty=cy+R*Math.sin(endRad);const col=sleepArcs[lastSleepArcIdx].col;return(<g><circle cx={tx} cy={ty} r={4} fill={col} opacity={0.9}><animate attributeName="r" values="3;6;3" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite"/></circle><circle cx={tx} cy={ty} r={8} fill="none" stroke={col} strokeWidth={1.5} opacity={0.4}><animate attributeName="r" values="5;14;5" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.4;0;0.4" dur="2s" repeatCount="indefinite"/></circle></g>)})()}
         {/* Live timer arc (growing) */}
-        {timerArc&&<g><path d={timerArc.path} fill="none" stroke={timerArc.col} strokeWidth={36} strokeLinecap="round" opacity={0.08} filter="url(#slpG)"/><path d={timerArc.path} fill="none" stroke={timerArc.col} strokeWidth={30} strokeLinecap="round" opacity={0.5}/><path d={timerArc.path} fill="none" stroke="rgba(16,12,40,0.85)" strokeWidth={24} strokeLinecap="round"/>{/* Dashed flow on active timer arc */}<path d={timerArc.path} fill="none" stroke={timerArc.col} strokeWidth={16} strokeLinecap="round" strokeDasharray="8 12" opacity={0.35} style={{animation:"dashFlow 2s linear infinite"}}/></g>}
+        {timerArc&&<g><path d={timerArc.path} fill="none" stroke={timerArc.col} strokeWidth={arcStrokeIconBlur} strokeLinecap="round" opacity={0.08} filter="url(#slpG)"/><path d={timerArc.path} fill="none" stroke={timerArc.col} strokeWidth={arcStrokeFill} strokeLinecap="round" opacity={0.5}/><path d={timerArc.path} fill="none" stroke="rgba(16,12,40,0.85)" strokeWidth={arcStrokeInset} strokeLinecap="round"/>{/* Dashed flow on active timer arc */}<path d={timerArc.path} fill="none" stroke={timerArc.col} strokeWidth={arcStrokeDashed} strokeLinecap="round" strokeDasharray="6 9" opacity={0.35} style={{animation:"dashFlow 2s linear infinite"}}/></g>}
       </svg>
       {/* Sleep icons centered on pills */}
-      {sleepArcs.map((sa,i)=>{const isLastSleep=i===lastSleepArcIdx&&!activeTimer;return<div key={"si"+i} style={{position:"absolute",left:sa.mx-sleepSz/2,top:sa.my-sleepSz/2,width:sleepSz,height:sleepSz,borderRadius:"50%",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",zIndex:3,filter:`drop-shadow(0 0 ${isLastSleep?14:6}px ${sa.col}${isLastSleep?"aa":"55"})`,animation:isLastSleep?"glowBreathe 2s ease-in-out infinite":"none"}}><Icon name={sa.ev.type==="nap"?"cloud":"moon"} size={isLastSleep?22:20} color={sa.col}/><span style={{fontSize:T.fXS,fontWeight:700,color:`${sa.col}88`,marginTop:1}}>{fmtDur(sa.ev.durationMin)}</span></div>})}
+      {sleepArcs.map((sa,i)=>{const isLastSleep=i===lastSleepArcIdx&&!activeTimer;return<div key={"si"+i} style={{position:"absolute",left:sa.mx-sleepSz/2,top:sa.my-sleepSz/2,width:sleepSz,height:sleepSz,borderRadius:"50%",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",zIndex:3,filter:`drop-shadow(0 0 ${isLastSleep?10:4}px ${sa.col}${isLastSleep?"aa":"55"})`,animation:isLastSleep?"glowBreathe 2s ease-in-out infinite":"none"}}><Icon name={sa.ev.type==="nap"?"cloud":"moon"} size={isLastSleep?sleepIconSz+2:sleepIconSz} color={sa.col}/><span style={{fontSize:8,fontWeight:700,color:`${sa.col}88`,marginTop:0,lineHeight:1}}>{fmtDur(sa.ev.durationMin)}</span></div>})}
       {/* Live timer icon — strong glow breathing */}
       {timerArc&&<>
-        <div style={{position:"absolute",left:timerArc.mx-sleepSz/2,top:timerArc.my-sleepSz/2,width:sleepSz,height:sleepSz,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",zIndex:4,filter:`drop-shadow(0 0 14px ${timerArc.col}aa)`,animation:"glowBreathe 2s ease-in-out infinite"}}><Icon name={activeTimer.type==="nap"?"cloud":activeTimer.type==="tummytime"?"baby":"bed"} size={22} color={timerArc.col}/></div>
-        <div style={{position:"absolute",left:timerArc.tipX-7,top:timerArc.tipY-7,width:14,height:14,borderRadius:"50%",background:timerArc.col,boxShadow:`0 0 10px ${timerArc.col}aa, 0 0 24px ${timerArc.col}55`,animation:"cometTip 1.5s ease-in-out infinite",zIndex:5}}/>
+        <div style={{position:"absolute",left:timerArc.mx-sleepSz/2,top:timerArc.my-sleepSz/2,width:sleepSz,height:sleepSz,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",zIndex:4,filter:`drop-shadow(0 0 10px ${timerArc.col}aa)`,animation:"glowBreathe 2s ease-in-out infinite"}}><Icon name={activeTimer.type==="nap"?"cloud":activeTimer.type==="tummytime"?"baby":"bed"} size={sleepIconSz+2} color={timerArc.col}/></div>
+        <div style={{position:"absolute",left:timerArc.tipX-5,top:timerArc.tipY-5,width:10,height:10,borderRadius:"50%",background:timerArc.col,boxShadow:`0 0 7px ${timerArc.col}aa, 0 0 16px ${timerArc.col}55`,animation:"cometTip 1.5s ease-in-out infinite",zIndex:5}}/>
       </>}
       {dots.map((gr,i)=>{const d=gr.primary,c=d.cfg.color,isGrp=gr.items.length>1,active=tip===i;const isLast=i===lastDotIdx&&!activeTimer;const lines=gr.items.map(it=>{let l=TL(it.ev.type);if(it.ev.ml)l+=` \u00b7 ${it.ev.ml}ml`;else if(it.ev.subtype)l+=` \u00b7 ${({wet:L("wet"),dirty:L("dirty"),both:L("both")})[it.ev.subtype]||""}`;return`${l} \u00b7 ${it.ev.time}`});return(<div key={d.ev.id||i} style={{position:"absolute",left:d.x-dotSz/2,top:d.y-dotSz/2}}>
         {isLast&&<div style={{position:"absolute",left:"50%",top:"50%",width:dotSz+10,height:dotSz+10,borderRadius:"50%",border:`1.5px solid ${c}88`,transform:"translate(-50%,-50%)",pointerEvents:"none",zIndex:0,animation:"softPulse 3.5s ease-in-out infinite"}}/>}
         {isGrp&&gr.items.slice(1,3).map((sd,si)=><div key={"st"+si} style={{position:"absolute",left:4*(si+1),top:4*(si+1),width:dotSz,height:dotSz,borderRadius:"50%",background:"radial-gradient(circle at 35% 30%,rgba(24,30,65,0.9),rgba(8,12,35,0.95))",border:`2px solid ${sd.cfg.color}44`,zIndex:0,boxShadow:"0 2px 8px rgba(0,0,0,0.3)"}}/>)}
         <div onClick={e=>{e.stopPropagation();setTip(active?null:i)}} style={{position:"relative",width:dotSz,height:dotSz,borderRadius:"50%",background:"radial-gradient(circle at 35% 30%,rgba(30,38,80,0.95),rgba(12,16,42,0.98))",border:`2.5px solid ${active||isLast?c:c+"77"}`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 2px 10px rgba(0,0,0,0.45), 0 0 ${active?22:16}px ${c}${active?"55":"30"}, inset 0 1px 0 rgba(200,220,255,0.06), inset 0 -1px 3px rgba(0,0,0,0.15)`,zIndex:active?10:isLast?5:2,transform:active?"scale(1.15)":"scale(1)",transition:"all .2s cubic-bezier(0.34,1.56,0.64,1)",overflow:"hidden",filter:`drop-shadow(0 0 5px ${c}44)`}}>
           <div style={{position:"absolute",top:"10%",left:"18%",width:"50%",height:"28%",background:`radial-gradient(ellipse,${c}22,transparent)`,borderRadius:"50%",filter:"blur(3px)"}}/>
-          <Icon name={d.cfg.icon} size={22} color={c}/>
+          <Icon name={d.cfg.icon} size={dotIconSz} color={c}/>
           {isGrp&&<div style={{position:"absolute",bottom:2,left:"50%",transform:"translateX(-50%)",display:"flex",gap:2}}><div style={{width:3,height:3,borderRadius:"50%",background:"rgba(255,255,255,0.7)"}}/><div style={{width:3,height:3,borderRadius:"50%",background:"rgba(255,255,255,0.7)"}}/><div style={{width:3,height:3,borderRadius:"50%",background:"rgba(255,255,255,0.7)"}}/></div>}
         </div>
         {active&&<div style={{position:"absolute",bottom:dotSz+6,left:"50%",transform:"translateX(-50%)",whiteSpace:"nowrap",padding:"6px 12px",borderRadius:9,background:"rgba(8,12,35,0.96)",border:`1px solid ${c}25`,boxShadow:"0 4px 16px rgba(0,0,0,0.5)",zIndex:20,animation:"fadeIn .15s ease"}}>
@@ -5026,11 +5057,11 @@ const Ring = React.memo(function Ring({activeTimer,napSug,tick,recentEvents,lang
           <div style={{position:"absolute",bottom:-4,left:"50%",transform:"translateX(-50%) rotate(45deg)",width:7,height:7,background:"rgba(8,12,35,0.96)",borderRight:`1px solid ${c}25`,borderBottom:`1px solid ${c}25`}}/>
         </div>}
       </div>)})}
-      {anchorSun&&<div style={{position:"absolute",left:anchorSun.x-20,top:anchorSun.y-20,display:"flex",flexDirection:"column",alignItems:"center",zIndex:5,pointerEvents:"none"}}><div style={{width:40,height:40,borderRadius:"50%",background:"radial-gradient(circle at 40% 30%,rgba(251,191,36,0.28),rgba(251,146,60,0.08))",border:"2px solid rgba(251,191,36,0.55)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 18px rgba(251,191,36,0.3)"}}><Icon name="sun" size={18} color="#fbbf24"/></div><span style={{fontSize:T.fXS,fontWeight:700,color:"#fbbf24",marginTop:2,textShadow:"0 1px 4px rgba(0,0,0,0.8)"}}>{anchorSun.time}</span></div>}
-      {anchorMoon&&<div style={{position:"absolute",left:anchorMoon.x-20,top:anchorMoon.y-20,display:"flex",flexDirection:"column",alignItems:"center",zIndex:5,pointerEvents:"none"}}><div style={{width:40,height:40,borderRadius:"50%",background:"radial-gradient(circle at 40% 30%,rgba(167,139,250,0.28),rgba(139,124,246,0.08))",border:"2px solid rgba(167,139,250,0.55)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 18px rgba(167,139,250,0.3)"}}><Icon name="moon" size={18} color="#a78bfa"/></div><span style={{fontSize:T.fXS,fontWeight:700,color:"#a78bfa",marginTop:2,textShadow:"0 1px 4px rgba(0,0,0,0.8)"}}>{anchorMoon.time}</span></div>}
-      <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}><span style={{fontSize:T.fMD,color:isBedtime?"#c084fc":T.sub,fontWeight:600,letterSpacing:1.8,textTransform:"uppercase",display:"flex",alignItems:"center",gap:5}}>{isBedtime&&<Icon name="bed" size={14} color="#c084fc"/>}{sub}{screenLockActive&&<span title={lang==="en"?"Screen on":"Tela ligada"} style={{display:"inline-flex",alignItems:"center",gap:3,marginLeft:4,padding:"2px 6px",borderRadius:8,background:"rgba(251,191,36,0.12)",border:"1px solid rgba(251,191,36,0.3)"}}><span style={{width:5,height:5,borderRadius:"50%",background:"#fbbf24",boxShadow:"0 0 6px #fbbf24",animation:"pulse 1.5s ease-in-out infinite"}}/><span style={{fontSize:T.fXS,fontWeight:700,color:"#fbbf24",letterSpacing:0.5,textTransform:"uppercase"}}>{lang==="en"?"On":"On"}</span></span>}</span><span style={{fontSize:52,fontWeight:800,letterSpacing:-2.2,marginTop:4,background:hasProgress?`linear-gradient(135deg,${col2},${col1})`:`linear-gradient(180deg,#ffffff 0%,#a78bfa 95%)`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",filter:hasProgress?`drop-shadow(0 0 24px ${col1}55)`:"drop-shadow(0 0 28px rgba(167,139,250,0.32))",fontVariantNumeric:"tabular-nums"}}>{lbl}</span>{napSug&&napSug.predictedTime&&!activeTimer&&<span style={{fontSize:T.fSM,fontWeight:600,color:col1,opacity:0.7,marginTop:2}}>{lang==="en"?"Nap":"Nap"} {napSug.napPos||""} ~{napSug.predictedTime}</span>}</div>
+      {anchorSun&&<div style={{position:"absolute",left:anchorSun.x-anchorSz/2,top:anchorSun.y-anchorSz/2,display:"flex",flexDirection:"column",alignItems:"center",zIndex:5,pointerEvents:"none"}}><div style={{width:anchorSz,height:anchorSz,borderRadius:"50%",background:"radial-gradient(circle at 40% 30%,rgba(251,191,36,0.28),rgba(251,146,60,0.08))",border:"2px solid rgba(251,191,36,0.55)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 14px rgba(251,191,36,0.3)"}}><Icon name="sun" size={anchorIconSz} color="#fbbf24"/></div><span style={{fontSize:T.fXS,fontWeight:700,color:"#fbbf24",marginTop:2,textShadow:"0 1px 4px rgba(0,0,0,0.8)"}}>{anchorSun.time}</span></div>}
+      {anchorMoon&&<div style={{position:"absolute",left:anchorMoon.x-anchorSz/2,top:anchorMoon.y-anchorSz/2,display:"flex",flexDirection:"column",alignItems:"center",zIndex:5,pointerEvents:"none"}}><div style={{width:anchorSz,height:anchorSz,borderRadius:"50%",background:"radial-gradient(circle at 40% 30%,rgba(167,139,250,0.28),rgba(139,124,246,0.08))",border:"2px solid rgba(167,139,250,0.55)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 14px rgba(167,139,250,0.3)"}}><Icon name="moon" size={anchorIconSz} color="#a78bfa"/></div><span style={{fontSize:T.fXS,fontWeight:700,color:"#a78bfa",marginTop:2,textShadow:"0 1px 4px rgba(0,0,0,0.8)"}}>{anchorMoon.time}</span></div>}
+      <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}><span style={{fontSize:T.fSM,color:isBedtime?"#c084fc":T.sub,fontWeight:600,letterSpacing:1.2,textTransform:"uppercase",display:"flex",alignItems:"center",gap:4}}>{isBedtime&&<Icon name="bed" size={11} color="#c084fc"/>}{sub}{screenLockActive&&<span title={lang==="en"?"Screen on":"Tela ligada"} style={{display:"inline-flex",alignItems:"center",gap:3,marginLeft:4,padding:"2px 6px",borderRadius:8,background:"rgba(251,191,36,0.12)",border:"1px solid rgba(251,191,36,0.3)"}}><span style={{width:4,height:4,borderRadius:"50%",background:"#fbbf24",boxShadow:"0 0 6px #fbbf24",animation:"pulse 1.5s ease-in-out infinite"}}/><span style={{fontSize:T.fXS,fontWeight:700,color:"#fbbf24",letterSpacing:0.5,textTransform:"uppercase"}}>{lang==="en"?"On":"On"}</span></span>}</span><span style={{fontSize:bigFont,fontWeight:800,letterSpacing:-1.4,marginTop:3,background:hasProgress?`linear-gradient(135deg,${col2},${col1})`:`linear-gradient(180deg,#ffffff 0%,#a78bfa 95%)`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",filter:hasProgress?`drop-shadow(0 0 16px ${col1}55)`:"drop-shadow(0 0 20px rgba(167,139,250,0.32))",fontVariantNumeric:"tabular-nums"}}>{lbl}</span>{napSug&&napSug.predictedTime&&!activeTimer&&<span style={{fontSize:T.fXS,fontWeight:600,color:col1,opacity:0.7,marginTop:2}}>{lang==="en"?"Nap":"Nap"} {napSug.napPos||""} ~{napSug.predictedTime}</span>}</div>
       {tip!==null&&<div onClick={()=>setTip(null)} style={{position:"absolute",inset:0,zIndex:1}}/>}
-      {showOrbit&&<div key={Date.now()} style={{position:"absolute",left:167,top:167,width:6,height:6,zIndex:10,pointerEvents:"none",animation:"orbitComet 1.2s cubic-bezier(0.25,0.1,0.25,1) forwards"}}><div style={{width:6,height:6,borderRadius:"50%",background:"#fff",boxShadow:"0 0 8px #fff, 0 0 20px rgba(139,124,246,0.6), -8px 0 12px rgba(139,124,246,0.3), -16px 0 8px rgba(139,124,246,0.15)",transform:"translateY(-148px)"}}/></div>}
+      {showOrbit&&<div key={Date.now()} style={{position:"absolute",left:cx-3,top:cy-3,width:6,height:6,zIndex:10,pointerEvents:"none",animation:"orbitComet 1.2s cubic-bezier(0.25,0.1,0.25,1) forwards"}}><div style={{width:6,height:6,borderRadius:"50%",background:"#fff",boxShadow:"0 0 8px #fff, 0 0 20px rgba(139,124,246,0.6), -8px 0 12px rgba(139,124,246,0.3), -16px 0 8px rgba(139,124,246,0.15)",transform:`translateY(${-R}px)`}}/></div>}
     </div>
   </div>);
 });
