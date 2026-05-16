@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.46 Fix: timer ativo (nap/sleep iniciado) conta como check verde na rotina imediatamente — sem esperar terminar a entry.
   v11.9.45 Rotina tolerancia +-60min (era +-20/30) + Ring meio termo 270px (era 200, original 340). Soneca 40min atrasada conta como feito.
   v11.9.44 Fix: "Acordada" verde de volta no Ring (era roxo lavanda errado de v11.9.42). State=null agora cai no default green, mesma cor de antes.
   v11.9.43 Ring 340 -> 200 (compact). Libera ~140px no Home, KPI cards bottle/sono/diaper sobem above-the-fold no iPhone 14/15.
@@ -709,8 +710,29 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.45";
+const APP_VERSION = "11.9.46";
 const CHANGELOG = [
+  {
+    v: "11.9.46", date: "2026-05-13",
+    pt: {
+      title: "Timer ativo conta como ✓ na rotina",
+      bullets: [
+        '★ **Fix:** quando você toca em "Iniciar soneca" ou "Iniciar bedtime", o slot correspondente na rotina já fica ✓ verde imediatamente — sem esperar terminar pra criar a entry no Firestore. Antes só contava depois de finalizar (que aí ja podia estar atrasado e perder a janela).',
+        'Aplicado pra naps + bedtime. Cenário: 3ª soneca alvo 13:30, você toca em Iniciar às 13:25 → chip da 3ª vira ✓ verde na hora. Mesmo se ainda for "agora", o slot conta como feito.',
+        'Bath não tem timer (é evento direto), wake também não — então só naps + sleep usam essa lógica nova.',
+        'Match com timer ativo usa a mesma tolerância (±60min naps/bedtime).',
+      ],
+    },
+    en: {
+      title: "Active timer counts as ✓ in routine",
+      bullets: [
+        '★ **Fix:** when you tap "Start nap" or "Start bedtime", the corresponding routine slot immediately turns ✓ green — without waiting for the timer to end and create the Firestore entry. Before, it only counted after finalizing (which could be late and miss the window).',
+        'Applied to naps + bedtime. Scenario: 3rd nap target 13:30, you tap Start at 13:25 → 3rd chip turns ✓ green right away. Even while "in progress", the slot counts as done.',
+        'Bath has no timer (direct event), wake either — so only naps + sleep use this new logic.',
+        'Active timer matching uses the same tolerance (±60min naps/bedtime).',
+      ],
+    },
+  },
   {
     v: "11.9.45", date: "2026-05-13",
     pt: {
@@ -8519,7 +8541,22 @@ function App(){
     const now=new Date();
     const nowMin=now.getHours()*60+now.getMinutes();
     const slots=[];
-    const findMatch=(types,tMin,tolMin)=>todayE.find(e=>types.includes(e.type)&&Math.abs(toMinutes(e.time)-tMin)<=tolMin);
+    // v11.9.46: timer ATIVO (nap/sleep em andamento) também conta como "done".
+    // Cenário: você toca em "Iniciar soneca" às 13:25 — slot da 3ª (alvo 13:30) já fica ✓
+    // verde sem precisar esperar terminar o timer pra criar a entry no Firestore.
+    const activeTimerMatch=(types,tMin,tolMin)=>{
+      if(!activeTimer)return null;
+      if(!types.includes(activeTimer.type))return null;
+      const st=new Date(activeTimer.startTime);
+      const tStart=st.getHours()*60+st.getMinutes();
+      if(Math.abs(tStart-tMin)>tolMin)return null;
+      return{type:activeTimer.type,time:`${String(st.getHours()).padStart(2,"0")}:${String(st.getMinutes()).padStart(2,"0")}`,_active:true};
+    };
+    const findMatch=(types,tMin,tolMin)=>{
+      const liveT=activeTimerMatch(types,tMin,tolMin);
+      if(liveT)return liveT;
+      return todayE.find(e=>types.includes(e.type)&&Math.abs(toMinutes(e.time)-tMin)<=tolMin);
+    };
     // v11.9.45: tolerância mais generosa (40-50min late ainda conta como "feito").
     // Wake fica em ±20min (time-sensitive). Naps/banho/bed sobem pra ±60min.
     if(r.wakeTime){const tMin=toMinutes(r.wakeTime);slots.push({key:"wake",type:"wake",icon:"sun",col:T.amber,target:r.wakeTime,targetMin:tMin,tolMin:20,match:findMatch(["wakeup"],tMin,20),lbl:_lang==="en"?"Wake up":"Acordar",chip:_lang==="en"?"Wake":"Wake"})}
@@ -8552,7 +8589,7 @@ function App(){
     const bottlesTarget=r.bottlesPerDay||7;
     const allDone=slots.every(s=>s.status==="done");
     return{slots,headline,bottlesDone,bottlesTarget,allDone,hasRoutine:true};
-  },[profile?.routine,todayE,tick]);
+  },[profile?.routine,todayE,tick,activeTimer]);
   // Live bedtime virtual entry: built when an active sleep timer is running.
   // Used by Home (shows in-progress block at top of today's list) and HistoryPage
   // (which intentionally HIDES it — bedtimes only appear in history once finalized).
