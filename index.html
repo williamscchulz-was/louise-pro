@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.53 Resumo do dia removido — card "Resumo de hoje" 19h-23h59 com totais bottle/sono/sonecas/fraldas tirado do Home.
   v11.9.52 Night Wake pill bump: bg+border lavanda mais saturado, pulse com scale 1->1.035 e box-shadow 28px@0.60, texto bolder #e0d4ff.
   v11.9.51 Bedtime polish: remove estimativa "~acordar" + shimmer 4s->10s + pill com mais glow lavanda + remove halo box-shadow ao redor do Ring.
   v11.9.50 Night Wake button: bye banner amber pulsando, vira pill minimal centrado. Default lavanda (in-theme), tap = amber "ACORDADA · Xmin".
@@ -730,8 +731,25 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.52";
+const APP_VERSION = "11.9.53";
 const CHANGELOG = [
+  {
+    v: "11.9.53", date: "2026-05-13",
+    pt: {
+      title: "Resumo do dia removido",
+      bullets: [
+        '★ **Daily summary noturno removido** — aquele card "🌙 Resumo de hoje" que aparecia entre 19h-23h59 com totais de mamada/sono/sonecas/fraldas (v11.9.8 → v11.9.17). Pedido do William: "aquele resumo que aparece no final do dia pode tirar fora".',
+        'Estados removidos: `showDailySummary`, `dismissDailySummary`, `_todayCount` useMemo, useEffect que escutava o horário. Chave localStorage `lp_daily_summary_seen` fica órfã mas inerte (~10 bytes por device).',
+      ],
+    },
+    en: {
+      title: "Daily summary removed",
+      bullets: [
+        '★ **Evening daily summary removed** — that "🌙 Today\'s recap" card that appeared between 7pm-11:59pm with totals for bottle/sleep/naps/diapers (v11.9.8 → v11.9.17). William asked: "drop that summary that shows up at end of day".',
+        'States removed: `showDailySummary`, `dismissDailySummary`, `_todayCount` useMemo, useEffect that watched the hour. The localStorage key `lp_daily_summary_seen` is orphaned but inert (~10 bytes per device).',
+      ],
+    },
+  },
   {
     v: "11.9.52", date: "2026-05-13",
     pt: {
@@ -8195,34 +8213,10 @@ function App(){
   const onRingPointerUp=useCallback(()=>{
     if(ringPressRef.current.timer){clearTimeout(ringPressRef.current.timer);ringPressRef.current.timer=null}
   },[]);
-  // v11.9.8: Daily summary noturno. Mostra 1x/dia entre 20h-23h se ainda não dismissed.
-  // v11.9.14 fix: usa `entries` direto (já declarado), calcula todayE inline. Antes
-  // referenciava `todayE` que ainda não estava no escopo (TDZ → crash).
-  const[showDailySummary,setShowDailySummary]=useState(false);
-  const _todayCount=useMemo(()=>{
-    const td=todayStr();
-    return entries.filter(e=>e.date===td).length;
-  },[entries]);
-  useEffect(()=>{
-    if(loading)return;
-    const check=()=>{
-      try{
-        const td=todayStr();
-        const seen=localStorage.getItem("lp_daily_summary_seen");
-        if(seen===td){setShowDailySummary(false);return}
-        const h=new Date().getHours();
-        // v11.9.17: janela 19h-23h59 (era 20-23). Mais inclusivo pra rotina noturna variada.
-        if(h>=19&&_todayCount>=3)setShowDailySummary(true);
-      }catch(_){}
-    };
-    check();
-    const iv=setInterval(check,5*60*1000);
-    return()=>clearInterval(iv);
-  },[loading,_todayCount]);
-  const dismissDailySummary=useCallback(()=>{
-    setShowDailySummary(false);
-    try{localStorage.setItem("lp_daily_summary_seen",todayStr())}catch(_){}
-  },[]);
+  // v11.9.53: daily summary removido (era um card "Resumo de hoje" 19h-23h59 com
+  // totais de bottle/sono/sonecas/fraldas). Pedido do William. Removida toda state
+  // associada — localStorage key `lp_daily_summary_seen` fica órfão mas não causa
+  // problema (chave isolada por device, ~10 bytes).
   // v11.9.1: marcos da Louise (1 mes, 100 dias, 6 meses) — confetti 1x cada.
   const[confettiOn,setConfettiOn]=useState(false);
   useEffect(()=>{
@@ -9061,19 +9055,7 @@ function App(){
         <div style={{height:1,margin:"0 22px 14px",background:"linear-gradient(90deg,transparent,rgba(139,124,246,0.12),transparent)"}}/>
         <CuriosityCard age={age} lang={lang} tick={tick}/>
         {/* v11.9.8: Daily summary card (20h-23h, 1x/dia) */}
-        {showDailySummary&&<div style={{margin:"0 20px 12px",padding:"14px 16px",borderRadius:16,background:"linear-gradient(180deg,rgba(167,139,250,0.14),rgba(124,58,237,0.06))",border:"1px solid rgba(167,139,250,0.32)",boxShadow:"0 1px 0 0 rgba(255,255,255,0.06) inset, 0 8px 24px -10px rgba(124,58,237,0.4)",position:"relative",animation:"slideUp .35s cubic-bezier(0.22,1,0.36,1)"}}>
-          <button onClick={dismissDailySummary} aria-label={_lang==="en"?"Dismiss":"Fechar"} style={{position:"absolute",top:8,right:8,width:24,height:24,borderRadius:8,background:"rgba(14,18,48,0.45)",border:"1px solid rgba(139,124,246,0.18)",display:"flex",alignItems:"center",justifyContent:"center",color:T.dim}}><Icon name="x" size={11} color={T.dim}/></button>
-          <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:9}}>
-            <span style={{fontSize:T.fLG}}>{"🌙"}</span>
-            <span style={{fontSize:T.fSM,fontWeight:800,letterSpacing:0.6,textTransform:"uppercase",color:"#c4b5fd"}}>{_lang==="en"?"Today's recap":"Resumo de hoje"}</span>
-          </div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,fontSize:T.fSM,color:T.sub,fontVariantNumeric:"tabular-nums"}}>
-            <div style={{display:"flex",alignItems:"center",gap:5}}><Icon name="bottle" size={11} color={T.green}/><span style={{color:"#f0f2ff",fontWeight:700}}>{totalMl>=1000?fmtMl(totalMl):`${totalMl}ml`}</span><span>· {totalBottles}x</span></div>
-            <div style={{display:"flex",alignItems:"center",gap:5}}><Icon name="bed" size={11} color={T.purple}/><span style={{color:"#f0f2ff",fontWeight:700}}>{fmtDur(totalSleep)}</span><span>{_lang==="en"?"sleep":"sono"}</span></div>
-            <div style={{display:"flex",alignItems:"center",gap:5}}><Icon name="cloud" size={11} color={T.accent}/><span style={{color:"#f0f2ff",fontWeight:700}}>{totalNapCount}</span><span>{_lang==="en"?"naps":"sonecas"}{totalNapMin>0?` · ${fmtDur(totalNapMin)}`:""}</span></div>
-            <div style={{display:"flex",alignItems:"center",gap:5}}><Icon name="diaper" size={11} color={T.pink}/><span style={{color:"#f0f2ff",fontWeight:700}}>{totalDiapers}</span><span>{_lang==="en"?"diapers":"fraldas"}</span></div>
-          </div>
-        </div>}
+        {/* v11.9.53: resumo do dia removido — pedido do William. */}
         {/* v11.9.36: "•••" sutil no canto do Ring sinaliza long-press. Opacity baixa,
             position absolute, sem alterar layout. Fade in/out elegante. */}
         <div role="region" aria-label={_lang==="en"?"Ring with current state. Long-press for details":"Anel com estado atual. Pressione e segure para detalhes"} style={{padding:"4px 0 0",position:"relative"}} onPointerDown={onRingPointerDown} onPointerMove={onRingPointerMove} onPointerUp={onRingPointerUp} onPointerCancel={onRingPointerUp}>
