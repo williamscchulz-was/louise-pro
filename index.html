@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.54 Wake/Sleep pill: amber em vez de lavanda + labels "Wake"/"Sleep" action-oriented + icone sun->moon + tamanho compacto (revert bump).
   v11.9.53 Resumo do dia removido — card "Resumo de hoje" 19h-23h59 com totais bottle/sono/sonecas/fraldas tirado do Home.
   v11.9.52 Night Wake pill bump: bg+border lavanda mais saturado, pulse com scale 1->1.035 e box-shadow 28px@0.60, texto bolder #e0d4ff.
   v11.9.51 Bedtime polish: remove estimativa "~acordar" + shimmer 4s->10s + pill com mais glow lavanda + remove halo box-shadow ao redor do Ring.
@@ -314,8 +315,9 @@
     /* v11.9.49: shimmer sweep — gradient que passa horizontalmente pelo counter "2h14m" (lento) */
     @keyframes bedtimeShimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
     @keyframes bedtimeSubBreath{0%,100%{opacity:0.85}50%{opacity:1}}
-    /* v11.9.52: pulse mais perceptivel no Night Wake pill — range maior + scale sutil */
-    @keyframes nwPillPulse{0%,100%{box-shadow:0 0 10px rgba(167,139,250,0.25);transform:scale(1)}50%{box-shadow:0 0 28px rgba(167,139,250,0.60);transform:scale(1.035)}}
+    /* v11.9.54: pulse no Night Wake pill — agora amber-tinted (não lavanda).
+       Scale 1→1.022 (mais sutil), box-shadow amber 8→20px. */
+    @keyframes nwPillPulse{0%,100%{box-shadow:0 0 8px rgba(251,191,36,0.20);transform:scale(1)}50%{box-shadow:0 0 22px rgba(251,191,36,0.50);transform:scale(1.022)}}
     .nw-pill-pulse{animation:nwPillPulse 2.8s ease-in-out infinite;transform-origin:center}
     html body.bedtime-active{
       background:
@@ -731,8 +733,31 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.53";
+const APP_VERSION = "11.9.54";
 const CHANGELOG = [
+  {
+    v: "11.9.54", date: "2026-05-13",
+    pt: {
+      title: "Wake/Sleep button: amber + ação-oriented + tamanho pequeno",
+      bullets: [
+        '★ **Cor amber em vez de lavanda.** Lavanda era "ambient/decorativo" — não chamava atenção pra ação. Amber/amarelo é intuitivo: cor universal de "atenção", e bate com a metáfora de "wake/sol".',
+        '★ **Label action-oriented:** sai o "Wake?" (estranho com a interrogação), vira **"Wake"** quando Louise tá dormindo (= ação: registrar despertar) e **"Sleep · 8min"** quando ela tá acordada (= ação: registrar voltou a dormir). Mesma label da action.',
+        '★ **Ícone muda com o estado:** sun ☀ quando default (action: wake) → moon 🌙 quando active (action: sleep). Ícone também segue a action.',
+        '★ **Tamanho pequeno** (revert do bump da v11.9.52). Padding 7×14 (era 9×18), fontWeight 700 (era 800), icon 13px (era 14px). Pill compacto.',
+        '**Pulse mantido** (default state) mas agora amber-tinted (box-shadow #fbbf24, scale 1→1.022 mais sutil).',
+      ],
+    },
+    en: {
+      title: "Wake/Sleep button: amber + action-oriented + small size",
+      bullets: [
+        '★ **Amber color instead of lavender.** Lavender was "ambient/decorative" — didn\'t draw attention to action. Amber/yellow is intuitive: universal "attention" color, and matches the "wake/sun" metaphor.',
+        '★ **Action-oriented label:** bye "Wake?" (weird with the question mark), now reads **"Wake"** when Louise is sleeping (= action: register wake) and **"Sleep · 8min"** when she\'s awake (= action: register back-to-sleep). Label is the action.',
+        '★ **Icon switches with state:** sun ☀ when default (action: wake) → moon 🌙 when active (action: sleep). Icon also follows the action.',
+        '★ **Small size** (reverts v11.9.52 bump). Padding 7×14 (was 9×18), fontWeight 700 (was 800), icon 13px (was 14px). Compact pill.',
+        '**Pulse kept** (default state) but now amber-tinted (box-shadow #fbbf24, scale 1→1.022 more subtle).',
+      ],
+    },
+  },
   {
     v: "11.9.53", date: "2026-05-13",
     pt: {
@@ -9068,12 +9093,13 @@ function App(){
         </div>
         {/* v11.9.23: predição de wake-up baseada na média 7d. Aparece dentro do bedtime ativo.
             v11.9.51: estimativa de wake removida — não bate com rotina da pediatra. */}
-        {/* v11.9.52: Night Wake pill bump — bg lavanda mais saturado + border 0.55 + pulse
-            mais perceptível (scale 1→1.035 + box-shadow range maior). Chama atenção sem ser loud. */}
+        {/* v11.9.54: Night Wake pill — tamanho pequeno (revert v11.9.52), cor amber em ambos
+            estados (intuitivo: amarelo = atenção/wake), labels "Wake"/"Sleep" action-oriented,
+            icon muda sun→moon conforme estado da ação. */}
         {activeTimer&&activeTimer.type==="sleep"&&<div style={{display:"flex",justifyContent:"center",marginBottom:10,padding:"0 20px"}}>
-          <button onClick={toggleNightWake} className={activeTimer.nightWake?"":"nw-pill-pulse"} style={{padding:"9px 18px",borderRadius:20,background:activeTimer.nightWake?"linear-gradient(135deg,rgba(251,146,60,0.18),rgba(251,191,36,0.10))":"linear-gradient(135deg,rgba(167,139,250,0.24),rgba(124,58,237,0.14))",border:`1px solid ${activeTimer.nightWake?"rgba(251,146,60,0.55)":"rgba(167,139,250,0.55)"}`,display:"flex",alignItems:"center",gap:7,fontSize:T.fSM,fontWeight:800,color:activeTimer.nightWake?"#fbbf24":"#e0d4ff",letterSpacing:0.5,textTransform:"uppercase",cursor:"pointer",transition:"background .25s ease, border-color .25s ease, color .25s ease"}}>
-            <Icon name="sun" size={14} color={activeTimer.nightWake?"#fbbf24":"#e0d4ff"}/>
-            {activeTimer.nightWake?`${_lang==="en"?"Awake":"Acordada"} · ${fmtDur(Math.max(1,Math.floor((Date.now()-new Date(activeTimer.nightWake.startTime).getTime())/60000)))}`:(_lang==="en"?"Wake?":"Despertar?")}
+          <button onClick={toggleNightWake} className={activeTimer.nightWake?"":"nw-pill-pulse"} style={{padding:"7px 14px",borderRadius:20,background:activeTimer.nightWake?"linear-gradient(135deg,rgba(251,146,60,0.22),rgba(251,191,36,0.10))":"linear-gradient(135deg,rgba(251,191,36,0.18),rgba(251,191,36,0.06))",border:`1px solid ${activeTimer.nightWake?"rgba(251,146,60,0.60)":"rgba(251,191,36,0.50)"}`,display:"flex",alignItems:"center",gap:7,fontSize:T.fSM,fontWeight:700,color:activeTimer.nightWake?"#fb923c":"#fbbf24",letterSpacing:0.5,textTransform:"uppercase",cursor:"pointer",transition:"background .25s ease, border-color .25s ease, color .25s ease"}}>
+            <Icon name={activeTimer.nightWake?"moon":"sun"} size={13} color={activeTimer.nightWake?"#fb923c":"#fbbf24"}/>
+            {activeTimer.nightWake?`${_lang==="en"?"Sleep":"Dormir"} · ${fmtDur(Math.max(1,Math.floor((Date.now()-new Date(activeTimer.nightWake.startTime).getTime())/60000)))}`:(_lang==="en"?"Wake":"Acordar")}
           </button>
         </div>}
         {/* v11.9.35: quick buttons 6×1 → 3×2 com fonte legivel + touch target 50×50+. */}
