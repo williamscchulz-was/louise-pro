@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.42 Rotina fixa: napSug 100% silencioso. Esconde "Nap 3 ~XX:XX" dentro do arco + banners overdue/stretching/sweet/opening. Ring neutro lavanda.
   v11.9.41 Rotina nova suprime predicao antiga: "Prox. soneca ~XX:XX" engine-driven some quando routine.enabled (evita 2 cards competindo). napSug + InsightCards mantem.
   v11.9.40 Rotina diaria (pediatra): config no perfil (wake/banho/bedtime/4 sonecas/mamadas) + card "Proximo" no Home com chips de progresso e pips de mamadas
   v11.9.39 Sistema tipografico: 7 niveis (T.fXS/SM/MD/LG/XL/f2XL/f3XL), ~390 valores migrados, fim do magic-number caos
@@ -705,8 +706,31 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.41";
+const APP_VERSION = "11.9.42";
 const CHANGELOG = [
+  {
+    v: "11.9.42", date: "2026-05-13",
+    pt: {
+      title: "Rotina fixa: napSug fica em silêncio (Ring + banners)",
+      bullets: [
+        '★ **"Nap 3 ~13:42" dentro do arco do Ring some** quando rotina ativa. Era a previsão do engine (napSug.predictedTime + napPos) renderizada no centro do anel — competia com o card "Próximo na rotina · alvo 13:30" da pediatra.',
+        '★ **Banners amber Janela abrindo / Hora ideal / Esticando / Passou do máximo** também escondidos. São estimativas do engine baseadas em padrão histórico ("já tá overtired"). Com rotina fixa da pediatra, viraram ruído contraditório.',
+        '★ **Cor do Ring fica neutra lavanda** durante "Acordada há Xh". Antes ia pra vermelho/laranja em modo overdue mesmo com rotina ativa. Agora a Ring só fica colorida quando há um timer ativo (mamada/soneca/bedtime em andamento) ou fora do modo rotina.',
+        'Mantém intacto:**texto "Acordada há Xh"** dentro do Ring (info útil mesmo com rotina), eventos do dia (dots e arcs de soneca/mamada/fralda no anel), `SleepBlock` ao vivo, card de rotina nova, `InsightCards`.',
+        'Toggle no perfil é a chave: rotina off = comportamento engine-driven; rotina on = engine vira silent advisor (roda no background mas não aparece visualmente).',
+      ],
+    },
+    en: {
+      title: "Fixed routine: napSug stays silent (Ring + banners)",
+      bullets: [
+        '★ **"Nap 3 ~13:42" inside the Ring arc is gone** when routine is enabled. It was the engine\'s prediction (napSug.predictedTime + napPos) rendered in the center of the ring — competing with the "Next in routine · target 13:30" card.',
+        '★ **Amber banners Window opening / Ideal time / Stretching / Past max window** also hidden. They\'re engine estimates from historical patterns ("already overtired"). With a fixed routine, they became contradictory noise.',
+        '★ **Ring color stays neutral lavender** during "Awake for Xh". Before, it would go red/orange in overdue mode even with routine on. Now the Ring only colors up during an active timer (bottle/nap/bedtime in progress) or outside routine mode.',
+        'Stays intact:**"Awake for Xh" text** inside Ring (useful info even with routine), today\'s events (dots and nap/bottle arcs on the ring), live `SleepBlock`, new routine card, `InsightCards`.',
+        'Profile toggle is the switch: routine off = engine-driven behavior; routine on = engine becomes silent advisor (runs in background but invisible).',
+      ],
+    },
+  },
   {
     v: "11.9.41", date: "2026-05-13",
     pt: {
@@ -4896,6 +4920,8 @@ const Ring = React.memo(function Ring({activeTimer,napSug,tick,recentEvents,lang
     else if(napSug.state==="stretching"){col1="#ea580c";col2="#fb923c"}
     else if(napSug.state==="sweet"){col1="#059669";col2="#34d399"}
     else if(napSug.state==="opening"){col1="#d97706";col2="#fbbf24"}
+    // v11.9.42: state === null (rotina fixa ativa neutraliza signal) \u2014 usa lavanda neutro
+    else if(napSug.state===null){col1="#7c3aed";col2="#a78bfa"}
     else{col1="#059669";col2="#34d399"}
   } else{sub="";lbl="\u2014"}
   const hasProgress=col1!==T.dim;
@@ -8398,7 +8424,19 @@ function App(){
     }
     return hints;
   },[todayE,sleepPattern,sleepRec,activeTimer]);
-  const napSug=useMemo(()=>!activeTimer?getNapSug(cycleE,sleepRec):null,[cycleE,sleepRec,activeTimer,tick]);
+  const napSug=useMemo(()=>{
+    if(activeTimer)return null;
+    const sug=getNapSug(cycleE,sleepRec);
+    if(!sug)return null;
+    // v11.9.42: quando rotina fixa da pediatra ativa, neutraliza signals visíveis do engine.
+    // Mantém `el` (tempo desde acordar) pro Ring mostrar "Acordada há Xh", mas zera:
+    //   - state (esconde banners overdue/stretching/sweet/opening + neutraliza cor do Ring)
+    //   - predictedTime + napPos (esconde "Nap 3 ~13:42" dentro do arco)
+    if(profile?.routine?.enabled===true){
+      return{...sug,state:null,predictedTime:null,napPos:null};
+    }
+    return sug;
+  },[cycleE,sleepRec,activeTimer,tick,profile?.routine]);
   // v11.9.40: rotina do dia (pediatra) — matching slot ↔ entry com tolerância ±20-30min.
   // Dependências em `tick` pra status (next/late) atualizar conforme o tempo passa.
   const routineState=useMemo(()=>{
