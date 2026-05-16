@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.40 Rotina diaria (pediatra): config no perfil (wake/banho/bedtime/4 sonecas/mamadas) + card "Proximo" no Home com chips de progresso e pips de mamadas
   v11.9.39 Sistema tipografico: 7 niveis (T.fXS/SM/MD/LG/XL/f2XL/f3XL), ~390 valores migrados, fim do magic-number caos
   v11.9.38 Confirm 2-step inline no SleepBlock: sem confirm() nativo no delete de evento aninhado + no remover waking do editor (consistencia com v11.9.35)
   v11.9.37 SleepBlock refinado: sai ribbon/box-shadow/stripe/eyebrow, fica ponto pulse no icone + duracao headline + stats em colunas + timeline 22px + pills "start->end"
@@ -703,8 +704,35 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.39";
+const APP_VERSION = "11.9.40";
 const CHANGELOG = [
+  {
+    v: "11.9.40", date: "2026-05-13",
+    pt: {
+      title: "Rotina diária da pediatra — config no perfil + card no Home",
+      bullets: [
+        '★ **Nova seção "Rotina diária" no perfil.** Configure os horários alvo recomendados pela pediatra: acordar, banho, bedtime, 4 sonecas (com horários individuais) e número de mamadas/dia. Toggle pra ativar/desativar a feature toda. Salva em `profile.routine` no Firestore (compartilhado entre os 2 iPhones).',
+        '★ **Card "Próximo na rotina" no Home** (só aparece se rotina ativa). Mostra o próximo evento programado com countdown ("alvo 13:30 · em 45min") OU alerta vermelho-âmbar quando atrasado ("3ª Soneca · 12min atrasada"). Click contextual no que vem agora.',
+        '★ **Progress strip de chips.** Logo abaixo do headline, uma fileira mostrando todos os eventos do dia: ✓ verde pra feito, ! laranja pra atrasado, dot pulsante pra próximo, dot vazio pra pendente. Glance instantâneo do dia inteiro.',
+        '★ **Pips de mamadas.** 7 quadradinhos verdes no rodapé do card. Preenche conforme você loga mamada ou amamentação. Mostra X/7 numérico ao lado.',
+        '**Matching automático:** o app casa cada slot programado com um evento logado dentro de tolerância (±20min pras sonecas/wake, ±30min pro banho/bedtime). Sem ação manual de "marcar feito" — log a mamada/soneca/etc normalmente e o check ✓ aparece sozinho.',
+        '**Default:** wake 07:00 · 1ª soneca 08:15 · 2ª 10:45 · 3ª 13:30 · 4ª 16:00 · banho 18:00 · bedtime 19:30 · 7 mamadas/dia. Editável.',
+        '**Backward compat:** se `profile.routine.enabled` é falso ou inexistente, NADA muda no app (feature opt-in).',
+      ],
+    },
+    en: {
+      title: "Pediatrician's daily routine — profile config + Home card",
+      bullets: [
+        '★ **New "Daily routine" section in profile.** Set the target times recommended by the pediatrician: wake, bath, bedtime, 4 naps (individual times) and number of bottles/day. Toggle to enable/disable the whole feature. Saved in `profile.routine` on Firestore (shared between both iPhones).',
+        '★ **"Next in routine" card on Home** (only renders if routine is enabled). Shows the next scheduled event with countdown ("target 13:30 · in 45min") OR red-amber alert when late ("3rd Nap · 12min late"). Contextual focus on what\'s next.',
+        '★ **Progress strip of chips.** Row below the headline showing the entire day: ✓ green for done, ! orange for late, pulsing dot for next, empty dot for pending. Instant glance of the whole day.',
+        '★ **Bottle pips.** 7 little green squares at the card footer. Fills as you log bottles or nursing. Shows numeric X/7 alongside.',
+        '**Auto-matching:** the app matches each scheduled slot to a logged entry within tolerance (±20min for naps/wake, ±30min for bath/bedtime). No manual "mark as done" — just log bottle/nap/etc normally and the ✓ check appears automatically.',
+        '**Defaults:** wake 07:00 · 1st nap 08:15 · 2nd 10:45 · 3rd 13:30 · 4th 16:00 · bath 18:00 · bedtime 19:30 · 7 bottles/day. Editable.',
+        '**Backward compat:** if `profile.routine.enabled` is false or missing, NOTHING changes in the app (opt-in feature).',
+      ],
+    },
+  },
   {
     v: "11.9.39", date: "2026-05-13",
     pt: {
@@ -4797,6 +4825,24 @@ const I={
   savedMeds:{pt:"Medicamentos salvos",en:"Saved medicines"},
   dose:{pt:"Dose",en:"Dose"},
   reg:{pt:"reg.",en:"entries"},
+  // v11.9.40: rotina diária
+  routineSection:{pt:"Rotina diária",en:"Daily routine"},
+  routineHelp:{pt:"Horários alvo recomendados pela pediatra. App mostra check ✓ quando você loga dentro de ±20min do alvo.",en:"Target times recommended by the pediatrician. App shows ✓ when you log within ±20min of target."},
+  routineEnable:{pt:"Ativar rotina",en:"Enable routine"},
+  bath:{pt:"Banho",en:"Bath"},
+  bedtime:{pt:"Bedtime",en:"Bedtime"},
+  wakeLabel:{pt:"Acordar",en:"Wake up"},
+  bottlesDay:{pt:"Mamadas/dia",en:"Bottles/day"},
+  napsDay:{pt:"Sonecas · 4 por dia",en:"Naps · 4 per day"},
+  napNth:{pt:["1ª soneca","2ª soneca","3ª soneca","4ª soneca"],en:["1st nap","2nd nap","3rd nap","4th nap"]},
+  // v11.9.40: card do Home
+  nextEvent:{pt:"Próximo na rotina",en:"Next in routine"},
+  onSchedule:{pt:"no horário",en:"on schedule"},
+  routineDone:{pt:"Rotina completa hoje",en:"Routine done today"},
+  routineDoneSub:{pt:"Todos os horários alvo cumpridos. Boa noite.",en:"All target times met. Goodnight."},
+  earlyMin:{pt:"em",en:"in"},
+  lateMin:{pt:"atrasado",en:"late"},
+  scheduledFor:{pt:"alvo",en:"target"},
 };
 function tl(key,lang){return I[key]?.[lang]||I[key]?.en||key}
 function typeLabel(type,lang){const t=TYPES[type];return t?.label?.[lang]||t?.label?.en||type}
@@ -6020,6 +6066,18 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
   const[birth,setBirth]=useState(profile.birthDate||"");
   const[photo,setPhoto]=useState(profile.photo||"");
   const[mlGoal,setMlGoal]=useState(String(profile.mlGoal||""));
+  // v11.9.40: rotina diária (pediatra)
+  const _r0=profile.routine||{};
+  const _naps0=Array.isArray(_r0.naps)?_r0.naps:[];
+  const[routineEnabled,setRoutineEnabled]=useState(profile.routine?.enabled===true);
+  const[wakeTime,setWakeTime]=useState(_r0.wakeTime||"07:00");
+  const[bathTime,setBathTime]=useState(_r0.bathTime||"18:00");
+  const[bedtime,setBedtime]=useState(_r0.bedtime||"19:30");
+  const[bottlesPerDay,setBottlesPerDay]=useState(String(_r0.bottlesPerDay||7));
+  const[nap1,setNap1]=useState(_naps0[0]?.time||"08:15");
+  const[nap2,setNap2]=useState(_naps0[1]?.time||"10:45");
+  const[nap3,setNap3]=useState(_naps0[2]?.time||"13:30");
+  const[nap4,setNap4]=useState(_naps0[3]?.time||"16:00");
   const[birthWeight,setBirthWeight]=useState(String(profile.birthWeight||""));
   const[birthLength,setBirthLength]=useState(String(profile.birthLength||""));
   const[birthHead,setBirthHead]=useState(String(profile.birthHead||""));
@@ -6143,7 +6201,17 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
     birthLength!==String(profile.birthLength||"")||
     birthHead!==String(profile.birthHead||"")||
     fdPushMinutes!==(feedReminder?.intervalMin||120)||
-    fdMinutes!==(feedReminder?.barIntervalMin||feedReminder?.intervalMin||120)
+    fdMinutes!==(feedReminder?.barIntervalMin||feedReminder?.intervalMin||120)||
+    // v11.9.40: rotina
+    routineEnabled!==(profile.routine?.enabled===true)||
+    wakeTime!==(_r0.wakeTime||"07:00")||
+    bathTime!==(_r0.bathTime||"18:00")||
+    bedtime!==(_r0.bedtime||"19:30")||
+    bottlesPerDay!==String(_r0.bottlesPerDay||7)||
+    nap1!==(_naps0[0]?.time||"08:15")||
+    nap2!==(_naps0[1]?.time||"10:45")||
+    nap3!==(_naps0[2]?.time||"13:30")||
+    nap4!==(_naps0[3]?.time||"16:00")
   );
   useEffect(()=>{if(onDirtyChange)onDirtyChange(isDirty)},[isDirty]);
   // Populate revertAllRef with function that resets all tracked fields
@@ -6157,6 +6225,16 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
     setBirthHead(String(profile.birthHead||""));
     setFdPushMinutes(feedReminder?.intervalMin||120);
     setFdMinutes(feedReminder?.barIntervalMin||feedReminder?.intervalMin||120);
+    // v11.9.40: revert rotina
+    setRoutineEnabled(profile.routine?.enabled===true);
+    setWakeTime(_r0.wakeTime||"07:00");
+    setBathTime(_r0.bathTime||"18:00");
+    setBedtime(_r0.bedtime||"19:30");
+    setBottlesPerDay(String(_r0.bottlesPerDay||7));
+    setNap1(_naps0[0]?.time||"08:15");
+    setNap2(_naps0[1]?.time||"10:45");
+    setNap3(_naps0[2]?.time||"13:30");
+    setNap4(_naps0[3]?.time||"16:00");
     Haptic.medium();
   };
   // Persists a single toggle change immediately to Firestore (no need to tap Save).
@@ -6200,7 +6278,16 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
     // Save profile fields
     // v11.7: parse com comma OR ponto (BRT keyboard usa v\u00edrgula por default).
     const pFloat=v=>parseFloat(String(v||"").replace(",","."))||0;
-    await onSave({name:name.trim(),birthDate:birth,photo,mlGoal:parseInt(mlGoal)||0,birthWeight:pFloat(birthWeight),birthLength:pFloat(birthLength),birthHead:pFloat(birthHead),lang:langSel,keepScreenOn,hapticEnabled,pushEnabled});
+    // v11.9.40: rotina diária — salva como sub-objeto routine
+    const routine={
+      enabled:routineEnabled,
+      wakeTime,
+      bathTime,
+      bedtime,
+      bottlesPerDay:Math.max(1,Math.min(20,parseInt(bottlesPerDay)||7)),
+      naps:[{time:nap1},{time:nap2},{time:nap3},{time:nap4}],
+    };
+    await onSave({name:name.trim(),birthDate:birth,photo,mlGoal:parseInt(mlGoal)||0,birthWeight:pFloat(birthWeight),birthLength:pFloat(birthLength),birthHead:pFloat(birthHead),lang:langSel,keepScreenOn,hapticEnabled,pushEnabled,routine});
     // Also persist feeding reminder intervals if they changed (barra OR push).
     // v11.7.7: intervalMin = push; barIntervalMin = barra.
     const barraChanged=fdMinutes!==(feedReminder?.barIntervalMin||feedReminder?.intervalMin||120);
@@ -6237,7 +6324,7 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
       }catch(e){setAutoState("idle")}
     },delay);
     return()=>{if(saveTimerRef.current)clearTimeout(saveTimerRef.current)};
-  },[isDirty,name,birth,photo,mlGoal,birthWeight,birthLength,birthHead,fdMinutes,fdPushMinutes]);
+  },[isDirty,name,birth,photo,mlGoal,birthWeight,birthLength,birthHead,fdMinutes,fdPushMinutes,routineEnabled,wakeTime,bathTime,bedtime,bottlesPerDay,nap1,nap2,nap3,nap4]);
   useEffect(()=>()=>{if(saveTimerRef.current)clearTimeout(saveTimerRef.current);if(savedFlashRef.current)clearTimeout(savedFlashRef.current)},[]);
   const inp={width:"100%",maxWidth:"100%",boxSizing:"border-box",WebkitAppearance:"none",appearance:"none",padding:"17px 18px",background:"rgba(20,26,60,0.55)",border:`1px solid ${T.gBSoft}`,borderRadius:16,color:T.text,fontSize:T.fXL,fontWeight:600,letterSpacing:-0.2,outline:"none",boxShadow:T.insetTop};
   // v11.7.1: Profile usa o MESMO gradient do body + Starfield interno pra compartilhar
@@ -6265,6 +6352,34 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
         <Fld label={L("name")}><input type="text" placeholder={_lang==="en"?"e.g. Louise":"Ex: Louise"} value={name} onChange={e=>setName(e.target.value)} style={inp}/></Fld>
         <Fld label={L("birthDate")}><input type="date" value={birth} onChange={e=>setBirth(e.target.value)} style={{...inp,colorScheme:"dark",maxWidth:"100%",WebkitAppearance:"none",textAlign:"center"}}/></Fld>
         <Fld label={L("dailyMilkGoal")}><input type="number" inputMode="numeric" placeholder={_lang==="en"?"e.g. 600":"Ex: 600"} value={mlGoal} onChange={e=>setMlGoal(e.target.value)} style={inp}/></Fld>
+      </div>
+      {/* v11.9.40: Rotina diária (pediatra) — toggle + hora alvo de cada evento + count de mamadas */}
+      <div style={{background:"rgba(22,28,60,0.4)",borderRadius:16,border:`1px solid ${T.gB}`,padding:16,marginBottom:12}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:routineEnabled?14:0}}>
+          <div style={{flex:1}}>
+            <div style={{fontSize:T.fLG,fontWeight:700,color:"#f0f2ff",letterSpacing:-0.2}}>{L("routineSection")}</div>
+            <div style={{fontSize:T.fSM,color:T.sub,lineHeight:1.45,marginTop:3}}>{L("routineHelp")}</div>
+          </div>
+          <button aria-label={L("routineEnable")} onClick={()=>setRoutineEnabled(!routineEnabled)} style={{width:52,height:30,borderRadius:15,background:routineEnabled?T.accent:"rgba(20,26,60,0.6)",border:`1px solid ${routineEnabled?T.accent:T.gB}`,position:"relative",flexShrink:0,cursor:"pointer",transition:"all .2s"}}>
+            <span style={{position:"absolute",top:2,left:routineEnabled?24:2,width:24,height:24,borderRadius:"50%",background:"#fff",transition:"left .2s",boxShadow:"0 2px 6px rgba(0,0,0,0.3)"}}/>
+          </button>
+        </div>
+        {routineEnabled&&<>
+          <div style={{borderTop:`1px solid ${T.gB}`,paddingTop:14,display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
+            <Fld label={L("wakeLabel")}><input type="time" value={wakeTime} onChange={e=>setWakeTime(e.target.value)} style={{...inp,padding:"14px 12px",fontSize:T.fLG,textAlign:"center",colorScheme:"dark",fontVariantNumeric:"tabular-nums"}}/></Fld>
+            <Fld label={L("bath")}><input type="time" value={bathTime} onChange={e=>setBathTime(e.target.value)} style={{...inp,padding:"14px 12px",fontSize:T.fLG,textAlign:"center",colorScheme:"dark",fontVariantNumeric:"tabular-nums"}}/></Fld>
+            <Fld label={L("bedtime")}><input type="time" value={bedtime} onChange={e=>setBedtime(e.target.value)} style={{...inp,padding:"14px 12px",fontSize:T.fLG,textAlign:"center",colorScheme:"dark",fontVariantNumeric:"tabular-nums"}}/></Fld>
+            <Fld label={L("bottlesDay")}><input type="number" inputMode="numeric" min="1" max="20" value={bottlesPerDay} onChange={e=>setBottlesPerDay(e.target.value)} style={{...inp,padding:"14px 12px",fontSize:T.fLG,textAlign:"center",fontVariantNumeric:"tabular-nums"}}/></Fld>
+          </div>
+          <div style={{borderTop:`1px solid ${T.gB}`,paddingTop:14}}>
+            <div style={{fontSize:T.fSM,fontWeight:700,color:T.sub,textTransform:"uppercase",letterSpacing:0.5,marginBottom:10}}>{L("napsDay")}</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+              {[{v:nap1,s:setNap1,i:0},{v:nap2,s:setNap2,i:1},{v:nap3,s:setNap3,i:2},{v:nap4,s:setNap4,i:3}].map(n=>
+                <Fld key={n.i} label={I.napNth[_lang][n.i]||`Soneca ${n.i+1}`}><input type="time" value={n.v} onChange={e=>n.s(e.target.value)} style={{...inp,padding:"14px 12px",fontSize:T.fLG,textAlign:"center",colorScheme:"dark",fontVariantNumeric:"tabular-nums"}}/></Fld>
+              )}
+            </div>
+          </div>
+        </>}
       </div>
       <div style={{background:"rgba(22,28,60,0.4)",borderRadius:16,border:`1px solid ${T.gB}`,padding:16,marginBottom:12}}>
         <Fld label={langSel==="en"?"Language":"Idioma"}>
@@ -8262,6 +8377,46 @@ function App(){
     return hints;
   },[todayE,sleepPattern,sleepRec,activeTimer]);
   const napSug=useMemo(()=>!activeTimer?getNapSug(cycleE,sleepRec):null,[cycleE,sleepRec,activeTimer,tick]);
+  // v11.9.40: rotina do dia (pediatra) — matching slot ↔ entry com tolerância ±20-30min.
+  // Dependências em `tick` pra status (next/late) atualizar conforme o tempo passa.
+  const routineState=useMemo(()=>{
+    const r=profile?.routine;
+    if(!r||r.enabled!==true)return null;
+    const now=new Date();
+    const nowMin=now.getHours()*60+now.getMinutes();
+    const slots=[];
+    const findMatch=(types,tMin,tolMin)=>todayE.find(e=>types.includes(e.type)&&Math.abs(toMinutes(e.time)-tMin)<=tolMin);
+    if(r.wakeTime){const tMin=toMinutes(r.wakeTime);slots.push({key:"wake",type:"wake",icon:"sun",col:T.amber,target:r.wakeTime,targetMin:tMin,tolMin:20,match:findMatch(["wakeup"],tMin,20),lbl:_lang==="en"?"Wake up":"Acordar",chip:_lang==="en"?"Wake":"Wake"})}
+    (r.naps||[]).forEach((nap,i)=>{
+      if(!nap?.time)return;
+      const tMin=toMinutes(nap.time);
+      slots.push({key:"nap"+i,type:"nap",icon:"cloud",col:T.accent,target:nap.time,targetMin:tMin,tolMin:20,num:i+1,match:findMatch(["nap"],tMin,20),lbl:`${i+1}${_lang==="en"?["st","nd","rd","th"][i]||"th":"ª"} ${_lang==="en"?"Nap":"Soneca"}`,chip:`${i+1}${_lang==="en"?"a":"ª"} S`})
+    });
+    if(r.bathTime){const tMin=toMinutes(r.bathTime);slots.push({key:"bath",type:"bath",icon:"bath",col:T.cyan,target:r.bathTime,targetMin:tMin,tolMin:30,match:findMatch(["bath"],tMin,30),lbl:_lang==="en"?"Bath":"Banho",chip:_lang==="en"?"Bath":"Banho"})}
+    if(r.bedtime){const tMin=toMinutes(r.bedtime);slots.push({key:"bedtime",type:"bedtime",icon:"bed",col:T.purple,target:r.bedtime,targetMin:tMin,tolMin:30,match:findMatch(["sleep"],tMin,30),lbl:_lang==="en"?"Bedtime":"Bedtime",chip:_lang==="en"?"Bed":"Bed"})}
+    slots.sort((a,b)=>a.targetMin-b.targetMin);
+    // Atribui status: done | late | next | pending
+    let nextAssigned=false;
+    for(const s of slots){
+      if(s.match){s.status="done";continue}
+      if(nowMin>s.targetMin){s.status="late"}
+      else if(!nextAssigned){s.status="next";nextAssigned=true}
+      else{s.status="pending"}
+    }
+    // First "late" sem next ainda → vira o "next" prioritário
+    if(!nextAssigned){
+      const firstLate=slots.find(s=>s.status==="late");
+      if(firstLate)firstLate.status="next-late";
+    }else{
+      const firstLate=slots.find(s=>s.status==="late");
+      if(firstLate)firstLate.status="next-late";
+    }
+    const headline=slots.find(s=>s.status==="next-late")||slots.find(s=>s.status==="next");
+    const bottlesDone=todayE.filter(e=>e.type==="bottle"||e.type==="nursing").length;
+    const bottlesTarget=r.bottlesPerDay||7;
+    const allDone=slots.every(s=>s.status==="done");
+    return{slots,headline,bottlesDone,bottlesTarget,allDone,hasRoutine:true};
+  },[profile?.routine,todayE,tick]);
   // Live bedtime virtual entry: built when an active sleep timer is running.
   // Used by Home (shows in-progress block at top of today's list) and HistoryPage
   // (which intentionally HIDES it — bedtimes only appear in history once finalized).
@@ -8640,6 +8795,61 @@ function App(){
         {napSug&&(napSug.state==="stretching"||napSug.state==="overdue")&&<div className="pulse-fast" style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:T.orangeS,border:`1px solid ${T.orange}22`,display:"flex",alignItems:"center",gap:10}}><Icon name="zap" size={18} color={napSug.state==="overdue"?"#f87171":T.orange}/><div><div style={{fontSize:T.fMD,fontWeight:700,color:napSug.state==="overdue"?"#f87171":T.orange}}>{napSug.state==="overdue"?(_lang==="en"?"Past max window":"Passou do maximo"):(_lang==="en"?"Stretching":"Esticando")}</div><div style={{fontSize:T.fSM,color:T.sub}}>{napSug.state==="overdue"?(_lang==="en"?`${fmtDur(napSug.el)} awake — risk of overtired`:`${fmtDur(napSug.el)} acordada — risco de overtired`):(_lang==="en"?"Past average, still within range":"Passou da media, ainda dentro do range")}</div></div></div>}
         {!activeTimer&&sleepRec?.phase===2&&daySchedule.length>0&&daySchedule.filter(s=>s.status==="next").map((s,i)=><div key={"ns"+i} style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:`${T.accent}10`,border:`1px solid ${T.accent}18`,display:"flex",alignItems:"center",gap:10}}><Icon name="star" size={18} color={T.accent} fill={T.accent}/><div><div style={{fontSize:T.fMD,fontWeight:700,color:T.accent}}>{s.bed?(_lang==="en"?"Bedtime ~":"Sono ~"):(_lang==="en"?"Next nap ~":"Prox. soneca ~")}{minToTime(s.startMin)}</div><div style={{fontSize:T.fSM,color:T.sub}}>{s.bed?"":`${s.pos}${_lang==="en"?["","st","nd","rd"][s.pos]||"th":"a"} · `}WW {fmtDur(s.ww)}{s.durRange?" · "+s.durRange:""}</div></div></div>)}
         <InsightCards insights={dayInsights} phase={sleepRec?.phase}/>
+        {/* v11.9.40: Card de rotina diária — só renderiza se profile.routine.enabled === true */}
+        {routineState&&<div style={{margin:"0 20px 14px"}}>
+          {routineState.allDone?<div style={{padding:"14px 16px",borderRadius:14,background:`linear-gradient(135deg,${T.green}18,${T.green}06)`,border:`1px solid ${T.green}32`,display:"flex",alignItems:"center",gap:12}}>
+            <div style={{width:38,height:38,borderRadius:11,background:`${T.green}24`,border:`1px solid ${T.green}40`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name="check" size={20} color={T.green}/></div>
+            <div style={{flex:1}}>
+              <div style={{fontSize:T.fMD,fontWeight:800,color:T.green,letterSpacing:-0.2}}>{L("routineDone")}</div>
+              <div style={{fontSize:T.fSM,color:T.sub,marginTop:2}}>{L("routineDoneSub")}</div>
+            </div>
+          </div>:routineState.headline?(()=>{
+            const h=routineState.headline;
+            const isLate=h.status==="next-late";
+            const lateMin=isLate?(()=>{const now=new Date();return now.getHours()*60+now.getMinutes()-h.targetMin})():0;
+            const earlyMin=!isLate?(()=>{const now=new Date();return h.targetMin-(now.getHours()*60+now.getMinutes())})():0;
+            const accentCol=isLate?"#fb923c":T.accent;
+            const accentBg=isLate?"rgba(251,146,60,0.10)":`${T.accent}10`;
+            const accentBd=isLate?"rgba(251,146,60,0.32)":`${T.accent}28`;
+            return<div style={{padding:"14px 16px",borderRadius:14,background:`linear-gradient(135deg,${accentBg},${accentBg.replace("0.10","0.04").replace("28","12")})`,border:`1px solid ${accentBd}`,position:"relative",overflow:"hidden"}}>
+              <div style={{position:"absolute",top:0,left:0,width:4,height:"100%",background:`linear-gradient(180deg,${accentCol},${accentCol}50)`,pointerEvents:"none"}}/>
+              <div style={{fontSize:T.fXS,fontWeight:800,color:accentCol,textTransform:"uppercase",letterSpacing:1.1,marginBottom:6,marginLeft:6}}>{L("nextEvent")}</div>
+              <div style={{display:"flex",alignItems:"center",gap:12,marginLeft:6}}>
+                <div style={{width:38,height:38,borderRadius:11,background:`${h.col}1f`,border:`1px solid ${h.col}40`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name={h.icon} size={20} color={h.col}/></div>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:T.fLG,fontWeight:800,color:"#f0f2ff",letterSpacing:-0.2}}>{h.lbl}{isLate&&<span style={{fontSize:T.fSM,color:accentCol,fontWeight:600,marginLeft:6,letterSpacing:0}}>· {fmtDur(lateMin)} {L("lateMin")}</span>}</div>
+                  <div style={{fontSize:T.fSM,color:T.sub,marginTop:2,fontVariantNumeric:"tabular-nums"}}>{L("scheduledFor")} <span style={{color:accentCol,fontWeight:700}}>{h.target}</span>{!isLate&&earlyMin>0&&earlyMin<=180&&<span> · {L("earlyMin")} {fmtDur(earlyMin)}</span>}</div>
+                </div>
+              </div>
+              {/* Progress strip: chips de cada slot + bottles count */}
+              <div style={{display:"flex",gap:5,marginTop:14,paddingTop:12,borderTop:`1px solid ${accentBd}`,marginLeft:6}}>
+                {routineState.slots.map(s=>{
+                  const isDone=s.status==="done";
+                  const isLateChip=s.status==="late"||s.status==="next-late";
+                  const isNextChip=s.status==="next";
+                  const dotBg=isDone?T.green:isLateChip?"rgba(251,146,60,0.32)":isNextChip?`${T.accent}40`:"rgba(139,124,246,0.10)";
+                  const dotBd=isDone?T.green:isLateChip?"#fb923c":isNextChip?T.accent:"rgba(139,124,246,0.22)";
+                  const dotCol=isDone?"#04061a":isLateChip?"#fb923c":isNextChip?"#fff":T.dim;
+                  return<div key={s.key} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:3}}>
+                    <div style={{width:18,height:18,borderRadius:"50%",background:dotBg,border:`1px solid ${dotBd}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:T.fXS,fontWeight:800,color:dotCol,boxShadow:isNextChip?`0 0 8px ${T.accent}55`:"none"}}>{isDone?"✓":isLateChip?"!":""}</div>
+                    <div style={{fontSize:T.fXS,color:T.dim,fontWeight:600,letterSpacing:0.2,textAlign:"center",fontVariantNumeric:"tabular-nums"}}>{s.chip}</div>
+                  </div>
+                })}
+              </div>
+              {/* Bottles row */}
+              <div style={{display:"flex",alignItems:"center",gap:8,marginTop:10,marginLeft:6,paddingTop:8,borderTop:`1px dashed ${accentBd}`}}>
+                <Icon name="bottle" size={14} color={T.green}/>
+                <span style={{fontSize:T.fSM,color:T.sub,fontWeight:600,flex:1}}>{_lang==="en"?"Bottles today":"Mamadas hoje"}</span>
+                <div style={{display:"flex",gap:3,marginRight:6}}>
+                  {Array.from({length:routineState.bottlesTarget}).map((_,i)=>
+                    <div key={i} style={{width:8,height:8,borderRadius:2,background:i<routineState.bottlesDone?T.green:`${T.green}18`,border:`1px solid ${i<routineState.bottlesDone?T.green:T.green+"32"}`}}/>
+                  )}
+                </div>
+                <span style={{fontSize:T.fSM,color:T.green,fontWeight:800,fontVariantNumeric:"tabular-nums"}}>{routineState.bottlesDone}<span style={{color:T.dim,fontWeight:600,fontSize:T.fXS}}>/{routineState.bottlesTarget}</span></span>
+              </div>
+            </div>
+          })():null}
+        </div>}
         <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr)",gap:6,padding:"0 20px",marginBottom:14}}>{[{i:"bottle",v:`${totalMl}`,u:"ml",c:T.green,t:["bottle"],tap:"bottle",l:_lang==="en"?"Bottle":"Mamad."},{i:"pill",v:`${totalSimet}`,u:"x",c:T.amber,t:["medicine"],tap:null,l:"Simeticona",filter:e=>e.type==="medicine"&&e.name&&/simet/i.test(e.name)},{i:"moon",v:fmtDur(totalSleep),c:T.purple,t:["sleep","nap"],tap:"nap",l:_lang==="en"?"Sleep":"Sono"},{i:"diaper",v:`${totalDiapers}`,c:T.pink,t:["diaper"],tap:"diaper",l:_lang==="en"?"Diaper":"Fralda"}].map((p,idx)=>{const last=entries.find(e=>p.filter?p.filter(e):p.t.includes(e.type));let ago=null;if(last){if(p.t.includes("sleep")&&last.durationMin){const endMs=new Date(`${last.date}T${last.time}`).getTime()+last.durationMin*60000;const endD=new Date(endMs);const ed=`${endD.getFullYear()}-${String(endD.getMonth()+1).padStart(2,"0")}-${String(endD.getDate()).padStart(2,"0")}`;const et=`${String(endD.getHours()).padStart(2,"0")}:${String(endD.getMinutes()).padStart(2,"0")}`;ago=timeSince(ed,et)}else{ago=timeSince(last.date,last.time)}}
         // Bottle-only: compute progress toward the next feeding when the feedingInterval reminder is enabled.
         let feedProg=null;
