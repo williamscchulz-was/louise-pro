@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.48 Bedtime ambient refeito sem lua (era loud demais): glow lavanda sutil ao redor do Ring + texto/contador respirando + bg mais escuro/lavanda.
   v11.9.47 Rotina completa = divisor invisivel minimal (era card verde grande) + bedtime ambient: lua emoji + halo lavanda respirando atras do Ring.
   v11.9.46 Fix: timer ativo (nap/sleep iniciado) conta como check verde na rotina imediatamente — sem esperar terminar a entry.
   v11.9.45 Rotina tolerancia +-60min (era +-20/30) + Ring meio termo 270px (era 200, original 340). Soneca 40min atrasada conta como feito.
@@ -304,9 +305,18 @@
     @keyframes liveDotPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.85)}}
     /* v11.9.37: pulse sutil de brilho no waking band ativo da timeline refinada */
     @keyframes liveBandPulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.25)}}
-    /* v11.9.47: bedtime ambient pulse — lua respirando atrás do Ring quando sleep timer ativo */
-    @keyframes bedtimeMoonBreath{0%,100%{transform:scale(0.92);opacity:0.35}50%{transform:scale(1.12);opacity:0.85}}
-    @keyframes bedtimeHaloBreath{0%,100%{opacity:0.25;transform:scale(0.95)}50%{opacity:0.55;transform:scale(1.15)}}
+    /* v11.9.48: bedtime ambient — sutil glow ao redor do Ring + texto respirando.
+       Removida a lua emoji (loud demais conforme feedback). Agora 100% discreto. */
+    @keyframes bedtimeRingHalo{0%,100%{box-shadow:0 0 30px -10px rgba(167,139,250,0.30)}50%{box-shadow:0 0 60px -10px rgba(167,139,250,0.55)}}
+    @keyframes bedtimeTextBreath{0%,100%{filter:drop-shadow(0 0 12px rgba(167,139,250,0.45))}50%{filter:drop-shadow(0 0 24px rgba(167,139,250,0.85))}}
+    @keyframes bedtimeSubBreath{0%,100%{opacity:0.85}50%{opacity:1}}
+    html body.bedtime-active{
+      background:
+        radial-gradient(ellipse 140% 55% at 50% 100%,#15124a 0%,transparent 70%),
+        radial-gradient(ellipse at 50% 0%,#080a26 0%,#040616 65%),
+        #040616;
+      transition:background 0.8s ease;
+    }
     @keyframes progressShimmer{0%,100%{opacity:0.7}50%{opacity:1}}
     @keyframes nwIconPulseAmber{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
     /* v11.9.1: confetti pra marcos (1m, 100d, etc). Cada particula com delay/distancia
@@ -714,8 +724,31 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.47";
+const APP_VERSION = "11.9.48";
 const CHANGELOG = [
+  {
+    v: "11.9.48", date: "2026-05-13",
+    pt: {
+      title: "Bedtime ambient refeito — discreto (sem lua emoji)",
+      bullets: [
+        '★ **Sai a lua emoji + halo gigante** que adicionei na v11.9.47 (visualmente loud demais — William chamou). Em vez:',
+        '★ **Glow lavanda sutil ao redor do Ring** — box-shadow respirando 5s, raio 30→60px com alpha 0.30→0.55. Parece o anel "pulsando levemente".',
+        '★ **"Boa noite / Bedtime" e contador (2h14m) respiram juntos.** Sub-label oscila opacidade 0.85→1, contador grande oscila drop-shadow lavanda 12→24px. 5s loop, sincronizado.',
+        '★ **Background do app fica mais escuro/lavanda durante bedtime** via `body.bedtime-active`. Os tons #1a1f52/#10153d/#070b1e viram #15124a/#080a26/#040616 — uns 15% mais profundos, com toque roxo. Transição suave de 0.8s.',
+        'Tudo CSS puro, GPU-cheap. Volta ao normal automaticamente quando o timer encerra.',
+      ],
+    },
+    en: {
+      title: "Bedtime ambient redone — discreet (no moon emoji)",
+      bullets: [
+        '★ **The moon emoji + giant halo are gone** from v11.9.47 (visually too loud — William called it out). Instead:',
+        '★ **Subtle lavender glow around the Ring** — box-shadow breathing 5s, 30→60px radius with 0.30→0.55 alpha. Looks like the ring "lightly pulsing".',
+        '★ **"Goodnight / Bedtime" and counter (2h14m) breathe together.** Sub-label oscillates opacity 0.85→1, large counter oscillates drop-shadow lavender 12→24px. 5s loop, synced.',
+        '★ **App background gets darker/lavender during bedtime** via `body.bedtime-active`. The #1a1f52/#10153d/#070b1e tones become #15124a/#080a26/#040616 — about 15% deeper, with a purple touch. Smooth 0.8s transition.',
+        'All pure CSS, GPU-cheap. Returns to normal automatically when the timer ends.',
+      ],
+    },
+  },
   {
     v: "11.9.47", date: "2026-05-13",
     pt: {
@@ -5111,15 +5144,9 @@ const Ring = React.memo(function Ring({activeTimer,napSug,tick,recentEvents,lang
 
   // Ring original: SVG puro com arcs, sem disco central (Beautiful Glow revertido em v10.7.0
   // — minimalismo vence, starfield aparece atrás do center text).
-  return(<div style={{position:"relative",width:sz,margin:"0 auto"}}>
+  return(<div style={{position:"relative",width:sz,margin:"0 auto",borderRadius:"50%",animation:isBedtime?"bedtimeRingHalo 5s ease-in-out infinite":"none"}}>
     <div style={{position:"relative",width:sz,height:sz}}>
-      {/* v11.9.47: bedtime ambient — lua respirando atrás do Ring quando sleep timer ativo.
-          Halo lavanda + emoji lua faintly visível. Animação CSS GPU-cheap. */}
-      {isBedtime&&<>
-        <div style={{position:"absolute",inset:`${sz*0.05}px`,borderRadius:"50%",background:"radial-gradient(circle,rgba(167,139,250,0.22) 0%, rgba(167,139,250,0.05) 50%, transparent 75%)",animation:"bedtimeHaloBreath 4.5s ease-in-out infinite",pointerEvents:"none",zIndex:0}}/>
-        <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none",zIndex:0,fontSize:Math.floor(sz*0.65),opacity:0.06,color:"#c4b5fd",animation:"bedtimeMoonBreath 4.5s ease-in-out infinite",filter:"drop-shadow(0 0 24px rgba(167,139,250,0.5))"}}>🌙</div>
-      </>}
-      <svg width={sz} height={sz} style={{overflow:"visible",position:"relative",zIndex:1}}>
+      <svg width={sz} height={sz} style={{overflow:"visible"}}>
         <defs><filter id="slpG"><feGaussianBlur stdDeviation="5" result="b"/><feFlood floodColor={T.purple} floodOpacity="0.35" result="c"/><feComposite in="c" in2="b" operator="in" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
         <path d={descArc(startAng,startAng+totalArc)} fill="none" stroke="rgba(40,55,120,0.18)" strokeWidth={arcStrokeBg} strokeLinecap="round"/>
         {/* Sleep pills */}
@@ -5155,7 +5182,7 @@ const Ring = React.memo(function Ring({activeTimer,napSug,tick,recentEvents,lang
       </div>)})}
       {anchorSun&&<div style={{position:"absolute",left:anchorSun.x-anchorSz/2,top:anchorSun.y-anchorSz/2,display:"flex",flexDirection:"column",alignItems:"center",zIndex:5,pointerEvents:"none"}}><div style={{width:anchorSz,height:anchorSz,borderRadius:"50%",background:"radial-gradient(circle at 40% 30%,rgba(251,191,36,0.28),rgba(251,146,60,0.08))",border:"2px solid rgba(251,191,36,0.55)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 14px rgba(251,191,36,0.3)"}}><Icon name="sun" size={anchorIconSz} color="#fbbf24"/></div><span style={{fontSize:T.fXS,fontWeight:700,color:"#fbbf24",marginTop:2,textShadow:"0 1px 4px rgba(0,0,0,0.8)"}}>{anchorSun.time}</span></div>}
       {anchorMoon&&<div style={{position:"absolute",left:anchorMoon.x-anchorSz/2,top:anchorMoon.y-anchorSz/2,display:"flex",flexDirection:"column",alignItems:"center",zIndex:5,pointerEvents:"none"}}><div style={{width:anchorSz,height:anchorSz,borderRadius:"50%",background:"radial-gradient(circle at 40% 30%,rgba(167,139,250,0.28),rgba(139,124,246,0.08))",border:"2px solid rgba(167,139,250,0.55)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 14px rgba(167,139,250,0.3)"}}><Icon name="moon" size={anchorIconSz} color="#a78bfa"/></div><span style={{fontSize:T.fXS,fontWeight:700,color:"#a78bfa",marginTop:2,textShadow:"0 1px 4px rgba(0,0,0,0.8)"}}>{anchorMoon.time}</span></div>}
-      <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}><span style={{fontSize:T.fMD,color:isBedtime?"#c084fc":T.sub,fontWeight:600,letterSpacing:1.5,textTransform:"uppercase",display:"flex",alignItems:"center",gap:5}}>{isBedtime&&<Icon name="bed" size={13} color="#c084fc"/>}{sub}{screenLockActive&&<span title={lang==="en"?"Screen on":"Tela ligada"} style={{display:"inline-flex",alignItems:"center",gap:3,marginLeft:4,padding:"2px 6px",borderRadius:8,background:"rgba(251,191,36,0.12)",border:"1px solid rgba(251,191,36,0.3)"}}><span style={{width:5,height:5,borderRadius:"50%",background:"#fbbf24",boxShadow:"0 0 6px #fbbf24",animation:"pulse 1.5s ease-in-out infinite"}}/><span style={{fontSize:T.fXS,fontWeight:700,color:"#fbbf24",letterSpacing:0.5,textTransform:"uppercase"}}>{lang==="en"?"On":"On"}</span></span>}</span><span style={{fontSize:bigFont,fontWeight:800,letterSpacing:-1.8,marginTop:4,background:hasProgress?`linear-gradient(135deg,${col2},${col1})`:`linear-gradient(180deg,#ffffff 0%,#a78bfa 95%)`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",filter:hasProgress?`drop-shadow(0 0 20px ${col1}55)`:"drop-shadow(0 0 24px rgba(167,139,250,0.32))",fontVariantNumeric:"tabular-nums"}}>{lbl}</span>{napSug&&napSug.predictedTime&&!activeTimer&&<span style={{fontSize:T.fSM,fontWeight:600,color:col1,opacity:0.7,marginTop:2}}>{lang==="en"?"Nap":"Nap"} {napSug.napPos||""} ~{napSug.predictedTime}</span>}</div>
+      <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}><span style={{fontSize:T.fMD,color:isBedtime?"#c084fc":T.sub,fontWeight:600,letterSpacing:1.5,textTransform:"uppercase",display:"flex",alignItems:"center",gap:5,animation:isBedtime?"bedtimeSubBreath 5s ease-in-out infinite":"none"}}>{isBedtime&&<Icon name="bed" size={13} color="#c084fc"/>}{sub}{screenLockActive&&<span title={lang==="en"?"Screen on":"Tela ligada"} style={{display:"inline-flex",alignItems:"center",gap:3,marginLeft:4,padding:"2px 6px",borderRadius:8,background:"rgba(251,191,36,0.12)",border:"1px solid rgba(251,191,36,0.3)"}}><span style={{width:5,height:5,borderRadius:"50%",background:"#fbbf24",boxShadow:"0 0 6px #fbbf24",animation:"pulse 1.5s ease-in-out infinite"}}/><span style={{fontSize:T.fXS,fontWeight:700,color:"#fbbf24",letterSpacing:0.5,textTransform:"uppercase"}}>{lang==="en"?"On":"On"}</span></span>}</span><span style={{fontSize:bigFont,fontWeight:800,letterSpacing:-1.8,marginTop:4,background:hasProgress?`linear-gradient(135deg,${col2},${col1})`:`linear-gradient(180deg,#ffffff 0%,#a78bfa 95%)`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",filter:isBedtime?undefined:(hasProgress?`drop-shadow(0 0 20px ${col1}55)`:"drop-shadow(0 0 24px rgba(167,139,250,0.32))"),animation:isBedtime?"bedtimeTextBreath 5s ease-in-out infinite":"none",fontVariantNumeric:"tabular-nums"}}>{lbl}</span>{napSug&&napSug.predictedTime&&!activeTimer&&<span style={{fontSize:T.fSM,fontWeight:600,color:col1,opacity:0.7,marginTop:2}}>{lang==="en"?"Nap":"Nap"} {napSug.napPos||""} ~{napSug.predictedTime}</span>}</div>
       {tip!==null&&<div onClick={()=>setTip(null)} style={{position:"absolute",inset:0,zIndex:1}}/>}
       {showOrbit&&<div key={Date.now()} style={{position:"absolute",left:cx-3,top:cy-3,width:6,height:6,zIndex:10,pointerEvents:"none",animation:"orbitComet 1.2s cubic-bezier(0.25,0.1,0.25,1) forwards"}}><div style={{width:6,height:6,borderRadius:"50%",background:"#fff",boxShadow:"0 0 8px #fff, 0 0 20px rgba(139,124,246,0.6), -8px 0 12px rgba(139,124,246,0.3), -16px 0 8px rgba(139,124,246,0.15)",transform:`translateY(${-R}px)`}}/></div>}
     </div>
@@ -8215,6 +8242,14 @@ function App(){
   // pra naps curtas), e elimina ~80% dos re-renders do App em bedtimes longos. O TimerBar
   // tem seu próprio tick interno de 1s pro display "17:03", não depende deste. v10.5.1.
   useEffect(()=>{const iv=activeTimer?5000:30000;const t=setInterval(()=>setTick(k=>k+1),iv);return()=>clearInterval(t)},[activeTimer]);
+  // v11.9.48: bedtime ambient — toggle body.bedtime-active quando sleep timer ativo
+  // pra trocar o background do app por uma versão mais escura/lavanda-tinted.
+  useEffect(()=>{
+    if(!document.body)return;
+    const on=activeTimer?.type==="sleep";
+    document.body.classList.toggle("bedtime-active",on);
+    return()=>{document.body.classList.remove("bedtime-active")};
+  },[activeTimer]);
 
   // Wake Lock: keep screen on during night wake or nursing
   const wakeLockEnabled=profile.keepScreenOn!==false;
