@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.44 Fix: "Acordada" verde de volta no Ring (era roxo lavanda errado de v11.9.42). State=null agora cai no default green, mesma cor de antes.
   v11.9.43 Ring 340 -> 200 (compact). Libera ~140px no Home, KPI cards bottle/sono/diaper sobem above-the-fold no iPhone 14/15.
   v11.9.42 Rotina fixa: napSug 100% silencioso. Esconde "Nap 3 ~XX:XX" dentro do arco + banners overdue/stretching/sweet/opening. Ring neutro lavanda.
   v11.9.41 Rotina nova suprime predicao antiga: "Prox. soneca ~XX:XX" engine-driven some quando routine.enabled (evita 2 cards competindo). napSug + InsightCards mantem.
@@ -707,8 +708,27 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.43";
+const APP_VERSION = "11.9.44";
 const CHANGELOG = [
+  {
+    v: "11.9.44", date: "2026-05-13",
+    pt: {
+      title: "Fix: 'Acordada' verde de volta (não roxo) durante o dia",
+      bullets: [
+        '★ **Bug introduzido em v11.9.42:** quando rotina fixa ativa, o número grande de "Acordada há Xh" no Ring virou roxo lavanda. Era pra continuar verde como antes (mesma cor pré-rotina) — só os ALERTAS de overdue/stretching que deveriam sumir.',
+        'Removida a branch nova `state === null → lavanda`. Agora cai no default green (#34d399 / #059669) que sempre foi a cor do "Awake for" neutro.',
+        'Resto da rotina silenciosa segue: sem banners, sem "Nap 3 ~13:42" dentro do arco, Ring sem vermelho/laranja de overdue.',
+      ],
+    },
+    en: {
+      title: "Fix: 'Awake for' back to green (not purple) during the day",
+      bullets: [
+        '★ **Bug introduced in v11.9.42:** with fixed routine active, the big "Awake for Xh" number in the Ring turned purple lavender. It should have stayed green as before — only the overdue/stretching ALERTS were supposed to go.',
+        'Removed the new `state === null → lavender` branch. Now falls through to default green (#34d399 / #059669), which was always the color of neutral "Awake for".',
+        'Rest of the silent routine still applies: no banners, no "Nap 3 ~13:42" inside the arc, no red/orange Ring overdue.',
+      ],
+    },
+  },
   {
     v: "11.9.43", date: "2026-05-13",
     pt: {
@@ -4951,8 +4971,8 @@ const Ring = React.memo(function Ring({activeTimer,napSug,tick,recentEvents,lang
     else if(napSug.state==="stretching"){col1="#ea580c";col2="#fb923c"}
     else if(napSug.state==="sweet"){col1="#059669";col2="#34d399"}
     else if(napSug.state==="opening"){col1="#d97706";col2="#fbbf24"}
-    // v11.9.42: state === null (rotina fixa ativa neutraliza signal) \u2014 usa lavanda neutro
-    else if(napSug.state===null){col1="#7c3aed";col2="#a78bfa"}
+    // v11.9.44: state === null (rotina fixa) cai no default green \u2014 mesma cor do "awake for"
+    // pr\u00e9-rotina (n\u00e3o usa lavanda da rotina pra n\u00e3o conflitar com purple/bedtime).
     else{col1="#059669";col2="#34d399"}
   } else{sub="";lbl="\u2014"}
   const hasProgress=col1!==T.dim;
