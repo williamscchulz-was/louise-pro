@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.51 Bedtime polish: remove estimativa "~acordar" + shimmer 4s->10s + pill com mais glow lavanda + remove halo box-shadow ao redor do Ring.
   v11.9.50 Night Wake button: bye banner amber pulsando, vira pill minimal centrado. Default lavanda (in-theme), tap = amber "ACORDADA · Xmin".
   v11.9.49 Bedtime counter ganha shimmer sweep horizontal (era apenas breath) — gradient roxo->branco->roxo passando pelo numero cada 4s.
   v11.9.48 Bedtime ambient refeito sem lua (era loud demais): glow lavanda sutil ao redor do Ring + texto/contador respirando + bg mais escuro/lavanda.
@@ -307,11 +308,13 @@
     @keyframes liveDotPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.85)}}
     /* v11.9.37: pulse sutil de brilho no waking band ativo da timeline refinada */
     @keyframes liveBandPulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.25)}}
-    /* v11.9.48-49: bedtime ambient — glow no Ring + shimmer sweep no counter + sub-label respirando */
-    @keyframes bedtimeRingHalo{0%,100%{box-shadow:0 0 30px -10px rgba(167,139,250,0.30)}50%{box-shadow:0 0 60px -10px rgba(167,139,250,0.55)}}
-    /* v11.9.49: shimmer sweep — gradient que passa horizontalmente pelo counter "2h14m" */
+    /* v11.9.48-51: bedtime ambient — shimmer sweep no counter + sub-label respirando + pill com glow */
+    /* v11.9.49: shimmer sweep — gradient que passa horizontalmente pelo counter "2h14m" (lento) */
     @keyframes bedtimeShimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
     @keyframes bedtimeSubBreath{0%,100%{opacity:0.85}50%{opacity:1}}
+    /* v11.9.51: pulse sutil no Night Wake pill (default lavanda) pra chamar atenção sem ser loud */
+    @keyframes nwPillPulse{0%,100%{box-shadow:0 0 8px rgba(167,139,250,0.15)}50%{box-shadow:0 0 16px rgba(167,139,250,0.32)}}
+    .nw-pill-pulse{animation:nwPillPulse 3s ease-in-out infinite}
     html body.bedtime-active{
       background:
         radial-gradient(ellipse 140% 55% at 50% 100%,#15124a 0%,transparent 70%),
@@ -726,8 +729,29 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.50";
+const APP_VERSION = "11.9.51";
 const CHANGELOG = [
+  {
+    v: "11.9.51", date: "2026-05-13",
+    pt: {
+      title: "Bedtime polish: 4 ajustes pedidos pelo William",
+      bullets: [
+        '★ **Estimativa de "~ acordar HH:MM · Xh média" removida.** Texto centrado abaixo do Ring durante bedtime ativo (engine-prediction baseada nas 7 últimas noites). Não fazia sentido coexistir com a rotina fixa da pediatra (alvo 19:30 → wake 07:00).',
+        '★ **Shimmer do counter agora é bem mais lento** — 4s → 10s. O gradient roxo→branco→roxo passa muito mais devagar pelo número.',
+        '★ **Night Wake pill mais visível** — antes era apagado demais. Agora: bg lavanda-tinted (linear-gradient 16%→8%), border lavanda mais saturada (0.42 → 0.42 com tom mais forte), texto cor `#d8ccff` (era `#c4b5fd`), box-shadow lavanda discreto + classe `nw-pill-pulse` faz uma pulse sutil 3s ease no glow.',
+        '★ **Removido o halo lavanda redondo ao redor do Ring** (era a `bedtimeRingHalo` da v11.9.48 — glow box-shadow que dava "respiro"). Era o tal "background mais claro por cima" que não tava bonito.',
+      ],
+    },
+    en: {
+      title: "Bedtime polish: 4 fixes William asked for",
+      bullets: [
+        '★ **"~ wake HH:MM · Xh avg" estimate removed.** Centered text below the Ring during active bedtime (engine prediction from last 7 nights). Made no sense coexisting with the pediatrician\'s fixed routine (target 19:30 → wake 07:00).',
+        '★ **Counter shimmer is now much slower** — 4s → 10s. The purple→white→purple gradient sweeps through the number way more slowly.',
+        '★ **Night Wake pill more visible** — was too washed-out. Now: lavender-tinted bg (linear-gradient 16%→8%), more saturated lavender border, text color `#d8ccff` (was `#c4b5fd`), subtle lavender box-shadow + `nw-pill-pulse` class for a soft 3s pulse on the glow.',
+        '★ **Removed the lavender halo around the Ring** (the `bedtimeRingHalo` from v11.9.48 — box-shadow glow that gave "breathing room"). It was the "lighter bg on top" that wasn\'t pretty.',
+      ],
+    },
+  },
   {
     v: "11.9.50", date: "2026-05-13",
     pt: {
@@ -5186,7 +5210,7 @@ const Ring = React.memo(function Ring({activeTimer,napSug,tick,recentEvents,lang
 
   // Ring original: SVG puro com arcs, sem disco central (Beautiful Glow revertido em v10.7.0
   // — minimalismo vence, starfield aparece atrás do center text).
-  return(<div style={{position:"relative",width:sz,margin:"0 auto",borderRadius:"50%",animation:isBedtime?"bedtimeRingHalo 5s ease-in-out infinite":"none"}}>
+  return(<div style={{position:"relative",width:sz,margin:"0 auto"}}>
     <div style={{position:"relative",width:sz,height:sz}}>
       <svg width={sz} height={sz} style={{overflow:"visible"}}>
         <defs><filter id="slpG"><feGaussianBlur stdDeviation="5" result="b"/><feFlood floodColor={T.purple} floodOpacity="0.35" result="c"/><feComposite in="c" in2="b" operator="in" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
@@ -5224,7 +5248,7 @@ const Ring = React.memo(function Ring({activeTimer,napSug,tick,recentEvents,lang
       </div>)})}
       {anchorSun&&<div style={{position:"absolute",left:anchorSun.x-anchorSz/2,top:anchorSun.y-anchorSz/2,display:"flex",flexDirection:"column",alignItems:"center",zIndex:5,pointerEvents:"none"}}><div style={{width:anchorSz,height:anchorSz,borderRadius:"50%",background:"radial-gradient(circle at 40% 30%,rgba(251,191,36,0.28),rgba(251,146,60,0.08))",border:"2px solid rgba(251,191,36,0.55)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 14px rgba(251,191,36,0.3)"}}><Icon name="sun" size={anchorIconSz} color="#fbbf24"/></div><span style={{fontSize:T.fXS,fontWeight:700,color:"#fbbf24",marginTop:2,textShadow:"0 1px 4px rgba(0,0,0,0.8)"}}>{anchorSun.time}</span></div>}
       {anchorMoon&&<div style={{position:"absolute",left:anchorMoon.x-anchorSz/2,top:anchorMoon.y-anchorSz/2,display:"flex",flexDirection:"column",alignItems:"center",zIndex:5,pointerEvents:"none"}}><div style={{width:anchorSz,height:anchorSz,borderRadius:"50%",background:"radial-gradient(circle at 40% 30%,rgba(167,139,250,0.28),rgba(139,124,246,0.08))",border:"2px solid rgba(167,139,250,0.55)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 14px rgba(167,139,250,0.3)"}}><Icon name="moon" size={anchorIconSz} color="#a78bfa"/></div><span style={{fontSize:T.fXS,fontWeight:700,color:"#a78bfa",marginTop:2,textShadow:"0 1px 4px rgba(0,0,0,0.8)"}}>{anchorMoon.time}</span></div>}
-      <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}><span style={{fontSize:T.fMD,color:isBedtime?"#c084fc":T.sub,fontWeight:600,letterSpacing:1.5,textTransform:"uppercase",display:"flex",alignItems:"center",gap:5,animation:isBedtime?"bedtimeSubBreath 5s ease-in-out infinite":"none"}}>{isBedtime&&<Icon name="bed" size={13} color="#c084fc"/>}{sub}{screenLockActive&&<span title={lang==="en"?"Screen on":"Tela ligada"} style={{display:"inline-flex",alignItems:"center",gap:3,marginLeft:4,padding:"2px 6px",borderRadius:8,background:"rgba(251,191,36,0.12)",border:"1px solid rgba(251,191,36,0.3)"}}><span style={{width:5,height:5,borderRadius:"50%",background:"#fbbf24",boxShadow:"0 0 6px #fbbf24",animation:"pulse 1.5s ease-in-out infinite"}}/><span style={{fontSize:T.fXS,fontWeight:700,color:"#fbbf24",letterSpacing:0.5,textTransform:"uppercase"}}>{lang==="en"?"On":"On"}</span></span>}</span><span style={{fontSize:bigFont,fontWeight:800,letterSpacing:-1.8,marginTop:4,background:isBedtime?"linear-gradient(110deg, #7c3aed 0%, #8b5cf6 25%, #e9d5ff 48%, #ffffff 50%, #e9d5ff 52%, #8b5cf6 75%, #7c3aed 100%)":(hasProgress?`linear-gradient(135deg,${col2},${col1})`:`linear-gradient(180deg,#ffffff 0%,#a78bfa 95%)`),backgroundSize:isBedtime?"300% 100%":"100% 100%",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",filter:isBedtime?"drop-shadow(0 0 18px rgba(167,139,250,0.55))":(hasProgress?`drop-shadow(0 0 20px ${col1}55)`:"drop-shadow(0 0 24px rgba(167,139,250,0.32))"),animation:isBedtime?"bedtimeShimmer 4s linear infinite":"none",fontVariantNumeric:"tabular-nums"}}>{lbl}</span>{napSug&&napSug.predictedTime&&!activeTimer&&<span style={{fontSize:T.fSM,fontWeight:600,color:col1,opacity:0.7,marginTop:2}}>{lang==="en"?"Nap":"Nap"} {napSug.napPos||""} ~{napSug.predictedTime}</span>}</div>
+      <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}><span style={{fontSize:T.fMD,color:isBedtime?"#c084fc":T.sub,fontWeight:600,letterSpacing:1.5,textTransform:"uppercase",display:"flex",alignItems:"center",gap:5,animation:isBedtime?"bedtimeSubBreath 5s ease-in-out infinite":"none"}}>{isBedtime&&<Icon name="bed" size={13} color="#c084fc"/>}{sub}{screenLockActive&&<span title={lang==="en"?"Screen on":"Tela ligada"} style={{display:"inline-flex",alignItems:"center",gap:3,marginLeft:4,padding:"2px 6px",borderRadius:8,background:"rgba(251,191,36,0.12)",border:"1px solid rgba(251,191,36,0.3)"}}><span style={{width:5,height:5,borderRadius:"50%",background:"#fbbf24",boxShadow:"0 0 6px #fbbf24",animation:"pulse 1.5s ease-in-out infinite"}}/><span style={{fontSize:T.fXS,fontWeight:700,color:"#fbbf24",letterSpacing:0.5,textTransform:"uppercase"}}>{lang==="en"?"On":"On"}</span></span>}</span><span style={{fontSize:bigFont,fontWeight:800,letterSpacing:-1.8,marginTop:4,background:isBedtime?"linear-gradient(110deg, #7c3aed 0%, #8b5cf6 25%, #e9d5ff 48%, #ffffff 50%, #e9d5ff 52%, #8b5cf6 75%, #7c3aed 100%)":(hasProgress?`linear-gradient(135deg,${col2},${col1})`:`linear-gradient(180deg,#ffffff 0%,#a78bfa 95%)`),backgroundSize:isBedtime?"300% 100%":"100% 100%",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",filter:isBedtime?"drop-shadow(0 0 18px rgba(167,139,250,0.55))":(hasProgress?`drop-shadow(0 0 20px ${col1}55)`:"drop-shadow(0 0 24px rgba(167,139,250,0.32))"),animation:isBedtime?"bedtimeShimmer 10s linear infinite":"none",fontVariantNumeric:"tabular-nums"}}>{lbl}</span>{napSug&&napSug.predictedTime&&!activeTimer&&<span style={{fontSize:T.fSM,fontWeight:600,color:col1,opacity:0.7,marginTop:2}}>{lang==="en"?"Nap":"Nap"} {napSug.napPos||""} ~{napSug.predictedTime}</span>}</div>
       {tip!==null&&<div onClick={()=>setTip(null)} style={{position:"absolute",inset:0,zIndex:1}}/>}
       {showOrbit&&<div key={Date.now()} style={{position:"absolute",left:cx-3,top:cy-3,width:6,height:6,zIndex:10,pointerEvents:"none",animation:"orbitComet 1.2s cubic-bezier(0.25,0.1,0.25,1) forwards"}}><div style={{width:6,height:6,borderRadius:"50%",background:"#fff",boxShadow:"0 0 8px #fff, 0 0 20px rgba(139,124,246,0.6), -8px 0 12px rgba(139,124,246,0.3), -16px 0 8px rgba(139,124,246,0.15)",transform:`translateY(${-R}px)`}}/></div>}
     </div>
@@ -9037,33 +9061,13 @@ function App(){
           </div>
         </div>
         {/* v11.9.23: predição de wake-up baseada na média 7d. Aparece dentro do bedtime ativo.
-            v11.9.28: requer pts>=3 (confiabilidade) + cap de overshoot na exibição. */}
-        {activeTimer&&activeTimer.type==="sleep"&&sleepPattern?.fullPattern?.sleep?.nightSleep?.avgDuration>0&&sleepPattern?.fullPattern?.sleep?.nightSleep?.pts>=3&&(()=>{
-          const avgMin=sleepPattern.fullPattern.sleep.nightSleep.avgDuration;
-          const startMs=new Date(activeTimer.startTime).getTime();
-          if(isNaN(startMs))return null;
-          const predMs=startMs+avgMin*60000;
-          const nowMs=Date.now();
-          const predD=new Date(predMs);
-          const predLabel=`${String(predD.getHours()).padStart(2,"0")}:${String(predD.getMinutes()).padStart(2,"0")}`;
-          const overshoot=Math.floor((nowMs-predMs)/60000);
-          const inPast=overshoot>5;
-          // Cap visual: overshoot >60min vira "muito além da média" pra não soar alarmante.
-          const farPast=overshoot>60;
-          return(<div style={{margin:"-4px 20px 10px",padding:"0 6px",fontSize:T.fSM,color:T.dim,textAlign:"center",letterSpacing:0.3,fontVariantNumeric:"tabular-nums"}}>
-            {inPast
-              ?(farPast
-                ?<span style={{opacity:0.85}}>{_lang==="en"?"well past avg":"além da média"}<span style={{opacity:0.7}}> · {fmtDur(avgMin)} {_lang==="en"?"avg":"média"}</span></span>
-                :<span>{_lang==="en"?"past avg by":"+"}<span style={{color:"#fdba74",fontWeight:600,margin:"0 2px"}}>{overshoot}min</span><span style={{opacity:0.7}}>{_lang==="en"?` · ${fmtDur(avgMin)} avg`:` da média 7d (${fmtDur(avgMin)})`}</span></span>)
-              :<span style={{opacity:0.85}}>{_lang==="en"?"~ wake":"~ acordar"} <span style={{color:T.sub,fontWeight:600}}>{predLabel}</span><span style={{opacity:0.7}}> · {fmtDur(avgMin)} {_lang==="en"?"avg":"média"}</span></span>}
-          </div>);
-        })()}
-        {/* v11.9.50: Night Wake virou pill minimal centrado (mockup variant D).
-            Substitui o banner full-width amber-pulsing que destoava do tema bedtime.
-            Default lavanda (Louise dormindo), tap → vira amber (Louise acordada) com timer. */}
+            v11.9.51: estimativa de wake removida — não bate com rotina da pediatra. */}
+        {/* v11.9.51: Night Wake pill com mais presença visual (era apagado demais em v11.9.50).
+            Bg lavanda-tinted, border mais saturada, glow sutil pulsando pra chamar atenção
+            sem ser invasivo. Quando active (Acordada) mantém amber forte. */}
         {activeTimer&&activeTimer.type==="sleep"&&<div style={{display:"flex",justifyContent:"center",marginBottom:10,padding:"0 20px"}}>
-          <button onClick={toggleNightWake} style={{padding:"7px 14px",borderRadius:20,background:activeTimer.nightWake?"rgba(251,146,60,0.10)":"rgba(20,26,60,0.55)",border:`1px solid ${activeTimer.nightWake?"rgba(251,146,60,0.42)":"rgba(139,124,246,0.24)"}`,display:"flex",alignItems:"center",gap:7,fontSize:T.fSM,fontWeight:700,color:activeTimer.nightWake?"#fbbf24":"#c4b5fd",letterSpacing:0.3,textTransform:"uppercase",cursor:"pointer",transition:"all .25s ease",boxShadow:activeTimer.nightWake?"0 0 14px rgba(251,146,60,0.18)":"none"}}>
-            <Icon name="sun" size={13} color={activeTimer.nightWake?"#fbbf24":"#c4b5fd"}/>
+          <button onClick={toggleNightWake} className={activeTimer.nightWake?"":"nw-pill-pulse"} style={{padding:"8px 16px",borderRadius:20,background:activeTimer.nightWake?"linear-gradient(135deg,rgba(251,146,60,0.14),rgba(251,191,36,0.08))":"linear-gradient(135deg,rgba(167,139,250,0.16),rgba(139,124,246,0.08))",border:`1px solid ${activeTimer.nightWake?"rgba(251,146,60,0.50)":"rgba(167,139,250,0.42)"}`,display:"flex",alignItems:"center",gap:7,fontSize:T.fSM,fontWeight:700,color:activeTimer.nightWake?"#fbbf24":"#d8ccff",letterSpacing:0.4,textTransform:"uppercase",cursor:"pointer",transition:"all .25s ease",boxShadow:activeTimer.nightWake?"0 0 16px rgba(251,146,60,0.22)":"0 0 12px rgba(167,139,250,0.18)"}}>
+            <Icon name="sun" size={13} color={activeTimer.nightWake?"#fbbf24":"#d8ccff"}/>
             {activeTimer.nightWake?`${_lang==="en"?"Awake":"Acordada"} · ${fmtDur(Math.max(1,Math.floor((Date.now()-new Date(activeTimer.nightWake.startTime).getTime())/60000)))}`:(_lang==="en"?"Wake?":"Despertar?")}
           </button>
         </div>}
