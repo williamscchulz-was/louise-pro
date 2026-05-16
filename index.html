@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.47 Rotina completa = divisor invisivel minimal (era card verde grande) + bedtime ambient: lua emoji + halo lavanda respirando atras do Ring.
   v11.9.46 Fix: timer ativo (nap/sleep iniciado) conta como check verde na rotina imediatamente — sem esperar terminar a entry.
   v11.9.45 Rotina tolerancia +-60min (era +-20/30) + Ring meio termo 270px (era 200, original 340). Soneca 40min atrasada conta como feito.
   v11.9.44 Fix: "Acordada" verde de volta no Ring (era roxo lavanda errado de v11.9.42). State=null agora cai no default green, mesma cor de antes.
@@ -303,6 +304,9 @@
     @keyframes liveDotPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.85)}}
     /* v11.9.37: pulse sutil de brilho no waking band ativo da timeline refinada */
     @keyframes liveBandPulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.25)}}
+    /* v11.9.47: bedtime ambient pulse — lua respirando atrás do Ring quando sleep timer ativo */
+    @keyframes bedtimeMoonBreath{0%,100%{transform:scale(0.92);opacity:0.35}50%{transform:scale(1.12);opacity:0.85}}
+    @keyframes bedtimeHaloBreath{0%,100%{opacity:0.25;transform:scale(0.95)}50%{opacity:0.55;transform:scale(1.15)}}
     @keyframes progressShimmer{0%,100%{opacity:0.7}50%{opacity:1}}
     @keyframes nwIconPulseAmber{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
     /* v11.9.1: confetti pra marcos (1m, 100d, etc). Cada particula com delay/distancia
@@ -710,8 +714,29 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.46";
+const APP_VERSION = "11.9.47";
 const CHANGELOG = [
+  {
+    v: "11.9.47", date: "2026-05-13",
+    pt: {
+      title: "Rotina completa minimal + lua respirando no bedtime",
+      bullets: [
+        '★ **Rotina 100% feita = divisor invisível.** Antes era um card verde grande com check 38×38 + "Rotina completa hoje" + sub-texto. Agora vira um single-line: dois traços sutis verdes + check 18×18 + "ROTINA COMPLETA" em caixa alta. Quase ausência — celebração sem peso visual.',
+        '★ **Bedtime ambient pulse.** Quando você toca em "Iniciar bedtime", o Ring ganha 2 elementos animados sutis atrás do conteúdo principal: um halo lavanda respirando 4.5s + uma lua emoji gigante (65% do diâmetro do Ring) com opacidade 0.06 também respirando. Mesma vibe de "ambiente noturno" — sem competir com a info do center text.',
+        'Ambas animações desaparecem se você para o timer. Animações CSS puras (GPU-cheap), respeitam `body.app-hidden` (PWA em background não gasta CPU).',
+        'Mantida toda a UI funcional do bedtime ao vivo (sub-label "Boa noite", elapsed time, SleepBlock no Home). Só adicionou ambient signal.',
+      ],
+    },
+    en: {
+      title: "Minimal routine done + breathing moon during bedtime",
+      bullets: [
+        '★ **Routine 100% done = invisible divider.** Was a big green card with 38×38 check + "Routine done today" + sub-text. Now becomes a single line: two subtle green strokes + 18×18 check + "ROUTINE DONE" in caps. Almost absence — celebration without visual weight.',
+        '★ **Bedtime ambient pulse.** When you tap "Start bedtime", the Ring gets 2 subtle animated elements behind the main content: a lavender halo breathing 4.5s + a giant moon emoji (65% of the Ring diameter) at opacity 0.06 also breathing. Same "nighttime ambient" vibe — doesn\'t compete with the center text info.',
+        'Both animations vanish if you stop the timer. Pure CSS animations (GPU-cheap), respect `body.app-hidden` (PWA in background doesn\'t burn CPU).',
+        'All functional bedtime UI kept (sub-label "Goodnight", elapsed time, SleepBlock on Home). Only added ambient signal.',
+      ],
+    },
+  },
   {
     v: "11.9.46", date: "2026-05-13",
     pt: {
@@ -5088,7 +5113,13 @@ const Ring = React.memo(function Ring({activeTimer,napSug,tick,recentEvents,lang
   // — minimalismo vence, starfield aparece atrás do center text).
   return(<div style={{position:"relative",width:sz,margin:"0 auto"}}>
     <div style={{position:"relative",width:sz,height:sz}}>
-      <svg width={sz} height={sz} style={{overflow:"visible"}}>
+      {/* v11.9.47: bedtime ambient — lua respirando atrás do Ring quando sleep timer ativo.
+          Halo lavanda + emoji lua faintly visível. Animação CSS GPU-cheap. */}
+      {isBedtime&&<>
+        <div style={{position:"absolute",inset:`${sz*0.05}px`,borderRadius:"50%",background:"radial-gradient(circle,rgba(167,139,250,0.22) 0%, rgba(167,139,250,0.05) 50%, transparent 75%)",animation:"bedtimeHaloBreath 4.5s ease-in-out infinite",pointerEvents:"none",zIndex:0}}/>
+        <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none",zIndex:0,fontSize:Math.floor(sz*0.65),opacity:0.06,color:"#c4b5fd",animation:"bedtimeMoonBreath 4.5s ease-in-out infinite",filter:"drop-shadow(0 0 24px rgba(167,139,250,0.5))"}}>🌙</div>
+      </>}
+      <svg width={sz} height={sz} style={{overflow:"visible",position:"relative",zIndex:1}}>
         <defs><filter id="slpG"><feGaussianBlur stdDeviation="5" result="b"/><feFlood floodColor={T.purple} floodOpacity="0.35" result="c"/><feComposite in="c" in2="b" operator="in" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
         <path d={descArc(startAng,startAng+totalArc)} fill="none" stroke="rgba(40,55,120,0.18)" strokeWidth={arcStrokeBg} strokeLinecap="round"/>
         {/* Sleep pills */}
@@ -8971,12 +9002,11 @@ function App(){
         <InsightCards insights={dayInsights} phase={sleepRec?.phase}/>
         {/* v11.9.40: Card de rotina diária — só renderiza se profile.routine.enabled === true */}
         {routineState&&<div style={{margin:"0 20px 14px"}}>
-          {routineState.allDone?<div style={{padding:"14px 16px",borderRadius:14,background:`linear-gradient(135deg,${T.green}18,${T.green}06)`,border:`1px solid ${T.green}32`,display:"flex",alignItems:"center",gap:12}}>
-            <div style={{width:38,height:38,borderRadius:11,background:`${T.green}24`,border:`1px solid ${T.green}40`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name="check" size={20} color={T.green}/></div>
-            <div style={{flex:1}}>
-              <div style={{fontSize:T.fMD,fontWeight:800,color:T.green,letterSpacing:-0.2}}>{L("routineDone")}</div>
-              <div style={{fontSize:T.fSM,color:T.sub,marginTop:2}}>{L("routineDoneSub")}</div>
-            </div>
+          {routineState.allDone?<div style={{padding:"6px 4px",display:"flex",alignItems:"center",justifyContent:"center",gap:10}}>
+            <span style={{flex:1,height:1,background:`linear-gradient(90deg,transparent,${T.green}50,transparent)`}}/>
+            <div style={{width:18,height:18,borderRadius:"50%",background:T.green,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name="check" size={11} color="#04061a"/></div>
+            <span style={{fontSize:T.fSM,color:T.green,fontWeight:700,letterSpacing:0.6,textTransform:"uppercase"}}>{L("routineDone")}</span>
+            <span style={{flex:1,height:1,background:`linear-gradient(90deg,transparent,${T.green}50,transparent)`}}/>
           </div>:routineState.headline?(()=>{
             const h=routineState.headline;
             const isLate=h.status==="next-late";
