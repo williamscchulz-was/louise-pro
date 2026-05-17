@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.55 Wake pill: respiro mais perceptivel — scale 1->1.05, box-shadow 6->30px, border alpha 0.5->0.85, duracao 3.5s. Realmente respira.
   v11.9.54 Wake/Sleep pill: amber em vez de lavanda + labels "Wake"/"Sleep" action-oriented + icone sun->moon + tamanho compacto (revert bump).
   v11.9.53 Resumo do dia removido — card "Resumo de hoje" 19h-23h59 com totais bottle/sono/sonecas/fraldas tirado do Home.
   v11.9.52 Night Wake pill bump: bg+border lavanda mais saturado, pulse com scale 1->1.035 e box-shadow 28px@0.60, texto bolder #e0d4ff.
@@ -315,10 +316,21 @@
     /* v11.9.49: shimmer sweep — gradient que passa horizontalmente pelo counter "2h14m" (lento) */
     @keyframes bedtimeShimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
     @keyframes bedtimeSubBreath{0%,100%{opacity:0.85}50%{opacity:1}}
-    /* v11.9.54: pulse no Night Wake pill — agora amber-tinted (não lavanda).
-       Scale 1→1.022 (mais sutil), box-shadow amber 8→20px. */
-    @keyframes nwPillPulse{0%,100%{box-shadow:0 0 8px rgba(251,191,36,0.20);transform:scale(1)}50%{box-shadow:0 0 22px rgba(251,191,36,0.50);transform:scale(1.022)}}
-    .nw-pill-pulse{animation:nwPillPulse 2.8s ease-in-out infinite;transform-origin:center}
+    /* v11.9.55: respiro mais perceptível no Wake pill — scale 1→1.05, border alpha 0.5→0.85,
+       box-shadow amber 6→30px, duração 3.5s pra feel "vivo" sem ser hectic. */
+    @keyframes nwPillPulse{
+      0%,100%{
+        box-shadow:0 0 6px rgba(251,191,36,0.18);
+        transform:scale(1);
+        border-color:rgba(251,191,36,0.50);
+      }
+      50%{
+        box-shadow:0 0 30px rgba(251,191,36,0.62);
+        transform:scale(1.05);
+        border-color:rgba(251,191,36,0.85);
+      }
+    }
+    .nw-pill-pulse{animation:nwPillPulse 3.5s ease-in-out infinite;transform-origin:center}
     html body.bedtime-active{
       background:
         radial-gradient(ellipse 140% 55% at 50% 100%,#15124a 0%,transparent 70%),
@@ -733,8 +745,27 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.54";
+const APP_VERSION = "11.9.55";
 const CHANGELOG = [
+  {
+    v: "11.9.55", date: "2026-05-13",
+    pt: {
+      title: "Wake pill: respiro mais perceptível (3.5s, scale 1.05)",
+      bullets: [
+        '★ **Pulse mais "respirando"** pra ficar intuitivo. Antes era sutil demais (scale 1.022 + box-shadow 8→22px@0.20-0.50). Agora **scale 1→1.05** (~2x mais perceptível) + **box-shadow 6→30px@0.18-0.62** + **border-color anima** de 0.50 → 0.85 alpha junto. O pill realmente "vive".',
+        'Duração subiu de 2.8s pra **3.5s** — feel mais calmo/respiratório, menos hectic.',
+        'Mantém: cor amber/yellow, label "Wake"/"Sleep", ícone sun/moon, tamanho compacto 7×14.',
+      ],
+    },
+    en: {
+      title: "Wake pill: more noticeable breathing (3.5s, scale 1.05)",
+      bullets: [
+        '★ **More "breathing" pulse** to feel intuitive. Was too subtle before (scale 1.022 + box-shadow 8→22px@0.20-0.50). Now **scale 1→1.05** (~2x more noticeable) + **box-shadow 6→30px@0.18-0.62** + **border-color animates** from 0.50 → 0.85 alpha alongside. The pill truly "lives".',
+        'Duration up from 2.8s to **3.5s** — calmer/breathing feel, less hectic.',
+        'Kept: amber/yellow color, "Wake"/"Sleep" label, sun/moon icon, compact 7×14 size.',
+      ],
+    },
+  },
   {
     v: "11.9.54", date: "2026-05-13",
     pt: {
