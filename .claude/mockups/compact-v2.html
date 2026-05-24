@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Home mais compacta</title>
+<style>
+  :root{
+    --bg:#070b1e; --card:rgba(22,28,60,.55);
+    --b:rgba(139,124,246,.15); --bSoft:rgba(139,124,246,.08);
+    --text:#e4e6f4; --sub:#9099c3; --dim:#5b6189;
+    --accent:#8b7cf6; --glass:rgba(14,18,48,.55);
+    --green:#4ade80; --blue:#6ea8ff; --purple:#a78bfa; --pink:#f472b6; --amber:#fbbf24;
+    --starfield:radial-gradient(ellipse 140% 55% at 50% 100%,#1a1f52 0%,transparent 70%),radial-gradient(ellipse at 50% 0%,#10153d 0%,var(--bg) 65%),var(--bg);
+  }
+  *{box-sizing:border-box}
+  body{background:#04061a;color:var(--text);font:500 14px/1.5 -apple-system,BlinkMacSystemFont,"Inter",sans-serif;margin:0;padding:24px 14px 72px}
+  .wrap{max-width:1240px;margin:0 auto}
+  h1{font-size:22px;margin:0 0 4px;font-weight:800;letter-spacing:-.4px}
+  .lede{color:var(--sub);font-size:13px;margin:0 0 20px}
+  h2{font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin:24px 0 10px}
+  .phones{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-bottom:22px}
+  .phone{background:var(--starfield);border-radius:34px;padding:14px 12px 10px;border:1px solid rgba(139,124,246,.18);box-shadow:0 20px 60px -20px rgba(0,0,0,.6);position:relative;min-height:320px;overflow:hidden}
+  .phone .notch{width:108px;height:18px;background:#000;border-radius:0 0 14px 14px;margin:-14px auto 10px}
+  .lbl{font-size:10px;font-weight:700;letter-spacing:1px;color:var(--accent);text-transform:uppercase;margin-bottom:4px;padding-left:4px}
+  .lbl span{color:var(--sub);font-weight:600;letter-spacing:0;margin-left:6px;text-transform:none}
+
+  /* Today label strip */
+  .today-strip{font-size:10px;font-weight:600;color:var(--dim);margin:10px 4px 6px;text-transform:uppercase;letter-spacing:.6px}
+
+  /* CARDS */
+  .grid-cards{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
+  .hcard{padding:10px;border-radius:12px;border:1px solid;text-align:left;background:rgba(0,0,0,0)}
+  .hcard.green{background:rgba(74,222,128,.025);border-color:rgba(74,222,128,.06)}
+  .hcard.amber{background:rgba(251,191,36,.025);border-color:rgba(251,191,36,.06)}
+  .hcard.purple{background:rgba(167,139,250,.025);border-color:rgba(167,139,250,.06)}
+  .hcard.pink{background:rgba(244,114,182,.025);border-color:rgba(244,114,182,.06)}
+  .hcard .k{display:flex;align-items:center;gap:5px;margin-bottom:3px}
+  .hcard .k .lbl2{font-size:9px;color:var(--dim)}
+  .hcard .v{font-size:16px;font-weight:800;font-variant-numeric:tabular-nums}
+  .hcard .u{font-size:11px;opacity:.6;font-weight:800}
+  .hcard .ago{font-size:12px;font-weight:600;margin-top:3px;opacity:.6;font-variant-numeric:tabular-nums}
+  .hcard.green .v{color:var(--green)}.hcard.green .ago{color:var(--green)}
+  .hcard.amber .v{color:var(--amber)}.hcard.amber .ago{color:var(--amber)}
+  .hcard.purple .v{color:var(--purple)}.hcard.purple .ago{color:var(--purple)}
+  .hcard.pink .v{color:var(--pink)}.hcard.pink .ago{color:var(--pink)}
+
+  /* COMPACT CARDS (proposal) */
+  .hcard.compact{padding:7px 9px}
+  .hcard.compact .k{margin-bottom:1px}
+  .hcard.compact .k .lbl2{font-size:8.5px}
+  .hcard.compact .v{font-size:14px;line-height:1.05}
+  .hcard.compact .u{font-size:10px}
+  .hcard.compact .ago{font-size:10px;margin-top:1px}
+
+  /* QUICK BUTTONS row */
+  .quick{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:0 4px;margin-bottom:10px}
+  .qb{padding:12px 0 8px;border-radius:14px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:5px;border:1px solid}
+  .qb .ic{font-size:18px}
+  .qb .t{font-size:9px;font-weight:700}
+  .qb.green{background:rgba(74,222,128,.025);border-color:rgba(74,222,128,.075);color:var(--green)}
+  .qb.blue{background:rgba(110,168,255,.025);border-color:rgba(110,168,255,.075);color:var(--blue)}
+  .qb.pink{background:rgba(244,114,182,.025);border-color:rgba(244,114,182,.075);color:var(--pink)}
+  .qb.purple{background:rgba(167,139,250,.025);border-color:rgba(167,139,250,.075);color:var(--purple)}
+  .qb.amber{background:rgba(251,191,36,.025);border-color:rgba(251,191,36,.075);color:var(--amber)}
+  .qb.accent{background:rgba(139,124,246,.025);border-color:rgba(139,124,246,.075);color:var(--accent)}
+
+  /* COMPACT quick buttons */
+  .quick.compact{grid-template-columns:repeat(6,1fr);gap:5px}
+  .quick.compact .qb{padding:9px 0 7px;border-radius:11px;gap:3px}
+  .quick.compact .qb .ic{font-size:15px}
+  .quick.compact .qb .t{font-size:8.5px}
+
+  /* HISTORY / event rows */
+  .hist{padding:0 2px}
+  .erow{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:14px;background:rgba(14,18,48,.35);border:1px solid rgba(139,124,246,.05);margin-bottom:5px}
+  .erow .ic2{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+  .erow .ic2.g{background:rgba(74,222,128,.14);color:var(--green)}
+  .erow .ic2.p{background:rgba(167,139,250,.14);color:var(--purple)}
+  .erow .ic2.a{background:rgba(251,191,36,.14);color:var(--amber)}
+  .erow .ic2.k{background:rgba(244,114,182,.14);color:var(--pink)}
+  .erow .mid{flex:1;min-width:0}
+  .erow .ttl{font-size:13px;font-weight:700;letter-spacing:-.15px}
+  .erow .sub{font-size:10px;color:var(--dim);margin-top:1px}
+  .erow .t{font-size:11px;color:var(--sub);font-variant-numeric:tabular-nums;font-weight:600}
+
+  /* THIN rows (v2): mant\u00e9m 2 linhas (t\u00edtulo + sub), icone mesmo tamanho,
+     mas encolhe padding vertical + line-height. Alvo: ~30-35% mais fino. */
+  .erow.thin{padding:5px 10px;gap:9px;border-radius:10px;margin-bottom:2px;align-items:center}
+  .erow.thin .ic2{width:28px;height:28px;border-radius:8px;font-size:14px}
+  .erow.thin .mid{line-height:1.15}
+  .erow.thin .ttl{font-size:12px;line-height:1.2}
+  .erow.thin .sub{font-size:9.5px;margin-top:0;line-height:1.1}
+  .erow.thin .t{font-size:11px}
+
+  /* NAV BAR */
+  .nav-wrap{position:absolute;bottom:12px;left:12px;right:12px;display:flex;justify-content:center;pointer-events:none}
+  .nav{pointer-events:auto;width:100%;max-width:360px;display:flex;align-items:center;background:rgba(14,18,48,.72);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);border:1px solid rgba(139,124,246,.2);border-radius:26px;padding:7px 14px;box-shadow:0 12px 40px -12px rgba(0,0,0,.6)}
+  .nav button{flex:1;background:none;border:none;color:var(--sub);font-size:18px;padding:10px 0;display:flex;align-items:center;justify-content:center}
+  .nav .plus{width:44px;height:44px;margin:-8px 2px;border-radius:50%;background:linear-gradient(180deg,#9b8df8,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;font-weight:700;box-shadow:0 8px 24px -6px rgba(139,124,246,.55),0 1px 0 0 rgba(255,255,255,.25) inset}
+  .nav.active button:first-child{color:var(--text)}
+
+  /* COMPACT nav (target from screenshot) */
+  .nav.slim{max-width:320px;padding:4px 10px;border-radius:22px;background:rgba(10,14,36,.78)}
+  .nav.slim button{font-size:15px;padding:8px 0}
+  .nav.slim .plus{width:36px;height:36px;margin:-4px 2px;font-size:16px;box-shadow:0 6px 18px -6px rgba(139,124,246,.5),0 1px 0 0 rgba(255,255,255,.2) inset}
+
+  /* callouts */
+  .call{background:linear-gradient(180deg,rgba(139,124,246,.1),rgba(139,124,246,.03));border:1px solid rgba(139,124,246,.22);border-radius:14px;padding:14px 18px;margin-top:14px;font-size:13px;color:#c7cbea;line-height:1.55}
+  .call h3{margin:0 0 6px;font-size:12px;color:#c4b5fd;text-transform:uppercase;letter-spacing:.5px;font-weight:800}
+  code{background:var(--glass);padding:2px 6px;border-radius:4px;font-size:11px;color:#c4b5fd}
+  table{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}
+  th,td{text-align:left;padding:7px 9px;border-bottom:1px solid rgba(139,124,246,.08)}
+  th{color:var(--accent);font-size:9.5px;letter-spacing:.7px;text-transform:uppercase;font-weight:800}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Home mais compacta</h1>
+<p class="lede">3 \u00e1reas apertadas: cards, quick buttons, linhas de hist\u00f3rico. Nav bar vira pill slim tipo Instagram.</p>
+
+<!-- ============ CARDS ============ -->
+<h2>1. Cards do topo</h2>
+
+<div class="phones">
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="lbl">Antes</div>
+    <div class="today-strip">07:07</div>
+    <div class="grid-cards">
+      <div class="hcard green"><div class="k"><span>🍼</span><span class="lbl2">Mamad.</span></div><div class="v">550<span class="u">ml</span> · 63%</div><div class="ago">1h6m ago</div></div>
+      <div class="hcard amber"><div class="k"><span>💊</span><span class="lbl2">Simeticona</span></div><div class="v">1<span class="u">x</span></div><div class="ago">7h37m ago</div></div>
+      <div class="hcard purple"><div class="k"><span>🌙</span><span class="lbl2">Sleep</span></div><div class="v">8h30m</div><div class="ago">1h30m ago</div></div>
+      <div class="hcard pink"><div class="k"><span>🧷</span><span class="lbl2">Diaper</span></div><div class="v">4</div><div class="ago">33min ago</div></div>
+    </div>
+  </div>
+
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="lbl">Depois <span>· compact</span></div>
+    <div class="today-strip">07:07</div>
+    <div class="grid-cards">
+      <div class="hcard green compact"><div class="k"><span>🍼</span><span class="lbl2">Mamad.</span></div><div class="v">550<span class="u">ml</span> · 63%</div><div class="ago">1h6m ago</div></div>
+      <div class="hcard amber compact"><div class="k"><span>💊</span><span class="lbl2">Simeticona</span></div><div class="v">1<span class="u">x</span></div><div class="ago">7h37m ago</div></div>
+      <div class="hcard purple compact"><div class="k"><span>🌙</span><span class="lbl2">Sleep</span></div><div class="v">8h30m</div><div class="ago">1h30m ago</div></div>
+      <div class="hcard pink compact"><div class="k"><span>🧷</span><span class="lbl2">Diaper</span></div><div class="v">4</div><div class="ago">33min ago</div></div>
+    </div>
+    <div class="call" style="margin-top:4px;padding:7px 10px;font-size:11px"><strong>Mudan\u00e7as:</strong> padding 10\u21927, v 16\u219214, ago 12\u219210. \u00cdcones mantidos, "ago"/"atr\u00e1s" mantido. Ganha ~30% menos altura.</div>
+  </div>
+</div>
+
+<!-- ============ QUICK BUTTONS ============ -->
+<h2>2. Quick buttons (+ popup)</h2>
+
+<div class="phones">
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="lbl">Antes</div>
+    <div class="quick">
+      <div class="qb green"><span class="ic">🍼</span><span class="t">Mamad.</span></div>
+      <div class="qb blue"><span class="ic">🤱</span><span class="t">Amam.</span></div>
+      <div class="qb pink"><span class="ic">🧷</span><span class="t">Fralda</span></div>
+      <div class="qb purple"><span class="ic">🌙</span><span class="t">Sono</span></div>
+      <div class="qb accent"><span class="ic">☁️</span><span class="t">Soneca</span></div>
+      <div class="qb amber"><span class="ic">👶</span><span class="t">Tummy</span></div>
+    </div>
+    <div class="call" style="margin-top:4px;padding:7px 10px;font-size:11px"><strong>3 col \u00d7 2 linhas = altura dobrada.</strong> Cada bot\u00e3o tem 12px padding topo + ic 18 + gap 5 + texto 9.</div>
+  </div>
+
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="lbl">Depois <span>· 1 linha 6 col</span></div>
+    <div class="quick compact">
+      <div class="qb green"><span class="ic">🍼</span><span class="t">Mam.</span></div>
+      <div class="qb blue"><span class="ic">🤱</span><span class="t">Amam.</span></div>
+      <div class="qb pink"><span class="ic">🧷</span><span class="t">Fralda</span></div>
+      <div class="qb purple"><span class="ic">🌙</span><span class="t">Sono</span></div>
+      <div class="qb accent"><span class="ic">☁️</span><span class="t">Soneca</span></div>
+      <div class="qb amber"><span class="ic">👶</span><span class="t">Tummy</span></div>
+    </div>
+    <div class="call" style="margin-top:4px;padding:7px 10px;font-size:11px"><strong>6 col \u00d7 1 linha</strong>. \u00cdcone 18\u219215, padding 12\u21929. Pega metade da altura. \u201cMamadeira\u201d vira \u201cMam.\u201d pra caber.</div>
+  </div>
+</div>
+
+<!-- ============ HISTORY ============ -->
+<h2>3. Linhas do hist\u00f3rico (Home + aba Hist\u00f3rico)</h2>
+
+<div class="phones">
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="lbl">Antes</div>
+    <div class="hist">
+      <div class="erow"><div class="ic2 g">🍼</div><div class="mid"><div class="ttl">Mamadeira · 120ml</div><div class="sub">2h50 atr\u00e1s</div></div><div class="t">04:17</div></div>
+      <div class="erow"><div class="ic2 k">🧷</div><div class="mid"><div class="ttl">Fralda · Urina</div><div class="sub">2h30 atr\u00e1s</div></div><div class="t">04:37</div></div>
+      <div class="erow"><div class="ic2 a">💊</div><div class="mid"><div class="ttl">Simeticona · 3 gotas</div><div class="sub">6h12 atr\u00e1s</div></div><div class="t">00:55</div></div>
+      <div class="erow"><div class="ic2 p">🌙</div><div class="mid"><div class="ttl">Bedtime · 8h30m</div><div class="sub">finalizado 1h30 atr\u00e1s</div></div><div class="t">21:00</div></div>
+    </div>
+  </div>
+
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="lbl">Depois <span>· thin (2 linhas)</span></div>
+    <div class="hist">
+      <div class="erow thin"><div class="ic2 g">🍼</div><div class="mid"><div class="ttl">Mamadeira · 120ml</div><div class="sub">2h50 atr\u00e1s</div></div><div class="t">04:17</div></div>
+      <div class="erow thin"><div class="ic2 k">🧷</div><div class="mid"><div class="ttl">Fralda · Urina</div><div class="sub">2h30 atr\u00e1s</div></div><div class="t">04:37</div></div>
+      <div class="erow thin"><div class="ic2 a">💊</div><div class="mid"><div class="ttl">Simeticona · 3 gotas</div><div class="sub">6h12 atr\u00e1s</div></div><div class="t">00:55</div></div>
+      <div class="erow thin"><div class="ic2 p">🌙</div><div class="mid"><div class="ttl">Bedtime · 8h30m</div><div class="sub">finalizado 1h30</div></div><div class="t">21:00</div></div>
+      <div class="erow thin"><div class="ic2 g">🍼</div><div class="mid"><div class="ttl">Mamadeira · 90ml</div><div class="sub">7h atr\u00e1s</div></div><div class="t">00:07</div></div>
+      <div class="erow thin"><div class="ic2 k">🧷</div><div class="mid"><div class="ttl">Fralda · Coc\u00f4</div><div class="sub">8h atr\u00e1s</div></div><div class="t">23:10</div></div>
+    </div>
+    <div class="call" style="margin-top:4px;padding:7px 10px;font-size:11px"><strong>\u00cdcones mantidos</strong> (32\u219228, mesmo tamanho aparente). Padding vertical 11\u21925, line-height apertado, "atr\u00e1s" mantido. Ganho 30-35% em altura por linha. 2 linhas (ttl+sub) preservadas.</div>
+  </div>
+</div>
+
+<!-- ============ NAV BAR ============ -->
+<h2>4. Nav bar \u2014 pill slim tipo Instagram</h2>
+
+<div class="phones">
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="lbl">Antes <span>· atual</span></div>
+    <div style="padding:140px 6px 0;color:var(--dim);font-size:11px;text-align:center">content</div>
+    <div class="nav-wrap">
+      <div class="nav">
+        <button>🏠</button>
+        <button>🕒</button>
+        <div class="plus">+</div>
+        <button>📊</button>
+        <button>⚙️</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="lbl">Depois <span>· slim pill</span></div>
+    <div style="padding:140px 6px 0;color:var(--dim);font-size:11px;text-align:center">content</div>
+    <div class="nav-wrap">
+      <div class="nav slim">
+        <button>🏠</button>
+        <button>🕒</button>
+        <div class="plus">+</div>
+        <button>📊</button>
+        <button>⚙️</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2>Resumo das mudan\u00e7as</h2>
+<div class="call">
+  <table>
+    <thead><tr><th>Componente</th><th>Antes</th><th>Depois</th><th>Ganho</th></tr></thead>
+    <tbody>
+      <tr><td>Cards Home</td><td>padding 10, v 16px, ago 12px (com \u201cago\u201d)</td><td>padding 7, v 14px, ago 10px (sem \u201cago\u201d)</td><td>~30% menor</td></tr>
+      <tr><td>Quick buttons</td><td>3\u00d72 grid, ic 18, padding 12</td><td>6\u00d71 grid, ic 15, padding 9</td><td>~50% menor</td></tr>
+      <tr><td>Linhas hist\u00f3rico</td><td>icone 32, padding 11, gap 10, 2 linhas</td><td>icone 28 (mesmo), padding 5, gap 9, 2 linhas (thinner)</td><td>~30% menor altura</td></tr>
+      <tr><td>Nav bar</td><td>padding 7/14, plus 44px, max 360</td><td>padding 4/10, plus 36px, max 320</td><td>~25% menor</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="call">
+  <h3>D\u00favidas antes de codar</h3>
+  <ul style="margin:0;padding-left:18px">
+    <li><strong>Quick buttons em 6\u00d71</strong>: confirma que caber em 1 linha \u00e9 melhor que 3\u00d72? Texto "Mamadeira" vira "Mam.". Alternativa: manter 3 cols e s\u00f3 diminuir padding/icon.</li>
+    <li><strong>Remover "atr\u00e1s"/"ago"</strong> das subs do card e da history: ok? fica s\u00f3 "1h6m" (sem sufixo \u2014 contexto deixa claro).</li>
+    <li><strong>Nav: plus 36px</strong> fica pequeno? Posso fazer 40px. Ou manter 44px e s\u00f3 reduzir altura do pill.</li>
+    <li><strong>Aba Hist\u00f3rico</strong>: aplica o mesmo row compact pra tudo (n\u00e3o s\u00f3 home). Se houver SleepBlock agregado, posso comprimir ele tamb\u00e9m \u2014 diz se quer.</li>
+  </ul>
+</div>
+
+</div>
+</body>
+</html>

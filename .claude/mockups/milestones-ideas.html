@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Marcos de crescimento — 4 abordagens</title>
+<style>
+  :root{
+    --bg:#070b1e;--text:#e4e6f4;--sub:#9099c3;--dim:#5b6189;
+    --accent:#8b7cf6;--green:#4ade80;--blue:#6ea8ff;--purple:#a78bfa;
+    --pink:#f472b6;--amber:#fbbf24;--cyan:#7dd3fc;--orange:#fb923c;
+    --starfield:radial-gradient(ellipse 140% 55% at 50% 100%,#1a1f52 0%,transparent 70%),radial-gradient(ellipse at 50% 0%,#10153d 0%,#070b1e 65%),#070b1e;
+  }
+  *{box-sizing:border-box}
+  body{background:#04061a;color:var(--text);font:500 14px/1.5 -apple-system,BlinkMacSystemFont,"Inter",sans-serif;margin:0;padding:30px 14px 60px;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1480px;margin:0 auto}
+  h1{font-size:24px;margin:0 0 6px;font-weight:800;letter-spacing:-.5px}
+  .lede{color:var(--sub);font-size:13.5px;margin:0 0 28px;line-height:1.55;max-width:900px}
+  h2{font-size:13px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--accent);margin:36px 0 14px;padding-bottom:8px;border-bottom:1px solid rgba(139,124,246,.18)}
+  h3{font-size:15px;margin:0 0 10px;color:#c4b5fd;font-weight:700}
+
+  .phones{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;align-items:start}
+  @media(max-width:1100px){.phones{grid-template-columns:repeat(2,1fr)}}
+  .phone{background:var(--starfield);border-radius:34px;padding:18px 14px 32px;border:1px solid rgba(139,124,246,.18);box-shadow:0 20px 60px -20px rgba(0,0,0,.6);position:relative;min-height:620px}
+  .phone .notch{width:104px;height:18px;background:#000;border-radius:0 0 14px 14px;margin:-14px auto 12px}
+  .col-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-align:center;margin-bottom:8px}
+  .col-label.a{color:#86efac}
+  .col-label.b{color:#fcd34d}
+  .col-label.c{color:#7dd3fc}
+  .col-label.d{color:#c4b5fd}
+
+  .today-h{display:flex;align-items:baseline;justify-content:space-between;margin:6px 4px 12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1}
+  .today-h .l{color:var(--accent)}
+  .today-h .d{color:var(--dim);font-weight:500;letter-spacing:.4px}
+
+  /* ═══════════════════════ APPROACH A ═══════════════════════ */
+  /* Categorized checklist page */
+  .a-tabs{display:flex;gap:6px;padding:0 4px;margin-bottom:14px;overflow-x:auto}
+  .a-tab{padding:6px 12px;border-radius:8px;background:rgba(20,26,60,.4);border:1px solid rgba(139,124,246,.14);color:var(--sub);font-size:10px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;white-space:nowrap;flex-shrink:0}
+  .a-tab.on{background:rgba(167,139,250,.18);border-color:rgba(167,139,250,.42);color:#c4b5fd}
+  .a-age-section{margin:10px 4px}
+  .a-age-label{font-size:9px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:1;margin:14px 0 6px;display:flex;align-items:center;gap:6px}
+  .a-age-label::after{content:"";flex:1;height:1px;background:rgba(139,124,246,.18)}
+  .a-row{display:flex;align-items:center;gap:10px;padding:8px 4px}
+  .a-check{width:22px;height:22px;border-radius:7px;border:1.5px solid rgba(139,124,246,.32);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px}
+  .a-row.done .a-check{background:#4ade80;border-color:#4ade80;color:#04061a;font-weight:800}
+  .a-row.exp .a-check{border-color:rgba(167,139,250,.5);background:rgba(167,139,250,.12);color:#a78bfa}
+  .a-text{flex:1;font-size:12.5px;color:var(--text);font-weight:600;line-height:1.35}
+  .a-row.done .a-text{color:var(--sub)}
+  .a-row.done .a-text small{display:block;font-size:10px;color:#86efac;font-weight:600;margin-top:1px;letter-spacing:.2px}
+  .a-row .when{font-size:10px;color:var(--dim);font-weight:600;font-variant-numeric:tabular-nums}
+
+  /* ═══════════════════════ APPROACH B ═══════════════════════ */
+  /* Wonder Weeks leap */
+  .b-hero{margin:14px 4px;padding:18px 16px;border-radius:18px;background:radial-gradient(ellipse at 30% 20%,rgba(167,139,250,.18),rgba(167,139,250,.04) 60%);border:1px solid rgba(167,139,250,.28);position:relative;overflow:hidden}
+  .b-hero::before{content:"";position:absolute;top:-30%;right:-20%;width:180px;height:180px;background:radial-gradient(circle,rgba(167,139,250,.16),transparent 70%);filter:blur(20px)}
+  .b-hero .eb{font-size:9px;font-weight:800;color:#c4b5fd;text-transform:uppercase;letter-spacing:1.4;margin-bottom:4px}
+  .b-hero .num{font-size:32px;font-weight:800;color:#f0f2ff;letter-spacing:-1px;line-height:1;background:linear-gradient(135deg,#c4b5fd,#a78bfa);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .b-hero .week-range{font-size:12px;color:#c4b5fd;margin-top:3px;font-weight:700;letter-spacing:.2px}
+  .b-hero .desc{font-size:12px;color:var(--sub);line-height:1.55;margin-top:12px;position:relative;z-index:1}
+  .b-hero .desc b{color:var(--text);font-weight:700}
+  .b-progress-wave{margin:14px 0 4px;height:38px;position:relative;overflow:hidden;border-radius:10px;background:rgba(20,26,60,.35)}
+  .b-progress-wave svg{width:100%;height:100%;display:block}
+  .b-progress-wave .now{position:absolute;top:-3px;bottom:-3px;width:2px;background:#fbbf24;box-shadow:0 0 8px #fbbf24;left:42%}
+  .b-progress-wave .nowlbl{position:absolute;top:-14px;left:42%;transform:translateX(-50%);font-size:9px;font-weight:800;color:#fbbf24;letter-spacing:.4px}
+  .b-list{margin:0 4px}
+  .b-leap-item{padding:10px 12px;border-radius:11px;background:rgba(20,26,60,.32);margin-bottom:6px;display:flex;align-items:center;gap:10px;border:1px solid rgba(139,124,246,.08)}
+  .b-leap-item.done{opacity:.55}
+  .b-leap-item.cur{border-color:rgba(167,139,250,.4);background:linear-gradient(135deg,rgba(167,139,250,.12),rgba(167,139,250,.04))}
+  .b-leap-item .num{width:24px;height:24px;border-radius:50%;background:rgba(139,124,246,.18);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#c4b5fd;flex-shrink:0}
+  .b-leap-item.done .num{background:#4ade80;color:#04061a}
+  .b-leap-item .info{flex:1;min-width:0}
+  .b-leap-item .ttl{font-size:12px;font-weight:700;color:var(--text)}
+  .b-leap-item .when{font-size:10px;color:var(--sub);margin-top:1px;font-variant-numeric:tabular-nums}
+  .b-leap-item .age{font-size:10px;color:var(--dim);font-weight:600}
+
+  /* ═══════════════════════ APPROACH C ═══════════════════════ */
+  /* Chronological timeline */
+  .c-stream{margin:14px 4px 0;position:relative;padding-left:24px}
+  .c-stream::before{content:"";position:absolute;top:0;bottom:0;left:9px;width:1px;background:linear-gradient(180deg,rgba(167,139,250,.55),rgba(139,124,246,.08))}
+  .c-item{position:relative;padding:0 0 14px 14px}
+  .c-dot{position:absolute;left:-18px;top:4px;width:11px;height:11px;border-radius:50%;background:#a78bfa;border:2px solid #04061a;box-shadow:0 0 0 1px rgba(167,139,250,.55)}
+  .c-item.upcoming .c-dot{background:transparent;border:1.5px dashed rgba(167,139,250,.55);box-shadow:none}
+  .c-when{font-size:9px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px;font-variant-numeric:tabular-nums}
+  .c-item.upcoming .c-when{color:var(--dim)}
+  .c-ttl{font-size:13px;font-weight:700;color:var(--text);letter-spacing:-.1px}
+  .c-item.upcoming .c-ttl{color:var(--sub)}
+  .c-desc{font-size:11px;color:var(--sub);line-height:1.45;margin-top:2px}
+  .c-photo{margin-top:8px;width:64px;height:64px;border-radius:12px;background:linear-gradient(135deg,#f472b6,#a78bfa);display:flex;align-items:center;justify-content:center;font-size:24px;overflow:hidden}
+  .c-tag{display:inline-block;font-size:9px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;padding:1px 6px;border-radius:5px;background:rgba(167,139,250,.16);color:#c4b5fd;margin-left:6px;vertical-align:middle}
+  .c-tag.motor{background:rgba(125,211,252,.14);color:#7dd3fc}
+  .c-tag.social{background:rgba(244,114,182,.14);color:#f472b6}
+  .c-tag.lang{background:rgba(251,191,36,.14);color:#fbbf24}
+  .c-tag.cog{background:rgba(167,139,250,.14);color:#a78bfa}
+
+  /* ═══════════════════════ APPROACH D ═══════════════════════ */
+  /* Home card "Next milestones" */
+  .d-card{margin:14px 4px;padding:14px 16px;border-radius:16px;background:linear-gradient(180deg,rgba(167,139,250,.10),rgba(167,139,250,.03));border:1px solid rgba(167,139,250,.22);position:relative;overflow:hidden}
+  .d-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,#a78bfa,rgba(167,139,250,.3))}
+  .d-card .head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding-left:8px}
+  .d-card .head .ttl{font-size:11px;font-weight:800;color:#c4b5fd;text-transform:uppercase;letter-spacing:1.1}
+  .d-card .head .more{font-size:10px;color:var(--dim);font-weight:600;letter-spacing:.3px}
+  .d-row{display:flex;align-items:center;gap:11px;padding:8px 8px;border-radius:9px}
+  .d-row + .d-row{margin-top:2px}
+  .d-row.add:hover{background:rgba(167,139,250,.06)}
+  .d-row .icon{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+  .d-row.motor .icon{background:rgba(125,211,252,.14);color:#7dd3fc}
+  .d-row.social .icon{background:rgba(244,114,182,.14);color:#f472b6}
+  .d-row.lang .icon{background:rgba(251,191,36,.14);color:#fbbf24}
+  .d-row .body{flex:1}
+  .d-row .lbl{font-size:12.5px;font-weight:700;color:var(--text);letter-spacing:-.1px}
+  .d-row .det{font-size:10px;color:var(--sub);margin-top:1px}
+  .d-row .plus{width:26px;height:26px;border-radius:8px;background:rgba(167,139,250,.12);border:1px solid rgba(167,139,250,.22);display:flex;align-items:center;justify-content:center;font-size:14px;color:#c4b5fd;flex-shrink:0;font-weight:700}
+
+  /* Existing home content fake */
+  .fake-ring{width:140px;height:140px;border-radius:50%;border:14px solid rgba(139,124,246,.10);position:relative;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;flex-direction:column}
+  .fake-ring::before{content:"";position:absolute;inset:-14px;border-radius:50%;border:14px solid transparent;border-top-color:rgba(167,139,250,.6);border-right-color:rgba(167,139,250,.6);transform:rotate(-45deg)}
+  .fake-ring .l{font-size:9px;color:var(--sub);text-transform:uppercase;letter-spacing:.6px;font-weight:600}
+  .fake-ring .v{font-size:24px;font-weight:800;color:#f0f2ff}
+
+  /* Annotation */
+  .annot{background:rgba(139,124,246,.04);border:1px solid rgba(139,124,246,.18);border-radius:14px;padding:18px 22px;margin:22px 0}
+  .annot h4{margin:0 0 10px;font-size:14px;font-weight:800;color:var(--accent)}
+  .annot p{margin:0 0 8px;color:var(--sub);font-size:13px;line-height:1.55}
+  .annot ul{margin:6px 0 0;padding-left:18px;color:var(--sub);font-size:13px;line-height:1.7}
+  .annot strong{color:var(--text)}
+  .annot code{background:rgba(20,26,60,.5);padding:1px 5px;border-radius:4px;font-size:11.5px;color:#c4b5fd;font-family:Menlo,monospace}
+
+  .decision{background:linear-gradient(180deg,rgba(167,139,250,.10),rgba(167,139,250,.03));border:1px solid rgba(167,139,250,.28);border-radius:18px;padding:24px;margin:36px 0 0}
+  .decision h3{margin:0 0 14px;font-size:17px;font-weight:800;color:#c4b5fd}
+  .decision .opt{background:rgba(20,26,60,.32);border:1px solid rgba(139,124,246,.14);border-radius:11px;padding:14px 16px;margin:10px 0;font-size:13.5px;color:var(--sub);line-height:1.55}
+  .decision .opt b{color:#c4b5fd}
+  .decision strong{color:var(--text)}
+
+  .source{color:var(--dim);font-size:11px;font-style:italic;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Marcos de crescimento — 4 abordagens</h1>
+  <p class="lede">Louise tem <strong>2 meses 6 dias</strong>. Nessa idade, os marcos de desenvolvimento esperados (WHO/CDC/SBP) são: sorriso social, segura cabeça brevemente, segue objetos com olhos, vocaliza ("ah", "oh"), reconhece os pais. Mockei 4 jeitos diferentes de tratar isso no Louise Pro — cada um com referência num app diferente, adaptado pra estética cosmic do app.</p>
+
+  <h2>4 abordagens — fluxo principal</h2>
+
+  <div class="phones">
+
+    <!-- ═══════════ APPROACH A ═══════════ -->
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="col-label a">A · CHECKLIST POR CATEGORIA</div>
+      <div class="today-h"><span class="l">Marcos</span><span class="d">3 de 8</span></div>
+      <div class="a-tabs">
+        <div class="a-tab on">Todos</div>
+        <div class="a-tab">Motor</div>
+        <div class="a-tab">Social</div>
+        <div class="a-tab">Linguagem</div>
+        <div class="a-tab">Cognitivo</div>
+      </div>
+      <div class="a-age-section">
+        <div class="a-age-label">0–1 mês</div>
+        <div class="a-row done"><div class="a-check">✓</div><div class="a-text">Olha para rostos<small>Marcado em 12 Mar · 4 dias</small></div></div>
+        <div class="a-row done"><div class="a-check">✓</div><div class="a-text">Reage a sons fortes<small>Marcado em 15 Mar · 7 dias</small></div></div>
+        <div class="a-row done"><div class="a-check">✓</div><div class="a-text">Vira a cabeça<small>Marcado em 20 Mar · 12 dias</small></div></div>
+      </div>
+      <div class="a-age-section">
+        <div class="a-age-label">1–3 meses · esperado agora</div>
+        <div class="a-row exp"><div class="a-check">●</div><div class="a-text">Sorriso social</div><span class="when">~8 sem</span></div>
+        <div class="a-row exp"><div class="a-check">●</div><div class="a-text">Segura a cabeça brevemente</div><span class="when">~10 sem</span></div>
+        <div class="a-row exp"><div class="a-check">●</div><div class="a-text">Faz sons "ah"/"oh"</div><span class="when">~12 sem</span></div>
+        <div class="a-row exp"><div class="a-check">●</div><div class="a-text">Segue objetos com olhos</div><span class="when">~10 sem</span></div>
+      </div>
+      <div class="a-age-section" style="opacity:.55">
+        <div class="a-age-label">3–6 meses · próximos</div>
+        <div class="a-row"><div class="a-check"></div><div class="a-text">Ri alto</div></div>
+        <div class="a-row"><div class="a-check"></div><div class="a-text">Rola da barriga pra costas</div></div>
+      </div>
+    </div>
+
+    <!-- ═══════════ APPROACH B ═══════════ -->
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="col-label b">B · WONDER WEEKS LEAPS</div>
+      <div class="today-h"><span class="l">Saltos mentais</span><span class="d">Semana 10</span></div>
+      <div class="b-hero">
+        <div class="eb">Salto atual</div>
+        <div class="num">Salto 2</div>
+        <div class="week-range">Sem 7 – 9 · pico em 8 sem</div>
+        <div class="desc"><b>Padrões.</b> Louise começa a perceber padrões — formas, sons repetitivos, ritmos. Pode ficar irritada ou chorona até integrar essa habilidade nova. Aproxime brinquedos com listras/contrastes, fale ritmando.</div>
+      </div>
+      <div class="b-progress-wave">
+        <svg viewBox="0 0 320 38" preserveAspectRatio="none">
+          <path d="M0,30 Q40,8 80,30 T160,30 T240,30 T320,30" stroke="rgba(167,139,250,.5)" stroke-width="1.5" fill="none"/>
+          <path d="M0,30 Q40,8 80,30 T160,30 T240,30 T320,30" stroke="url(#g)" stroke-width="2" fill="none" stroke-dasharray="280 100" stroke-dashoffset="-160"/>
+          <defs><linearGradient id="g"><stop offset="0%" stop-color="#fbbf24"/><stop offset="100%" stop-color="#a78bfa"/></linearGradient></defs>
+        </svg>
+        <div class="now"></div>
+        <div class="nowlbl">vc</div>
+      </div>
+      <div class="b-list">
+        <div class="b-leap-item done"><div class="num">1</div><div class="info"><div class="ttl">Sensações que mudam</div><div class="when">Sem 5 · 14 Mar</div></div><div class="age">5 sem</div></div>
+        <div class="b-leap-item cur"><div class="num">2</div><div class="info"><div class="ttl">Padrões</div><div class="when">Sem 8 · agora</div></div><div class="age">7–9 sem</div></div>
+        <div class="b-leap-item"><div class="num">3</div><div class="info"><div class="ttl">Transições suaves</div><div class="when">Sem 12 · em ~3 sem</div></div><div class="age">11–13 sem</div></div>
+        <div class="b-leap-item"><div class="num">4</div><div class="info"><div class="ttl">Eventos</div><div class="when">Sem 19</div></div><div class="age">18–20 sem</div></div>
+      </div>
+      <p class="source">Baseado no método "The Wonder Weeks" (van de Rijt & Plooij).</p>
+    </div>
+
+    <!-- ═══════════ APPROACH C ═══════════ -->
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="col-label c">C · TIMELINE CRONOLÓGICA</div>
+      <div class="today-h"><span class="l">Linha do tempo</span><span class="d">8 marcos</span></div>
+      <div class="c-stream">
+        <div class="c-item">
+          <div class="c-dot"></div>
+          <div class="c-when">06 abr · 4 sem</div>
+          <div class="c-ttl">Primeiro sorriso intencional <span class="c-tag social">Social</span></div>
+          <div class="c-desc">Sorriu pra mim quando entrei no quarto. Reagiu pelo segundo dia.</div>
+          <div class="c-photo">🌸</div>
+        </div>
+        <div class="c-item">
+          <div class="c-dot"></div>
+          <div class="c-when">22 mar · 2 sem</div>
+          <div class="c-ttl">Reagiu a som forte <span class="c-tag cog">Cognitivo</span></div>
+          <div class="c-desc">Pulou com a campainha — assustou e depois acalmou.</div>
+        </div>
+        <div class="c-item">
+          <div class="c-dot"></div>
+          <div class="c-when">15 mar · 1 sem</div>
+          <div class="c-ttl">Pegou o dedo do papai <span class="c-tag motor">Motor</span></div>
+        </div>
+        <div class="c-item">
+          <div class="c-dot"></div>
+          <div class="c-when">12 mar</div>
+          <div class="c-ttl">Olhou pra mim <span class="c-tag social">Social</span></div>
+        </div>
+        <div class="c-item">
+          <div class="c-dot"></div>
+          <div class="c-when">08 mar</div>
+          <div class="c-ttl">Nasceu <span class="c-tag" style="background:rgba(74,222,128,.14);color:#86efac">Marco</span></div>
+          <div class="c-desc">3.2kg · 48cm</div>
+        </div>
+        <div class="c-item upcoming">
+          <div class="c-dot"></div>
+          <div class="c-when">esperado</div>
+          <div class="c-ttl">Segura a cabeça brevemente</div>
+          <div class="c-desc">Faltam ~2 sem</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ APPROACH D ═══════════ -->
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="col-label d">D · CARD NO HOME</div>
+      <div class="today-h"><span class="l">Hoje</span><span class="d">Qua 14 Mai</span></div>
+      <div class="fake-ring">
+        <div class="l">Mercúrio</div>
+        <div class="v">6h 12m</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:0 4px;margin-bottom:8px">
+        <div style="background:rgba(74,222,128,.07);border:1px solid rgba(74,222,128,.14);border-radius:11px;padding:8px 10px"><div style="font-size:9px;color:#86efac99;font-weight:700;text-transform:uppercase;letter-spacing:.3px">Mamad.</div><div style="font-size:16px;font-weight:800;color:#4ade80">520<span style="font-size:11px;opacity:.5">ml</span></div></div>
+        <div style="background:rgba(167,139,250,.07);border:1px solid rgba(167,139,250,.14);border-radius:11px;padding:8px 10px"><div style="font-size:9px;color:#a78bfa99;font-weight:700;text-transform:uppercase;letter-spacing:.3px">Sono</div><div style="font-size:16px;font-weight:800;color:#a78bfa">11h30</div></div>
+      </div>
+
+      <div class="d-card">
+        <div class="head">
+          <span class="ttl">★ Próximos marcos</span>
+          <span class="more">ver tudo →</span>
+        </div>
+        <div class="d-row motor add">
+          <div class="icon">🧠</div>
+          <div class="body">
+            <div class="lbl">Sorriso social</div>
+            <div class="det">esperado entre 1–3 meses · há 2 sem disso</div>
+          </div>
+          <div class="plus">+</div>
+        </div>
+        <div class="d-row social add">
+          <div class="icon">😊</div>
+          <div class="body">
+            <div class="lbl">Vocalizações "ah"/"oh"</div>
+            <div class="det">esperado em ~2 sem</div>
+          </div>
+          <div class="plus">+</div>
+        </div>
+        <div class="d-row lang add">
+          <div class="icon">👀</div>
+          <div class="body">
+            <div class="lbl">Segue objetos com olhos</div>
+            <div class="det">esperado agora</div>
+          </div>
+          <div class="plus">+</div>
+        </div>
+      </div>
+
+      <div style="font-size:10px;color:var(--dim);text-align:center;padding:8px 4px">— Hoje continua —</div>
+    </div>
+
+  </div>
+
+  <h2>Trade-offs — comparação por dimensão</h2>
+
+  <div class="annot">
+    <table style="width:100%;border-collapse:collapse;font-size:12.5px">
+      <thead>
+        <tr style="border-bottom:1px solid rgba(139,124,246,.2);text-align:left">
+          <th style="padding:8px 6px;color:var(--accent);font-weight:700">Dimensão</th>
+          <th style="padding:8px 6px;color:#86efac">A · Checklist</th>
+          <th style="padding:8px 6px;color:#fcd34d">B · Wonder Weeks</th>
+          <th style="padding:8px 6px;color:#7dd3fc">C · Timeline</th>
+          <th style="padding:8px 6px;color:#c4b5fd">D · Home Card</th>
+        </tr>
+      </thead>
+      <tbody style="color:var(--sub);line-height:1.55">
+        <tr style="border-bottom:1px solid rgba(139,124,246,.08)"><td style="padding:8px 6px;color:var(--text);font-weight:600">Aciona ativamente</td><td style="padding:8px 6px">Sim, tap pra check</td><td style="padding:8px 6px">Não, automático</td><td style="padding:8px 6px">Sim, adicionar entry</td><td style="padding:8px 6px">Sim, + inline</td></tr>
+        <tr style="border-bottom:1px solid rgba(139,124,246,.08)"><td style="padding:8px 6px;color:var(--text);font-weight:600">Posição no app</td><td style="padding:8px 6px">Aba dedicada</td><td style="padding:8px 6px">Aba dedicada</td><td style="padding:8px 6px">Aba dedicada</td><td style="padding:8px 6px">No Home (sempre visível)</td></tr>
+        <tr style="border-bottom:1px solid rgba(139,124,246,.08)"><td style="padding:8px 6px;color:var(--text);font-weight:600">Risco de ansiedade</td><td style="padding:8px 6px">Médio — "tô atrasado?"</td><td style="padding:8px 6px">Baixo — sci-friendly</td><td style="padding:8px 6px">Baixo — narrativo</td><td style="padding:8px 6px">Médio — visível diário</td></tr>
+        <tr style="border-bottom:1px solid rgba(139,124,246,.08)"><td style="padding:8px 6px;color:var(--text);font-weight:600">Suporta foto/nota</td><td style="padding:8px 6px">Sim, no detalhe</td><td style="padding:8px 6px">N/A</td><td style="padding:8px 6px">Sim, primeira classe</td><td style="padding:8px 6px">Sim, ao adicionar</td></tr>
+        <tr style="border-bottom:1px solid rgba(139,124,246,.08)"><td style="padding:8px 6px;color:var(--text);font-weight:600">Esforço dev</td><td style="padding:8px 6px">Médio — lista grande</td><td style="padding:8px 6px">Médio — dados Wonder Weeks</td><td style="padding:8px 6px">Alto — timeline + foto + edit</td><td style="padding:8px 6px">Baixo — extensão do Home</td></tr>
+        <tr><td style="padding:8px 6px;color:var(--text);font-weight:600">Sentimento ao usar</td><td style="padding:8px 6px">Lista-fazer / cobrança</td><td style="padding:8px 6px">Curiosidade científica</td><td style="padding:8px 6px">Memória / álbum</td><td style="padding:8px 6px">Lembrete passivo</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="annot">
+    <h4>Recomendação minha</h4>
+    <p><strong>Combinação C + D</strong>: <strong>Timeline cronológica</strong> como aba dedicada (registro histórico permanente, com foto e nota — vira um "álbum digital" pra rever depois) + <strong>Card no Home</strong> sugerindo 2-3 marcos esperados pra idade atual (tap → registra direto). Cada marco logado vira um entry na timeline.</p>
+    <p>Razões:</p>
+    <ul>
+      <li><strong>C tem valor emocional duradouro</strong> — daqui a 10 anos a Louise vai poder olhar a timeline com fotos. Não é "tarefa", é álbum.</li>
+      <li><strong>D resolve o problema de discoverability</strong> — sem o card no Home, parents esquecem de marcar. Com o card, é passivo: você vê e marca quando lembra.</li>
+      <li><strong>Ansiedade controlada</strong> — D mostra apenas "esperado em ~2 sem" sem "tá atrasado". C mostra apenas o que JÁ ACONTECEU, não o que falta.</li>
+      <li><strong>A (checklist) tem energia de "deveres a cumprir"</strong> que pode ser estressante.</li>
+      <li><strong>B (Wonder Weeks)</strong> é interessante mas é UM método específico — melhor como feature lateral depois. Pode ser integrado num modal/aba secundária.</li>
+    </ul>
+  </div>
+
+  <div class="annot">
+    <h4>Modelo de dados sugerido (Firestore)</h4>
+    <pre style="background:rgba(20,26,60,.5);padding:14px;border-radius:8px;font-size:11.5px;color:#c4b5fd;font-family:Menlo,monospace;overflow-x:auto;line-height:1.55"><code>milestones/{id}
+  type: "milestone"        // novo tipo de entry
+  key: "social_smile"      // chave pré-definida
+  date: "2026-04-12"       // YYYY-MM-DD
+  time: "14:30"            // opcional
+  category: "social"       // motor | social | language | cognitive
+  note: "Sorriu quando..."  // opcional
+  photo: "data:image/..."  // opcional, base64 ≤200kb
+  ageWeeks: 5              // calculado (vira histórico)</code></pre>
+    <p style="margin-top:10px"><strong>Lista de marcos pré-definidos</strong> ficaria em <code>js/milestones.js</code> (bilíngue, ~40 itens cobrindo 0-24 meses divididos nas 4 categorias). Cada marco tem: key, label{pt,en}, category, ageRange{minWeeks,maxWeeks}, tip{pt,en} opcional.</p>
+  </div>
+
+  <div class="decision">
+    <h3>Qual rumo?</h3>
+    <div class="opt"><b>A · Checklist por categoria</b> — Mais conservador, padrão Baby Center. Bom pra quem quer "TODO list" de marcos.</div>
+    <div class="opt"><b>B · Wonder Weeks leaps</b> — Único, interessante, mas é UM método específico (não universal). Pode confundir quem não conhece.</div>
+    <div class="opt"><b>C · Timeline cronológica</b> — Memória emocional, vira álbum digital. Excelente pra "olhar pra trás daqui a anos".</div>
+    <div class="opt"><b>D · Card no Home</b> — Discoverability. Não funciona sozinho — precisa de C ou A pro registro completo.</div>
+    <div class="opt" style="border-color:rgba(167,139,250,.4);background:rgba(167,139,250,.05)"><b>★ C + D (recomendado)</b> — Combina narrativa emocional + sugestão passiva. Cobre o ciclo completo: descobrir → registrar → revisitar.</div>
+  </div>
+
+</div>
+</body>
+</html>

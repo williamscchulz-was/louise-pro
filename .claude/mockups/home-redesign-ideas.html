@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Home redesign — ideias</title>
+<style>
+  :root{
+    --bg:#070b1e; --card:rgba(22,28,60,.55);
+    --b:rgba(139,124,246,.15); --bSoft:rgba(139,124,246,.08);
+    --text:#e4e6f4; --sub:#9099c3; --dim:#5b6189;
+    --accent:#8b7cf6; --green:#4ade80; --blue:#6ea8ff;
+    --purple:#a78bfa; --pink:#f472b6; --amber:#fbbf24; --orange:#fb923c;
+    --glass:rgba(14,18,48,.55);
+    --starfield:radial-gradient(ellipse 140% 55% at 50% 100%,#1a1f52 0%,transparent 70%),radial-gradient(ellipse at 50% 0%,#10153d 0%,var(--bg) 65%),var(--bg);
+  }
+  *{box-sizing:border-box}
+  body{background:#04061a;color:var(--text);font:500 14px/1.5 -apple-system,BlinkMacSystemFont,"Inter",sans-serif;margin:0;padding:28px 16px 80px}
+  .wrap{max-width:1480px;margin:0 auto}
+  h1{font-size:24px;margin:0 0 6px;font-weight:800;letter-spacing:-.5px}
+  .lede{color:var(--sub);font-size:13.5px;margin:0 0 28px;max-width:640px}
+  h2{font-size:13px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--accent);margin:32px 0 12px;display:flex;align-items:center;gap:10px}
+  h2 .badge{padding:3px 8px;border-radius:6px;background:rgba(139,124,246,.12);color:#c4b5fd;font-size:10px;font-weight:700;letter-spacing:.6px}
+  .desc{color:var(--sub);font-size:13px;margin:0 0 14px;max-width:640px;line-height:1.55}
+
+  .phones{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:22px;margin-bottom:24px}
+  .phone{background:var(--starfield);border-radius:36px;padding:18px 14px 70px;border:1px solid rgba(139,124,246,.18);box-shadow:0 20px 60px -20px rgba(0,0,0,.6);position:relative;min-height:560px;overflow:hidden}
+  .phone .notch{width:108px;height:18px;background:#000;border-radius:0 0 14px 14px;margin:-14px auto 14px}
+
+  /* Header común */
+  .head{display:flex;align-items:center;gap:10px;padding:0 4px 14px}
+  .photo{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#f472b6,#a78bfa);display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:800;color:#fff}
+  .head .name{font-size:16px;font-weight:800;letter-spacing:-.3px}
+  .head .meta{font-size:10px;color:var(--accent);font-weight:600}
+  .head .bell{margin-left:auto;width:32px;height:32px;border-radius:10px;background:rgba(22,28,60,.6);border:1px solid var(--bSoft);display:flex;align-items:center;justify-content:center;color:var(--sub);font-size:14px}
+
+  /* === IDEA 1: NEXT-THING HERO (countdown) === */
+  .next-hero{padding:22px 18px;border-radius:22px;background:linear-gradient(180deg,rgba(110,168,255,.12),rgba(110,168,255,.04));border:1px solid rgba(110,168,255,.32);margin:0 4px 16px;position:relative;overflow:hidden}
+  .next-hero::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 70% 100% at 0% 100%,rgba(110,168,255,.18),transparent 60%);pointer-events:none}
+  .next-hero .lbl{font-size:10px;font-weight:700;color:#7dd3fc;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+  .next-hero .lbl::before{content:"●";color:var(--blue);animation:livePulse 1.6s ease-in-out infinite;font-size:10px}
+  .next-hero .ic{font-size:34px;margin-bottom:6px}
+  .next-hero .title{font-size:22px;font-weight:800;letter-spacing:-.4px;margin-bottom:6px}
+  .next-hero .countdown{font-size:48px;font-weight:900;letter-spacing:-1.5px;color:#7dd3fc;font-variant-numeric:tabular-nums;line-height:1;margin-bottom:6px}
+  .next-hero .countdown .sec{font-size:24px;color:#9099c3;animation:tick 1s steps(1) infinite}
+  .next-hero .sub{font-size:12px;color:var(--sub);font-variant-numeric:tabular-nums}
+  .next-hero .progress{margin-top:14px;height:5px;border-radius:3px;background:rgba(110,168,255,.12);overflow:hidden}
+  .next-hero .progress .fill{height:100%;width:60%;background:linear-gradient(90deg,#60a5fa,#a78bfa);border-radius:3px;animation:progressFill 6s ease-out infinite}
+  @keyframes livePulse{0%,100%{opacity:.4}50%{opacity:1}}
+  @keyframes tick{0%{opacity:1}50%{opacity:.4}}
+  @keyframes progressFill{0%{width:30%}100%{width:90%}}
+
+  /* mini cards strip below hero */
+  .mini-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:0 4px;margin-bottom:14px}
+  .mini-strip .m{padding:8px 6px;border-radius:10px;background:rgba(22,28,60,.45);border:1px solid var(--bSoft);text-align:center}
+  .mini-strip .m .v{font-size:14px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.3px}
+  .mini-strip .m .l{font-size:8px;color:var(--dim);font-weight:700;letter-spacing:.4px;text-transform:uppercase;margin-top:1px}
+  .mini-strip .m.green .v{color:var(--green)}
+  .mini-strip .m.amber .v{color:var(--amber)}
+  .mini-strip .m.purple .v{color:var(--purple)}
+  .mini-strip .m.pink .v{color:var(--pink)}
+
+  /* === IDEA 2: COMPACT METRIC STRIP (single row) === */
+  .strip{display:flex;background:rgba(22,28,60,.45);border:1px solid var(--bSoft);border-radius:18px;padding:12px 8px;margin:0 4px 16px;overflow:hidden}
+  .strip .col{flex:1;text-align:center;position:relative}
+  .strip .col+.col::before{content:"";position:absolute;left:0;top:18%;bottom:18%;width:1px;background:rgba(139,124,246,.1)}
+  .strip .col .v{font-size:18px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.4px;line-height:1}
+  .strip .col .l{font-size:9px;color:var(--dim);font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-top:4px}
+  .strip .col .ago{font-size:9px;color:var(--sub);margin-top:2px;font-variant-numeric:tabular-nums}
+  .strip .col.green .v{color:var(--green)}
+  .strip .col.purple .v{color:var(--purple)}
+  .strip .col.pink .v{color:var(--pink)}
+  .strip .col.amber .v{color:var(--amber)}
+
+  /* === IDEA 3: MULTI-ARC RING === */
+  .multi-ring-wrap{display:flex;justify-content:center;padding:18px 0 12px;position:relative}
+  .multi-ring{position:relative;width:240px;height:240px}
+  .multi-ring svg{width:100%;height:100%;display:block;transform:rotate(-90deg)}
+  .multi-ring .center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:none}
+  .multi-ring .center .lbl{font-size:9px;font-weight:700;color:var(--dim);letter-spacing:1.2px;text-transform:uppercase}
+  .multi-ring .center .val{font-size:32px;font-weight:900;letter-spacing:-1.5px;color:var(--text);line-height:1;margin-top:4px;font-variant-numeric:tabular-nums}
+  .multi-ring .center .sub{font-size:11px;color:var(--sub);margin-top:4px}
+  /* arc legend */
+  .arc-legend{display:flex;justify-content:center;gap:14px;font-size:10px;color:var(--dim);font-weight:600;margin-bottom:14px}
+  .arc-legend span{display:inline-flex;align-items:center;gap:5px}
+  .arc-legend i{width:8px;height:8px;border-radius:50%}
+
+  /* === IDEA 4: PHOTO HERO === */
+  .photo-hero{position:relative;height:280px;border-radius:22px;overflow:hidden;margin:0 4px 16px;background:linear-gradient(135deg,#f472b6,#a78bfa,#6ea8ff)}
+  .photo-hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,rgba(7,11,30,.6) 75%,rgba(7,11,30,.95))}
+  .photo-hero .baby-emoji{position:absolute;top:50%;left:50%;transform:translate(-50%,-65%);font-size:90px;filter:drop-shadow(0 4px 12px rgba(0,0,0,.3))}
+  .photo-hero .info{position:absolute;left:0;right:0;bottom:14px;padding:0 18px;color:#fff;z-index:2}
+  .photo-hero .age{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.7);margin-bottom:4px}
+  .photo-hero .name-big{font-size:26px;font-weight:900;letter-spacing:-.6px;margin-bottom:6px;text-shadow:0 2px 8px rgba(0,0,0,.4)}
+  .photo-hero .status{font-size:13px;font-weight:600;color:rgba(255,255,255,.92);display:flex;align-items:center;gap:6px}
+  .photo-hero .status::before{content:"●";color:#a78bfa;animation:livePulse 1.6s ease-in-out infinite}
+
+  /* === IDEA 5: TIMELINE STORY === */
+  .timeline-wrap{padding:14px 16px;background:rgba(22,28,60,.4);border:1px solid var(--bSoft);border-radius:18px;margin:0 4px 16px}
+  .timeline-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
+  .timeline-head .h{font-size:11px;font-weight:700;color:var(--dim);letter-spacing:.6px;text-transform:uppercase}
+  .timeline-head .now{font-size:10px;color:#7dd3fc;font-weight:700}
+  .timeline{position:relative;height:54px;background:linear-gradient(90deg,rgba(167,139,250,.22) 0%,rgba(167,139,250,.22) 25%,rgba(22,28,60,.5) 25%,rgba(22,28,60,.5) 100%);border-radius:8px;overflow:hidden}
+  /* sleep band */
+  .timeline .sleep-band{position:absolute;left:0;top:0;height:100%;background:linear-gradient(90deg,rgba(167,139,250,.4),rgba(167,139,250,.2));width:25%}
+  /* events */
+  .timeline .ev{position:absolute;top:50%;width:20px;height:20px;border-radius:50%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;font-size:10px;border:2px solid rgba(7,11,30,.7);box-shadow:0 2px 6px rgba(0,0,0,.4)}
+  .timeline .now-line{position:absolute;top:0;bottom:0;width:2px;background:#fbbf24;box-shadow:0 0 8px #fbbf24;animation:nowPulse 2s ease-in-out infinite}
+  @keyframes nowPulse{0%,100%{opacity:.6}50%{opacity:1}}
+  .timeline-axis{display:flex;justify-content:space-between;margin-top:6px;font-size:9px;color:var(--dim);font-weight:600}
+
+  /* === IDEA 6: STACKED CARDS HERO === */
+  .stack{position:relative;margin:0 4px 16px;height:200px}
+  .stack-card{position:absolute;left:0;right:0;border-radius:20px;padding:20px;border:1px solid var(--bSoft);box-shadow:0 8px 24px -8px rgba(0,0,0,.5);transition:all .3s}
+  .stack-card.c1{top:0;background:linear-gradient(180deg,rgba(167,139,250,.18),rgba(124,58,237,.06));border-color:rgba(167,139,250,.3);z-index:3;height:140px}
+  .stack-card.c2{top:14px;left:8px;right:8px;background:linear-gradient(180deg,rgba(74,222,128,.12),rgba(34,197,94,.04));border-color:rgba(74,222,128,.2);z-index:2;height:140px;opacity:.62}
+  .stack-card.c3{top:28px;left:16px;right:16px;background:linear-gradient(180deg,rgba(244,114,182,.1),rgba(244,114,182,.04));border-color:rgba(244,114,182,.16);z-index:1;height:140px;opacity:.4}
+  .stack-card .lbl{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#c4b5fd}
+  .stack-card .big{font-size:30px;font-weight:900;letter-spacing:-.8px;color:#f0f2ff;margin-top:4px;font-variant-numeric:tabular-nums;line-height:1}
+  .stack-card .sub{font-size:11px;color:rgba(255,255,255,.7);margin-top:4px}
+  .stack-dots{display:flex;justify-content:center;gap:6px;margin-top:10px}
+  .stack-dots span{width:5px;height:5px;border-radius:50%;background:rgba(139,124,246,.2)}
+  .stack-dots span.active{background:var(--accent);width:14px;border-radius:3px}
+
+  /* call out */
+  .call{background:linear-gradient(180deg,rgba(139,124,246,.1),rgba(139,124,246,.03));border:1px solid rgba(139,124,246,.22);border-radius:14px;padding:14px 18px;margin:18px 0 30px;font-size:13px;color:#c7cbea;line-height:1.6;max-width:780px}
+  .call h3{margin:0 0 6px;font-size:12px;color:#c4b5fd;text-transform:uppercase;letter-spacing:.5px;font-weight:800}
+
+  .pros{display:grid;grid-template-columns:1fr 1fr;gap:14px;font-size:12.5px;margin-top:8px}
+  .pros .p{padding:10px 14px;border-radius:10px;background:rgba(74,222,128,.06);border:1px solid rgba(74,222,128,.16)}
+  .pros .c{padding:10px 14px;border-radius:10px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.16)}
+  .pros strong{color:#fff}
+  .vote{display:inline-block;padding:5px 12px;border-radius:14px;background:rgba(139,124,246,.16);border:1px solid rgba(139,124,246,.32);font-size:11px;font-weight:700;letter-spacing:.3px;color:#c4b5fd;margin-top:8px}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<h1>Home redesign — ideias pra escolher</h1>
+<p class="lede">5 direções pra repensar a tela inicial. Cada uma resolve uma "primeira coisa que você vê" diferente. Algumas têm animação. Aprova qual ressoar (ou combina partes).</p>
+
+<!-- ============== IDEA 1: NEXT-THING HERO ============== -->
+<h2>Ideia 1 — "Próxima coisa" hero <span class="badge">com animação</span></h2>
+<p class="desc">Em vez do Ring grande no centro, um <strong>card hero</strong> mostra qual é o próximo evento esperado, com countdown vivo. Resolve a pergunta principal de pais: "quando é a próxima mamada/sono?". Mini-strip embaixo mantém os números do dia.</p>
+
+<div class="phones">
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="head">
+      <div class="photo">L</div>
+      <div><div class="name">Louise</div><div class="meta">52 dias · 27 abr</div></div>
+      <div class="bell">🔔</div>
+    </div>
+    <div class="next-hero">
+      <div class="lbl">Próxima mamada</div>
+      <div class="ic">🍼</div>
+      <div class="title">~14:30</div>
+      <div class="countdown">1<span style="opacity:.5">h</span>25<span class="sec">s</span></div>
+      <div class="sub">90ml previsto · última: 13:05 (110ml)</div>
+      <div class="progress"><div class="fill"></div></div>
+    </div>
+    <div class="mini-strip">
+      <div class="m green"><div class="v">220<span style="font-size:9px;opacity:.6;font-weight:700">ml</span></div><div class="l">Mamad.</div></div>
+      <div class="m amber"><div class="v">2x</div><div class="l">Simet.</div></div>
+      <div class="m purple"><div class="v">8h30</div><div class="l">Sono</div></div>
+      <div class="m pink"><div class="v">4</div><div class="l">Fralda</div></div>
+    </div>
+    <div style="font-size:10px;color:var(--dim);text-align:center;padding:0 20px;line-height:1.4">depois aparece curiosidade do dia + lista do hoje</div>
+  </div>
+
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="head">
+      <div class="photo">L</div>
+      <div><div class="name">Louise</div><div class="meta">52 dias</div></div>
+      <div class="bell">🔔</div>
+    </div>
+    <div class="next-hero" style="background:linear-gradient(180deg,rgba(167,139,250,.18),rgba(167,139,250,.05));border-color:rgba(167,139,250,.4)">
+      <div class="lbl" style="color:#c4b5fd">Janela de soneca abrindo</div>
+      <div class="ic">☁️</div>
+      <div class="title" style="font-size:18px">em ~25min · WW 1h12</div>
+      <div class="countdown" style="color:#c4b5fd;font-size:38px">25<span style="font-size:18px">m</span><span style="font-size:24px;color:#9099c3"> 14<span class="sec">s</span></span></div>
+      <div class="sub">acordou às 13:18 · padrão 7d</div>
+    </div>
+    <div class="mini-strip">
+      <div class="m green"><div class="v">220ml</div><div class="l">Mamad.</div></div>
+      <div class="m amber"><div class="v">2x</div><div class="l">Simet.</div></div>
+      <div class="m purple"><div class="v">8h30</div><div class="l">Sono</div></div>
+      <div class="m pink"><div class="v">4</div><div class="l">Fralda</div></div>
+    </div>
+  </div>
+
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="head">
+      <div class="photo">L</div>
+      <div><div class="name">Louise</div><div class="meta">52 dias</div></div>
+      <div class="bell">🔔</div>
+    </div>
+    <div class="next-hero" style="background:linear-gradient(180deg,rgba(96,165,250,.18),rgba(96,165,250,.05));border-color:rgba(96,165,250,.4)">
+      <div class="lbl" style="color:#7dd3fc">Bedtime ao vivo</div>
+      <div class="ic">🌙</div>
+      <div class="title">21:00 → ~06:15</div>
+      <div class="countdown" style="font-size:36px">3h22 <span style="color:#fdba74;font-size:18px">+ 22min vs média</span></div>
+      <div class="sub">2 despertares · 35min acordada</div>
+    </div>
+    <div class="mini-strip">
+      <div class="m green"><div class="v">220ml</div><div class="l">Mamad.</div></div>
+      <div class="m amber"><div class="v">2x</div><div class="l">Simet.</div></div>
+      <div class="m purple"><div class="v">8h30</div><div class="l">Sono</div></div>
+      <div class="m pink"><div class="v">4</div><div class="l">Fralda</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="pros">
+  <div class="p"><strong>Pro:</strong> resolve "quando vai acontecer X" com 1 glance. Countdown vivo dá sensação de presença. Mini-strip mantém o resumo. Funciona pra todos os estados (próxima mamada / janela soneca / bedtime ativo).</div>
+  <div class="c"><strong>Con:</strong> sai do Ring atual (identidade visual forte). Predição depende de pattern → primeiros dias mostra "—" ou texto fallback. Card grande pode parecer "cheio" demais pra alguns.</div>
+</div>
+
+<!-- ============== IDEA 2: COMPACT STRIP ============== -->
+<h2>Ideia 2 — Strip compacto com Ring intacto</h2>
+<p class="desc">Mantém o Ring como hero, mas <strong>compacta os 4 cards</strong> em uma única strip horizontal — fica menos "duplicado" porque a Home já tem o Ring grande. Ganha espaço pra ver mais do histórico de hoje sem scroll.</p>
+
+<div class="phones">
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="head">
+      <div class="photo">L</div>
+      <div><div class="name">Louise</div><div class="meta">52 dias · 27 abr</div></div>
+      <div class="bell">🔔</div>
+    </div>
+    <div style="text-align:center;padding:6px 4px;color:var(--dim);font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase">RING (icone aqui)</div>
+    <div style="text-align:center;padding:30px 0;font-size:36px;font-weight:900;letter-spacing:-1.5px">14:25</div>
+    <div style="text-align:center;color:var(--purple);font-size:13px;font-weight:700;margin-bottom:18px">Acordada · 1h07 desde acordar</div>
+    <div class="strip">
+      <div class="col green"><div class="v">220<span style="font-size:11px;opacity:.6">ml</span></div><div class="l">Mamad.</div><div class="ago">2h ago</div></div>
+      <div class="col amber"><div class="v">2x</div><div class="l">Simet.</div><div class="ago">1h ago</div></div>
+      <div class="col purple"><div class="v">8h30</div><div class="l">Sono</div><div class="ago">3h ago</div></div>
+      <div class="col pink"><div class="v">4</div><div class="l">Fralda</div><div class="ago">45m ago</div></div>
+    </div>
+    <div style="font-size:10px;color:var(--dim);padding:0 4px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;margin-top:8px">TODAY · seg 27</div>
+    <div style="font-size:10px;color:var(--dim);text-align:center;padding:8px 0">+ lista de eventos abaixo</div>
+  </div>
+</div>
+
+<div class="pros">
+  <div class="p"><strong>Pro:</strong> mudança mínima vs estado atual. Ring fica intocado (identidade preservada). Strip ocupa 1/3 da altura dos 4 cards atuais. Lista do "hoje" sobe na tela = menos scroll.</div>
+  <div class="c"><strong>Con:</strong> não traz info nova — só reorganiza. Strip tem espaço apertado pra valores grandes (550ml · 36% pode estourar).</div>
+</div>
+
+<!-- ============== IDEA 3: MULTI-ARC RING ============== -->
+<h2>Ideia 3 — Ring multi-arco (concêntricos)</h2>
+<p class="desc">O Ring hoje mostra <strong>1 arco</strong> (estado atual). Versão concêntrica mostra <strong>3 arcos</strong> ao mesmo tempo: progresso do bedtime atual, ciclo da próxima mamada, e o dia (% até bedtime). Densidade de info crescente no centro.</p>
+
+<div class="phones">
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="head">
+      <div class="photo">L</div>
+      <div><div class="name">Louise</div><div class="meta">52 dias</div></div>
+      <div class="bell">🔔</div>
+    </div>
+    <div class="multi-ring-wrap">
+      <div class="multi-ring">
+        <svg viewBox="0 0 240 240">
+          <!-- track outer -->
+          <circle cx="120" cy="120" r="105" fill="none" stroke="rgba(110,168,255,0.1)" stroke-width="6"/>
+          <!-- arc outer (sleep cycle) -->
+          <circle cx="120" cy="120" r="105" fill="none" stroke="#60a5fa" stroke-width="6" stroke-linecap="round" stroke-dasharray="380 660" stroke-dashoffset="0" style="filter:drop-shadow(0 0 6px rgba(96,165,250,.5))"/>
+          <!-- track middle -->
+          <circle cx="120" cy="120" r="85" fill="none" stroke="rgba(74,222,128,0.1)" stroke-width="6"/>
+          <!-- arc middle (feed) -->
+          <circle cx="120" cy="120" r="85" fill="none" stroke="#4ade80" stroke-width="6" stroke-linecap="round" stroke-dasharray="280 540" style="filter:drop-shadow(0 0 6px rgba(74,222,128,.4))"/>
+          <!-- track inner -->
+          <circle cx="120" cy="120" r="65" fill="none" stroke="rgba(167,139,250,0.1)" stroke-width="6"/>
+          <!-- arc inner (day cycle) -->
+          <circle cx="120" cy="120" r="65" fill="none" stroke="#a78bfa" stroke-width="6" stroke-linecap="round" stroke-dasharray="240 410" style="filter:drop-shadow(0 0 6px rgba(167,139,250,.4))"/>
+        </svg>
+        <div class="center">
+          <div class="lbl">14:25</div>
+          <div class="val">1h07</div>
+          <div class="sub">Acordada</div>
+        </div>
+      </div>
+    </div>
+    <div class="arc-legend">
+      <span><i style="background:#60a5fa"></i> Sono 60%</span>
+      <span><i style="background:#4ade80"></i> Mamada 52%</span>
+      <span><i style="background:#a78bfa"></i> Dia 58%</span>
+    </div>
+    <div style="text-align:center;font-size:11px;color:var(--dim);padding:0 16px">3 ciclos overlay — sono/mamada/dia · cores combinam com o app</div>
+  </div>
+</div>
+
+<div class="pros">
+  <div class="p"><strong>Pro:</strong> info-dense, 3 progressos em 1 olhar. Mantém spirit visual do app. Glow das cores fica bonito sobre o starfield. Tap em cada arco poderia expandir info.</div>
+  <div class="c"><strong>Con:</strong> mais complexo de ler à primeira vista (precisa de legenda). Arcos podem se confundir com hue similar. Custo de re-arquitetar Ring component (~200 linhas).</div>
+</div>
+
+<!-- ============== IDEA 4: PHOTO HERO ============== -->
+<h2>Ideia 4 — Photo hero (foto da Louise como fundo)</h2>
+<p class="desc">A <strong>foto da Louise</strong> ocupa um card grande no topo. Estado atual e idade sobrepostos. Mais "memória", menos "operacional". Foto vem do profile (já existe upload). Substituiria header pequeno + curiosity card (combina os dois).</p>
+
+<div class="phones">
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="bell" style="position:absolute;top:24px;right:18px;z-index:10;background:rgba(7,11,30,.6);backdrop-filter:blur(12px)">🔔</div>
+    <div class="photo-hero">
+      <div class="baby-emoji">👶🏻</div>
+      <div class="info">
+        <div class="age">52 DIAS · 1m 22d · 7 sem</div>
+        <div class="name-big">Louise</div>
+        <div class="status">Acordada · 1h07 desde acordar</div>
+      </div>
+    </div>
+    <div class="mini-strip">
+      <div class="m green"><div class="v">220ml</div><div class="l">Mamad.</div></div>
+      <div class="m amber"><div class="v">2x</div><div class="l">Simet.</div></div>
+      <div class="m purple"><div class="v">8h30</div><div class="l">Sono</div></div>
+      <div class="m pink"><div class="v">4</div><div class="l">Fralda</div></div>
+    </div>
+    <div style="font-size:10px;color:var(--dim);text-align:center;padding:0 20px;line-height:1.4">+ Ring menor abaixo · curiosidade · timeline</div>
+  </div>
+</div>
+
+<div class="pros">
+  <div class="p"><strong>Pro:</strong> emocional, mostra a Louise. Idade em 3 unidades (dias/meses-dias/semanas) ajuda contexto. Combina com gradient noturno no resto do app.</div>
+  <div class="c"><strong>Con:</strong> ocupa muito espaço (280px). Foto pode ficar ruim em letras (text shadow precisa cuidar). Vai contra o vibe minimalista atual. Precisa de fallback bonito quando não tem foto upload.</div>
+</div>
+
+<!-- ============== IDEA 5: TIMELINE STORY ============== -->
+<h2>Ideia 5 — Timeline visual do dia <span class="badge">com animação</span></h2>
+<p class="desc">Hoje virado <strong>linha de tempo horizontal</strong> de 24h, com banda roxa onde foi o sono noturno + bolinhas dos eventos do dia. Linha amarela vertical = agora. Spatial = cérebro pega rapidão. Mantém Ring menor abaixo pra ainda ser focal.</p>
+
+<div class="phones">
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="head">
+      <div class="photo">L</div>
+      <div><div class="name">Louise</div><div class="meta">52 dias</div></div>
+      <div class="bell">🔔</div>
+    </div>
+    <div class="timeline-wrap">
+      <div class="timeline-head">
+        <span class="h">Hoje · linha do tempo</span>
+        <span class="now">14:25 agora</span>
+      </div>
+      <div class="timeline">
+        <div class="sleep-band"></div>
+        <div class="ev" style="left:6%;background:rgba(74,222,128,.7);color:#1a0a00">🍼</div>
+        <div class="ev" style="left:18%;background:rgba(74,222,128,.7);color:#1a0a00">🍼</div>
+        <div class="ev" style="left:24%;background:rgba(244,114,182,.7);color:#1a0a00">💧</div>
+        <div class="ev" style="left:32%;background:rgba(167,139,250,.7);color:#1a0a00">☁️</div>
+        <div class="ev" style="left:42%;background:rgba(74,222,128,.7);color:#1a0a00">🍼</div>
+        <div class="ev" style="left:50%;background:rgba(244,114,182,.7);color:#1a0a00">💩</div>
+        <div class="ev" style="left:55%;background:rgba(251,191,36,.7);color:#1a0a00">💊</div>
+        <div class="now-line" style="left:60%"></div>
+      </div>
+      <div class="timeline-axis">
+        <span>0h</span><span>6h</span><span>12h</span><span>18h</span><span>24h</span>
+      </div>
+    </div>
+    <div style="text-align:center;font-size:10px;color:var(--dim);padding:0 20px;line-height:1.4;margin-bottom:14px">Banda escura = sono noturno · bolinhas = eventos · linha amarela = agora · pulse leve</div>
+    <div style="margin:0 4px;padding:14px;border-radius:14px;background:rgba(22,28,60,.4);border:1px solid var(--bSoft);text-align:center">
+      <div style="font-size:11px;color:var(--dim);margin-bottom:6px">RING menor</div>
+      <div style="font-size:20px;font-weight:800;color:var(--purple)">1h07</div>
+      <div style="font-size:10px;color:var(--sub)">acordada</div>
+    </div>
+  </div>
+</div>
+
+<div class="pros">
+  <div class="p"><strong>Pro:</strong> visualização espacial é forte — bate o olho e vê a forma do dia. Identifica padrões instantâneos ("manhã cheia, tarde quieta"). Diferencia o app dos competidores. Tap numa bolinha pode editar o evento.</div>
+  <div class="c"><strong>Con:</strong> bolinhas podem se sobrepor em horários cheios. Eventos com duração (sono) precisam ser bandas, não pontos — implementação complica. Não substitui Ring (fica abaixo, não hero).</div>
+</div>
+
+<!-- ============== IDEA 6: STACK CARDS HERO ============== -->
+<h2>Ideia 6 — Stack de cards (estilo Apple Wallet)</h2>
+<p class="desc">Card principal mostra <strong>"última atividade"</strong> em destaque (sleep terminou X atrás, mamada Y, etc). Outros cards pequenos atrás peeking, swipeable. Visual marcante, quase de mini-jornal do dia.</p>
+
+<div class="phones">
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="head">
+      <div class="photo">L</div>
+      <div><div class="name">Louise</div><div class="meta">52 dias</div></div>
+      <div class="bell">🔔</div>
+    </div>
+    <div class="stack">
+      <div class="stack-card c1">
+        <div class="lbl">🌙 Bedtime terminou</div>
+        <div class="big">8h30m</div>
+        <div class="sub">06:00 · 2 despertares</div>
+      </div>
+      <div class="stack-card c2">
+        <div class="lbl" style="color:#86efac">🍼 Última mamada</div>
+        <div class="big" style="color:#bbf7d0;opacity:.8">110ml</div>
+        <div class="sub" style="color:rgba(187,247,208,.7)">há 2h05 · 13:05</div>
+      </div>
+      <div class="stack-card c3">
+        <div class="lbl" style="color:#f9a8d4">🧷 Última fralda</div>
+        <div class="big" style="color:#fbcfe8;opacity:.7">💧 Xixi</div>
+      </div>
+    </div>
+    <div class="stack-dots">
+      <span class="active"></span><span></span><span></span><span></span>
+    </div>
+    <div style="text-align:center;font-size:11px;color:var(--dim);padding:14px 20px 0;line-height:1.5">swipe pra navegar · tap no topo expande pra detalhes</div>
+  </div>
+</div>
+
+<div class="pros">
+  <div class="p"><strong>Pro:</strong> visual rico, sensação premium estilo iOS Wallet. Foco em "última atividade" é perfeito pra quem acabou de pegar o filho — pais querem saber o que aconteceu por último.</div>
+  <div class="c"><strong>Con:</strong> swipe horizontal complica gestures (já tem swipe entre Home/Stats/History). Stack pode ficar visualmente bagunçado. Precisa novo padrão de interação (swipe-up pra expandir).</div>
+</div>
+
+<!-- ============== DECISION ============== -->
+<h2>Como decidir</h2>
+<div class="call">
+  <h3>Minha sugestão</h3>
+  Se quer **mudança grande mas baixo risco**: <strong>Ideia 1 (Next-thing hero)</strong> — resolve a pergunta principal de pais, animação dá vida sem ser brega, mini-strip preserva o resumo dos 4 cards. Substitui o Ring central por algo mais útil pra checagem rápida (e Ring continua existindo embaixo se quiser).<br><br>
+  Se quer **mudança suave**: <strong>Ideia 2 (Strip compacto)</strong> — só compacta os 4 cards. Sem riscos. Ganho de altura.<br><br>
+  Se quer **memória/emoção**: <strong>Ideia 4 (Photo hero)</strong> — funciona melhor com foto real (não emoji).<br><br>
+  Se quer **info dense visual**: <strong>Ideia 3 (Multi-arc)</strong> ou <strong>Ideia 5 (Timeline)</strong>.<br><br>
+  <span class="vote">Vota qual: 1, 2, 3, 4, 5, 6 ou combinação ("1 + 5", etc)</span>
+</div>
+
+</div>
+</body>
+</html>

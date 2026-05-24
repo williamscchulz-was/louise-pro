@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Rotina diária — mockups</title>
+<style>
+  :root{
+    --bg:#070b1e;--text:#e4e6f4;--sub:#9099c3;--dim:#5b6189;
+    --accent:#8b7cf6;--green:#4ade80;--blue:#6ea8ff;--purple:#a78bfa;
+    --pink:#f472b6;--amber:#fbbf24;--cyan:#7dd3fc;--brown:#a16b4a;
+    --b:rgba(139,124,246,.06);
+    --starfield:radial-gradient(ellipse 140% 55% at 50% 100%,#1a1f52 0%,transparent 70%),radial-gradient(ellipse at 50% 0%,#10153d 0%,var(--bg) 65%),var(--bg);
+  }
+  *{box-sizing:border-box}
+  body{background:#04061a;color:var(--text);font:500 14px/1.5 -apple-system,BlinkMacSystemFont,"Inter",sans-serif;margin:0;padding:30px 14px 60px;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1400px;margin:0 auto}
+  h1{font-size:24px;margin:0 0 6px;font-weight:800;letter-spacing:-.5px}
+  .lede{color:var(--sub);font-size:14px;margin:0 0 30px;line-height:1.55}
+  h2{font-size:13px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin:36px 0 14px;padding-bottom:8px;border-bottom:1px solid rgba(139,124,246,.18)}
+  h2 span{color:var(--dim);font-weight:600;margin-left:10px;text-transform:none;letter-spacing:0}
+  h3{font-size:15px;margin:0 0 10px;color:#c4b5fd;font-weight:700}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:24px}
+  .phone{background:var(--starfield);border-radius:34px;padding:18px 14px 32px;border:1px solid rgba(139,124,246,.18);box-shadow:0 20px 60px -20px rgba(0,0,0,.6);position:relative;min-height:600px}
+  .phone .notch{width:104px;height:18px;background:#000;border-radius:0 0 14px 14px;margin:-14px auto 12px}
+  .col-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-align:center;margin-bottom:8px;color:#86efac}
+  .col-label.alt1{color:#fda4af}
+  .col-label.alt2{color:#fcd34d}
+  .col-label.alt3{color:#7dd3fc}
+  .col-label.alt4{color:#a78bfa}
+
+  .today-h{display:flex;align-items:baseline;justify-content:space-between;margin:6px 4px 12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1}
+  .today-h .l{color:var(--accent)}
+  .today-h .d{color:var(--dim);font-weight:500;letter-spacing:.4px}
+
+  /* ──── Ring placeholder ──── */
+  .ring{width:200px;height:200px;border-radius:50%;border:8px solid rgba(139,124,246,.3);position:relative;margin:18px auto 14px;display:flex;align-items:center;justify-content:center;flex-direction:column}
+  .ring::before{content:"";position:absolute;top:-8px;left:-8px;right:-8px;bottom:-8px;border-radius:50%;border:8px solid transparent;border-top-color:#a78bfa;border-right-color:#a78bfa;transform:rotate(45deg)}
+  .ring .label{font-size:11px;color:var(--sub);text-transform:uppercase;letter-spacing:.6px;font-weight:600;margin-bottom:4px}
+  .ring .val{font-size:34px;font-weight:800;color:#f0f2ff;letter-spacing:-1px;font-variant-numeric:tabular-nums;line-height:1}
+  .ring .sub{font-size:11px;color:var(--dim);margin-top:5px;letter-spacing:.3px}
+
+  /* ──── Entry row look ──── */
+  .row{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid rgba(139,124,246,.08)}
+  .row:last-child{border-bottom:none}
+  .row .ic{width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px}
+  .row .ic.bottle{background:rgba(74,222,128,.13);color:#4ade80}
+  .row .ic.diaper{background:rgba(163,140,254,.13);color:#a38cfe}
+  .row .ic.sleep{background:rgba(167,139,250,.13);color:#a78bfa}
+  .row .ic.bath{background:rgba(125,211,252,.13);color:#7dd3fc}
+  .row .ic.nap{background:rgba(167,139,250,.13);color:#a78bfa}
+  .row .ic.wake{background:rgba(251,191,36,.13);color:#fbbf24}
+  .row .body{flex:1;min-width:0}
+  .row .lbl{font-size:13px;font-weight:700;color:var(--text);letter-spacing:-.1px}
+  .row .det{font-size:11px;color:var(--sub);margin-top:1px}
+  .row .t{font-size:11px;color:var(--dim);font-weight:600;font-variant-numeric:tabular-nums}
+
+  /* ──── A1: "Next up" card no Home ──── */
+  .next-up{background:linear-gradient(135deg,rgba(167,139,250,.16),rgba(167,139,250,.06));border:1px solid rgba(167,139,250,.32);border-radius:18px;padding:16px 18px;margin-bottom:14px;position:relative;overflow:hidden}
+  .next-up::before{content:"";position:absolute;top:0;left:0;width:4px;height:100%;background:linear-gradient(180deg,#a78bfa,#7c3aed)}
+  .next-up .eyebrow{font-size:9px;font-weight:800;color:#c4b5fd;text-transform:uppercase;letter-spacing:1.2;margin-bottom:5px}
+  .next-up .main{display:flex;align-items:center;gap:14px}
+  .next-up .ic{width:44px;height:44px;border-radius:12px;background:rgba(167,139,250,.18);border:1px solid rgba(167,139,250,.3);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+  .next-up .info{flex:1}
+  .next-up .ttl{font-size:17px;font-weight:800;color:#f0f2ff;letter-spacing:-.3px}
+  .next-up .countdown{font-size:13px;color:var(--sub);margin-top:2px;font-variant-numeric:tabular-nums}
+  .next-up .countdown b{color:#c4b5fd;font-weight:700}
+  .next-up .progress-strip{display:flex;gap:5px;margin-top:14px;padding-top:12px;border-top:1px solid rgba(167,139,250,.14)}
+  .next-up .chip{flex:1;display:flex;flex-direction:column;align-items:center;font-size:9px;color:var(--dim);font-weight:600;text-transform:uppercase;letter-spacing:.4px;font-variant-numeric:tabular-nums}
+  .next-up .chip .dot{width:18px;height:18px;border-radius:50%;background:rgba(139,124,246,.12);border:1px solid rgba(139,124,246,.22);margin-bottom:4px;font-size:9px;display:flex;align-items:center;justify-content:center}
+  .next-up .chip.done .dot{background:#4ade80;border-color:#4ade80;color:#04061a}
+  .next-up .chip.next .dot{background:rgba(167,139,250,.4);border-color:#a78bfa;color:#fff;box-shadow:0 0 8px rgba(167,139,250,.5)}
+  .next-up .chip.late .dot{background:rgba(251,146,60,.3);border-color:#fb923c;color:#fb923c}
+
+  /* ──── A2: Timeline strip ──── */
+  .tline-strip{background:rgba(20,26,60,.4);border:1px solid rgba(139,124,246,.18);border-radius:16px;padding:14px 16px 12px;margin-bottom:14px}
+  .tline-strip .head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px}
+  .tline-strip .ttl{font-size:9px;font-weight:800;color:#c4b5fd;text-transform:uppercase;letter-spacing:1.2}
+  .tline-strip .now-pill{font-size:10px;color:var(--sub);font-variant-numeric:tabular-nums;font-weight:600;padding:2px 8px;border-radius:5px;background:rgba(167,139,250,.12)}
+  .tline-strip .bar{position:relative;height:36px;border-radius:10px;background:linear-gradient(90deg,rgba(20,26,60,.6),rgba(20,26,60,.8));border:1px solid rgba(139,124,246,.12);margin:0 0 8px}
+  .tline-strip .bar::before{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;width:2px;background:#a78bfa;box-shadow:0 0 8px #a78bfa,0 0 0 1px rgba(7,11,30,.8)}
+  .tline-strip .ev{position:absolute;top:50%;transform:translate(-50%,-50%);font-size:14px;width:24px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center}
+  .tline-strip .ev.done{background:#4ade80;color:#04061a}
+  .tline-strip .ev.pending{background:rgba(139,124,246,.2);border:1px dashed rgba(167,139,250,.4);color:#a78bfa}
+  .tline-strip .ev.late{background:rgba(251,146,60,.25);border:1px solid #fb923c;color:#fb923c;animation:pulseLate 2s ease-in-out infinite}
+  @keyframes pulseLate{0%,100%{box-shadow:0 0 0 0 rgba(251,146,60,.3)}50%{box-shadow:0 0 0 6px rgba(251,146,60,0)}}
+  .tline-strip .axis{display:flex;justify-content:space-between;font-size:9px;color:var(--dim);font-weight:600;font-variant-numeric:tabular-nums;padding:0 2px}
+
+  /* ──── A3: Checklist do dia ──── */
+  .checklist{background:rgba(20,26,60,.32);border:1px solid rgba(139,124,246,.18);border-radius:18px;padding:14px 18px;margin-bottom:14px}
+  .checklist .head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .checklist .head .ttl{font-size:13px;font-weight:700;color:#f0f2ff;letter-spacing:-.1px}
+  .checklist .head .progress{font-size:11px;color:var(--sub);font-variant-numeric:tabular-nums;font-weight:600}
+  .checklist .head .progress b{color:#c4b5fd}
+  .checklist .item{display:flex;align-items:center;gap:11px;padding:7px 0;font-size:12px}
+  .checklist .item .chk{width:20px;height:20px;border-radius:6px;border:1.5px solid rgba(139,124,246,.32);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px}
+  .checklist .item.done .chk{background:#4ade80;border-color:#4ade80;color:#04061a;font-weight:800}
+  .checklist .item.next .chk{background:rgba(167,139,250,.2);border-color:#a78bfa;color:#a78bfa}
+  .checklist .item.late .chk{background:rgba(251,146,60,.2);border-color:#fb923c;color:#fb923c}
+  .checklist .item .lbl{flex:1;color:var(--text);font-weight:500}
+  .checklist .item.done .lbl{color:var(--sub);text-decoration:line-through;text-decoration-color:rgba(144,153,195,.4)}
+  .checklist .item .when{font-size:10px;color:var(--dim);font-weight:600;font-variant-numeric:tabular-nums}
+  .checklist .bottles-row{display:flex;align-items:center;gap:6px;padding:9px 0 6px;border-top:1px solid rgba(139,124,246,.1);margin-top:6px}
+  .checklist .bottles-row .lbl{font-size:11px;color:var(--text);font-weight:600;flex:1;display:flex;align-items:center;gap:6px}
+  .checklist .bottles-row .pip{width:12px;height:12px;border-radius:3px;background:rgba(74,222,128,.18);border:1px solid rgba(74,222,128,.32)}
+  .checklist .bottles-row .pip.done{background:#4ade80;border-color:#4ade80}
+  .checklist .bottles-row .cnt{font-size:11px;color:#86efac;font-weight:700;font-variant-numeric:tabular-nums}
+
+  /* ──── A4: Ring com schedule arc ──── */
+  .ring-schedule{width:240px;height:240px;border-radius:50%;position:relative;margin:20px auto 12px}
+  .ring-schedule svg{width:100%;height:100%}
+  .ring-schedule .center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+  .ring-schedule .center .lbl{font-size:10px;color:var(--sub);text-transform:uppercase;letter-spacing:.6px;font-weight:600;margin-bottom:4px}
+  .ring-schedule .center .v{font-size:32px;font-weight:800;color:#f0f2ff;letter-spacing:-1px;font-variant-numeric:tabular-nums;line-height:1}
+  .ring-schedule .center .next{font-size:10px;color:#c4b5fd;margin-top:6px;font-weight:600;letter-spacing:.3px}
+
+  /* ──── Profile config section ──── */
+  .profile-section{background:rgba(20,26,60,.32);border:1px solid rgba(139,124,246,.18);border-radius:18px;padding:18px;margin:14px 0}
+  .profile-section .sec-title{font-size:11px;font-weight:800;color:#c4b5fd;text-transform:uppercase;letter-spacing:1;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+  .profile-section .sec-title::before{content:"⏰";font-size:14px}
+  .profile-section .row-cfg{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(139,124,246,.08)}
+  .profile-section .row-cfg:last-child{border-bottom:none}
+  .profile-section .label{font-size:13px;color:var(--text);font-weight:500;display:flex;align-items:center;gap:9px}
+  .profile-section .label .ic{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px}
+  .profile-section .ic.wake{background:rgba(251,191,36,.13);color:#fbbf24}
+  .profile-section .ic.nap{background:rgba(167,139,250,.13);color:#a78bfa}
+  .profile-section .ic.bath{background:rgba(125,211,252,.13);color:#7dd3fc}
+  .profile-section .ic.bed{background:rgba(167,139,250,.18);color:#c4b5fd}
+  .profile-section .ic.bottle{background:rgba(74,222,128,.13);color:#4ade80}
+  .profile-section .time-input{font-size:14px;font-weight:700;color:#c4b5fd;font-variant-numeric:tabular-nums;background:rgba(14,18,48,.55);border:1px solid rgba(139,124,246,.22);padding:6px 12px;border-radius:8px;min-width:64px;text-align:center}
+  .profile-section .qty-input{font-size:14px;font-weight:700;color:#86efac;font-variant-numeric:tabular-nums;background:rgba(14,18,48,.55);border:1px solid rgba(74,222,128,.32);padding:6px 14px;border-radius:8px;min-width:44px;text-align:center}
+  .profile-section .nap-group{padding:6px 0}
+  .profile-section .nap-group .nap-title{font-size:11px;color:var(--sub);font-weight:600;margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px}
+  .profile-section .nap-row{display:flex;align-items:center;gap:8px;padding:5px 0}
+  .profile-section .nap-row .num{font-size:11px;color:var(--dim);font-weight:600;width:24px}
+  .profile-section .nap-row .time{flex:1;text-align:right}
+
+  /* ──── Annotation block ──── */
+  .annot{background:rgba(139,124,246,.04);border:1px solid rgba(139,124,246,.18);border-radius:14px;padding:18px 22px;margin:18px 0}
+  .annot h4{margin:0 0 8px;font-size:13px;font-weight:800;color:var(--accent)}
+  .annot p,.annot ul{margin:0 0 6px;color:var(--sub);font-size:13px;line-height:1.55}
+  .annot ul{padding-left:18px}
+  .annot strong{color:var(--text);font-weight:700}
+  .annot code{background:rgba(20,26,60,.5);padding:1px 5px;border-radius:4px;font-size:11.5px;color:#c4b5fd;font-family:Menlo,Consolas,monospace}
+
+  .decision{background:linear-gradient(180deg,rgba(167,139,250,.10),rgba(167,139,250,.03));border:1px solid rgba(167,139,250,.28);border-radius:18px;padding:24px;margin:36px 0 0}
+  .decision h3{margin:0 0 14px;font-size:17px;font-weight:800;color:#c4b5fd}
+  .decision ul{margin:0;padding-left:18px;color:var(--sub);font-size:13.5px;line-height:1.7}
+  .decision strong{color:var(--text)}
+  .decision .opt{background:rgba(20,26,60,.32);border:1px solid rgba(139,124,246,.14);border-radius:11px;padding:14px 16px;margin:10px 0}
+  .decision .opt b{color:#c4b5fd}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Rotina diária da Louise — mockups</h1>
+  <p class="lede"><strong>Regras configuradas:</strong> wake 07:00 · soneca 1 08:15 · soneca 2 10:45 · soneca 3 13:30 · soneca 4 16:00 · banho 18:00 · bedtime 19:30 · 7 mamadas/dia. <br/>Cenário simulado abaixo: hora atual = <strong>13:42</strong>. Wake feito 07:08, soneca 1 feita 08:20 (5min atraso), soneca 2 feita 10:55 (10min atraso), soneca 3 atrasada (deveria ter sido 13:30, agora são 13:42). 4 mamadas consumidas de 7.</p>
+
+  <!-- ═══════════════════════════════════════ -->
+  <h2>1. Onde configurar — Perfil</h2>
+
+  <div class="grid" style="grid-template-columns:1fr 1.4fr;gap:24px">
+    <div class="phone" style="min-height:auto">
+      <div class="notch"></div>
+      <div class="col-label">PERFIL · ROTINA</div>
+      <div class="profile-section">
+        <div class="sec-title">Rotina diária</div>
+
+        <div class="row-cfg">
+          <div class="label"><span class="ic wake">☀</span> Acordar</div>
+          <span class="time-input">07:00</span>
+        </div>
+        <div class="row-cfg">
+          <div class="label"><span class="ic bath">🛁</span> Banho</div>
+          <span class="time-input">18:00</span>
+        </div>
+        <div class="row-cfg">
+          <div class="label"><span class="ic bed">🌙</span> Bedtime</div>
+          <span class="time-input">19:30</span>
+        </div>
+        <div class="row-cfg">
+          <div class="label"><span class="ic bottle">🍼</span> Mamadas/dia</div>
+          <span class="qty-input">7</span>
+        </div>
+
+        <div class="nap-group" style="margin-top:6px;border-top:1px solid rgba(139,124,246,.10);padding-top:12px">
+          <div class="nap-title">Sonecas · 4 por dia</div>
+          <div class="nap-row"><span class="num">1ª</span><span class="label"><span class="ic nap">☁</span> Soneca</span><span class="time" style="margin-left:auto"><span class="time-input">08:15</span></span></div>
+          <div class="nap-row"><span class="num">2ª</span><span class="label"><span class="ic nap">☁</span> Soneca</span><span class="time" style="margin-left:auto"><span class="time-input">10:45</span></span></div>
+          <div class="nap-row"><span class="num">3ª</span><span class="label"><span class="ic nap">☁</span> Soneca</span><span class="time" style="margin-left:auto"><span class="time-input">13:30</span></span></div>
+          <div class="nap-row"><span class="num">4ª</span><span class="label"><span class="ic nap">☁</span> Soneca</span><span class="time" style="margin-left:auto"><span class="time-input">16:00</span></span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="annot">
+      <h4>Modelo de dados — armazenamento</h4>
+      <p>Salva no <code>config/profile</code> do Firestore (compartilhado entre os 2 iPhones). Estrutura nova proposta:</p>
+      <pre style="background:rgba(20,26,60,.5);padding:12px;border-radius:8px;font-size:11.5px;color:#c4b5fd;font-family:Menlo,monospace;overflow-x:auto;line-height:1.5"><code>profile.routine = {
+  wakeTime:  "07:00",
+  bathTime:  "18:00",
+  bedtime:   "19:30",
+  bottlesPerDay: 7,
+  naps: [
+    { time: "08:15" },
+    { time: "10:45" },
+    { time: "13:30" },
+    { time: "16:00" }
+  ]
+}</code></pre>
+      <p style="margin-top:10px"><strong>Tolerância:</strong> Considera "no horário" se ±20min. Acima de 20min vira "atrasado" (chip âmbar). Configurável depois se quiser refinar.</p>
+      <p><strong>Backward compat:</strong> Se <code>profile.routine</code> não existir, o app funciona como hoje (sem nenhum indicador). Setting opt-in.</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <h2>2. Como mostrar no Home — 4 abordagens</h2>
+
+  <div class="grid">
+
+    <!-- A1 ──────────────────────────── -->
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="col-label alt1">A · CARD "PRÓXIMO" + PROGRESS</div>
+      <div class="today-h"><span class="l">Hoje</span><span class="d">13:42 · Qua 13 Mai</span></div>
+
+      <div class="next-up">
+        <div class="eyebrow">Próximo evento</div>
+        <div class="main">
+          <div class="ic">☁</div>
+          <div class="info">
+            <div class="ttl">3ª Soneca <span style="color:#fb923c;font-size:11px;font-weight:600;margin-left:6px">· 12min atrasada</span></div>
+            <div class="countdown">Era pra ter sido às <b>13:30</b></div>
+          </div>
+        </div>
+        <div class="progress-strip">
+          <div class="chip done"><div class="dot">✓</div>Wake</div>
+          <div class="chip done"><div class="dot">✓</div>Mamada</div>
+          <div class="chip done"><div class="dot">✓</div>1ª Son</div>
+          <div class="chip done"><div class="dot">✓</div>2ª Son</div>
+          <div class="chip late"><div class="dot">!</div>3ª Son</div>
+          <div class="chip"><div class="dot"></div>Banho</div>
+          <div class="chip"><div class="dot"></div>Bed</div>
+        </div>
+      </div>
+
+      <div class="row"><div class="ic wake">☀</div><div class="body"><div class="lbl">Acordou</div><div class="det">na rotina · 8min depois do alvo</div></div><div class="t">07:08</div></div>
+      <div class="row"><div class="ic bottle">🍼</div><div class="body"><div class="lbl">Mamadeira · 120ml</div><div class="det">após acordar</div></div><div class="t">07:30</div></div>
+      <div class="row"><div class="ic nap">☁</div><div class="body"><div class="lbl">1ª Soneca · 50min</div><div class="det">na rotina · 5min depois</div></div><div class="t">08:20</div></div>
+      <div class="row"><div class="ic bottle">🍼</div><div class="body"><div class="lbl">Mamadeira · 130ml</div><div class="det">3/7 do dia</div></div><div class="t">10:00</div></div>
+      <div class="row"><div class="ic nap">☁</div><div class="body"><div class="lbl">2ª Soneca · 45min</div><div class="det">10min depois do alvo</div></div><div class="t">10:55</div></div>
+    </div>
+
+    <!-- A2 ──────────────────────────── -->
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="col-label alt2">B · TIMELINE STRIP DO DIA</div>
+      <div class="today-h"><span class="l">Hoje</span><span class="d">13:42 · Qua 13 Mai</span></div>
+
+      <div class="tline-strip">
+        <div class="head"><span class="ttl">Rotina do dia</span><span class="now-pill">13:42 agora</span></div>
+        <div class="bar">
+          <div class="ev done" style="left:6%" title="07:00">☀</div>
+          <div class="ev done" style="left:13%" title="08:15">☁</div>
+          <div class="ev done" style="left:32%" title="10:45">☁</div>
+          <div class="ev late" style="left:55%" title="13:30">☁</div>
+          <div class="ev pending" style="left:73%" title="16:00">☁</div>
+          <div class="ev pending" style="left:88%" title="18:00">🛁</div>
+          <div class="ev pending" style="left:97%" title="19:30">🌙</div>
+        </div>
+        <div class="axis"><span>07h</span><span>10h</span><span>13h</span><span>16h</span><span>19h</span></div>
+      </div>
+
+      <!-- "Bottles" pill -->
+      <div style="background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.18);border-radius:14px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px">
+        <div style="font-size:18px">🍼</div>
+        <div style="flex:1">
+          <div style="font-size:11px;color:#86efac;font-weight:700;letter-spacing:.3px">Mamadas hoje</div>
+          <div style="font-size:11px;color:var(--sub);margin-top:1px">Última às 10:00 · 3h42m atrás</div>
+        </div>
+        <div style="font-size:18px;color:#4ade80;font-weight:800;font-variant-numeric:tabular-nums">4<span style="color:var(--dim);font-size:13px;font-weight:600">/7</span></div>
+      </div>
+
+      <div class="row"><div class="ic wake">☀</div><div class="body"><div class="lbl">Acordou</div></div><div class="t">07:08</div></div>
+      <div class="row"><div class="ic bottle">🍼</div><div class="body"><div class="lbl">Mamadeira · 120ml</div></div><div class="t">07:30</div></div>
+      <div class="row"><div class="ic nap">☁</div><div class="body"><div class="lbl">1ª Soneca · 50min</div></div><div class="t">08:20</div></div>
+      <div class="row"><div class="ic bottle">🍼</div><div class="body"><div class="lbl">Mamadeira · 130ml</div></div><div class="t">10:00</div></div>
+      <div class="row"><div class="ic nap">☁</div><div class="body"><div class="lbl">2ª Soneca · 45min</div></div><div class="t">10:55</div></div>
+    </div>
+
+    <!-- A3 ──────────────────────────── -->
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="col-label alt3">C · CHECKLIST DO DIA</div>
+      <div class="today-h"><span class="l">Hoje</span><span class="d">13:42 · Qua 13 Mai</span></div>
+
+      <div class="checklist">
+        <div class="head">
+          <div class="ttl">Checklist da rotina</div>
+          <div class="progress"><b>3</b>/7 feitos · 1 atrasado</div>
+        </div>
+        <div class="item done"><div class="chk">✓</div><div class="lbl">Acordar</div><div class="when">07:08 · alvo 07:00</div></div>
+        <div class="item done"><div class="chk">✓</div><div class="lbl">1ª Soneca</div><div class="when">08:20 · alvo 08:15</div></div>
+        <div class="item done"><div class="chk">✓</div><div class="lbl">2ª Soneca</div><div class="when">10:55 · alvo 10:45</div></div>
+        <div class="item late"><div class="chk">!</div><div class="lbl">3ª Soneca</div><div class="when">atrasada · 13:30</div></div>
+        <div class="item"><div class="chk"></div><div class="lbl">4ª Soneca</div><div class="when">16:00</div></div>
+        <div class="item"><div class="chk"></div><div class="lbl">Banho</div><div class="when">18:00</div></div>
+        <div class="item"><div class="chk"></div><div class="lbl">Bedtime</div><div class="when">19:30</div></div>
+        <div class="bottles-row">
+          <div class="lbl">🍼 Mamadas <div class="pip done"></div><div class="pip done"></div><div class="pip done"></div><div class="pip done"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div></div>
+          <div class="cnt">4/7</div>
+        </div>
+      </div>
+
+      <div class="row"><div class="ic wake">☀</div><div class="body"><div class="lbl">Acordou</div></div><div class="t">07:08</div></div>
+      <div class="row"><div class="ic nap">☁</div><div class="body"><div class="lbl">1ª Soneca · 50min</div></div><div class="t">08:20</div></div>
+      <div class="row"><div class="ic nap">☁</div><div class="body"><div class="lbl">2ª Soneca · 45min</div></div><div class="t">10:55</div></div>
+    </div>
+
+    <!-- A4 ──────────────────────────── -->
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="col-label alt4">D · RING COM ARCO DE ROTINA</div>
+      <div class="today-h"><span class="l">Hoje</span><span class="d">13:42 · Qua 13 Mai</span></div>
+
+      <div class="ring-schedule">
+        <svg viewBox="0 0 240 240">
+          <!-- background ring -->
+          <circle cx="120" cy="120" r="105" fill="none" stroke="rgba(139,124,246,0.10)" stroke-width="6"/>
+          <!-- outer schedule arc (lavender) -->
+          <circle cx="120" cy="120" r="105" fill="none" stroke="#a78bfa" stroke-width="6" stroke-dasharray="280 660" stroke-dashoffset="-160" stroke-linecap="round" transform="rotate(-90 120 120)" opacity=".85"/>
+          <!-- schedule dots -->
+          <g transform="rotate(-90 120 120)">
+            <!-- Wake 07:00 → 7/24*360 = 105° -->
+            <circle cx="120" cy="15" r="6" fill="#4ade80" transform="rotate(105 120 120)"/>
+            <text x="120" y="20" text-anchor="middle" font-size="8" fill="#04061a" font-weight="700" transform="rotate(105 120 120)">✓</text>
+            <!-- 08:15 → 8.25/24*360 = 123.75 -->
+            <circle cx="120" cy="15" r="6" fill="#4ade80" transform="rotate(124 120 120)"/>
+            <text x="120" y="20" text-anchor="middle" font-size="8" fill="#04061a" font-weight="700" transform="rotate(124 120 120)">✓</text>
+            <!-- 10:45 → 161° -->
+            <circle cx="120" cy="15" r="6" fill="#4ade80" transform="rotate(161 120 120)"/>
+            <text x="120" y="20" text-anchor="middle" font-size="8" fill="#04061a" font-weight="700" transform="rotate(161 120 120)">✓</text>
+            <!-- 13:30 → 202.5° -->
+            <circle cx="120" cy="15" r="7" fill="#fb923c" transform="rotate(202.5 120 120)" stroke="#fff" stroke-width=".5"/>
+            <text x="120" y="20" text-anchor="middle" font-size="9" fill="#04061a" font-weight="700" transform="rotate(202.5 120 120)">!</text>
+            <!-- 16:00 → 240° -->
+            <circle cx="120" cy="15" r="5" fill="rgba(167,139,250,.4)" stroke="#a78bfa" stroke-width="1.5" transform="rotate(240 120 120)"/>
+            <!-- 18:00 → 270° -->
+            <circle cx="120" cy="15" r="5" fill="rgba(125,211,252,.3)" stroke="#7dd3fc" stroke-width="1.5" transform="rotate(270 120 120)"/>
+            <!-- 19:30 → 292.5° -->
+            <circle cx="120" cy="15" r="6" fill="rgba(167,139,250,.4)" stroke="#c4b5fd" stroke-width="2" transform="rotate(292.5 120 120)"/>
+          </g>
+          <!-- "now" needle at 13:42 → 205.5° -->
+          <line x1="120" y1="120" x2="120" y2="25" stroke="#fbbf24" stroke-width="1.5" stroke-linecap="round" transform="rotate(115.5 120 120)" opacity=".6"/>
+        </svg>
+        <div class="center">
+          <div class="lbl">Atrasada</div>
+          <div class="v" style="color:#fb923c">12min</div>
+          <div class="next">3ª soneca · alvo 13:30</div>
+        </div>
+      </div>
+
+      <div style="background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.18);border-radius:14px;padding:10px 14px;margin:8px 0 14px;display:flex;align-items:center;gap:10px">
+        <div style="font-size:18px">🍼</div>
+        <div style="flex:1;font-size:11px;color:var(--sub)"><b style="color:#86efac;font-size:13px">4</b>/7 mamadas · próx em ~1h30</div>
+      </div>
+
+      <div class="row"><div class="ic nap">☁</div><div class="body"><div class="lbl">2ª Soneca · 45min</div></div><div class="t">10:55</div></div>
+      <div class="row"><div class="ic bottle">🍼</div><div class="body"><div class="lbl">Mamadeira · 130ml</div></div><div class="t">10:00</div></div>
+      <div class="row"><div class="ic nap">☁</div><div class="body"><div class="lbl">1ª Soneca · 50min</div></div><div class="t">08:20</div></div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <div class="decision">
+    <h3>Trade-offs — qual abordagem escolher?</h3>
+
+    <div class="opt">
+      <b>A · Card "Próximo" + progress strip (recomendo se quer foco em "o que vem agora")</b>
+      <ul>
+        <li><strong>Pro:</strong> Resposta imediata pra "que horas é o próximo evento?". Strip de chips é compacta e mostra dia inteiro num glance.</li>
+        <li><strong>Contra:</strong> Ocupa altura no topo do Home. Quando dia inteiro feito (à noite), o card fica meio vazio.</li>
+      </ul>
+    </div>
+
+    <div class="opt">
+      <b>B · Timeline strip horizontal (recomendo se quer "panorama visual")</b>
+      <ul>
+        <li><strong>Pro:</strong> Visualização espacial — você vê o dia inteiro distribuído numa barra. Posição do "agora" indica progresso. Mamadas separadas em pill própria (porque não têm horário fixo).</li>
+        <li><strong>Contra:</strong> Menos imediato pra ler "o que é o próximo evento" — precisa interpretar a barra.</li>
+      </ul>
+    </div>
+
+    <div class="opt">
+      <b>C · Checklist vertical (recomendo se você curte sensação de "checking off")</b>
+      <ul>
+        <li><strong>Pro:</strong> Cada item é uma linha clara, com alvo vs realizado lado a lado. Satisfying o ticking ✓. Mamadas como pips visuais no rodapé.</li>
+        <li><strong>Contra:</strong> Não é o que tá "no horário agora" em destaque. Precisa scanear a lista pra achar o próximo.</li>
+      </ul>
+    </div>
+
+    <div class="opt">
+      <b>D · Ring com arco de rotina (idea ambiciosa)</b>
+      <ul>
+        <li><strong>Pro:</strong> Visualmente impactante — o relógio é o app. Posições angulares dos eventos correspondem ao horário real.</li>
+        <li><strong>Contra:</strong> Complexo de implementar (SVG arcs + interactions). Pequeno demais pra ler nomes dos eventos sem tap. Arco roxo já existe pro mercury — confunde semântica.</li>
+      </ul>
+    </div>
+
+    <h3 style="margin-top:24px">Combinações possíveis</h3>
+    <ul style="color:var(--sub);font-size:13.5px;line-height:1.7">
+      <li><strong>A + C:</strong> Card no Home (visão "agora") + checklist completo dentro de uma sheet/modal "Ver rotina completa".</li>
+      <li><strong>B simples:</strong> só timeline strip no Home, sem detail card. Minimalismo.</li>
+      <li><strong>Profile only:</strong> só configura e o app NÃO mostra na home — útil pra deixar a engine usar internamente em insights, sem feature visível.</li>
+    </ul>
+
+    <p style="margin-top:18px;color:var(--text);font-size:13.5px;font-weight:600">Qual rumo? A, B, C, D, ou combinação?</p>
+  </div>
+
+</div>
+</body>
+</html>

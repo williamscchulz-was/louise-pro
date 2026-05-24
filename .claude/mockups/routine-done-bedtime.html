@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Rotina completa + Bedtime animations</title>
+<style>
+  :root{
+    --bg:#070b1e;--text:#e4e6f4;--sub:#9099c3;--dim:#5b6189;
+    --accent:#8b7cf6;--green:#4ade80;--blue:#6ea8ff;--purple:#a78bfa;
+    --pink:#f472b6;--amber:#fbbf24;--cyan:#7dd3fc;
+    --starfield:radial-gradient(ellipse 140% 55% at 50% 100%,#1a1f52 0%,transparent 70%),radial-gradient(ellipse at 50% 0%,#10153d 0%,var(--bg) 65%),var(--bg);
+    --night:radial-gradient(ellipse 140% 55% at 50% 100%,#1a1245 0%,transparent 70%),radial-gradient(ellipse at 50% 0%,#0a0d2a 0%,#040616 65%),#040616;
+  }
+  *{box-sizing:border-box}
+  body{background:#04061a;color:var(--text);font:500 14px/1.5 -apple-system,BlinkMacSystemFont,"Inter",sans-serif;margin:0;padding:30px 14px 60px;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1400px;margin:0 auto}
+  h1{font-size:24px;margin:0 0 6px;font-weight:800;letter-spacing:-.5px}
+  .lede{color:var(--sub);font-size:13.5px;margin:0 0 28px;line-height:1.55}
+  h2{font-size:13px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--accent);margin:36px 0 14px;padding-bottom:8px;border-bottom:1px solid rgba(139,124,246,.18)}
+  h3{font-size:14px;margin:0 0 8px;color:#c4b5fd;font-weight:700}
+
+  .phones{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;align-items:start}
+  @media(max-width:900px){.phones{grid-template-columns:1fr 1fr}}
+  .phone{background:var(--starfield);border-radius:36px;padding:14px 12px 28px;border:1px solid rgba(139,124,246,.18);box-shadow:0 20px 60px -20px rgba(0,0,0,.6);position:relative;min-height:540px;overflow:hidden}
+  .phone.night{background:var(--night)}
+  .phone .notch{width:96px;height:18px;background:#000;border-radius:0 0 14px 14px;margin:-10px auto 10px}
+  .col-label{font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;text-align:center;margin-bottom:8px;color:#86efac}
+  .col-label.a{color:#fda4af}.col-label.b{color:#fcd34d}.col-label.c{color:#7dd3fc}
+
+  .hdr{display:flex;align-items:center;justify-content:space-between;padding:4px 8px 8px}
+  .hdr .avatar{width:34px;height:34px;border-radius:50%;background:rgba(139,124,246,.18);border:1px solid rgba(139,124,246,.3);display:flex;align-items:center;justify-content:center;font-size:14px}
+  .hdr .name{flex:1;margin-left:9px}
+  .hdr .name .n{font-size:13px;font-weight:800;color:#f0f2ff}
+  .hdr .name .a{font-size:10px;color:var(--sub)}
+
+  /* Ring 270 placeholder */
+  .ring{width:200px;height:200px;border-radius:50%;position:relative;margin:6px auto 14px;display:flex;align-items:center;justify-content:center}
+  .ring svg{width:100%;height:100%;position:absolute;inset:0}
+  .ring .center{position:absolute;text-align:center;display:flex;flex-direction:column;align-items:center}
+  .ring .center .lbl{font-size:10px;color:var(--sub);text-transform:uppercase;letter-spacing:1.5px;font-weight:600;margin-bottom:4px}
+  .ring .center .v{font-size:32px;font-weight:800;color:#f0f2ff;letter-spacing:-1.2px;font-variant-numeric:tabular-nums;line-height:1;background:linear-gradient(135deg,#a78bfa,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .ring .center .v.green{background:linear-gradient(135deg,#34d399,#059669);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+  /* ───── Routine done minimal ───── */
+  .done-A{margin:0 8px 10px;padding:10px 16px;border-radius:14px;background:linear-gradient(90deg,rgba(74,222,128,.10),rgba(74,222,128,.03));border:1px solid rgba(74,222,128,.24);display:flex;align-items:center;gap:10px}
+  .done-A .ck{width:24px;height:24px;border-radius:50%;background:#4ade80;display:flex;align-items:center;justify-content:center;color:#04061a;font-size:13px;font-weight:800;flex-shrink:0}
+  .done-A .txt{flex:1;font-size:12px;font-weight:700;color:#86efac}
+  .done-A .em{font-size:14px;opacity:.7}
+
+  .done-B{margin:0 8px 10px;padding:14px 18px;border-radius:16px;background:linear-gradient(180deg,rgba(74,222,128,.10),rgba(74,222,128,.02));border:1px solid rgba(74,222,128,.22);text-align:center}
+  .done-B .star{font-size:18px;color:#4ade80;margin-bottom:4px;display:inline-block;animation:starPulse 3s ease-in-out infinite}
+  .done-B .ttl{font-size:13px;font-weight:800;color:#86efac;letter-spacing:-.2px}
+  .done-B .sub{font-size:10.5px;color:var(--sub);margin-top:3px;line-height:1.4}
+  @keyframes starPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.15);opacity:.85}}
+
+  .done-C{margin:0 8px 10px;padding:8px 14px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:11px;color:#86efac;letter-spacing:.5px;text-transform:uppercase;font-weight:700}
+  .done-C::before,.done-C::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(74,222,128,.3),transparent)}
+  .done-C .ck{width:18px;height:18px;border-radius:50%;background:#4ade80;display:flex;align-items:center;justify-content:center;color:#04061a;font-size:11px;font-weight:800;flex-shrink:0}
+
+  /* quick + kpi placeholders */
+  .quick{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:0 8px;margin-bottom:10px}
+  .quick button{background:rgba(20,26,60,.4);border:1px solid rgba(139,124,246,.14);border-radius:12px;padding:8px 0 6px;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--sub);font-size:10px;font-weight:700}
+  .quick button .em{font-size:14px;line-height:1}
+  .kpis{display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:0 8px;margin-bottom:10px}
+  .kpi{background:rgba(20,26,60,.32);border:1px solid rgba(139,124,246,.10);border-radius:11px;padding:8px 10px}
+  .kpi .lbl{font-size:8px;color:var(--dim);font-weight:600;letter-spacing:.3px;text-transform:uppercase}
+  .kpi .v{font-size:14px;font-weight:800;line-height:1;letter-spacing:-.2px;font-variant-numeric:tabular-nums;margin-top:2px}
+  .kpi.bottle .v{color:#4ade80}
+  .kpi.sono .v{color:#a78bfa}
+  .kpi.simet .v{color:#fbbf24}
+  .kpi.diaper .v{color:#f472b6}
+
+  /* ═══ BEDTIME ANIMATIONS ═══ */
+  /* Idea 1: Starfield + slow breathing moon */
+  .starfield-bg{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+  .starfield-bg .star{position:absolute;width:2px;height:2px;background:#fff;border-radius:50%;animation:twinkle var(--d,3s) ease-in-out infinite}
+  @keyframes twinkle{0%,100%{opacity:.2;transform:scale(.8)}50%{opacity:.9;transform:scale(1.2)}}
+  /* Idea 2: Constellation/orbit */
+  .orbit-bg{position:absolute;inset:0;overflow:hidden;pointer-events:none;opacity:.5}
+  .orbit-bg .orbit-line{position:absolute;border:1px dashed rgba(167,139,250,.18);border-radius:50%}
+  .orbit-bg .orbit-line.r1{top:50%;left:50%;width:260px;height:260px;transform:translate(-50%,-50%);animation:orbit-rot 60s linear infinite}
+  .orbit-bg .orbit-line.r2{top:50%;left:50%;width:340px;height:340px;transform:translate(-50%,-50%);animation:orbit-rot 90s linear infinite reverse}
+  @keyframes orbit-rot{from{transform:translate(-50%,-50%) rotate(0deg)}to{transform:translate(-50%,-50%) rotate(360deg)}}
+  /* Idea 3: Breathing aura */
+  .breath-bg{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(167,139,250,.12),transparent 70%);animation:breath 4s ease-in-out infinite;pointer-events:none}
+  @keyframes breath{0%,100%{transform:translate(-50%,-50%) scale(.85);opacity:.4}50%{transform:translate(-50%,-50%) scale(1.15);opacity:.9}}
+  /* Idea 4: Falling star (occasional) */
+  .falling-star{position:absolute;top:20%;left:80%;width:60px;height:1.5px;background:linear-gradient(90deg,#fff,transparent);transform:rotate(20deg);animation:fall 8s linear infinite}
+  @keyframes fall{0%,90%,100%{opacity:0;transform:translate(0,0) rotate(20deg)}5%{opacity:1}50%{transform:translate(-200px,80px) rotate(20deg);opacity:.4}55%{opacity:0}}
+  /* Idea 5: Gradient bg shift */
+  .bg-shift{position:absolute;inset:0;background:linear-gradient(180deg,#0a0d2a 0%,#040616 100%);animation:bgShift 20s ease-in-out infinite;pointer-events:none;opacity:0;animation-fill-mode:forwards}
+  @keyframes bgShift{0%,100%{opacity:0}50%{opacity:.6}}
+  /* Idea 6: Moon pulse */
+  .moon-pulse{font-size:32px;color:#c4b5fd;filter:drop-shadow(0 0 20px rgba(167,139,250,.7));animation:moonBreath 4s ease-in-out infinite}
+  @keyframes moonBreath{0%,100%{transform:scale(1);filter:drop-shadow(0 0 16px rgba(167,139,250,.5))}50%{transform:scale(1.08);filter:drop-shadow(0 0 28px rgba(167,139,250,.9))}}
+
+  .bedtime-status{position:absolute;top:12px;right:14px;display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:20px;background:rgba(167,139,250,.18);border:1px solid rgba(167,139,250,.32);font-size:9px;font-weight:700;color:#c4b5fd;letter-spacing:.5px;text-transform:uppercase;z-index:5}
+  .bedtime-status .dot{width:6px;height:6px;border-radius:50%;background:#a78bfa;animation:livePulse 1.5s ease-in-out infinite}
+  @keyframes livePulse{0%,100%{opacity:.5;transform:scale(.9)}50%{opacity:1;transform:scale(1.2)}}
+
+  .bedtime-info{position:absolute;bottom:32px;left:0;right:0;text-align:center;z-index:5}
+  .bedtime-info .since{font-size:10px;color:var(--sub);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:4px}
+  .bedtime-info .time{font-size:34px;font-weight:800;color:#c4b5fd;letter-spacing:-1.5px;font-variant-numeric:tabular-nums;background:linear-gradient(135deg,#c4b5fd,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .bedtime-info .next{font-size:10px;color:var(--dim);margin-top:6px;font-weight:600}
+
+  .annot{background:rgba(139,124,246,.04);border:1px solid rgba(139,124,246,.18);border-radius:14px;padding:16px 20px;margin:18px 0}
+  .annot p{margin:0 0 8px;color:var(--sub);font-size:13px;line-height:1.55}
+  .annot ul{margin:0;padding-left:18px;color:var(--sub);font-size:13px;line-height:1.7}
+  .annot strong{color:var(--text)}
+  .annot code{background:rgba(20,26,60,.5);padding:1px 5px;border-radius:4px;font-size:11px;color:#c4b5fd;font-family:Menlo,monospace}
+
+  .decision{background:linear-gradient(180deg,rgba(167,139,250,.10),rgba(167,139,250,.03));border:1px solid rgba(167,139,250,.28);border-radius:18px;padding:22px;margin:30px 0}
+  .decision .opt{background:rgba(20,26,60,.32);border:1px solid rgba(139,124,246,.14);border-radius:11px;padding:12px 14px;margin:8px 0;font-size:13.5px;color:var(--sub)}
+  .decision .opt b{color:#c4b5fd}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Rotina completa + Bedtime animations</h1>
+  <p class="lede">2 mockups. <strong>Topo:</strong> 3 variantes de mensagem quando todos os slots da rotina estão ✓ feitos. Você pediu "bem minimal" — todas são bem discretas. <strong>Embaixo:</strong> 4 ideias de animação calma quando o bedtime tá ao vivo (sleep timer rodando).</p>
+
+  <h2>Parte 1 · Rotina completa — 3 variantes minimalistas</h2>
+
+  <div class="phones">
+
+    <!-- Variant A: pill horizontal -->
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="col-label a">A · PILL HORIZONTAL DISCRETA</div>
+      <div class="hdr"><div class="avatar">👶</div><div class="name"><div class="n">Louise</div><div class="a">10 sem · 2m 6d</div></div></div>
+      <div class="ring">
+        <svg viewBox="0 0 200 200">
+          <circle cx="100" cy="100" r="84" fill="none" stroke="rgba(74,222,128,0.18)" stroke-width="10"/>
+          <circle cx="100" cy="100" r="84" fill="none" stroke="#34d399" stroke-width="10" stroke-dasharray="528 528" stroke-linecap="round" transform="rotate(-90 100 100)"/>
+        </svg>
+        <div class="center"><div class="lbl">Total</div><div class="v green">13h<br/>52m</div></div>
+      </div>
+      <div class="done-A">
+        <div class="ck">✓</div>
+        <div class="txt">Rotina completa</div>
+        <div class="em">🌙</div>
+      </div>
+      <div class="quick">
+        <button><span class="em">🍼</span>Mamad.</button>
+        <button><span class="em">🤱</span>Amam.</button>
+        <button><span class="em">💧</span>Fralda</button>
+      </div>
+      <div class="kpis">
+        <div class="kpi bottle"><div class="lbl">Mamad.</div><div class="v">630ml</div></div>
+        <div class="kpi sono"><div class="lbl">Sono</div><div class="v">2h15</div></div>
+      </div>
+    </div>
+
+    <!-- Variant B: centered with star -->
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="col-label b">B · MENSAGEM CENTRADA + ⭐</div>
+      <div class="hdr"><div class="avatar">👶</div><div class="name"><div class="n">Louise</div><div class="a">10 sem · 2m 6d</div></div></div>
+      <div class="ring">
+        <svg viewBox="0 0 200 200">
+          <circle cx="100" cy="100" r="84" fill="none" stroke="rgba(74,222,128,0.18)" stroke-width="10"/>
+          <circle cx="100" cy="100" r="84" fill="none" stroke="#34d399" stroke-width="10" stroke-dasharray="528 528" stroke-linecap="round" transform="rotate(-90 100 100)"/>
+        </svg>
+        <div class="center"><div class="lbl">Total</div><div class="v green">13h<br/>52m</div></div>
+      </div>
+      <div class="done-B">
+        <span class="star">★</span>
+        <div class="ttl">Rotina completa hoje</div>
+        <div class="sub">Wake · 4 sonecas · Banho · Bedtime. 🌙</div>
+      </div>
+      <div class="quick">
+        <button><span class="em">🍼</span>Mamad.</button>
+        <button><span class="em">🤱</span>Amam.</button>
+        <button><span class="em">💧</span>Fralda</button>
+      </div>
+      <div class="kpis">
+        <div class="kpi bottle"><div class="lbl">Mamad.</div><div class="v">630ml</div></div>
+        <div class="kpi sono"><div class="lbl">Sono</div><div class="v">2h15</div></div>
+      </div>
+    </div>
+
+    <!-- Variant C: divisor com check -->
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="col-label c">C · DIVISOR + ✓ INLINE (MIN)</div>
+      <div class="hdr"><div class="avatar">👶</div><div class="name"><div class="n">Louise</div><div class="a">10 sem · 2m 6d</div></div></div>
+      <div class="ring">
+        <svg viewBox="0 0 200 200">
+          <circle cx="100" cy="100" r="84" fill="none" stroke="rgba(74,222,128,0.18)" stroke-width="10"/>
+          <circle cx="100" cy="100" r="84" fill="none" stroke="#34d399" stroke-width="10" stroke-dasharray="528 528" stroke-linecap="round" transform="rotate(-90 100 100)"/>
+        </svg>
+        <div class="center"><div class="lbl">Total</div><div class="v green">13h<br/>52m</div></div>
+      </div>
+      <div class="done-C">
+        <div class="ck">✓</div>
+        <span>Rotina completa</span>
+      </div>
+      <div class="quick">
+        <button><span class="em">🍼</span>Mamad.</button>
+        <button><span class="em">🤱</span>Amam.</button>
+        <button><span class="em">💧</span>Fralda</button>
+      </div>
+      <div class="kpis">
+        <div class="kpi bottle"><div class="lbl">Mamad.</div><div class="v">630ml</div></div>
+        <div class="kpi sono"><div class="lbl">Sono</div><div class="v">2h15</div></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="annot">
+    <h3>Diferenças entre as 3</h3>
+    <ul>
+      <li><strong>A · Pill horizontal:</strong> banda verde sutil tomando o lugar do card de rotina, com check + texto + 🌙 do lado. Ocupa ~50px de altura.</li>
+      <li><strong>B · Centrada com ★:</strong> tipo banner cerimonioso. Estrela pulsa devagar. Sub-texto lembra o que foi feito ("Wake · 4 sonecas · Banho · Bedtime"). ~70px de altura, mais peso visual.</li>
+      <li><strong>C · Divisor minimal:</strong> apenas check + "Rotina completa" entre dois traços. ZERO peso, é quase ausência. ~30px. <strong>Mais minimal possível</strong>.</li>
+    </ul>
+  </div>
+
+  <h2>Parte 2 · Bedtime animations — 4 ideias</h2>
+
+  <div class="phones">
+
+    <!-- Bedtime A: Twinkling stars -->
+    <div class="phone night">
+      <div class="bedtime-status"><span class="dot"></span>Bedtime</div>
+      <div class="notch"></div>
+      <div class="starfield-bg">
+        <div class="star" style="top:18%;left:20%;--d:2.5s"></div>
+        <div class="star" style="top:30%;left:80%;--d:3.2s"></div>
+        <div class="star" style="top:25%;left:50%;--d:2.8s"></div>
+        <div class="star" style="top:45%;left:15%;--d:4s"></div>
+        <div class="star" style="top:60%;left:75%;--d:3.5s"></div>
+        <div class="star" style="top:70%;left:35%;--d:2.6s"></div>
+        <div class="star" style="top:50%;left:60%;--d:3.8s"></div>
+        <div class="star" style="top:38%;left:90%;--d:2.4s"></div>
+        <div class="star" style="top:15%;left:65%;--d:4.5s"></div>
+        <div class="star" style="top:80%;left:55%;--d:2.9s"></div>
+        <div class="star" style="top:22%;left:10%;--d:3.6s"></div>
+        <div class="star" style="top:65%;left:88%;--d:2.7s"></div>
+      </div>
+      <div class="col-label a" style="position:relative;z-index:2">A · TWINKLING STARS</div>
+      <div class="bedtime-info">
+        <div class="since">Dormindo há</div>
+        <div class="time">2h 14m</div>
+        <div class="next">início 21:32 · próx. wake ~07:00</div>
+      </div>
+    </div>
+
+    <!-- Bedtime B: Breathing aura -->
+    <div class="phone night">
+      <div class="bedtime-status"><span class="dot"></span>Bedtime</div>
+      <div class="notch"></div>
+      <div class="breath-bg"></div>
+      <div class="col-label b" style="position:relative;z-index:2">B · BREATHING AURA</div>
+      <div class="bedtime-info">
+        <div class="since">Dormindo há</div>
+        <div class="time">2h 14m</div>
+        <div class="next">início 21:32 · próx. wake ~07:00</div>
+      </div>
+    </div>
+
+    <!-- Bedtime C: Orbit rotation -->
+    <div class="phone night">
+      <div class="bedtime-status"><span class="dot"></span>Bedtime</div>
+      <div class="notch"></div>
+      <div class="orbit-bg">
+        <div class="orbit-line r1"></div>
+        <div class="orbit-line r2"></div>
+      </div>
+      <div class="col-label c" style="position:relative;z-index:2">C · ORBIT ROTATION</div>
+      <div class="bedtime-info">
+        <div class="since">Dormindo há</div>
+        <div class="time">2h 14m</div>
+        <div class="next">início 21:32 · próx. wake ~07:00</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="phones" style="grid-template-columns:1fr 1fr;margin-top:18px">
+
+    <!-- Bedtime D: All combined subtle -->
+    <div class="phone night">
+      <div class="bedtime-status"><span class="dot"></span>Bedtime</div>
+      <div class="notch"></div>
+      <div class="starfield-bg">
+        <div class="star" style="top:20%;left:25%;--d:3s"></div>
+        <div class="star" style="top:35%;left:78%;--d:2.5s"></div>
+        <div class="star" style="top:55%;left:18%;--d:3.8s"></div>
+        <div class="star" style="top:65%;left:70%;--d:2.7s"></div>
+        <div class="star" style="top:25%;left:55%;--d:3.4s"></div>
+        <div class="star" style="top:80%;left:40%;--d:4s"></div>
+        <div class="star" style="top:15%;left:88%;--d:3.2s"></div>
+        <div class="star" style="top:48%;left:5%;--d:2.9s"></div>
+      </div>
+      <div class="breath-bg" style="opacity:.5"></div>
+      <div class="col-label" style="color:#c4b5fd;position:relative;z-index:2">D · TUDO JUNTO (SUTIL)</div>
+      <div style="position:absolute;top:48%;left:50%;transform:translate(-50%,-50%);z-index:3"><span class="moon-pulse">🌙</span></div>
+      <div class="bedtime-info">
+        <div class="since">Dormindo há</div>
+        <div class="time">2h 14m</div>
+        <div class="next">início 21:32 · próx. wake ~07:00</div>
+      </div>
+    </div>
+
+    <!-- Bedtime E: minimal moon pulse only -->
+    <div class="phone night">
+      <div class="bedtime-status"><span class="dot"></span>Bedtime</div>
+      <div class="notch"></div>
+      <div class="col-label" style="color:#fcd34d;position:relative;z-index:2">E · SÓ MOON PULSE (MINIMAL)</div>
+      <div style="position:absolute;top:38%;left:50%;transform:translate(-50%,-50%);z-index:3"><span class="moon-pulse" style="font-size:80px">🌙</span></div>
+      <div class="bedtime-info">
+        <div class="since">Dormindo há</div>
+        <div class="time">2h 14m</div>
+        <div class="next">início 21:32 · próx. wake ~07:00</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="annot">
+    <h3>Diferenças entre as 5</h3>
+    <ul>
+      <li><strong>A · Twinkling stars:</strong> 10-12 pontinhos brancos piscando em ritmos ligeiramente diferentes. <code>animation:twinkle 2.5-4.5s</code>. Custo: baixo (CSS pure, GPU-cheap).</li>
+      <li><strong>B · Breathing aura:</strong> um círculo lavanda gigante (radial-gradient) atrás de tudo, respirando 4s. Suave, etéreo. Custo: baixo (1 elemento).</li>
+      <li><strong>C · Orbit rotation:</strong> 2 anéis tracejados girando em sentidos opostos (60s + 90s — quase imperceptível). Sensação de "movimento celeste". Custo: baixo.</li>
+      <li><strong>D · Tudo junto (sutil):</strong> stars + breath aura + moon central pulsante. Mais cinematográfico. Custo: médio (mais elementos, mas todos GPU-cheap).</li>
+      <li><strong>E · Só moon pulse:</strong> uma lua grande no centro respirando devagar com glow lavanda. ZERO mais elementos. <strong>Mais minimal</strong>.</li>
+    </ul>
+    <p style="margin-top:14px"><strong>Impacto técnico:</strong> Todas usam <code>@keyframes</code> CSS puros (sem JS), respeitam <code>body.app-hidden *{animation-play-state:paused}</code> que existe no app (PWA em background não gasta CPU). Bedtime já tem 1 animation rodando hoje (<code>livePulse</code> no border do SleepBlock), então adicionar 2-3 mais não impacta perceptivelmente.</p>
+  </div>
+
+  <div class="decision">
+    <h3 style="margin:0 0 14px;font-size:16px;color:#c4b5fd">Escolhas finais</h3>
+    <div class="opt"><b>Rotina completa:</b> A (pill), B (centrada com estrela), ou C (divisor minimal)?</div>
+    <div class="opt"><b>Bedtime animation:</b> A (twinkling stars), B (breathing aura), C (orbit), D (combo sutil), ou E (só moon)?</div>
+    <p style="color:var(--sub);font-size:13px;margin-top:14px">Sugiro <b>C</b> + <b>A</b> ou <b>D</b> — combo "rotina= invisível celebração + bedtime = ambiente noturno". Mas você decide.</p>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Medicine event — redesign (v2)</title>
+<style>
+  :root{
+    --bg:#070b1e; --bg2:#0b1128;
+    --card:rgba(22,28,60,.55);
+    --b:rgba(139,124,246,.12);
+    --bSoft:rgba(139,124,246,.08);
+    --text:#e4e6f4; --sub:#9099c3; --dim:#5b6189;
+    --accent:#8b7cf6;
+    --amber:#fbbf24; --amberSoft:rgba(251,191,36,.10);
+    --green:#4ade80;
+    --glass:rgba(14,18,48,.55);
+  }
+  *{box-sizing:border-box}
+  body{background:#04061a;color:var(--text);font:500 14px/1.5 -apple-system,BlinkMacSystemFont,"Inter",sans-serif;margin:0;padding:32px 16px 80px}
+  .wrap{max-width:1240px;margin:0 auto}
+  h1{font-size:22px;margin:0 0 4px;font-weight:800;letter-spacing:-.4px}
+  .lede{color:var(--sub);font-size:13.5px;margin:0 0 24px}
+  h2{font-size:12px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin:8px 0 8px}
+  .phones{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-bottom:32px}
+  @media (max-width:1100px){.phones{grid-template-columns:repeat(2,1fr)}}
+  .phone{background:radial-gradient(ellipse 140% 55% at 50% 100%,#1a1f52 0%,transparent 70%),radial-gradient(ellipse at 50% 0%,#10153d 0%,var(--bg) 65%),var(--bg);border-radius:36px;padding:18px 14px 14px;border:1px solid rgba(139,124,246,.18);box-shadow:0 20px 60px -20px rgba(0,0,0,.6);position:relative;min-height:620px}
+  .phone .notch{width:120px;height:20px;background:#000;border-radius:0 0 16px 16px;margin:-18px auto 14px}
+  .sc-label{font-size:10px;font-weight:700;letter-spacing:1px;color:var(--accent);text-transform:uppercase;margin-bottom:6px;padding-left:4px}
+  .sc-label span{color:var(--sub);font-weight:600;letter-spacing:0;margin-left:6px;text-transform:none}
+  .sheet-head{display:flex;align-items:center;gap:10px;padding:6px 4px 14px}
+  .icon-box{width:32px;height:32px;border-radius:10px;background:var(--amberSoft);display:flex;align-items:center;justify-content:center;color:var(--amber);font-size:16px;font-weight:800}
+  .sheet-head .title{font-size:15px;font-weight:700}
+  .field-label{font-size:10px;font-weight:700;color:var(--dim);letter-spacing:.4px;margin:10px 0 6px 4px;text-transform:uppercase}
+  .row{display:flex;gap:8px;margin-bottom:14px}
+  .row .half{flex:1;background:rgba(20,26,60,.55);border:1px solid var(--b);border-radius:12px;padding:11px 14px;font-size:14px;font-weight:600}
+  .row .half .k{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
+
+  .med-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+  .chip{flex:1 1 calc(50% - 4px);min-width:0;padding:10px 12px;border-radius:12px;background:var(--glass);border:1px solid var(--b);text-align:left;position:relative;transition:all .2s;cursor:pointer}
+  .chip .n{font-size:12.5px;font-weight:700;color:var(--text);letter-spacing:-.1px}
+  .chip .d{font-size:10px;color:var(--dim);margin-top:2px}
+  .chip .d.drops{color:#fcd34d;font-style:italic;opacity:.75}
+  .chip .check{position:absolute;top:8px;right:8px;width:16px;height:16px;border-radius:50%;border:1.5px solid var(--b);background:transparent;display:flex;align-items:center;justify-content:center;font-size:10px;color:transparent;transition:all .2s}
+  .chip.on{background:rgba(251,191,36,.14);border-color:rgba(251,191,36,.55);box-shadow:0 0 10px rgba(251,191,36,.12)}
+  .chip.on .n{color:var(--amber)}
+  .chip.on .d{color:rgba(251,191,36,.8)}
+  .chip.on .check{background:var(--amber);border-color:var(--amber);color:var(--bg)}
+  .chip.ask-drops::after{content:"💧";position:absolute;top:6px;right:28px;font-size:9px;opacity:.55}
+  .chip.on.ask-drops::after{opacity:0.9}
+  .chip.add{flex:1 1 calc(50% - 4px);padding:10px 12px;border-radius:12px;background:transparent;border:1px dashed rgba(139,124,246,.25);display:flex;align-items:center;justify-content:center;gap:6px;color:var(--dim);font-size:12px;font-weight:600}
+
+  .save{width:100%;padding:16px;border-radius:16px;background:linear-gradient(180deg,var(--amber),#e0a315);color:var(--bg);font-size:16px;font-weight:800;letter-spacing:-.2px;border:none;box-shadow:0 12px 32px -8px rgba(251,191,36,.4);margin-top:8px;text-align:center}
+  .save.disabled{opacity:.4;pointer-events:none;box-shadow:none;background:rgba(251,191,36,.2);color:rgba(251,191,36,.6)}
+
+  .drop-head{padding:24px 0 18px;text-align:center}
+  .drop-head .ic{width:64px;height:64px;border-radius:22px;background:var(--amberSoft);display:flex;align-items:center;justify-content:center;margin:8px auto 14px;font-size:32px}
+  .drop-head .med-name{font-size:22px;font-weight:800;letter-spacing:-.4px;margin-bottom:4px}
+  .drop-head .q{font-size:13px;color:var(--sub)}
+  .drop-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0 14px}
+  .drop-btn{padding:22px 0;border-radius:18px;background:linear-gradient(180deg,rgba(20,26,60,.8),rgba(14,18,48,.5));border:1px solid var(--b);font-size:30px;font-weight:800;color:var(--amber);letter-spacing:-.5px;transition:all .2s;cursor:pointer;position:relative;box-shadow:0 1px 0 0 rgba(255,255,255,0.04) inset}
+  .drop-btn .u{font-size:10px;font-weight:700;color:var(--dim);display:block;letter-spacing:1.5px;margin-top:4px;opacity:.8}
+  .drop-btn:hover,.drop-btn.pulse{border-color:rgba(251,191,36,.45);background:linear-gradient(180deg,rgba(251,191,36,.14),rgba(251,191,36,.04));box-shadow:0 0 14px rgba(251,191,36,.2),0 1px 0 0 rgba(255,255,255,.1) inset}
+  .drop-btn.pulse{animation:pulseGlow 1.4s ease-in-out infinite}
+  @keyframes pulseGlow{0%,100%{box-shadow:0 0 10px rgba(251,191,36,.2),0 1px 0 0 rgba(255,255,255,.1) inset}50%{box-shadow:0 0 22px rgba(251,191,36,.5),0 1px 0 0 rgba(255,255,255,.15) inset}}
+  .drop-help{font-size:11px;color:var(--dim);text-align:center;margin-top:10px}
+
+  .back-row{display:flex;align-items:center;gap:10px;padding:4px 4px 18px}
+  .back-row .back{width:32px;height:32px;border-radius:10px;background:var(--glass);border:1px solid var(--b);display:flex;align-items:center;justify-content:center;color:var(--sub);font-size:16px}
+
+  .toast-pill{position:absolute;left:50%;transform:translateX(-50%);bottom:22px;padding:10px 18px;border-radius:22px;background:rgba(16,30,24,.92);border:1px solid rgba(74,222,128,.35);color:#6ee7b7;font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px;backdrop-filter:blur(14px);box-shadow:0 8px 24px -8px rgba(0,0,0,.5)}
+
+  .call{background:linear-gradient(180deg,rgba(139,124,246,.1),rgba(139,124,246,.03));border:1px solid rgba(139,124,246,.22);border-radius:14px;padding:14px 18px;margin:16px 0 6px;font-size:13px;color:#c7cbea;line-height:1.55}
+  .call strong{color:#fff}
+  .call h3{margin:0 0 6px;font-size:12px;color:#c4b5fd;text-transform:uppercase;letter-spacing:.5px;font-weight:800}
+  code{background:var(--glass);padding:2px 6px;border-radius:4px;font-size:11px;color:#c4b5fd}
+
+  .arrow{position:absolute;right:-28px;top:50%;transform:translateY(-50%);font-size:28px;color:var(--accent);opacity:.5}
+  @media (max-width:1100px){.arrow{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Medicine event — redesign (v2)</h1>
+<p class="lede">Simplificado: drops picker trata <strong>1 med por vez</strong>. Multi-select serve pra combo de dose fixa (Floripa + Vit D + Cólicaliv). Simeticona/Paracetamol são solo → tap no med → Save → tela de gotas → tap → fim.</p>
+
+<h2>1. Combo de dose fixa (manhã) — sem drops picker</h2>
+
+<div class="phones">
+
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="sc-label">Tela 1 <span>· Seleciona 3 meds fixos</span></div>
+    <div class="sheet-head">
+      <div class="icon-box">💊</div>
+      <div class="title">Medicamento</div>
+    </div>
+    <div class="row">
+      <div class="half"><div class="k">Dia · Hoje</div>2026-04-21</div>
+      <div class="half"><div class="k">Horário</div>07:45</div>
+    </div>
+    <div class="field-label">Selecione (1 ou mais)</div>
+    <div class="med-grid">
+      <div class="chip on"><div class="n">Floripa</div><div class="d">3 gotas</div><div class="check">✓</div></div>
+      <div class="chip on"><div class="n">Vit. D</div><div class="d">1 gota</div><div class="check">✓</div></div>
+      <div class="chip on"><div class="n">Cólicaliv</div><div class="d">5 gotas</div><div class="check">✓</div></div>
+      <div class="chip ask-drops"><div class="n">Simeticona</div><div class="d drops">pergunta ao salvar</div><div class="check">✓</div></div>
+      <div class="chip ask-drops"><div class="n">Paracetamol</div><div class="d drops">pergunta ao salvar</div><div class="check">✓</div></div>
+      <div class="chip add">＋ Outro</div>
+    </div>
+    <button class="save">Salvar (3)</button>
+    <div class="arrow">→</div>
+  </div>
+
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="sc-label">Tela 2 <span>· Grava e fecha</span></div>
+    <div style="text-align:center;padding:50px 8px 20px">
+      <div style="font-size:68px;margin-bottom:14px">✓</div>
+      <div style="font-size:16px;font-weight:800;color:var(--green);margin-bottom:6px">3 medicamentos registrados</div>
+      <div style="font-size:12px;color:var(--sub);line-height:1.7">
+        Floripa · 3 gotas<br>
+        Vit. D · 1 gota<br>
+        Cólicaliv · 5 gotas
+      </div>
+      <div style="font-size:10px;color:var(--dim);margin-top:16px;letter-spacing:.4px">07:45 · Tela fecha sozinha</div>
+    </div>
+    <div class="toast-pill">✓ Registrados</div>
+  </div>
+
+  <div></div>
+</div>
+
+<h2>2. Solo Simeticona — abre drops picker</h2>
+
+<div class="phones">
+
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="sc-label">Tela A <span>· Seleciona só Simeticona</span></div>
+    <div class="sheet-head">
+      <div class="icon-box">💊</div>
+      <div class="title">Medicamento</div>
+    </div>
+    <div class="row">
+      <div class="half"><div class="k">Dia · Hoje</div>2026-04-21</div>
+      <div class="half"><div class="k">Horário</div>14:30</div>
+    </div>
+    <div class="field-label">Selecione (1 ou mais)</div>
+    <div class="med-grid">
+      <div class="chip"><div class="n">Floripa</div><div class="d">3 gotas</div><div class="check">✓</div></div>
+      <div class="chip"><div class="n">Vit. D</div><div class="d">1 gota</div><div class="check">✓</div></div>
+      <div class="chip"><div class="n">Cólicaliv</div><div class="d">5 gotas</div><div class="check">✓</div></div>
+      <div class="chip on ask-drops"><div class="n">Simeticona</div><div class="d drops">pergunta ao salvar</div><div class="check">✓</div></div>
+      <div class="chip ask-drops"><div class="n">Paracetamol</div><div class="d drops">pergunta ao salvar</div><div class="check">✓</div></div>
+      <div class="chip add">＋ Outro</div>
+    </div>
+    <button class="save">Salvar (1)</button>
+    <div class="arrow">→</div>
+  </div>
+
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="sc-label">Tela B <span>· Drops picker</span></div>
+    <div class="back-row">
+      <div class="back">←</div>
+      <div style="font-size:11px;color:var(--dim);font-weight:700;letter-spacing:.4px;text-transform:uppercase">Voltar</div>
+    </div>
+    <div class="drop-head">
+      <div class="ic">💧</div>
+      <div class="med-name">Simeticona</div>
+      <div class="q">Quantas gotas?</div>
+    </div>
+    <div class="drop-grid">
+      <button class="drop-btn">1<span class="u">GOTA</span></button>
+      <button class="drop-btn">2<span class="u">GOTAS</span></button>
+      <button class="drop-btn pulse">3<span class="u">GOTAS</span></button>
+      <button class="drop-btn">4<span class="u">GOTAS</span></button>
+      <button class="drop-btn">5<span class="u">GOTAS</span></button>
+      <button class="drop-btn">6<span class="u">GOTAS</span></button>
+    </div>
+    <div class="drop-help">Toque pra registrar e fechar</div>
+    <div class="arrow">→</div>
+  </div>
+
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="sc-label">Tela C <span>· Grava e fecha</span></div>
+    <div style="text-align:center;padding:80px 8px 20px">
+      <div style="font-size:72px;margin-bottom:16px">✓</div>
+      <div style="font-size:16px;font-weight:800;color:var(--green);margin-bottom:6px">Simeticona registrada</div>
+      <div style="font-size:13px;color:var(--sub)">3 gotas · 14:30</div>
+    </div>
+    <div class="toast-pill">✓ Registrado</div>
+  </div>
+
+</div>
+
+<h2>3. Solo Paracetamol — mesma tela, nome trocado</h2>
+
+<div class="phones">
+
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="sc-label">Paracetamol</div>
+    <div class="back-row">
+      <div class="back">←</div>
+      <div style="font-size:11px;color:var(--dim);font-weight:700;letter-spacing:.4px;text-transform:uppercase">Voltar</div>
+    </div>
+    <div class="drop-head">
+      <div class="ic">💧</div>
+      <div class="med-name">Paracetamol</div>
+      <div class="q">Quantas gotas?</div>
+    </div>
+    <div class="drop-grid">
+      <button class="drop-btn">1<span class="u">GOTA</span></button>
+      <button class="drop-btn pulse">2<span class="u">GOTAS</span></button>
+      <button class="drop-btn">3<span class="u">GOTAS</span></button>
+      <button class="drop-btn">4<span class="u">GOTAS</span></button>
+      <button class="drop-btn">5<span class="u">GOTAS</span></button>
+      <button class="drop-btn">6<span class="u">GOTAS</span></button>
+    </div>
+    <div class="drop-help">Tap = auto-save + fechar</div>
+  </div>
+
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="sc-label">＋ Outro <span>· Add custom</span></div>
+    <div class="sheet-head"><div class="icon-box">💊</div><div class="title">Medicamento</div></div>
+    <div class="row">
+      <div class="half"><div class="k">Dia</div>Hoje</div>
+      <div class="half"><div class="k">Horário</div>09:20</div>
+    </div>
+    <div class="field-label">Novo medicamento</div>
+    <div style="background:var(--glass);border:1px solid var(--b);border-radius:14px;padding:14px;margin-bottom:10px">
+      <div style="font-size:10px;color:var(--dim);margin-bottom:6px;letter-spacing:.4px">NOME</div>
+      <div style="font-size:15px;font-weight:600;color:var(--text);border-bottom:1px solid var(--bSoft);padding-bottom:6px;margin-bottom:10px">Novalgina|</div>
+      <div style="font-size:10px;color:var(--dim);margin-bottom:6px;letter-spacing:.4px">DOSE · deixe vazio pra pedir gotas</div>
+      <div style="font-size:14px;color:var(--sub);border-bottom:1px solid var(--bSoft);padding-bottom:6px">Ex: 3 gotas, 2.5ml, ½ comp</div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button style="flex:1;padding:10px;border-radius:10px;background:var(--glass);border:1px solid var(--b);color:var(--sub);font-size:12px;font-weight:700">Cancelar</button>
+      <button style="flex:1;padding:10px;border-radius:10px;background:var(--amber);border:none;color:var(--bg);font-size:12px;font-weight:800">Salvar med</button>
+    </div>
+  </div>
+
+  <div></div>
+</div>
+
+<h2>Regra do drops picker</h2>
+<div class="call">
+  <h3>Quando abre</h3>
+  <p>Só abre se <strong>exatamente UM med selecionado sem dose</strong>. Nos outros casos grava direto:</p>
+  <ul style="margin:8px 0 0;padding-left:20px">
+    <li>Só meds fixos (Floripa, Vit D, Cólicaliv…) → <strong>grava todos direto</strong> no Save.</li>
+    <li>Mistura fixos + 1 que pede drops → <strong>grava os fixos + abre drops</strong> do outro.</li>
+    <li>(Improvável) 2+ meds que pedem drops juntos → abre drops do 1º, grava; abre do 2º, grava. Simples sequência, sem stepper visual.</li>
+  </ul>
+</div>
+
+<div class="call">
+  <h3>Mudanças vs app atual</h3>
+  <ul style="margin:8px 0 0;padding-left:20px">
+    <li>Chips viram <strong>multi-select</strong> (checkmark em cada um), não um só por vez.</li>
+    <li>Save label mostra o <strong>contador</strong>: "Salvar (3)".</li>
+    <li>Cada med selecionado vira <strong>1 entry própria</strong> no Firestore (todas com mesmo timestamp). Stats por med continuam funcionando.</li>
+    <li>Campo <strong>notes removido</strong> do form.</li>
+    <li>Nova tela <strong>Drops Picker</strong> (6 botões grandes), abre pós-Save se med sem dose.</li>
+    <li>"+ Outro" vira <strong>Modal dedicado</strong> pra cadastrar (nome + dose opcional). Se dose vazio → marca o med como "pede drops".</li>
+  </ul>
+</div>
+
+</div>
+</body>
+</html>

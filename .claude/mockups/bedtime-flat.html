@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Bedtime flat — eventos normais com tag</title>
+<style>
+  :root{
+    --bg:#070b1e;--text:#e4e6f4;--sub:#9099c3;--dim:#5b6189;
+    --accent:#8b7cf6;--green:#4ade80;--blue:#6ea8ff;--purple:#a78bfa;
+    --pink:#f472b6;--amber:#fbbf24;--brown:#a16b4a;
+    --b:rgba(139,124,246,.06);
+    --starfield:radial-gradient(ellipse 140% 55% at 50% 100%,#1a1f52 0%,transparent 70%),radial-gradient(ellipse at 50% 0%,#10153d 0%,var(--bg) 65%),var(--bg);
+  }
+  *{box-sizing:border-box}
+  body{background:#04061a;color:var(--text);font:500 14px/1.5 -apple-system,BlinkMacSystemFont,"Inter",sans-serif;margin:0;padding:30px 14px 60px;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:880px;margin:0 auto}
+  h1{font-size:22px;margin:0 0 4px;font-weight:800;letter-spacing:-.4px}
+  .lede{color:var(--sub);font-size:13.5px;margin:0 0 24px;line-height:1.55}
+  h2{font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--accent);margin:28px 0 12px}
+
+  .phones{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .phone{background:var(--starfield);border-radius:34px;padding:18px 14px 32px;border:1px solid rgba(139,124,246,.18);box-shadow:0 20px 60px -20px rgba(0,0,0,.6);position:relative;min-height:560px}
+  .phone .notch{width:104px;height:18px;background:#000;border-radius:0 0 14px 14px;margin:-14px auto 12px}
+  .col-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-align:center;margin-bottom:8px}
+  .col-label.now{color:#fda4af}
+  .col-label.next{color:#86efac}
+
+  .today-h{display:flex;align-items:baseline;justify-content:space-between;margin:6px 4px 10px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1}
+  .today-h .l{color:var(--accent)}
+  .today-h .d{color:var(--dim);font-weight:500;letter-spacing:.4px}
+
+  /* === CURRENT: SleepBlock complexo === */
+  .sleepblock{background:linear-gradient(180deg,rgba(96,165,250,.08),rgba(167,139,250,.04));border:1px solid rgba(96,165,250,.32);border-radius:20px;overflow:hidden;margin-bottom:10px;box-shadow:0 0 16px rgba(96,165,250,.12)}
+  .live-ribbon{display:flex;align-items:center;gap:8px;padding:8px 16px 8px 20px;background:linear-gradient(90deg,rgba(96,165,250,.18),rgba(167,139,250,.10));border-bottom:1px solid rgba(96,165,250,.25)}
+  .live-ribbon .dot{width:7px;height:7px;border-radius:50%;background:#60a5fa;box-shadow:0 0 6px #60a5fa;animation:pulseDot 1.6s ease-in-out infinite}
+  .live-ribbon .lbl{font-size:10px;font-weight:700;color:#c4b5fd;letter-spacing:.5px;text-transform:uppercase}
+  .live-ribbon .lbl span{opacity:.7;margin-left:6px}
+  @keyframes pulseDot{0%,100%{opacity:.4}50%{opacity:1}}
+
+  .sb-body{padding:14px 16px}
+  .sb-main{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+  .sb-main .ic{width:38px;height:38px;border-radius:11px;background:rgba(167,139,250,.18);display:flex;align-items:center;justify-content:center;font-size:20px}
+  .sb-main .info{flex:1}
+  .sb-main .ttl{font-size:14px;font-weight:700;color:#f0f2ff;letter-spacing:-.2px}
+  .sb-main .sub{font-size:11px;color:var(--sub);margin-top:2px}
+  .sb-main .t{font-size:14px;font-weight:700;color:#7dd3fc;font-variant-numeric:tabular-nums}
+
+  .timeline-bar{height:7px;border-radius:4px;background:rgba(20,26,60,.55);position:relative;overflow:hidden;margin:10px 0 14px}
+  .timeline-bar .seg{position:absolute;top:0;bottom:0;background:rgba(96,165,250,.6)}
+
+  .waking{padding:10px 12px;border-radius:12px;background:rgba(20,26,60,.4);border:1px solid rgba(110,168,255,.18);margin-bottom:6px}
+  .waking .h{display:flex;align-items:center;gap:7px;font-size:10.5px;color:#7dd3fc;font-weight:700;margin-bottom:6px}
+  .waking .h .dot{width:5px;height:5px;border-radius:50%;background:#7dd3fc}
+  .waking .ev{display:flex;align-items:center;gap:8px;padding:6px 0;font-size:11.5px;color:var(--sub)}
+  .waking .ev .ic2{width:18px;height:18px;border-radius:6px;background:rgba(74,222,128,.16);color:var(--green);display:flex;align-items:center;justify-content:center;font-size:10px}
+  .waking .ev .name{flex:1;color:#f0f2ff;font-weight:600}
+  .waking .ev .t2{font-size:10px;color:var(--dim)}
+
+  /* === PROPOSED: bedtime como entry + eventos com tag === */
+  .row{display:flex;align-items:center;gap:11px;padding:8px 14px 8px 16px;background:rgba(22,28,60,.4);border-radius:14px;border:1px solid rgba(139,124,246,.06);margin-bottom:5px;position:relative;overflow:hidden;line-height:1.15}
+  .row::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:0 2px 2px 0}
+  .row.purple::before{background:linear-gradient(180deg,var(--purple),rgba(167,139,250,.3))}
+  .row.green::before{background:linear-gradient(180deg,var(--green),rgba(74,222,128,.3))}
+  .row.pink::before{background:linear-gradient(180deg,var(--pink),rgba(244,114,182,.3))}
+  .row.amber::before{background:linear-gradient(180deg,var(--amber),rgba(251,191,36,.3))}
+  .row.blue::before{background:linear-gradient(180deg,var(--blue),rgba(96,165,250,.3))}
+  .row .ic{width:30px;height:30px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;border:1px solid;box-shadow:0 1px 0 0 rgba(255,255,255,.05) inset}
+  .row.purple .ic{background:linear-gradient(135deg,rgba(167,139,250,.22),rgba(167,139,250,.08));color:var(--purple);border-color:rgba(167,139,250,.32)}
+  .row.green .ic{background:linear-gradient(135deg,rgba(74,222,128,.22),rgba(74,222,128,.08));color:var(--green);border-color:rgba(74,222,128,.32)}
+  .row.pink .ic{background:linear-gradient(135deg,rgba(244,114,182,.22),rgba(244,114,182,.08));color:var(--pink);border-color:rgba(244,114,182,.32)}
+  .row.amber .ic{background:linear-gradient(135deg,rgba(251,191,36,.22),rgba(251,191,36,.08));color:var(--amber);border-color:rgba(251,191,36,.32)}
+  .row.blue .ic{background:linear-gradient(135deg,rgba(96,165,250,.22),rgba(96,165,250,.08));color:var(--blue);border-color:rgba(96,165,250,.32)}
+  .row .mid{flex:1;min-width:0}
+  .row .ttl{font-size:13px;font-weight:600;letter-spacing:-.2px;color:#f0f2ff;display:flex;align-items:center;gap:5px}
+  .row .ttl .detail{color:var(--sub);font-weight:500}
+  .row .sub{font-size:10.5px;color:var(--sub);margin-top:1px;letter-spacing:.1px}
+  .row .t{font-size:13.5px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.3px}
+
+  /* Bedtime tag (existente, refinada) */
+  .night-tag{display:inline-flex;align-items:center;gap:2px;padding:0 5px 0 4px;border-radius:5px;background:rgba(167,139,250,.14);border:1px solid rgba(167,139,250,.32);font-size:8.5px;font-weight:700;color:#c4b5fd;letter-spacing:.2px}
+  .night-tag svg{width:8px;height:8px}
+
+  /* Bedtime row variants */
+  .row.bedtime-active{background:linear-gradient(180deg,rgba(167,139,250,.10),rgba(167,139,250,.03));border-color:rgba(167,139,250,.3);box-shadow:0 0 12px rgba(167,139,250,.08)}
+  .row.bedtime-active .ic{animation:bedPulse 2.5s ease-in-out infinite}
+  @keyframes bedPulse{0%,100%{opacity:1}50%{opacity:.7}}
+
+  /* Time separator (between events at different times during bedtime) */
+  .gap-sep{display:flex;align-items:center;gap:8px;padding:4px 16px;margin:1px 0}
+  .gap-sep .line{flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(167,139,250,.1),transparent)}
+  .gap-sep .lbl{font-size:9px;color:var(--dim);font-weight:600;letter-spacing:.5px;text-transform:uppercase}
+
+  .call{background:linear-gradient(180deg,rgba(139,124,246,.08),rgba(139,124,246,.02));border:1px solid rgba(139,124,246,.18);border-radius:14px;padding:14px 18px;margin:18px 0;font-size:13px;color:#c7cbea;line-height:1.6}
+  .call h3{margin:0 0 6px;font-size:12px;color:#c4b5fd;text-transform:uppercase;letter-spacing:.5px;font-weight:800}
+  .call ul{margin:8px 0 0;padding-left:20px}
+  .call li{margin-bottom:5px}
+  code{background:rgba(14,18,48,.6);padding:2px 6px;border-radius:4px;font-size:11.5px;color:#c4b5fd;font-family:"SF Mono",ui-monospace,monospace}
+
+  /* Side comparison annotation */
+  .annot{font-size:11px;color:var(--dim);background:rgba(139,124,246,.04);border:1px dashed rgba(139,124,246,.15);border-radius:8px;padding:8px 12px;margin:10px 4px 0;line-height:1.5}
+  .annot strong{color:#c4b5fd}
+
+  .pros{display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12.5px;margin:14px 0 20px}
+  .pros .p{padding:10px 14px;border-radius:10px;background:rgba(74,222,128,.06);border:1px solid rgba(74,222,128,.16)}
+  .pros .c{padding:10px 14px;border-radius:10px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.16)}
+  .pros strong{color:#fff}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<h1>Bedtime flat — eventos normais com tag "noite"</h1>
+<p class="lede">Proposta: tirar o card SleepBlock complexo, transformar o bedtime em uma <strong>entry normal</strong>, e deixar as mamadas/fraldas/meds da noite aparecerem na timeline cronológica do dia <strong>com um badge "noite"</strong> pra contexto.</p>
+
+<h2>Comparação — bedtime LIVE em curso (com 2 wakings já registradas)</h2>
+
+<div class="phones">
+
+  <!-- CURRENT -->
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="col-label now">ATUAL — SleepBlock complexo</div>
+    <div class="today-h"><span class="l">Hoje</span><span class="d">SEG · 13 MAI</span></div>
+
+    <div class="sleepblock">
+      <div class="live-ribbon">
+        <span class="dot"></span>
+        <span class="lbl">Sono noturno <span>· ao vivo</span></span>
+        <span style="margin-left:auto;font-size:10px;color:var(--sub);font-weight:600">9h36m</span>
+      </div>
+      <div class="sb-body">
+        <div class="sb-main">
+          <div class="ic">🌙</div>
+          <div class="info">
+            <div class="ttl">21:00 — now</div>
+            <div class="sub">8h13m sleep · 1h23m awake · 2 wakings</div>
+          </div>
+        </div>
+        <div class="timeline-bar">
+          <div class="seg" style="left:30%;width:4%"></div>
+          <div class="seg" style="left:60%;width:8%"></div>
+        </div>
+        <div class="waking">
+          <div class="h"><span class="dot"></span>01:47 · 23min ✏</div>
+          <div class="ev"><span class="ic2">🍼</span><span class="name">Bottle · 110ml</span><span class="t2">01:48</span></div>
+        </div>
+        <div class="waking">
+          <div class="h"><span class="dot"></span>05:04 · 1h ✏</div>
+          <div class="ev"><span class="ic2">🍼</span><span class="name">Bottle · 110ml</span><span class="t2">05:13</span></div>
+          <div class="ev"><span class="ic2" style="background:rgba(244,114,182,.16);color:var(--pink)">🧷</span><span class="name">Diaper · Both</span><span class="t2">05:24</span></div>
+          <div class="ev"><span class="ic2" style="background:rgba(251,191,36,.16);color:var(--amber)">💊</span><span class="name">Simet. · 3 gotas</span><span class="t2">05:44</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="annot">
+      <strong>Problema:</strong> tudo aninhado dentro do card. Quando bedtime acaba, vira modal expansível complicado. Eventos da noite somem da lista normal. Edits invisíveis.
+    </div>
+  </div>
+
+  <!-- PROPOSED -->
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="col-label next">PROPOSTA — flat com tag</div>
+    <div class="today-h"><span class="l">Hoje</span><span class="d">SEG · 13 MAI</span></div>
+
+    <div class="row bedtime-active purple">
+      <div class="ic">🌙</div>
+      <div class="mid">
+        <div class="ttl">Bedtime · <span class="detail">em curso</span></div>
+        <div class="sub">8h13m sono · 1h23m acordada · 2 despertares</div>
+      </div>
+      <div class="t" style="color:#7dd3fc">9h36m</div>
+    </div>
+
+    <div class="gap-sep"><div class="line"></div><span class="lbl">01:47</span><div class="line"></div></div>
+
+    <div class="row green">
+      <div class="ic">🍼</div>
+      <div class="mid">
+        <div class="ttl">
+          Mamadeira <span class="detail">· 110ml</span>
+          <span class="night-tag">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/></svg>
+            noite
+          </span>
+        </div>
+        <div class="sub">6h12 atrás</div>
+      </div>
+      <div class="t" style="color:#f0f2ff">01:48</div>
+    </div>
+
+    <div class="gap-sep"><div class="line"></div><span class="lbl">05:04</span><div class="line"></div></div>
+
+    <div class="row green">
+      <div class="ic">🍼</div>
+      <div class="mid">
+        <div class="ttl">
+          Mamadeira <span class="detail">· 110ml</span>
+          <span class="night-tag">noite</span>
+        </div>
+        <div class="sub">2h56 atrás</div>
+      </div>
+      <div class="t" style="color:#f0f2ff">05:13</div>
+    </div>
+    <div class="row pink">
+      <div class="ic">🧷</div>
+      <div class="mid">
+        <div class="ttl">
+          Fralda <span class="detail">· Ambos</span>
+          <span class="night-tag">noite</span>
+        </div>
+        <div class="sub">2h45 atrás</div>
+      </div>
+      <div class="t" style="color:#f0f2ff">05:24</div>
+    </div>
+    <div class="row amber">
+      <div class="ic">💊</div>
+      <div class="mid">
+        <div class="ttl">
+          Simeticona <span class="detail">· 3 gotas</span>
+          <span class="night-tag">noite</span>
+        </div>
+        <div class="sub">2h25 atrás</div>
+      </div>
+      <div class="t" style="color:#f0f2ff">05:44</div>
+    </div>
+
+    <div class="annot">
+      <strong>Vantagens:</strong> bedtime é uma entry comum (editável via swipe-right como qualquer outra). Eventos da noite aparecem na timeline cronológica normal com tag <code>🌙 noite</code> sutil. Separadores indicam quando houve waking. Tudo navegável, editável.
+    </div>
+  </div>
+</div>
+
+<h2>Bedtime FINALIZADO (no dia seguinte, na lista do passado)</h2>
+
+<div class="phones">
+
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="col-label now">ATUAL</div>
+    <div class="today-h"><span class="l">Ontem</span><span class="d">DOM · 12 MAI</span></div>
+    <div class="sleepblock" style="background:linear-gradient(180deg,rgba(167,139,250,.05),rgba(167,139,250,.02));border-color:rgba(139,124,246,.18);box-shadow:none">
+      <div class="sb-body">
+        <div class="sb-main">
+          <div class="ic" style="background:rgba(167,139,250,.14)">🌙</div>
+          <div class="info">
+            <div class="ttl">21:00 — 06:36</div>
+            <div class="sub">9h36m total · 8h13m sleep · 2 wakings</div>
+          </div>
+          <span style="font-size:11px;color:var(--sub);font-weight:600">▾</span>
+        </div>
+      </div>
+    </div>
+    <div class="annot">
+      Card collapsado. Pra editar uma waking ou ver o que aconteceu, precisa abrir o card. Eventos somem da lista do dia.
+    </div>
+  </div>
+
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="col-label next">PROPOSTA</div>
+    <div class="today-h"><span class="l">Ontem</span><span class="d">DOM · 12 MAI</span></div>
+
+    <div class="row purple">
+      <div class="ic">🌙</div>
+      <div class="mid">
+        <div class="ttl">Bedtime <span class="detail">· 9h36m</span></div>
+        <div class="sub">21:00 → 06:36 · 2 despertares</div>
+      </div>
+      <div class="t" style="color:#f0f2ff">21:00</div>
+    </div>
+
+    <div class="row green">
+      <div class="ic">🍼</div>
+      <div class="mid">
+        <div class="ttl">Mamadeira <span class="detail">· 110ml</span> <span class="night-tag">noite</span></div>
+        <div class="sub">acordou 01:47, 23min</div>
+      </div>
+      <div class="t" style="color:#f0f2ff">01:48</div>
+    </div>
+    <div class="row green">
+      <div class="ic">🍼</div>
+      <div class="mid">
+        <div class="ttl">Mamadeira <span class="detail">· 110ml</span> <span class="night-tag">noite</span></div>
+        <div class="sub">acordou 05:04, 1h</div>
+      </div>
+      <div class="t" style="color:#f0f2ff">05:13</div>
+    </div>
+    <div class="row pink">
+      <div class="ic">🧷</div>
+      <div class="mid">
+        <div class="ttl">Fralda <span class="detail">· Ambos</span> <span class="night-tag">noite</span></div>
+        <div class="sub">durante despertar 05:04</div>
+      </div>
+      <div class="t" style="color:#f0f2ff">05:24</div>
+    </div>
+    <div class="row amber">
+      <div class="ic">💊</div>
+      <div class="mid">
+        <div class="ttl">Simeticona <span class="detail">· 3 gotas</span> <span class="night-tag">noite</span></div>
+        <div class="sub">durante despertar 05:04</div>
+      </div>
+      <div class="t" style="color:#f0f2ff">05:44</div>
+    </div>
+    <div class="row blue">
+      <div class="ic">☀</div>
+      <div class="mid">
+        <div class="ttl">Acordou <span class="detail">· dia começou</span></div>
+        <div class="sub">9h36m de bedtime</div>
+      </div>
+      <div class="t" style="color:#f0f2ff">06:36</div>
+    </div>
+
+    <div class="annot">
+      Bedtime + eventos numa única linha do tempo. Tag <code>🌙 noite</code> dá contexto. Cada linha editável por swipe-right como qualquer entry. Eventos do dia anterior à bedtime e do dia depois ficam acima/abaixo, sem corte.
+    </div>
+  </div>
+</div>
+
+<div class="call">
+  <h3>O que muda no código</h3>
+  <ul>
+    <li><strong>Remove o SleepBlock</strong> como renderizador especial. Vira EntryRow normal pra tipo <code>sleep</code>, com detail = "9h36m · 2 despertares".</li>
+    <li><strong>NÃO filtra mais</strong> eventos durante bedtime do <code>todayE</code>. Eles aparecem normalmente na lista cronológica.</li>
+    <li><strong>Tag "noite" já existe</strong> (`nightBadge` prop em EntryRow). Só precisa passar `true` quando o evento cai dentro de um bedtime — função `findContainingBedtime` já existe.</li>
+    <li>Sub-line do evento da noite pode mostrar contexto extra (qual waking, quanto tempo desde acordar) — sutil.</li>
+    <li><strong>SleepBlock pode continuar existindo</strong> só pra bedtime LIVE em curso (visualmente diferente, mais informativo), e bedtime finalizado vira row normal. Ou matar de vez.</li>
+  </ul>
+</div>
+
+<div class="pros">
+  <div class="p"><strong>Pró:</strong> mais simples mentalmente, edição uniforme (swipe-right edita qualquer linha), tudo na timeline cronológica, menos UI especial pra manter. Tag "noite" preserva o contexto sem aninhar.</div>
+  <div class="c"><strong>Contra:</strong> perde a "visão de noite" coesa (atual mostra wakings com seus eventos linkados num bloco). Pra ver padrão de noite, vai precisar olhar Stats. Edits de waking time não têm UI direta (precisaria abrir bedtime, achar a waking, editar — perde acesso rápido).</div>
+</div>
+
+<div class="call">
+  <h3>Pergunta-chave</h3>
+  <p>Qual versão você prefere?</p>
+  <ul>
+    <li><strong>A.</strong> Flat 100% — bedtime vira row normal, eventos com tag "noite". Adeus SleepBlock.</li>
+    <li><strong>B.</strong> Híbrido — bedtime LIVE mantém um card compacto (info-rica), bedtime finalizado vira row + eventos flat.</li>
+    <li><strong>C.</strong> Manter atual e só refinar o SleepBlock visualmente.</li>
+  </ul>
+</div>
+
+</div>
+</body>
+</html>

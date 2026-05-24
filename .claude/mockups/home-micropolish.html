@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Home micro-polish — design pass</title>
+<style>
+  :root{
+    --bg:#070b1e; --text:#e4e6f4; --sub:#9099c3; --dim:#5b6189;
+    --accent:#8b7cf6; --green:#4ade80; --purple:#a78bfa;
+    --pink:#f472b6; --amber:#fbbf24; --blue:#6ea8ff;
+    --starfield:radial-gradient(ellipse 140% 55% at 50% 100%,#1a1f52 0%,transparent 70%),radial-gradient(ellipse at 50% 0%,#10153d 0%,var(--bg) 65%),var(--bg);
+  }
+  *{box-sizing:border-box}
+  body{background:#04061a;color:var(--text);font:500 14px/1.5 -apple-system,BlinkMacSystemFont,"Inter","SF Pro Text",sans-serif;margin:0;padding:30px 16px 60px;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1320px;margin:0 auto}
+  h1{font-size:24px;margin:0 0 4px;font-weight:800;letter-spacing:-.5px}
+  .lede{color:var(--sub);font-size:13.5px;margin:0 0 24px;max-width:680px;line-height:1.5}
+  h2{font-size:13px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--accent);margin:32px 0 6px}
+  .h2-desc{color:var(--sub);font-size:13px;margin:0 0 16px;max-width:780px;line-height:1.55}
+
+  /* Comparison grid */
+  .cmp{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-bottom:18px}
+  .col-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--dim);text-align:center;margin-bottom:8px}
+  .col-label.now{color:#fda4af}
+  .col-label.next{color:#86efac}
+  .phone{background:var(--starfield);border-radius:34px;padding:18px 14px;border:1px solid rgba(139,124,246,.18);box-shadow:0 20px 60px -20px rgba(0,0,0,.6);position:relative;min-height:480px;overflow:hidden}
+  .phone .notch{width:104px;height:18px;background:#000;border-radius:0 0 14px 14px;margin:-14px auto 12px}
+
+  /* === SHARED STYLES (current home) === */
+  .head-now{display:flex;align-items:center;gap:10px;padding:0 6px 14px}
+  .photo{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#f472b6,#a78bfa);display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:800;color:#fff;flex-shrink:0}
+  .head-now .name{font-size:17px;font-weight:800;letter-spacing:-.3px;line-height:1.2}
+  .head-now .meta{font-size:10px;color:var(--accent);font-weight:600;display:flex;align-items:center;gap:6px;margin-top:3px}
+  .head-now .meta .dot{width:3px;height:3px;border-radius:50%;background:var(--dim)}
+  .head-now .bell{margin-left:auto;width:34px;height:34px;border-radius:11px;background:rgba(22,28,60,.6);border:1px solid rgba(139,124,246,.08);display:flex;align-items:center;justify-content:center;color:var(--sub);font-size:14px}
+
+  /* === CURRENT === */
+  .now-curiosity{margin:0 6px 12px;padding:14px 16px;border-radius:18px;background:linear-gradient(180deg,rgba(167,139,250,.10),rgba(167,139,250,.03));border:1px solid rgba(167,139,250,.22)}
+  .now-curiosity .tag{font-size:10px;color:#c4b5fd;font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px}
+  .now-curiosity .t1{font-size:14px;font-weight:700;line-height:1.3;letter-spacing:-.2px;margin-bottom:4px}
+  .now-curiosity .t2{font-size:12px;color:var(--sub);line-height:1.55}
+
+  .now-ring-wrap{display:flex;justify-content:center;padding:6px 0 14px}
+  .now-ring{width:200px;height:200px;border-radius:50%;background:radial-gradient(circle at 50% 60%,rgba(167,139,250,.04),rgba(7,11,30,.0));border:1px dashed rgba(139,124,246,.12);display:flex;align-items:center;justify-content:center;position:relative}
+  .now-ring .center-num{font-size:36px;font-weight:900;letter-spacing:-1.5px;color:var(--text);font-variant-numeric:tabular-nums;line-height:1}
+  .now-ring .center-lbl{position:absolute;bottom:42px;font-size:11px;color:var(--accent);font-weight:700;letter-spacing:.4px;text-transform:uppercase}
+
+  .now-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:0 6px;margin-bottom:14px}
+  .now-card{padding:7px 9px;border-radius:12px;border:1px solid;background:transparent}
+  .now-card.green{background:rgba(74,222,128,.025);border-color:rgba(74,222,128,.06)}
+  .now-card.amber{background:rgba(251,191,36,.025);border-color:rgba(251,191,36,.06)}
+  .now-card.purple{background:rgba(167,139,250,.025);border-color:rgba(167,139,250,.06)}
+  .now-card.pink{background:rgba(244,114,182,.025);border-color:rgba(244,114,182,.06)}
+  .now-card .k{display:flex;align-items:center;gap:5px;margin-bottom:1px}
+  .now-card .k .lbl{font-size:8.5px;color:var(--dim);font-weight:600}
+  .now-card .v{font-size:14px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.05}
+  .now-card .ago{font-size:10px;font-weight:600;margin-top:1px;font-variant-numeric:tabular-nums;opacity:.55}
+  .now-card.green .v,.now-card.green .ago{color:var(--green)}
+  .now-card.amber .v,.now-card.amber .ago{color:var(--amber)}
+  .now-card.purple .v,.now-card.purple .ago{color:var(--purple)}
+  .now-card.pink .v,.now-card.pink .ago{color:var(--pink)}
+
+  .now-today{padding:0 6px;margin-top:4px}
+  .now-today-h{font-size:11px;font-weight:600;color:var(--dim);margin-bottom:8px;text-transform:uppercase;letter-spacing:.8px}
+  .now-today-h span{opacity:.5;margin-left:8px;font-weight:500}
+  .now-row{display:flex;align-items:center;gap:10px;padding:6px 14px 6px 16px;background:rgba(22,28,60,.65);border-radius:14px;border:1px solid rgba(139,124,246,.08);margin-bottom:4px}
+  .now-row .ic2{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;background:rgba(74,222,128,.18);color:var(--green)}
+  .now-row .mid{flex:1}
+  .now-row .ttl{font-size:12.5px;font-weight:600;letter-spacing:-.15px}
+  .now-row .sub{font-size:10.5px;color:var(--sub);margin-top:0;line-height:1.15}
+  .now-row .t{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+
+  /* === PROPOSED (refined) === */
+  /* Tighter rhythm: 8pt grid, hairline dividers, refined typography, subtle gradients on text */
+  .ref-head{display:flex;align-items:flex-start;gap:12px;padding:0 8px 18px;position:relative}
+  .ref-head::after{content:"";position:absolute;left:8px;right:8px;bottom:0;height:1px;background:linear-gradient(90deg,transparent,rgba(139,124,246,.12),transparent)}
+  .ref-head .photo{width:40px;height:40px}
+  .ref-head .info{flex:1;min-width:0;padding-top:2px}
+  .ref-head .name{font-size:18px;font-weight:800;letter-spacing:-.45px;line-height:1.1;background:linear-gradient(180deg,#ffffff,#c4b5fd);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .ref-head .meta{font-size:11px;color:var(--accent);font-weight:600;display:flex;align-items:center;gap:5px;margin-top:5px;letter-spacing:.1px;font-variant-numeric:tabular-nums}
+  .ref-head .meta .dot{width:2.5px;height:2.5px;border-radius:50%;background:rgba(139,124,246,.4)}
+  .ref-head .meta .age{color:var(--accent)}
+  .ref-head .meta .date{color:var(--dim)}
+  .ref-head .bell{margin-left:auto;width:34px;height:34px;border-radius:12px;background:rgba(22,28,60,.5);border:1px solid rgba(139,124,246,.12);display:flex;align-items:center;justify-content:center;color:var(--sub);font-size:14px;backdrop-filter:blur(12px) saturate(140%)}
+
+  .ref-curiosity{margin:14px 8px 14px;padding:14px 18px;border-radius:18px;background:linear-gradient(180deg,rgba(167,139,250,.08),rgba(167,139,250,.02));border:1px solid rgba(167,139,250,.16);box-shadow:0 1px 0 0 rgba(255,255,255,.04) inset, 0 8px 24px -16px rgba(167,139,250,.4)}
+  .ref-curiosity .tag{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:5px;background:rgba(196,181,253,.1);font-size:9.5px;color:#c4b5fd;font-weight:700;letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px}
+  .ref-curiosity .t1{font-size:14px;font-weight:700;line-height:1.35;letter-spacing:-.25px;margin-bottom:4px;color:#f0f2ff}
+  .ref-curiosity .t2{font-size:12px;color:var(--sub);line-height:1.6;letter-spacing:.05px}
+
+  .ref-ring-wrap{display:flex;justify-content:center;padding:8px 0 16px}
+  .ref-ring{width:208px;height:208px;border-radius:50%;background:radial-gradient(circle at 50% 60%,rgba(167,139,250,.06),rgba(7,11,30,0));border:1px dashed rgba(139,124,246,.10);display:flex;align-items:center;justify-content:center;position:relative}
+  .ref-ring .center-num{font-size:38px;font-weight:900;letter-spacing:-1.6px;font-variant-numeric:tabular-nums;line-height:1;background:linear-gradient(180deg,#ffffff 0%,#a78bfa 90%);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 0 32px rgba(167,139,250,.3)}
+  .ref-ring .center-lbl{position:absolute;bottom:44px;font-size:11px;color:var(--accent);font-weight:700;letter-spacing:.8px;text-transform:uppercase}
+
+  .ref-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 8px;margin-bottom:18px}
+  .ref-card{padding:9px 11px;border-radius:14px;border:0.5px solid;background:rgba(20,26,60,0.32);position:relative;backdrop-filter:blur(2px)}
+  .ref-card::before{content:"";position:absolute;inset:0;border-radius:14px;padding:0.5px;background:linear-gradient(180deg,currentColor,transparent 50%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.18;pointer-events:none}
+  .ref-card.green{color:var(--green);background:rgba(74,222,128,.04);border-color:rgba(74,222,128,.10)}
+  .ref-card.amber{color:var(--amber);background:rgba(251,191,36,.04);border-color:rgba(251,191,36,.10)}
+  .ref-card.purple{color:var(--purple);background:rgba(167,139,250,.04);border-color:rgba(167,139,250,.10)}
+  .ref-card.pink{color:var(--pink);background:rgba(244,114,182,.04);border-color:rgba(244,114,182,.10)}
+  .ref-card .k{display:flex;align-items:center;gap:5px;margin-bottom:2px}
+  .ref-card .k .lbl{font-size:9px;color:var(--dim);font-weight:600;letter-spacing:.3px;text-transform:uppercase}
+  .ref-card .v{font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1;letter-spacing:-.2px}
+  .ref-card .v .u{font-size:10px;opacity:.5;font-weight:700;margin-left:1px}
+  .ref-card .ago{font-size:10px;font-weight:600;margin-top:3px;font-variant-numeric:tabular-nums;opacity:.55;letter-spacing:.2px}
+
+  /* Hairline divider between sections */
+  .hr-line{height:1px;margin:14px 22px 18px;background:linear-gradient(90deg,transparent,rgba(139,124,246,.14),transparent)}
+
+  .ref-today{padding:0 8px;margin-top:0}
+  .ref-today-h{display:flex;align-items:baseline;justify-content:space-between;font-size:11px;font-weight:600;color:var(--dim);margin-bottom:10px;text-transform:uppercase;letter-spacing:1px;padding:0 4px}
+  .ref-today-h .h{color:var(--accent)}
+  .ref-today-h .date{font-weight:500;color:var(--dim);letter-spacing:.4px}
+  .ref-row{display:flex;align-items:center;gap:11px;padding:8px 14px 8px 16px;background:rgba(22,28,60,.4);border-radius:14px;border:1px solid rgba(139,124,246,.06);margin-bottom:5px;position:relative;overflow:hidden}
+  .ref-row::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--green),rgba(74,222,128,.3));border-radius:0 2px 2px 0}
+  .ref-row .ic2{width:30px;height:30px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;background:linear-gradient(135deg,rgba(74,222,128,.22),rgba(74,222,128,.08));color:var(--green);border:1px solid rgba(74,222,128,.32);box-shadow:0 1px 0 0 rgba(255,255,255,.04) inset}
+  .ref-row .mid{flex:1;line-height:1.15}
+  .ref-row .ttl{font-size:13px;font-weight:600;letter-spacing:-.2px;color:#f0f2ff}
+  .ref-row .sub{font-size:10.5px;color:var(--sub);margin-top:1px;letter-spacing:.1px}
+  .ref-row .t{font-size:13.5px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.3px}
+
+  /* Annotations */
+  .annot{font-size:11px;color:var(--dim);background:rgba(139,124,246,.05);border:1px dashed rgba(139,124,246,.15);border-radius:8px;padding:8px 12px;margin:8px 0 0;line-height:1.5}
+  .annot strong{color:#c4b5fd;font-weight:700}
+
+  /* Diff list */
+  .diff-list{background:linear-gradient(180deg,rgba(139,124,246,.08),rgba(139,124,246,.02));border:1px solid rgba(139,124,246,.18);border-radius:14px;padding:18px 22px;margin-top:16px;font-size:13.5px;line-height:1.7;color:#c7cbea;max-width:880px}
+  .diff-list strong{color:#fff}
+  .diff-list h3{margin:0 0 10px;font-size:12px;color:#c4b5fd;text-transform:uppercase;letter-spacing:.6px;font-weight:800}
+  .diff-list ul{margin:8px 0 0;padding-left:22px}
+  .diff-list li{margin-bottom:7px}
+  .diff-list code{background:rgba(14,18,48,.65);padding:2px 7px;border-radius:5px;font-size:11.5px;color:#c4b5fd;font-family:"SF Mono",ui-monospace,monospace}
+  .diff-list .why{color:var(--sub);font-style:italic;margin-top:1px;display:block;font-size:12px}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<h1>Home micro-polish — design pass</h1>
+<p class="lede">Mantém estrutura e essência. Aplica princípios canônicos de design (Apple HIG, Material 3, Rauno's typography craft) em pequenas refinarias. Antes/depois lado a lado pra você ver o cumulativo.</p>
+
+<!-- =============================== HEADER =============================== -->
+<h2>1. Header — peso, gradiente sutil no nome, dot mais leve</h2>
+<p class="h2-desc">Pequenos ajustes de tipografia + um divisor hairline marcando a borda do header (Apple-style).</p>
+<div class="cmp">
+  <div>
+    <div class="col-label now">ATUAL</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="head-now">
+        <div class="photo">L</div>
+        <div><div class="name">Louise</div><div class="meta">52 dias<span class="dot"></span><span style="color:var(--dim)">27 abr</span></div></div>
+        <div class="bell">🔔</div>
+      </div>
+    </div>
+  </div>
+  <div>
+    <div class="col-label next">REFINADO</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="ref-head">
+        <div class="photo">L</div>
+        <div class="info">
+          <div class="name">Louise</div>
+          <div class="meta"><span class="age">52 dias</span><span class="dot"></span><span class="date">27 abr</span></div>
+        </div>
+        <div class="bell">🔔</div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="annot"><strong>O que mudou:</strong> nome 17→18px com micro-gradient texto (branco→lavanda) — ganha "weight" sem aumentar peso visual. Letter-spacing -0.3 → -0.45 (Apple SF style). Hairline divider sutil sob o header (marca seção). Dot separator: solido 3px → translúcido 2.5px.</div>
+
+<!-- =============================== CURIOSITY =============================== -->
+<h2>2. CuriosityCard — tag em pill + gradient mais sutil + soft inset shadow</h2>
+<p class="h2-desc">Card é o primeiro elemento informacional. Apple "Material" approach: blur leve + inset shadow pra sensação de papel. Tag em pill (não plain text) cria hierarquia visual.</p>
+<div class="cmp">
+  <div>
+    <div class="col-label now">ATUAL</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="head-now"><div class="photo">L</div><div><div class="name">Louise</div><div class="meta">52 dias<span class="dot"></span><span style="color:var(--dim)">27 abr</span></div></div><div class="bell">🔔</div></div>
+      <div class="now-curiosity">
+        <div class="tag">Dia 52</div>
+        <div class="t1">Louise já segue objetos com os olhos em distâncias maiores.</div>
+        <div class="t2">Estímulos visuais coloridos a 30-40cm são ideais nessa fase.</div>
+      </div>
+    </div>
+  </div>
+  <div>
+    <div class="col-label next">REFINADO</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="ref-head"><div class="photo">L</div><div class="info"><div class="name">Louise</div><div class="meta"><span class="age">52 dias</span><span class="dot"></span><span class="date">27 abr</span></div></div><div class="bell">🔔</div></div>
+      <div class="ref-curiosity">
+        <div class="tag">☀ Dia 52</div>
+        <div class="t1">Louise já segue objetos com os olhos em distâncias maiores.</div>
+        <div class="t2">Estímulos visuais coloridos a 30–40cm são ideais nessa fase.</div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="annot"><strong>O que mudou:</strong> tag virou <strong>pill</strong> (com bg sutil rgba(196,181,253,.1) + ícone ☀) — establece hierarquia. Gradient bg do card: <code>0.10 → 0.08</code> (mais sutil). Border <code>0.22 → 0.16</code> (menos peso). Adicionado <strong>inset highlight shadow</strong> (1px linha branca topo) + <strong>outer drop shadow lavanda</strong> sutil — Apple Material approach. Aspas tipográficas <code>30-40</code> → <code>30–40</code> (en-dash, mais correto).</div>
+
+<!-- =============================== RING =============================== -->
+<h2>3. Ring — gradient texto central + glow text-shadow</h2>
+<p class="h2-desc">O número central do Ring é o foco visual. Gradient text (branco→lavanda) + glow sutil cria sensação de "luz emanando", consistente com o starfield ao redor.</p>
+<div class="cmp">
+  <div>
+    <div class="col-label now">ATUAL</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="head-now"><div class="photo">L</div><div><div class="name">Louise</div><div class="meta">52 dias<span class="dot"></span><span style="color:var(--dim)">27 abr</span></div></div><div class="bell">🔔</div></div>
+      <div class="now-ring-wrap">
+        <div class="now-ring">
+          <div class="center-lbl">14:25</div>
+          <div class="center-num">1h07</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div>
+    <div class="col-label next">REFINADO</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="ref-head"><div class="photo">L</div><div class="info"><div class="name">Louise</div><div class="meta"><span class="age">52 dias</span><span class="dot"></span><span class="date">27 abr</span></div></div><div class="bell">🔔</div></div>
+      <div class="ref-ring-wrap">
+        <div class="ref-ring">
+          <div class="center-lbl">14:25</div>
+          <div class="center-num">1h07</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="annot"><strong>O que mudou:</strong> número central <strong>36→38px</strong>, letter-spacing <code>-1.5 → -1.6</code>. Gradient de texto <strong>branco→lavanda</strong> top-down (vai com a luz do "céu" do app). Text-shadow: <code>0 0 32px rgba(167,139,250,.3)</code> — glow sutil que vibra no starfield. Ring overlay tracejado: opacity <code>.12 → .10</code> (menos competitivo com o número). Letter-spacing das CAPS labels: <code>.4 → .8</code> (Apple SF style — mais legível).</div>
+
+<!-- =============================== CARDS =============================== -->
+<h2>4. Cards 4-grid — gradient border + backdrop blur micro</h2>
+<p class="h2-desc">Cards atuais usam <code>border 1px solid rgba</code>. Refinados usam <strong>gradient border</strong> (mascarado) — top brilha mais que base, simulando luz vindo de cima. Padrão Apple Cards / Linear.</p>
+<div class="cmp">
+  <div>
+    <div class="col-label now">ATUAL</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="head-now"><div class="photo">L</div><div><div class="name">Louise</div><div class="meta">52 dias<span class="dot"></span><span style="color:var(--dim)">27 abr</span></div></div><div class="bell">🔔</div></div>
+      <div class="now-grid">
+        <div class="now-card green"><div class="k"><span>🍼</span><span class="lbl">Mamad.</span></div><div class="v">220ml · 36%</div><div class="ago">2h ago</div></div>
+        <div class="now-card amber"><div class="k"><span>💊</span><span class="lbl">Simeticona</span></div><div class="v">2x</div><div class="ago">1h ago</div></div>
+        <div class="now-card purple"><div class="k"><span>🌙</span><span class="lbl">Sleep</span></div><div class="v">8h30</div><div class="ago">3h ago</div></div>
+        <div class="now-card pink"><div class="k"><span>🧷</span><span class="lbl">Diaper</span></div><div class="v">4</div><div class="ago">45m ago</div></div>
+      </div>
+    </div>
+  </div>
+  <div>
+    <div class="col-label next">REFINADO</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="ref-head"><div class="photo">L</div><div class="info"><div class="name">Louise</div><div class="meta"><span class="age">52 dias</span><span class="dot"></span><span class="date">27 abr</span></div></div><div class="bell">🔔</div></div>
+      <div class="ref-grid">
+        <div class="ref-card green"><div class="k"><span>🍼</span><span class="lbl">Mamad.</span></div><div class="v">220<span class="u">ml</span> · 36%</div><div class="ago">2h ago</div></div>
+        <div class="ref-card amber"><div class="k"><span>💊</span><span class="lbl">Simeticona</span></div><div class="v">2<span class="u">x</span></div><div class="ago">1h ago</div></div>
+        <div class="ref-card purple"><div class="k"><span>🌙</span><span class="lbl">Sleep</span></div><div class="v">8h30</div><div class="ago">3h ago</div></div>
+        <div class="ref-card pink"><div class="k"><span>🧷</span><span class="lbl">Diaper</span></div><div class="v">4</div><div class="ago">45m ago</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="annot"><strong>O que mudou:</strong> padding <code>7,9 → 9,11</code> (espaço respira). Border <code>1px solid → 0.5px solid + gradient overlay</code> — top mais brilhante que base, dá noção de luz vinda de cima (Apple/Linear approach). Background <code>rgba 0.025 → 0.04</code> — ligeiramente mais visível, ainda translúcido. Backdrop-filter blur(2px) — só pra dar uma micro-camada de profundidade sobre o starfield. Unidades (<code>ml</code>, <code>x</code>) com opacity .5 separadas do número (hierarquia tipo SF Pro). Border-radius <code>12 → 14</code> (mais Apple).</div>
+
+<!-- =============================== TODAY ROW =============================== -->
+<h2>5. Today row — colored stripe + ícone gradient + spacing rhythm</h2>
+<p class="h2-desc">Linha do "hoje" mais polida: stripe colorida na borda esquerda (já tem na EntryRow do app, replicada aqui), ícone com gradient leve, spacing 8pt grid consistente.</p>
+<div class="cmp">
+  <div>
+    <div class="col-label now">ATUAL</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="head-now"><div class="photo">L</div><div><div class="name">Louise</div><div class="meta">52 dias<span class="dot"></span><span style="color:var(--dim)">27 abr</span></div></div><div class="bell">🔔</div></div>
+      <div class="now-today">
+        <div class="now-today-h">TODAY <span>· seg 27</span></div>
+        <div class="now-row"><div class="ic2">🍼</div><div class="mid"><div class="ttl">Mamadeira · 110ml</div><div class="sub">2h05 atrás</div></div><div class="t" style="color:#f0f2ff">13:05</div></div>
+        <div class="now-row"><div class="ic2" style="background:rgba(244,114,182,.18);color:var(--pink)">🧷</div><div class="mid"><div class="ttl">Fralda · Urina</div><div class="sub">2h30 atrás</div></div><div class="t" style="color:#f0f2ff">12:40</div></div>
+        <div class="now-row"><div class="ic2" style="background:rgba(167,139,250,.18);color:var(--purple)">🌙</div><div class="mid"><div class="ttl">Bedtime · 8h30m</div><div class="sub">finalizado 3h atrás</div></div><div class="t" style="color:#f0f2ff">21:00</div></div>
+      </div>
+    </div>
+  </div>
+  <div>
+    <div class="col-label next">REFINADO</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="ref-head"><div class="photo">L</div><div class="info"><div class="name">Louise</div><div class="meta"><span class="age">52 dias</span><span class="dot"></span><span class="date">27 abr</span></div></div><div class="bell">🔔</div></div>
+      <div class="hr-line"></div>
+      <div class="ref-today">
+        <div class="ref-today-h"><span class="h">Hoje</span><span class="date">SEG · 27 ABR</span></div>
+        <div class="ref-row"><div class="ic2">🍼</div><div class="mid"><div class="ttl">Mamadeira <span style="color:var(--sub);font-weight:500">· 110ml</span></div><div class="sub">2h05 atrás</div></div><div class="t" style="color:#f0f2ff">13:05</div></div>
+        <div class="ref-row" style="--c:#f472b6"><div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,#f472b6,rgba(244,114,182,.3));border-radius:0 2px 2px 0"></div><div class="ic2" style="background:linear-gradient(135deg,rgba(244,114,182,.22),rgba(244,114,182,.08));color:var(--pink);border-color:rgba(244,114,182,.32)">🧷</div><div class="mid"><div class="ttl">Fralda <span style="color:var(--sub);font-weight:500">· Urina</span></div><div class="sub">2h30 atrás</div></div><div class="t" style="color:#f0f2ff">12:40</div></div>
+        <div class="ref-row" style="--c:#a78bfa"><div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,#a78bfa,rgba(167,139,250,.3));border-radius:0 2px 2px 0"></div><div class="ic2" style="background:linear-gradient(135deg,rgba(167,139,250,.22),rgba(167,139,250,.08));color:var(--purple);border-color:rgba(167,139,250,.32)">🌙</div><div class="mid"><div class="ttl">Bedtime <span style="color:var(--sub);font-weight:500">· 8h30m</span></div><div class="sub">finalizado 3h atrás</div></div><div class="t" style="color:#f0f2ff">21:00</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="annot"><strong>O que mudou:</strong> hairline divider entre header e Today (separa seções sem caixas). Header do "Today" agora é <strong>flex justify-between</strong> com data à direita em CAPS subtle. Detail (`110ml`, `Urina`) usa <code>color:sub + font-weight:500</code> em vez de mesma cor do título — hierarquia. Border esquerda colorida com gradient top→base 30% (luz vinda do topo). Ícone com gradient diagonal (135°) + 1px highlight inset — sensação de glassmorphism. Spacing entre rows <code>4 → 5px</code> (8pt grid).</div>
+
+<!-- =============================== SUMMARY =============================== -->
+<div class="diff-list">
+  <h3>Resumo dos princípios aplicados</h3>
+  <ul>
+    <li><strong>Tipografia hierárquica</strong> — nome do bebê com gradient sutil, números com tabular-nums + letter-spacing tighter, CAPS labels com letter-spacing wider (Apple SF Pro). <span class="why">→ por que: cria peso visual sem aumentar tamanho de fonte.</span></li>
+    <li><strong>Border-as-light</strong> — bordas viram gradients top-bright→base-dark, simulando iluminação natural (Apple Cards, Linear). <span class="why">→ por que: dá depth tridimensional sem usar shadow pesado.</span></li>
+    <li><strong>Inset highlight + outer drop</strong> — duas shadows: 1px linha branca topo (highlight) + drop sutil colored. Apple Material. <span class="why">→ por que: o card parece "papel sob luz" em vez de "borda chapada".</span></li>
+    <li><strong>Hairline dividers</strong> com gradient horizontal (transparent→cor→transparent) entre seções, em vez de cards encaixotando tudo. <span class="why">→ por que: mais "editorial", menos "interface". Linear/Cron approach.</span></li>
+    <li><strong>Hierarquia de detalhes</strong> — em vez de "Mamadeira · 110ml" no mesmo peso, o detalhe vai pro <code>color:sub + weight:500</code>. <span class="why">→ por que: o título lê primeiro, o detalhe completa.</span></li>
+    <li><strong>Sufixos de unidade desligados</strong> — em <code>220ml</code>, o "ml" tem opacity .5 e font-size menor. SF Pro do iOS. <span class="why">→ por que: número é o protagonista.</span></li>
+    <li><strong>Pill tag</strong> em vez de plain caps text — tag "Dia 52" agora tem bg sutil + padding. <span class="why">→ por que: estabelece "isso é metadata" visualmente, sem competir com o conteúdo.</span></li>
+    <li><strong>Glow sutil no número-foco</strong> do Ring (text-shadow lavanda blur 32px) — combina com o starfield. <span class="why">→ por que: o número emana luz, integra com a identidade do app.</span></li>
+    <li><strong>En-dash em ranges numéricos</strong> (<code>30–40cm</code>) — typographically correct. <span class="why">→ por que: detalhe profissional.</span></li>
+    <li><strong>Spacing 8pt grid</strong> consistente — gaps de 4/8/12/16/24, padding em múltiplos. <span class="why">→ por que: rhythm visual previsível, "calmo".</span></li>
+  </ul>
+</div>
+
+<div class="diff-list" style="background:linear-gradient(180deg,rgba(74,222,128,.06),rgba(74,222,128,.02));border-color:rgba(74,222,128,.18)">
+  <h3 style="color:#86efac">Decisão</h3>
+  <p style="margin:0">Cada item é independente — pode pegar 2-3 ou tudo. Estimativa de implementação:</p>
+  <ul>
+    <li><strong>1-2 (Header + Curiosity)</strong> — 30min, baixo risco, ganho visual claro.</li>
+    <li><strong>3 (Ring gradient + glow)</strong> — 20min, só mexe em CSS do número central. Pode ficar bonito ou estranho — fácil reverter.</li>
+    <li><strong>4 (Cards gradient border)</strong> — 1h, mexe em todo card style pattern. Mais arriscado.</li>
+    <li><strong>5 (Today row refinement)</strong> — 30min, EntryRow já tem stripe, só refina ícone e header.</li>
+  </ul>
+  <p style="margin:8px 0 0">Me diz <strong>quais números</strong> aprova (ex: "1, 2, 5") e implemento.</p>
+</div>
+
+</div>
+</body>
+</html>

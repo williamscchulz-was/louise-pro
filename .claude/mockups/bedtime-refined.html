@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Bedtime — refinado</title>
+<style>
+  :root{
+    --bg:#070b1e;--text:#e4e6f4;--sub:#9099c3;--dim:#5b6189;
+    --accent:#8b7cf6;--green:#4ade80;--blue:#6ea8ff;--purple:#a78bfa;
+    --amber:#fbbf24;--cyan:#7dd3fc;
+    --b:rgba(139,124,246,.06);
+    --starfield:radial-gradient(ellipse 140% 55% at 50% 100%,#1a1f52 0%,transparent 70%),radial-gradient(ellipse at 50% 0%,#10153d 0%,var(--bg) 65%),var(--bg);
+  }
+  *{box-sizing:border-box}
+  body{background:#04061a;color:var(--text);font:500 14px/1.5 -apple-system,BlinkMacSystemFont,"Inter",sans-serif;margin:0;padding:30px 14px 60px;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto}
+  h1{font-size:22px;margin:0 0 4px;font-weight:800;letter-spacing:-.4px}
+  .lede{color:var(--sub);font-size:13.5px;margin:0 0 24px;line-height:1.55}
+  h2{font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--accent);margin:30px 0 12px}
+  h2 .ver{color:var(--dim);font-weight:600;margin-left:8px;text-transform:none;letter-spacing:0}
+
+  .phones{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+  .phone{background:var(--starfield);border-radius:34px;padding:18px 14px 32px;border:1px solid rgba(139,124,246,.18);box-shadow:0 20px 60px -20px rgba(0,0,0,.6);position:relative;min-height:560px}
+  .phone .notch{width:104px;height:18px;background:#000;border-radius:0 0 14px 14px;margin:-14px auto 12px}
+  .col-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-align:center;margin-bottom:8px}
+  .col-label.before{color:#fda4af}
+  .col-label.after{color:#86efac}
+
+  .today-h{display:flex;align-items:baseline;justify-content:space-between;margin:6px 4px 12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1}
+  .today-h .l{color:var(--accent)}
+  .today-h .d{color:var(--dim);font-weight:500;letter-spacing:.4px}
+
+  /* ───────────── ATUAL (espelha index.html v11.9.36) ───────────── */
+  .sb-old{position:relative;margin-bottom:10px;border-radius:20px;background:linear-gradient(180deg,rgba(167,139,250,.08),rgba(167,139,250,.03));border:1px solid rgba(96,165,250,.4);overflow:hidden;box-shadow:0 0 16px rgba(96,165,250,.18),inset 0 1px 0 0 rgba(255,255,255,.06)}
+  .sb-old .stripe{position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,#a78bfa,rgba(167,139,250,.3));border-radius:0 2px 2px 0}
+  .sb-old .ribbon{display:flex;align-items:center;gap:8px;padding:8px 16px 8px 22px;background:linear-gradient(90deg,rgba(96,165,250,.18),rgba(167,139,250,.10));border-bottom:1px solid rgba(96,165,250,.25)}
+  .sb-old .ribbon .dot{width:8px;height:8px;border-radius:50%;background:#60a5fa;box-shadow:0 0 8px #60a5fa;animation:pulseDot 1.5s ease-in-out infinite}
+  .sb-old .ribbon .lbl{font-size:9px;font-weight:800;color:#60a5fa;text-transform:uppercase;letter-spacing:1.5px;flex:1}
+  .sb-old .ribbon .for{font-size:10px;color:var(--sub);font-weight:600;font-variant-numeric:tabular-nums}
+  .sb-old .head{padding:18px 20px 18px 24px;display:flex;align-items:center;gap:14px}
+  .sb-old .head .ic{width:50px;height:50px;border-radius:15px;background:linear-gradient(135deg,rgba(167,139,250,.28),rgba(167,139,250,.08));border:1px solid rgba(167,139,250,.4);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:24px;color:#c4b5fd;box-shadow:inset 0 1px 0 0 rgba(255,255,255,.08)}
+  .sb-old .head .info{flex:1;min-width:0}
+  .sb-old .head .eyebrow{font-size:10px;font-weight:700;color:rgba(196,181,253,.85);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+  .sb-old .head .eyebrow .sm{margin-left:6px;opacity:.7}
+  .sb-old .head .time{font-size:18px;font-weight:800;color:#f0f2ff;letter-spacing:-.4px;font-variant-numeric:tabular-nums;margin-bottom:5px}
+  .sb-old .head .stats{display:flex;gap:8px;font-size:12px;color:var(--sub);align-items:center;flex-wrap:wrap}
+  .sb-old .head .stats .sleep{color:var(--purple);font-weight:700;font-variant-numeric:tabular-nums}
+  .sb-old .head .stats .awake{color:#60a5fa;font-weight:700;font-variant-numeric:tabular-nums}
+  .sb-old .head .stats .dot{width:3px;height:3px;border-radius:50%;background:var(--dim)}
+  .sb-old .head .chev{width:24px;height:24px;display:flex;align-items:center;justify-content:center;color:var(--sub);flex-shrink:0;transform:rotate(180deg)}
+  .sb-old .timeline{margin:0 16px 4px;position:relative;height:14px;background:linear-gradient(180deg,rgba(167,139,250,.18),rgba(124,58,237,.10));border-radius:7px;overflow:hidden;border:1px solid rgba(167,139,250,.15)}
+  .sb-old .timeline .mark{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.06)}
+  .sb-old .timeline .band{position:absolute;top:0;bottom:0;background:rgba(96,165,250,.7);border-left:2px solid #60a5fa;border-right:2px solid #60a5fa}
+  .sb-old .timeline .band.active{background:rgba(251,191,36,.7);border-color:#fbbf24}
+  .sb-old .hour-row{display:flex;justify-content:space-between;padding:0 16px 10px;font-size:8px;color:var(--dim);font-weight:600;font-variant-numeric:tabular-nums}
+  .sb-old .night{border-top:1px solid rgba(167,139,250,.12);padding:10px 0;background:rgba(14,18,48,.3)}
+  .sb-old .night-title{font-size:9px;font-weight:800;color:rgba(96,165,250,.85);text-transform:uppercase;letter-spacing:1px;padding:4px 16px 6px;display:flex;align-items:center;gap:8px}
+  .sb-old .night-title .line{flex:1;height:1px;background:rgba(96,165,250,.15)}
+  .sb-old .night-title .line.short{flex:0 0 14px;background:rgba(96,165,250,.3)}
+  .sb-old .waking-section{padding:0 16px;margin-top:6px;border-top:1px dashed rgba(96,165,250,.18);padding-top:8px}
+  .sb-old .waking-section.first{margin-top:0;border-top:none;padding-top:0}
+  .sb-old .waking-pill{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:700;color:#60a5fa;padding:3px 9px;border-radius:8px;background:rgba(96,165,250,.15);border:1px solid rgba(96,165,250,.3);font-variant-numeric:tabular-nums}
+  .sb-old .waking-pill.active{color:#fbbf24;background:rgba(251,191,36,.18);border-color:rgba(251,191,36,.4)}
+  .sb-old .ev{display:flex;align-items:center;gap:9px;padding:6px 0}
+  .sb-old .ev .ic{width:24px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px}
+  .sb-old .ev .ic.bottle{background:rgba(74,222,128,.18);color:#4ade80}
+  .sb-old .ev .ic.diaper{background:rgba(163,140,254,.18);color:#a38cfe}
+  .sb-old .ev .lbl{flex:1;font-size:11px;color:var(--text);font-weight:500}
+  .sb-old .ev .t{font-size:10px;color:var(--sub);font-weight:600;font-variant-numeric:tabular-nums}
+  .sb-old .ev .x{width:22px;height:22px;border-radius:6px;border:1px solid rgba(139,124,246,.12);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--dim)}
+  .sb-old .foot-hint{padding:10px 16px;background:rgba(14,18,48,.4);border-top:1px solid rgba(167,139,250,.1);font-size:10px;color:var(--dim);text-align:center;font-style:italic}
+  .sb-old .actions{padding:10px 14px 12px;display:flex;gap:8px;border-top:1px solid rgba(167,139,250,.1)}
+  .sb-old .actions .edit{flex:1;padding:7px 10px;border-radius:8px;background:rgba(167,139,250,.08);font-size:10px;font-weight:600;color:#a78bfa;text-align:center}
+  .sb-old .actions .del{padding:7px 12px;border-radius:8px;background:rgba(248,113,113,.08);font-size:10px;font-weight:600;color:#f87171}
+
+  @keyframes pulseDot{0%,100%{opacity:.5}50%{opacity:1}}
+
+  /* ───────────── REFINADO (proposta) ───────────── */
+  .sb-new{position:relative;margin-bottom:10px;border-radius:18px;background:rgba(20,26,60,.32);border:1px solid rgba(139,124,246,.18);overflow:hidden}
+  .sb-new.live{border-color:rgba(139,124,246,.4)}
+  .sb-new .head{padding:14px 18px;display:flex;align-items:center;gap:13px}
+  .sb-new .head .ic{width:42px;height:42px;border-radius:13px;background:rgba(167,139,250,.16);border:1px solid rgba(167,139,250,.22);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px;color:#c4b5fd;position:relative}
+  .sb-new.live .head .ic::after{content:"";position:absolute;top:-2px;right:-2px;width:8px;height:8px;border-radius:50%;background:#a78bfa;box-shadow:0 0 6px #a78bfa,0 0 0 2px rgba(7,11,30,.9);animation:pulseDot 1.6s ease-in-out infinite}
+  .sb-new .head .info{flex:1;min-width:0}
+  .sb-new .head .duration{font-size:20px;font-weight:800;color:#f0f2ff;letter-spacing:-.5px;font-variant-numeric:tabular-nums;line-height:1.1}
+  .sb-new .head .duration .live-lbl{font-size:11px;color:#c4b5fd;font-weight:600;margin-left:6px;letter-spacing:.2px;text-transform:none;opacity:.85}
+  .sb-new .head .range{font-size:12px;color:var(--sub);margin-top:2px;font-variant-numeric:tabular-nums;font-weight:500}
+  .sb-new .head .chev{width:22px;height:22px;display:flex;align-items:center;justify-content:center;color:var(--dim);flex-shrink:0;transition:transform .2s}
+  .sb-new .head .chev.open{transform:rotate(180deg)}
+
+  .sb-new .tline{margin:0 18px 4px;position:relative;height:22px;border-radius:11px;background:linear-gradient(180deg,rgba(124,58,237,.16),rgba(124,58,237,.06));border:1px solid rgba(139,124,246,.14);overflow:hidden}
+  .sb-new .tline .mark{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.04)}
+  .sb-new .tline .band{position:absolute;top:0;bottom:0;background:linear-gradient(180deg,#6ea8ff,#3b82f6);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+  .sb-new .tline .band.active{background:linear-gradient(180deg,#fbbf24,#d97706);animation:pulseBand 2s ease-in-out infinite}
+  .sb-new .hours{display:flex;justify-content:space-between;padding:0 18px 14px;font-size:9px;color:var(--dim);font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:.3px}
+  @keyframes pulseBand{0%,100%{filter:brightness(1)}50%{filter:brightness(1.25)}}
+
+  .sb-new .stat-row{padding:0 18px 14px;display:flex;gap:14px;font-size:11.5px;color:var(--sub);font-variant-numeric:tabular-nums}
+  .sb-new .stat-row .k{color:var(--dim);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px}
+  .sb-new .stat-row .v{font-weight:700;color:var(--text)}
+  .sb-new .stat-row .col{flex:1}
+  .sb-new .stat-row .col + .col{border-left:1px solid rgba(139,124,246,.1);padding-left:14px}
+
+  .sb-new .wak{border-top:1px solid rgba(139,124,246,.10);padding:10px 18px}
+  .sb-new .wak + .wak{border-top:1px solid rgba(139,124,246,.06)}
+  .sb-new .wak-h{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .sb-new .wak-h .pill{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:#7dd3fc;padding:4px 10px;border-radius:9px;background:rgba(59,130,246,.13);border:1px solid rgba(59,130,246,.25);font-variant-numeric:tabular-nums}
+  .sb-new .wak-h .pill.active{color:#fbbf24;background:rgba(251,191,36,.13);border-color:rgba(251,191,36,.32)}
+  .sb-new .wak-h .pill .pen{opacity:.55}
+  .sb-new .wak-h .dur{font-size:10.5px;color:var(--dim);font-weight:600;font-variant-numeric:tabular-nums}
+  .sb-new .wak-events{padding-left:6px}
+  .sb-new .wak-events .ev{display:flex;align-items:center;gap:10px;padding:5px 0}
+  .sb-new .wak-events .ev .ic{width:24px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+  .sb-new .wak-events .ev .ic.bottle{background:rgba(74,222,128,.15);color:#4ade80}
+  .sb-new .wak-events .ev .ic.diaper{background:rgba(163,140,254,.15);color:#a38cfe}
+  .sb-new .wak-events .ev .ic.med{background:rgba(244,114,182,.15);color:#f472b6}
+  .sb-new .wak-events .ev .lbl{flex:1;font-size:12px;color:var(--text);font-weight:500;letter-spacing:-.1px}
+  .sb-new .wak-events .ev .t{font-size:10.5px;color:var(--sub);font-weight:600;font-variant-numeric:tabular-nums}
+
+  .sb-new .foot{padding:10px 16px 12px;display:flex;gap:8px;border-top:1px solid rgba(139,124,246,.1)}
+  .sb-new .foot.live-hint{font-size:10.5px;color:var(--dim);text-align:center;justify-content:center;font-weight:500}
+  .sb-new .foot .edit{flex:1;padding:8px 10px;border-radius:9px;background:rgba(167,139,250,.07);font-size:11px;font-weight:600;color:#a78bfa;text-align:center;letter-spacing:.1px}
+  .sb-new .foot .del{padding:8px 14px;border-radius:9px;background:rgba(248,113,113,.07);font-size:11px;font-weight:600;color:#f87171}
+
+  /* ───────── Annotation block ───────── */
+  .annot{background:rgba(139,124,246,.04);border:1px solid rgba(139,124,246,.18);border-radius:14px;padding:20px 22px;margin:18px 0}
+  .annot h3{margin:0 0 10px;font-size:14px;font-weight:800;color:var(--accent)}
+  .annot ul{margin:0 0 0 16px;padding:0;color:var(--sub);font-size:13px;line-height:1.7}
+  .annot ul li{margin-bottom:4px}
+  .annot strong{color:var(--text);font-weight:700}
+  .annot code{background:rgba(20,26,60,.5);padding:2px 6px;border-radius:5px;font-size:11.5px;color:#c4b5fd;font-family:Menlo,Consolas,monospace}
+
+  .decision{background:linear-gradient(180deg,rgba(167,139,250,.10),rgba(167,139,250,.03));border:1px solid rgba(167,139,250,.28);border-radius:18px;padding:22px 24px;margin:32px 0 0}
+  .decision h3{margin:0 0 12px;font-size:16px;font-weight:800;color:#c4b5fd}
+  .decision p{margin:0 0 14px;color:var(--sub);font-size:13.5px;line-height:1.6}
+  .decision strong{color:var(--text)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Bedtime — refinado</h1>
+  <p class="lede">Mantemos o SleepBlock (faz sentido — bedtime ao vivo é o momento que mais info útil tem), mas <strong>tirar gordura</strong>: menos chrome, menos sinais redundantes de "live", timeline com mais protagonismo, hierarquia visual mais clara. Lado esquerdo: como está hoje (v11.9.36). Lado direito: refinado.</p>
+
+  <h2>Cenário 1 — Bedtime ao vivo, com 1 waking ativo</h2>
+
+  <div class="phones">
+    <!-- ATUAL -->
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="col-label before">ATUAL · v11.9.36</div>
+      <div class="today-h"><span class="l">Hoje</span><span class="d">Quarta · 13 Mai</span></div>
+
+      <div class="sb-old">
+        <div class="stripe"></div>
+        <div class="ribbon">
+          <span class="dot"></span>
+          <span class="lbl">EM ANDAMENTO</span>
+          <span class="for">há 8h12m</span>
+        </div>
+        <div class="head">
+          <div class="ic">🛏</div>
+          <div class="info">
+            <div class="eyebrow">SONO NOTURNO <span class="sm">· ao vivo</span></div>
+            <div class="time">21:32 — agora</div>
+            <div class="stats">
+              <span class="sleep">7h45m sono</span>
+              <span class="dot"></span>
+              <span class="awake">27min acordada</span>
+              <span class="dot"></span>
+              <span>2 despertares</span>
+            </div>
+          </div>
+          <div class="chev"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+        </div>
+        <div class="timeline">
+          <div class="mark" style="left:12%"></div>
+          <div class="mark" style="left:25%"></div>
+          <div class="mark" style="left:37%"></div>
+          <div class="mark" style="left:50%"></div>
+          <div class="mark" style="left:62%"></div>
+          <div class="mark" style="left:75%"></div>
+          <div class="mark" style="left:87%"></div>
+          <div class="band" style="left:38%;width:6%"></div>
+          <div class="band active" style="left:88%;width:4%"></div>
+        </div>
+        <div class="hour-row"><span>21:32</span><span>01:34</span><span>agora</span></div>
+        <div class="night">
+          <div class="night-title">
+            <span class="line short"></span>
+            <span>ATIVIDADE DA NOITE</span>
+            <span class="line"></span>
+          </div>
+          <div class="waking-section first">
+            <div style="display:flex;align-items:center;gap:10px;padding:4px 0">
+              <span class="waking-pill">☀ 00:50 · 28min ✎</span>
+              <span style="flex:1;height:1px;background:rgba(96,165,250,.12)"></span>
+            </div>
+            <div class="ev">
+              <div class="ic bottle">🍼</div>
+              <div class="lbl">Mamadeira · 120 ml</div>
+              <div class="t">01:08</div>
+              <div class="x">🗑</div>
+            </div>
+          </div>
+          <div class="waking-section">
+            <div style="display:flex;align-items:center;gap:10px;padding:4px 0">
+              <span class="waking-pill active">☀ 05:42 · 7min · ao vivo ✎</span>
+              <span style="flex:1;height:1px;background:rgba(251,191,36,.15)"></span>
+            </div>
+            <div class="ev">
+              <div class="ic diaper">💧</div>
+              <div class="lbl">Fralda · xixi</div>
+              <div class="t">05:46</div>
+              <div class="x">🗑</div>
+            </div>
+          </div>
+        </div>
+        <div class="foot-hint">✨ Será consolidado quando o bedtime terminar</div>
+      </div>
+    </div>
+
+    <!-- REFINADO -->
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="col-label after">REFINADO</div>
+      <div class="today-h"><span class="l">Hoje</span><span class="d">Quarta · 13 Mai</span></div>
+
+      <div class="sb-new live">
+        <div class="head">
+          <div class="ic">🛏</div>
+          <div class="info">
+            <div class="duration">8h 12m <span class="live-lbl">· ao vivo</span></div>
+            <div class="range">21:32 → agora · 2 despertares</div>
+          </div>
+          <div class="chev open"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 9l6 6 6-6"/></svg></div>
+        </div>
+        <div class="tline">
+          <div class="mark" style="left:12%"></div>
+          <div class="mark" style="left:25%"></div>
+          <div class="mark" style="left:37%"></div>
+          <div class="mark" style="left:50%"></div>
+          <div class="mark" style="left:62%"></div>
+          <div class="mark" style="left:75%"></div>
+          <div class="mark" style="left:87%"></div>
+          <div class="band" style="left:38%;width:6%"></div>
+          <div class="band active" style="left:88%;width:4%"></div>
+        </div>
+        <div class="hours"><span>21:32</span><span>01:34</span><span>agora</span></div>
+
+        <div class="stat-row">
+          <div class="col"><div class="k">Sono real</div><div class="v" style="color:#c4b5fd">7h 45m</div></div>
+          <div class="col"><div class="k">Acordada</div><div class="v" style="color:#7dd3fc">27 min</div></div>
+        </div>
+
+        <div class="wak">
+          <div class="wak-h">
+            <span class="pill">☀ 00:50 → 01:18 <span class="pen">✎</span></span>
+            <span class="dur">28 min</span>
+          </div>
+          <div class="wak-events">
+            <div class="ev">
+              <div class="ic bottle">🍼</div>
+              <div class="lbl">Mamadeira · 120 ml</div>
+              <div class="t">01:08</div>
+            </div>
+          </div>
+        </div>
+        <div class="wak">
+          <div class="wak-h">
+            <span class="pill active">● 05:42 → agora <span class="pen">✎</span></span>
+            <span class="dur">7 min · ao vivo</span>
+          </div>
+          <div class="wak-events">
+            <div class="ev">
+              <div class="ic diaper">💧</div>
+              <div class="lbl">Fralda · xixi</div>
+              <div class="t">05:46</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="foot live-hint">Consolida quando o bedtime terminar</div>
+      </div>
+    </div>
+  </div>
+
+  <h2>Cenário 2 — Bedtime finalizado, no histórico</h2>
+
+  <div class="phones">
+    <!-- ATUAL -->
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="col-label before">ATUAL · v11.9.36</div>
+      <div class="today-h"><span class="l">Histórico</span><span class="d">Terça · 12 Mai</span></div>
+
+      <div class="sb-old" style="border-color:rgba(139,124,246,.18);box-shadow:none">
+        <div class="stripe"></div>
+        <div class="head">
+          <div class="ic">🛏</div>
+          <div class="info">
+            <div class="eyebrow">SONO NOTURNO</div>
+            <div class="time">21:14 — 07:08</div>
+            <div class="stats">
+              <span class="sleep">9h36m sono</span>
+              <span class="dot"></span>
+              <span class="awake">18min acordada</span>
+              <span class="dot"></span>
+              <span>3 despertares</span>
+            </div>
+          </div>
+          <div class="chev"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+        </div>
+        <div class="timeline">
+          <div class="mark" style="left:10%"></div>
+          <div class="mark" style="left:20%"></div>
+          <div class="mark" style="left:30%"></div>
+          <div class="mark" style="left:40%"></div>
+          <div class="mark" style="left:50%"></div>
+          <div class="mark" style="left:60%"></div>
+          <div class="mark" style="left:70%"></div>
+          <div class="mark" style="left:80%"></div>
+          <div class="mark" style="left:90%"></div>
+          <div class="band" style="left:34%;width:4.5%"></div>
+          <div class="band" style="left:56%;width:2.5%"></div>
+          <div class="band" style="left:82%;width:5%"></div>
+        </div>
+        <div class="hour-row"><span>21:14</span><span>02:11</span><span>07:08</span></div>
+        <div class="night">
+          <div class="night-title">
+            <span class="line short"></span>
+            <span>ATIVIDADE DA NOITE</span>
+            <span class="line"></span>
+          </div>
+          <div class="waking-section first">
+            <div style="display:flex;align-items:center;gap:10px;padding:4px 0">
+              <span class="waking-pill">☀ 00:36 · 26min ✎</span>
+              <span style="flex:1;height:1px;background:rgba(96,165,250,.12)"></span>
+            </div>
+            <div class="ev"><div class="ic bottle">🍼</div><div class="lbl">Mamadeira · 130 ml</div><div class="t">00:48</div><div class="x">🗑</div></div>
+          </div>
+          <div class="waking-section">
+            <div style="display:flex;align-items:center;gap:10px;padding:4px 0">
+              <span class="waking-pill">☀ 03:48 · 14min ✎</span>
+              <span style="flex:1;height:1px;background:rgba(96,165,250,.12)"></span>
+            </div>
+            <div class="ev"><div class="ic diaper">💧</div><div class="lbl">Fralda · xixi</div><div class="t">03:51</div><div class="x">🗑</div></div>
+          </div>
+          <div class="waking-section">
+            <div style="display:flex;align-items:center;gap:10px;padding:4px 0">
+              <span class="waking-pill">☀ 06:01 · 28min ✎</span>
+              <span style="flex:1;height:1px;background:rgba(96,165,250,.12)"></span>
+            </div>
+            <div class="ev"><div class="ic bottle">🍼</div><div class="lbl">Mamadeira · 110 ml</div><div class="t">06:14</div><div class="x">🗑</div></div>
+          </div>
+        </div>
+        <div class="actions">
+          <div class="edit">Editar</div>
+          <div class="del">🗑</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REFINADO -->
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="col-label after">REFINADO</div>
+      <div class="today-h"><span class="l">Histórico</span><span class="d">Terça · 12 Mai</span></div>
+
+      <div class="sb-new">
+        <div class="head">
+          <div class="ic">🛏</div>
+          <div class="info">
+            <div class="duration">9h 36m</div>
+            <div class="range">21:14 → 07:08 · 3 despertares</div>
+          </div>
+          <div class="chev open"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 9l6 6 6-6"/></svg></div>
+        </div>
+        <div class="tline">
+          <div class="mark" style="left:10%"></div>
+          <div class="mark" style="left:20%"></div>
+          <div class="mark" style="left:30%"></div>
+          <div class="mark" style="left:40%"></div>
+          <div class="mark" style="left:50%"></div>
+          <div class="mark" style="left:60%"></div>
+          <div class="mark" style="left:70%"></div>
+          <div class="mark" style="left:80%"></div>
+          <div class="mark" style="left:90%"></div>
+          <div class="band" style="left:34%;width:4.5%"></div>
+          <div class="band" style="left:56%;width:2.5%"></div>
+          <div class="band" style="left:82%;width:5%"></div>
+        </div>
+        <div class="hours"><span>21:14</span><span>02:11</span><span>07:08</span></div>
+
+        <div class="stat-row">
+          <div class="col"><div class="k">Sono real</div><div class="v" style="color:#c4b5fd">9h 18m</div></div>
+          <div class="col"><div class="k">Acordada</div><div class="v" style="color:#7dd3fc">18 min</div></div>
+        </div>
+
+        <div class="wak">
+          <div class="wak-h">
+            <span class="pill">☀ 00:36 → 01:02 <span class="pen">✎</span></span>
+            <span class="dur">26 min</span>
+          </div>
+          <div class="wak-events">
+            <div class="ev"><div class="ic bottle">🍼</div><div class="lbl">Mamadeira · 130 ml</div><div class="t">00:48</div></div>
+          </div>
+        </div>
+        <div class="wak">
+          <div class="wak-h">
+            <span class="pill">☀ 03:48 → 04:02 <span class="pen">✎</span></span>
+            <span class="dur">14 min</span>
+          </div>
+          <div class="wak-events">
+            <div class="ev"><div class="ic diaper">💧</div><div class="lbl">Fralda · xixi</div><div class="t">03:51</div></div>
+          </div>
+        </div>
+        <div class="wak">
+          <div class="wak-h">
+            <span class="pill">☀ 06:01 → 06:29 <span class="pen">✎</span></span>
+            <span class="dur">28 min</span>
+          </div>
+          <div class="wak-events">
+            <div class="ev"><div class="ic bottle">🍼</div><div class="lbl">Mamadeira · 110 ml</div><div class="t">06:14</div></div>
+          </div>
+        </div>
+
+        <div class="foot">
+          <div class="edit">Editar</div>
+          <div class="del">🗑</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="annot">
+    <h3>O que mudou — diff entre atual e refinado</h3>
+    <ul>
+      <li><strong>Indicador "live" único:</strong> sai a ribbon "EM ANDAMENTO" + box-shadow azul pulsante. Fica só um <strong>ponto lavanda piscando no canto do ícone do bedtime</strong> + sufixo discreto "· ao vivo" do lado da duração. Menos ruído, mesma clareza.</li>
+      <li><strong>Hierarquia visual reescrita:</strong> a duração total ("8h 12m") vira o headline em 20px bold. O range de horas e o número de despertares vão pra linha 2 em cinza. Sai o eyebrow "SONO NOTURNO" (redundante com o ícone de cama).</li>
+      <li><strong>Stats coloridos viram tabela compacta:</strong> em vez de 3 stats coloridos disputando atenção na mesma linha, fica uma <code>stat-row</code> de 2 colunas com label uppercase ("SONO REAL" / "ACORDADA") + valor. "Despertares" sobe pra linha 2 do header (mais saliente).</li>
+      <li><strong>Timeline maior e mais clara:</strong> 22px de altura (era 14px), bands com gradient azul + glow interno. Active waking ganha pulse sutil de brilho. Hour marks mais sutis.</li>
+      <li><strong>Wakings sem separador tracejado:</strong> cada waking vira uma <code>.wak</code> section com borda sólida de 1px ultra-sutil. O pill mostra agora "00:50 → 01:18" (range explícito) em vez de "00:50 · 28min" (só duração). Duração vai pra direita do pill.</li>
+      <li><strong>Sai a header "ATIVIDADE DA NOITE":</strong> com a estrutura limpa de wakings, esse título virou ruído. Os wakings se explicam visualmente.</li>
+      <li><strong>Foot do live mais curto:</strong> "Consolida quando o bedtime terminar" — sem emoji, sem itálico, peso normal.</li>
+      <li><strong>Padding mais respiroso:</strong> 14px header (era 18px), 18px laterais. Card menos volumoso, mais ar.</li>
+    </ul>
+  </div>
+
+  <div class="decision">
+    <h3>Pronto pra implementar?</h3>
+    <p>Esse é o nível de refinamento que vou aplicar. <strong>Comportamento idêntico</strong> (tap no pill abre editor inline, edit/delete, mesma lógica de wakings e retroactive events) — só visual + hierarquia.</p>
+    <p>Se aprovar, sigo direto pra o index.html. Se quiser mais leve ainda (ex: <em>dropar a timeline visual</em>, <em>colapsar wakings por default</em>, ou <em>mudar a cor base de roxo pra cyan</em>), só falar.</p>
+  </div>
+
+</div>
+</body>
+</html>

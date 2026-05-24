@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Relatório semanal + Stats novos</title>
+<style>
+  :root{
+    --bg:#070b1e; --bg2:#0b1128;
+    --card:rgba(22,28,60,.55);
+    --b:rgba(139,124,246,.15);
+    --bSoft:rgba(139,124,246,.08);
+    --text:#e4e6f4; --sub:#9099c3; --dim:#5b6189;
+    --accent:#8b7cf6;
+    --green:#4ade80; --blue:#6ea8ff; --purple:#a78bfa; --pink:#f472b6;
+    --amber:#fbbf24; --orange:#fb923c; --red:#f87171; --brown:#a16b4a;
+    --glass:rgba(14,18,48,.55);
+    --starfield:radial-gradient(ellipse 140% 55% at 50% 100%,#1a1f52 0%,transparent 70%),radial-gradient(ellipse at 50% 0%,#10153d 0%,var(--bg) 65%),var(--bg);
+  }
+  *{box-sizing:border-box}
+  body{background:#04061a;color:var(--text);font:500 14px/1.5 -apple-system,BlinkMacSystemFont,"Inter",sans-serif;margin:0;padding:30px 16px 80px}
+  .wrap{max-width:1240px;margin:0 auto}
+  h1{font-size:22px;margin:0 0 4px;font-weight:800;letter-spacing:-.4px}
+  .lede{color:var(--sub);font-size:13px;margin:0 0 22px}
+  h2{font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin:24px 0 10px}
+  .phones{display:grid;grid-template-columns:repeat(2,1fr);gap:24px}
+  .phone{background:var(--starfield);border-radius:34px;padding:18px 14px;border:1px solid rgba(139,124,246,.18);box-shadow:0 20px 60px -20px rgba(0,0,0,.6);position:relative;min-height:560px}
+  .phone .notch{width:108px;height:18px;background:#000;border-radius:0 0 14px 14px;margin:-14px auto 12px}
+  .lbl{font-size:10px;font-weight:700;letter-spacing:1px;color:var(--accent);text-transform:uppercase;margin-bottom:6px;padding-left:4px}
+  .lbl span{color:var(--sub);font-weight:600;letter-spacing:0;margin-left:6px;text-transform:none}
+
+  /* Section header */
+  .section-h{display:flex;align-items:center;gap:8px;margin:14px 4px 8px;font-size:11px;color:var(--dim);font-weight:700;text-transform:uppercase;letter-spacing:.6px}
+
+  /* Big stats card (existing app style) */
+  .stat-card{background:linear-gradient(180deg,rgba(22,28,60,.6),rgba(20,26,60,.45));border:1px solid var(--bSoft);border-radius:14px;padding:14px 14px 12px;margin-bottom:8px}
+  .stat-card .top{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .stat-card .top .ic{width:24px;height:24px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px}
+  .stat-card .top .lab{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;font-weight:700}
+  .stat-card .top .val{margin-left:auto;font-size:13px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.2px}
+  .stat-card .row{display:flex;justify-content:space-between;align-items:baseline;font-size:11px;color:var(--sub);font-variant-numeric:tabular-nums}
+  .stat-card .row .k{font-weight:600}
+  .stat-card .row .v{font-weight:700;color:var(--text)}
+
+  /* Color variants */
+  .stat-card.green .top .ic{background:rgba(74,222,128,.14);color:var(--green)}
+  .stat-card.green .top .val{color:var(--green)}
+  .stat-card.blue .top .ic{background:rgba(110,168,255,.14);color:var(--blue)}
+  .stat-card.blue .top .val{color:var(--blue)}
+  .stat-card.purple .top .ic{background:rgba(167,139,250,.14);color:var(--purple)}
+  .stat-card.purple .top .val{color:var(--purple)}
+  .stat-card.pink .top .ic{background:rgba(244,114,182,.14);color:var(--pink)}
+  .stat-card.pink .top .val{color:var(--pink)}
+  .stat-card.amber .top .ic{background:rgba(251,191,36,.14);color:var(--amber)}
+  .stat-card.amber .top .val{color:var(--amber)}
+  .stat-card.brown .top .ic{background:rgba(161,107,74,.14);color:var(--brown)}
+  .stat-card.brown .top .val{color:var(--brown)}
+
+  /* Mini bar chart for daily/weekly */
+  .bar-chart{display:flex;align-items:flex-end;gap:5px;height:54px;margin:10px 0 4px;padding:0 2px}
+  .bar-chart .bar{flex:1;background:linear-gradient(180deg,currentColor,transparent);border-radius:3px 3px 0 0;min-height:3px;position:relative}
+  .bar-chart .bar::after{content:attr(data-v);position:absolute;top:-12px;left:50%;transform:translateX(-50%);font-size:8px;color:var(--sub);font-weight:700;font-variant-numeric:tabular-nums;opacity:0.7;white-space:nowrap}
+  .bar-chart .bar.dim{opacity:.32}
+  .axis-x{display:flex;gap:5px;margin-top:4px;padding:0 2px}
+  .axis-x span{flex:1;text-align:center;font-size:8.5px;color:var(--dim);font-weight:700;letter-spacing:.4px;text-transform:uppercase}
+
+  /* Trend chip */
+  .trend{display:inline-flex;align-items:center;gap:3px;padding:1px 6px;border-radius:6px;font-size:9.5px;font-weight:700;letter-spacing:0;font-variant-numeric:tabular-nums}
+  .trend.up{background:rgba(74,222,128,.1);color:var(--green)}
+  .trend.dn{background:rgba(248,113,113,.1);color:var(--red)}
+  .trend.eq{background:rgba(139,124,246,.1);color:var(--accent)}
+
+  /* Sparkline mini */
+  svg.spark{width:100%;height:24px;margin-top:6px}
+
+  /* Period switcher */
+  .periods{display:flex;gap:4px;margin:6px 4px 12px;background:rgba(14,18,48,.45);border:1px solid var(--bSoft);border-radius:11px;padding:3px}
+  .periods button{flex:1;padding:6px 0;border-radius:8px;font-size:10.5px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.3px;background:transparent;border:none;cursor:pointer}
+  .periods button.on{background:rgba(139,124,246,.22);color:#fff}
+
+  /* Header com nome + range */
+  .stats-header{padding:6px 6px 10px}
+  .stats-header h3{font-size:18px;font-weight:800;margin:0;letter-spacing:-.3px}
+  .stats-header .range{font-size:11px;color:var(--sub);margin-top:2px;font-variant-numeric:tabular-nums}
+
+  .pill-row{display:flex;gap:6px;flex-wrap:wrap;margin:0 4px 12px}
+  .pill{padding:4px 8px;border-radius:8px;background:rgba(139,124,246,.08);border:1px solid var(--bSoft);font-size:10px;font-weight:700;letter-spacing:.3px;color:var(--sub);text-transform:uppercase}
+
+  /* callouts */
+  .call{background:linear-gradient(180deg,rgba(139,124,246,.1),rgba(139,124,246,.03));border:1px solid rgba(139,124,246,.22);border-radius:14px;padding:14px 18px;margin-top:14px;font-size:13px;color:#c7cbea;line-height:1.55}
+  .call h3{margin:0 0 6px;font-size:12px;color:#c4b5fd;text-transform:uppercase;letter-spacing:.5px;font-weight:800}
+  code{background:var(--glass);padding:2px 6px;border-radius:4px;font-size:11px;color:#c4b5fd}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Relatório semanal + Stats novos</h1>
+<p class="lede">Aba <strong>Stats</strong> ganha período selectável (Hoje / 7d / 4 sem) e cards extras: cocô/dia, tempo das sonecas, janela real de sono. Tudo no estilo dos cards atuais (linear-gradient + colored ic + tabular-nums).</p>
+
+<h2>1. Aba Stats — versão proposta (período: 7 dias)</h2>
+
+<div class="phones">
+
+  <!-- PHONE 1: visão semana -->
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="lbl">Stats <span>· últimos 7 dias</span></div>
+
+    <div class="stats-header">
+      <h3>Resumo · Louise</h3>
+      <div class="range">21/abr → 27/abr · 7 dias</div>
+    </div>
+
+    <div class="periods">
+      <button>Hoje</button>
+      <button class="on">7 dias</button>
+      <button>4 semanas</button>
+    </div>
+
+    <!-- Sleep section -->
+    <div class="section-h">🌙 Sono</div>
+    <div class="stat-card purple">
+      <div class="top"><div class="ic">🌙</div><div class="lab">Sono total/noite (média)</div><div class="val">8h12m</div></div>
+      <div class="row"><span class="k">Min · Máx</span><span class="v">6h45 · 9h30</span></div>
+      <div class="row"><span class="k">Despertares/noite</span><span class="v">1.4 <span class="trend up">↓ 22%</span></span></div>
+      <div class="row"><span class="k">Janela real (acordada)</span><span class="v">42min/noite</span></div>
+    </div>
+
+    <!-- Naps section -->
+    <div class="section-h">☁️ Sonecas</div>
+    <div class="stat-card accent" style="--accent:#a78bfa">
+      <div class="top"><div class="ic">☁️</div><div class="lab">Sonecas/dia (média)</div><div class="val">4.3</div></div>
+      <div class="bar-chart" style="color:var(--accent)">
+        <div class="bar" style="height:42%" data-v="3"></div>
+        <div class="bar" style="height:56%" data-v="4"></div>
+        <div class="bar" style="height:42%" data-v="3"></div>
+        <div class="bar" style="height:70%" data-v="5"></div>
+        <div class="bar" style="height:56%" data-v="4"></div>
+        <div class="bar" style="height:70%" data-v="5"></div>
+        <div class="bar" style="height:84%" data-v="6"></div>
+      </div>
+      <div class="axis-x"><span>seg</span><span>ter</span><span>qua</span><span>qui</span><span>sex</span><span>sáb</span><span>dom</span></div>
+      <div class="row" style="margin-top:8px"><span class="k">Tempo total/dia</span><span class="v">3h08</span></div>
+      <div class="row"><span class="k">Soneca mais longa</span><span class="v">1h45</span></div>
+      <div class="row"><span class="k">Wake window média</span><span class="v">1h12</span></div>
+    </div>
+
+    <!-- Bottle section -->
+    <div class="section-h">🍼 Mamadeiras</div>
+    <div class="stat-card green">
+      <div class="top"><div class="ic">🍼</div><div class="lab">Volume/dia (média)</div><div class="val">630ml</div></div>
+      <div class="bar-chart" style="color:var(--green)">
+        <div class="bar" style="height:60%" data-v="540"></div>
+        <div class="bar" style="height:75%" data-v="660"></div>
+        <div class="bar" style="height:65%" data-v="600"></div>
+        <div class="bar" style="height:80%" data-v="700"></div>
+        <div class="bar" style="height:72%" data-v="640"></div>
+        <div class="bar" style="height:55%" data-v="500"></div>
+        <div class="bar" style="height:78%" data-v="690"></div>
+      </div>
+      <div class="axis-x"><span>seg</span><span>ter</span><span>qua</span><span>qui</span><span>sex</span><span>sáb</span><span>dom</span></div>
+      <div class="row" style="margin-top:8px"><span class="k">Mamadas/dia</span><span class="v">7.4</span></div>
+      <div class="row"><span class="k">Volume/mamada (média)</span><span class="v">85ml</span></div>
+      <div class="row"><span class="k">Intervalo médio</span><span class="v">2h45</span></div>
+    </div>
+
+    <div style="font-size:10px;color:var(--dim);text-align:center;padding:6px 8px;margin-top:6px">role pra ver mais ↓</div>
+  </div>
+
+  <!-- PHONE 2: continuação scroll -->
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="lbl">Stats <span>· continuação</span></div>
+
+    <!-- Diaper section -->
+    <div class="section-h">🧷 Fraldas</div>
+    <div class="stat-card pink">
+      <div class="top"><div class="ic">🧷</div><div class="lab">Fraldas/dia (média)</div><div class="val">6.4</div></div>
+      <div class="row"><span class="k">💧 Xixi</span><span class="v">5.1/dia</span></div>
+      <div class="row"><span class="k">💩 Cocô</span><span class="v">1.3/dia</span></div>
+      <div class="bar-chart" style="color:#a16b4a;margin-top:8px">
+        <div class="bar" style="height:30%" data-v="1"></div>
+        <div class="bar" style="height:60%" data-v="2"></div>
+        <div class="bar" style="height:30%" data-v="1"></div>
+        <div class="bar dim" style="height:0%" data-v="0"></div>
+        <div class="bar" style="height:60%" data-v="2"></div>
+        <div class="bar" style="height:30%" data-v="1"></div>
+        <div class="bar" style="height:60%" data-v="2"></div>
+      </div>
+      <div class="axis-x"><span>seg</span><span>ter</span><span>qua</span><span>qui</span><span>sex</span><span>sáb</span><span>dom</span></div>
+      <div style="font-size:10px;color:var(--dim);text-align:center;margin-top:4px">cocô/dia</div>
+    </div>
+
+    <!-- Medicine section -->
+    <div class="section-h">💊 Medicamentos</div>
+    <div class="stat-card amber">
+      <div class="top"><div class="ic">💊</div><div class="lab">Total na semana</div><div class="val">21x</div></div>
+      <div class="row"><span class="k">Floripa</span><span class="v">7x · 1/dia</span></div>
+      <div class="row"><span class="k">Vit. D</span><span class="v">7x · 1/dia</span></div>
+      <div class="row"><span class="k">Cólicaliv</span><span class="v">7x · 1/dia</span></div>
+      <div class="row"><span class="k">Simeticona (gotas)</span><span class="v">3x · 3,3,4</span></div>
+      <div class="row"><span class="k">Paracetamol</span><span class="v">— · não usado</span></div>
+    </div>
+
+    <!-- Crescimento -->
+    <div class="section-h">📏 Crescimento</div>
+    <div class="stat-card blue">
+      <div class="top"><div class="ic">📏</div><div class="lab">Última medição</div><div class="val">22/abr</div></div>
+      <div class="row"><span class="k">Peso</span><span class="v">4.85 kg <span class="trend up">+180g/sem</span></span></div>
+      <div class="row"><span class="k">Comprimento</span><span class="v">55.0 cm <span class="trend up">+1.2cm/sem</span></span></div>
+      <div class="row"><span class="k">Cabeça</span><span class="v">37.5 cm</span></div>
+    </div>
+
+    <div style="font-size:10px;color:var(--dim);text-align:center;padding:8px 8px 0;margin-top:6px">P50 OMS · Tap pra ver gráfico completo →</div>
+  </div>
+</div>
+
+<h2>2. Período "4 semanas" — visão de tendência</h2>
+
+<div class="phones">
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="lbl">Stats <span>· 4 semanas</span></div>
+
+    <div class="stats-header">
+      <h3>Resumo · 4 semanas</h3>
+      <div class="range">31/mar → 27/abr</div>
+    </div>
+
+    <div class="periods">
+      <button>Hoje</button>
+      <button>7 dias</button>
+      <button class="on">4 semanas</button>
+    </div>
+
+    <div class="section-h">🌙 Sono — evolução semanal</div>
+    <div class="stat-card purple">
+      <div class="top"><div class="ic">🌙</div><div class="lab">Sono total/noite</div><div class="val">8h12m <span class="trend up" style="margin-left:4px">↑ 28min</span></div></div>
+      <div class="bar-chart" style="color:var(--purple)">
+        <div class="bar" style="height:60%" data-v="6h45"></div>
+        <div class="bar" style="height:70%" data-v="7h22"></div>
+        <div class="bar" style="height:78%" data-v="7h50"></div>
+        <div class="bar" style="height:88%" data-v="8h12"></div>
+      </div>
+      <div class="axis-x"><span>S1</span><span>S2</span><span>S3</span><span>S4</span></div>
+    </div>
+
+    <div class="section-h">🍼 Mamadeiras</div>
+    <div class="stat-card green">
+      <div class="top"><div class="ic">🍼</div><div class="lab">Volume/dia</div><div class="val">630ml <span class="trend up" style="margin-left:4px">↑ 60ml</span></div></div>
+      <div class="bar-chart" style="color:var(--green)">
+        <div class="bar" style="height:55%" data-v="510ml"></div>
+        <div class="bar" style="height:65%" data-v="568ml"></div>
+        <div class="bar" style="height:75%" data-v="595ml"></div>
+        <div class="bar" style="height:85%" data-v="630ml"></div>
+      </div>
+      <div class="axis-x"><span>S1</span><span>S2</span><span>S3</span><span>S4</span></div>
+    </div>
+
+    <div class="section-h">☁️ Sonecas</div>
+    <div class="stat-card accent" style="--accent:#a78bfa">
+      <div class="top"><div class="ic">☁️</div><div class="lab">Sonecas/dia</div><div class="val">4.3 <span class="trend dn" style="margin-left:4px">↓ 0.8</span></div></div>
+      <div class="bar-chart" style="color:var(--accent)">
+        <div class="bar" style="height:88%" data-v="5.1"></div>
+        <div class="bar" style="height:80%" data-v="4.8"></div>
+        <div class="bar" style="height:75%" data-v="4.5"></div>
+        <div class="bar" style="height:70%" data-v="4.3"></div>
+      </div>
+      <div class="axis-x"><span>S1</span><span>S2</span><span>S3</span><span>S4</span></div>
+      <div class="row" style="margin-top:6px"><span class="k">Tempo total/dia</span><span class="v">3h08 <span class="trend up">↑ 12min</span></span></div>
+    </div>
+
+    <div class="section-h">🧷 Fraldas</div>
+    <div class="stat-card pink">
+      <div class="top"><div class="ic">🧷</div><div class="lab">Fraldas/dia</div><div class="val">6.4 <span class="trend eq" style="margin-left:4px">≈</span></div></div>
+      <div class="row"><span class="k">💩 Cocô/dia</span><span class="v">1.3 <span class="trend up">↑ 0.2</span></span></div>
+    </div>
+  </div>
+
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="lbl">Stats <span>· hoje (default)</span></div>
+
+    <div class="stats-header">
+      <h3>Hoje · seg, 27/abr</h3>
+      <div class="range">parcial · 14:30</div>
+    </div>
+
+    <div class="periods">
+      <button class="on">Hoje</button>
+      <button>7 dias</button>
+      <button>4 semanas</button>
+    </div>
+
+    <div class="pill-row">
+      <span class="pill">7h ago: bedtime</span>
+      <span class="pill">3 mamadas</span>
+      <span class="pill">2 sonecas</span>
+    </div>
+
+    <div class="stat-card purple">
+      <div class="top"><div class="ic">🌙</div><div class="lab">Sono noturno (último)</div><div class="val">8h30m</div></div>
+      <div class="row"><span class="k">Janela real (acordada)</span><span class="v">35min</span></div>
+      <div class="row"><span class="k">Despertares</span><span class="v">2</span></div>
+    </div>
+
+    <div class="stat-card green">
+      <div class="top"><div class="ic">🍼</div><div class="lab">Mamadeiras hoje</div><div class="val">220ml</div></div>
+      <div class="row"><span class="k">Mamadas</span><span class="v">3 · 70/80/70ml</span></div>
+      <div class="row"><span class="k">Próxima estimada</span><span class="v">~17:15</span></div>
+    </div>
+
+    <div class="stat-card accent" style="--accent:#a78bfa">
+      <div class="top"><div class="ic">☁️</div><div class="lab">Sonecas hoje</div><div class="val">2 · 1h45</div></div>
+      <div class="row"><span class="k">Mais longa</span><span class="v">55min</span></div>
+      <div class="row"><span class="k">Próxima janela ~</span><span class="v">15:45</span></div>
+    </div>
+
+    <div class="stat-card pink">
+      <div class="top"><div class="ic">🧷</div><div class="lab">Fraldas hoje</div><div class="val">4</div></div>
+      <div class="row"><span class="k">💧 Xixi</span><span class="v">3</span></div>
+      <div class="row"><span class="k">💩 Cocô</span><span class="v">1</span></div>
+    </div>
+  </div>
+</div>
+
+<h2>Resumo do que entra no app</h2>
+<div class="call">
+  <h3>Mudanças propostas na aba Stats</h3>
+  <ul style="margin:0;padding-left:18px">
+    <li><strong>Period switcher</strong> no topo: Hoje / 7 dias / 4 semanas. Default = 7 dias (mais útil que "tudo").</li>
+    <li><strong>Cards agrupados por categoria</strong> (Sono, Sonecas, Mamadeiras, Fraldas, Medicamentos, Crescimento). Cada card tem a métrica principal + sub-rows com detalhes + bar chart mini quando aplicável.</li>
+    <li><strong>Bar chart mini</strong> 7 dias / 4 semanas com valor em cima de cada barra (tabular-nums, fontSize 8).</li>
+    <li><strong>Trend chips</strong> (↑↓≈) comparando o período atual com o anterior. Verde = ganho desejado, vermelho = perda, accent = neutro.</li>
+    <li><strong>Janela real de sono</strong> (sleep window): tempo acordada DENTRO do bedtime (descontando wakings). Já calculo via `realSleepMin`, só falta exibir.</li>
+    <li><strong>Cocô/dia</strong> com bar chart próprio em cor brown (pré-existente em entries diaper subtype).</li>
+    <li><strong>Tempo das sonecas</strong>: total + soneca mais longa + WW (wake window) média.</li>
+  </ul>
+</div>
+
+<div class="call">
+  <h3>Bug das wakings duplicadas (corrigido nesse mesmo bundle)</h3>
+  <ul style="margin:0;padding-left:18px">
+    <li><strong>Causa provável</strong>: race condition multi-device. William e esposa ambos pressionando "voltar a dormir" no mesmo waking ativo → cada device escreve `[...wakings, novaWaking]` baseado no estado local antigo → duplica.</li>
+    <li><strong>Fix em <code>js/routine-engine.js</code></strong>: dedupe das wakings por `time:durationMin` antes da análise. Se duas tem o mesmo time + duração, só conta 1.</li>
+    <li>Não corrige na escrita (race continua existindo no Firestore), mas a leitura/análise/UI mostra o número correto.</li>
+  </ul>
+</div>
+
+</div>
+</body>
+</html>

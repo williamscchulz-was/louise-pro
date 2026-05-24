@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Home compacto — Ring menor + mais info above-the-fold</title>
+<style>
+  :root{
+    --bg:#070b1e;--text:#e4e6f4;--sub:#9099c3;--dim:#5b6189;
+    --accent:#8b7cf6;--green:#4ade80;--blue:#6ea8ff;--purple:#a78bfa;
+    --pink:#f472b6;--amber:#fbbf24;--cyan:#7dd3fc;--orange:#fb923c;
+    --b:rgba(139,124,246,.06);
+    --starfield:radial-gradient(ellipse 140% 55% at 50% 100%,#1a1f52 0%,transparent 70%),radial-gradient(ellipse at 50% 0%,#10153d 0%,var(--bg) 65%),var(--bg);
+  }
+  *{box-sizing:border-box}
+  body{background:#04061a;color:var(--text);font:500 14px/1.5 -apple-system,BlinkMacSystemFont,"Inter",sans-serif;margin:0;padding:30px 14px 60px;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1480px;margin:0 auto}
+  h1{font-size:24px;margin:0 0 6px;font-weight:800;letter-spacing:-.5px}
+  .lede{color:var(--sub);font-size:13.5px;margin:0 0 28px;line-height:1.55}
+  h2{font-size:13px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--accent);margin:30px 0 12px;padding-bottom:8px;border-bottom:1px solid rgba(139,124,246,.18)}
+
+  .phones{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;align-items:start}
+  @media(max-width:1100px){.phones{grid-template-columns:repeat(2,1fr)}}
+  .phone{background:var(--starfield);border-radius:36px;padding:14px 12px 28px;border:1px solid rgba(139,124,246,.18);box-shadow:0 20px 60px -20px rgba(0,0,0,.6);position:relative;min-height:640px;overflow:hidden}
+  .phone .notch{width:96px;height:18px;background:#000;border-radius:0 0 14px 14px;margin:-10px auto 10px}
+  .col-label{font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;text-align:center;margin-bottom:6px}
+  .col-label.now{color:#fda4af}
+  .col-label.a{color:#86efac}
+  .col-label.b{color:#fcd34d}
+  .col-label.c{color:#7dd3fc}
+
+  /* ── header ── */
+  .hdr{display:flex;align-items:center;justify-content:space-between;padding:4px 8px 8px}
+  .hdr .avatar{width:34px;height:34px;border-radius:50%;background:rgba(139,124,246,.18);border:1px solid rgba(139,124,246,.3);display:flex;align-items:center;justify-content:center;font-size:14px}
+  .hdr .name{flex:1;margin-left:9px}
+  .hdr .name .n{font-size:13px;font-weight:800;color:#f0f2ff;letter-spacing:-.2px}
+  .hdr .name .a{font-size:10px;color:var(--sub);margin-top:1px}
+  .hdr .bell{width:30px;height:30px;border-radius:50%;background:rgba(139,124,246,.10);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--sub)}
+
+  /* ── Big ring (current) ── */
+  .ring-big{width:240px;height:240px;border-radius:50%;position:relative;margin:6px auto 14px;display:flex;align-items:center;justify-content:center}
+  .ring-big svg{width:100%;height:100%;position:absolute;inset:0}
+  .ring-big .center{position:absolute;text-align:center}
+  .ring-big .center .lbl{font-size:9px;color:var(--sub);text-transform:uppercase;letter-spacing:.8px;font-weight:600;margin-bottom:5px}
+  .ring-big .center .v{font-size:30px;font-weight:800;color:#f0f2ff;letter-spacing:-1px;font-variant-numeric:tabular-nums;line-height:1}
+  .ring-big .center .sub{font-size:10px;color:var(--dim);margin-top:5px;letter-spacing:.3px}
+
+  /* ── Compact ring A (180px) ── */
+  .ring-mid{width:160px;height:160px;border-radius:50%;position:relative;margin:4px auto 10px;display:flex;align-items:center;justify-content:center}
+  .ring-mid svg{width:100%;height:100%;position:absolute;inset:0}
+  .ring-mid .center{position:absolute;text-align:center}
+  .ring-mid .center .lbl{font-size:8px;color:var(--sub);text-transform:uppercase;letter-spacing:.6px;font-weight:600;margin-bottom:3px}
+  .ring-mid .center .v{font-size:22px;font-weight:800;color:#f0f2ff;letter-spacing:-.6px;font-variant-numeric:tabular-nums;line-height:1}
+  .ring-mid .center .sub{font-size:9px;color:var(--dim);margin-top:3px;letter-spacing:.3px}
+
+  /* ── Compact B: row with mini-ring + label ── */
+  .ring-row{display:flex;align-items:center;gap:14px;padding:8px 12px 6px;margin-bottom:8px}
+  .ring-row .miniring{width:84px;height:84px;border-radius:50%;position:relative;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+  .ring-row .miniring svg{width:100%;height:100%;position:absolute;inset:0}
+  .ring-row .miniring .v{font-size:15px;font-weight:800;color:#f0f2ff;letter-spacing:-.3px;font-variant-numeric:tabular-nums;line-height:1}
+  .ring-row .info{flex:1}
+  .ring-row .info .l{font-size:9px;color:var(--sub);text-transform:uppercase;letter-spacing:.8px;font-weight:700;margin-bottom:3px}
+  .ring-row .info .name{font-size:15px;font-weight:800;color:#f0f2ff;letter-spacing:-.2px;margin-bottom:2px}
+  .ring-row .info .age{font-size:10px;color:var(--dim)}
+  .ring-row .info .next{font-size:11px;color:var(--accent);margin-top:5px;font-weight:700;display:flex;align-items:center;gap:4px}
+
+  /* ── Compact C: ring as horizontal pill ── */
+  .ring-pill{margin:6px 8px 8px;padding:10px 12px;border-radius:16px;background:linear-gradient(135deg,rgba(167,139,250,.10),rgba(167,139,250,.03));border:1px solid rgba(139,124,246,.22);display:flex;align-items:center;gap:12px}
+  .ring-pill .miniring{width:60px;height:60px;border-radius:50%;position:relative;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+  .ring-pill .miniring svg{width:100%;height:100%;position:absolute;inset:0}
+  .ring-pill .miniring .v{font-size:12px;font-weight:800;color:#f0f2ff;line-height:1;font-variant-numeric:tabular-nums}
+  .ring-pill .info{flex:1;min-width:0}
+  .ring-pill .info .l{font-size:8px;color:var(--sub);text-transform:uppercase;letter-spacing:.8px;font-weight:700}
+  .ring-pill .info .v{font-size:14px;font-weight:800;color:#f0f2ff;margin-top:1px;letter-spacing:-.2px}
+  .ring-pill .meta{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;font-variant-numeric:tabular-nums}
+  .ring-pill .meta .age{font-size:9px;color:var(--dim);font-weight:600;text-transform:uppercase;letter-spacing:.6px}
+  .ring-pill .meta .nxt{font-size:10px;color:var(--accent);font-weight:700}
+
+  /* ── Routine card ── */
+  .routine-card{background:linear-gradient(135deg,rgba(167,139,250,.10),rgba(167,139,250,.03));border:1px solid rgba(167,139,250,.24);border-radius:14px;padding:11px 14px 11px 17px;margin:0 8px 10px;position:relative;overflow:hidden}
+  .routine-card.compact{padding:9px 12px 9px 14px;margin:0 8px 8px;border-radius:12px}
+  .routine-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,#a78bfa,#7c3aed)}
+  .routine-card .eb{font-size:8px;font-weight:800;color:#c4b5fd;text-transform:uppercase;letter-spacing:1.2;margin-bottom:4px}
+  .routine-card .main{display:flex;align-items:center;gap:10px}
+  .routine-card .ic{width:32px;height:32px;border-radius:9px;background:rgba(167,139,250,.18);border:1px solid rgba(167,139,250,.3);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+  .routine-card .info{flex:1}
+  .routine-card .info .ttl{font-size:13px;font-weight:800;color:#f0f2ff;letter-spacing:-.2px}
+  .routine-card .info .sub{font-size:10px;color:var(--sub);margin-top:1px;font-variant-numeric:tabular-nums}
+  .routine-card .strip{display:flex;gap:4px;margin-top:9px;padding-top:8px;border-top:1px solid rgba(167,139,250,.18)}
+  .routine-card .chip{flex:1;display:flex;flex-direction:column;align-items:center;font-size:8px;color:var(--dim);font-weight:600;text-transform:uppercase;letter-spacing:.2px;font-variant-numeric:tabular-nums}
+  .routine-card .chip .dot{width:14px;height:14px;border-radius:50%;background:rgba(139,124,246,.12);border:1px solid rgba(139,124,246,.22);margin-bottom:2px;font-size:7px;display:flex;align-items:center;justify-content:center;font-weight:800}
+  .routine-card .chip.done .dot{background:#4ade80;border-color:#4ade80;color:#04061a}
+  .routine-card .chip.next .dot{background:rgba(167,139,250,.4);border-color:#a78bfa;color:#fff}
+  .routine-card .chip.late .dot{background:rgba(251,146,60,.3);border-color:#fb923c;color:#fb923c}
+
+  /* ── Quick buttons ── */
+  .quick{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:0 8px;margin-bottom:10px}
+  .quick button{background:rgba(20,26,60,.4);border:1px solid rgba(139,124,246,.14);border-radius:12px;padding:9px 0 7px;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--sub);font-size:10px;font-weight:700;cursor:pointer}
+  .quick button .em{font-size:16px;line-height:1}
+
+  /* ── KPI cards ── */
+  .kpis{display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:0 8px;margin-bottom:10px}
+  .kpi{background:rgba(20,26,60,.32);border:1px solid rgba(139,124,246,.10);border-radius:11px;padding:8px 10px;position:relative;overflow:hidden}
+  .kpi .head{display:flex;align-items:center;gap:4px;margin-bottom:1px}
+  .kpi .lbl{font-size:8px;color:var(--dim);font-weight:600;letter-spacing:.3px;text-transform:uppercase}
+  .kpi .v{font-size:14px;font-weight:800;line-height:1;letter-spacing:-.2px;font-variant-numeric:tabular-nums}
+  .kpi .v .u{font-size:10px;opacity:.5;font-weight:700;margin-left:1px}
+  .kpi .ago{font-size:9px;font-weight:600;margin-top:2px;font-variant-numeric:tabular-nums}
+  .kpi.bottle .v{color:#4ade80}.kpi.bottle .ago{color:#4ade80aa}
+  .kpi.simet .v{color:#fbbf24}
+  .kpi.sono .v{color:#a78bfa}.kpi.sono .ago{color:#a78bfa99}
+  .kpi.diaper .v{color:#f472b6}.kpi.diaper .ago{color:#f472b699}
+
+  /* ── Today header ── */
+  .today-h{display:flex;align-items:baseline;justify-content:space-between;padding:0 12px;margin:4px 0 8px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.9px}
+  .today-h .l{color:var(--accent)}
+  .today-h .d{color:var(--dim);font-weight:500;letter-spacing:.3px}
+
+  /* ── Entry rows ── */
+  .rows{padding:0 8px}
+  .row{display:flex;align-items:center;gap:8px;padding:6px 4px;border-bottom:1px solid rgba(139,124,246,.06)}
+  .row .ic{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+  .row .ic.bottle{background:rgba(74,222,128,.12);color:#4ade80}
+  .row .ic.nap{background:rgba(167,139,250,.12);color:#a78bfa}
+  .row .ic.diaper{background:rgba(244,114,182,.12);color:#f472b6}
+  .row .body{flex:1;min-width:0}
+  .row .lbl{font-size:11px;font-weight:700;color:var(--text)}
+  .row .det{font-size:9px;color:var(--sub);margin-top:0}
+  .row .t{font-size:9px;color:var(--dim);font-weight:600;font-variant-numeric:tabular-nums}
+
+  /* ── Fold indicator ── */
+  .fold-mark{position:relative;background:linear-gradient(90deg,transparent,rgba(248,113,113,.45),transparent);height:1px;margin:6px 8px 8px}
+  .fold-mark::before{content:"FOLD · ~640px";position:absolute;left:50%;top:-7px;transform:translateX(-50%);background:#04061a;padding:0 8px;font-size:7px;font-weight:800;color:#f87171;letter-spacing:1.5px}
+
+  /* ── Annotation ── */
+  .annot{background:rgba(139,124,246,.04);border:1px solid rgba(139,124,246,.18);border-radius:14px;padding:18px 22px;margin:24px 0}
+  .annot h3{margin:0 0 8px;font-size:14px;font-weight:800;color:var(--accent)}
+  .annot p{margin:0 0 8px;color:var(--sub);font-size:13px;line-height:1.55}
+  .annot strong{color:var(--text)}
+  .annot code{background:rgba(20,26,60,.5);padding:2px 5px;border-radius:5px;font-size:11.5px;color:#c4b5fd;font-family:Menlo,monospace}
+  .annot ul{margin:0;padding-left:20px;color:var(--sub);font-size:13px;line-height:1.65}
+  .annot ul li{margin-bottom:4px}
+  .annot ul li strong{color:var(--text)}
+
+  .decision{background:linear-gradient(180deg,rgba(167,139,250,.10),rgba(167,139,250,.03));border:1px solid rgba(167,139,250,.28);border-radius:18px;padding:22px;margin:30px 0 0}
+  .decision h3{margin:0 0 12px;font-size:16px;font-weight:800;color:#c4b5fd}
+  .decision .opt{background:rgba(20,26,60,.32);border:1px solid rgba(139,124,246,.14);border-radius:11px;padding:12px 14px;margin:8px 0;font-size:13.5px;color:var(--sub)}
+  .decision .opt b{color:#c4b5fd}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Home compacto — mockup</h1>
+  <p class="lede">3 abordagens diferentes pra reduzir o tamanho do Ring e botar mais coisa above-the-fold. A marca <span style="color:#f87171;font-weight:700">FOLD ~640px</span> é onde o iPhone 14/15 corta o conteúdo visível sem scroll. Quanto mais coisa <strong>antes da fold</strong>, melhor. Cenário: <strong>13:42 da tarde</strong>, rotina da pediatra ativa, 3ª soneca 12min atrasada.</p>
+
+  <div class="phones">
+
+    <!-- ════════════════ CURRENT ════════════════ -->
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="col-label now">ATUAL · v11.9.41</div>
+      <div class="hdr">
+        <div class="avatar">👶</div>
+        <div class="name"><div class="n">Louise</div><div class="a">10 sem · 2m 6d</div></div>
+        <div class="bell">🔔</div>
+      </div>
+      <div class="ring-big">
+        <svg viewBox="0 0 240 240">
+          <circle cx="120" cy="120" r="100" fill="none" stroke="rgba(139,124,246,0.10)" stroke-width="14"/>
+          <circle cx="120" cy="120" r="100" fill="none" stroke="#a78bfa" stroke-width="14" stroke-dasharray="380 628" stroke-linecap="round" transform="rotate(-90 120 120)"/>
+        </svg>
+        <div class="center">
+          <div class="lbl">Mercúrio</div>
+          <div class="v">14h<br/>23m</div>
+          <div class="sub">desde acordar</div>
+        </div>
+      </div>
+      <!-- Rotina card antiga -->
+      <div class="routine-card">
+        <div class="eb">Próximo na rotina</div>
+        <div class="main">
+          <div class="ic" style="color:#a78bfa">☁</div>
+          <div class="info">
+            <div class="ttl">3ª Soneca <span style="color:#fb923c;font-size:10px;font-weight:600;margin-left:4px">· 12min atrasada</span></div>
+            <div class="sub">alvo 13:30 · agora 13:42</div>
+          </div>
+        </div>
+        <div class="strip">
+          <div class="chip done"><div class="dot">✓</div>Wake</div>
+          <div class="chip done"><div class="dot">✓</div>1a S</div>
+          <div class="chip done"><div class="dot">✓</div>2a S</div>
+          <div class="chip late"><div class="dot">!</div>3a S</div>
+          <div class="chip"><div class="dot"></div>4a S</div>
+          <div class="chip"><div class="dot"></div>Banho</div>
+          <div class="chip"><div class="dot"></div>Bed</div>
+        </div>
+      </div>
+      <!-- Quick buttons -->
+      <div class="quick">
+        <button><span class="em">🍼</span>Mamad.</button>
+        <button><span class="em">🤱</span>Amam.</button>
+        <button><span class="em">💧</span>Fralda</button>
+      </div>
+      <div class="fold-mark"></div>
+      <div class="quick">
+        <button><span class="em">🌙</span>Sono</button>
+        <button><span class="em">☁</span>Soneca</button>
+        <button><span class="em">💊</span>Medic.</button>
+      </div>
+      <!-- KPI cards -->
+      <div class="kpis">
+        <div class="kpi bottle"><div class="head"><span style="font-size:11px">🍼</span><span class="lbl">Mamad.</span></div><div class="v">520<span class="u">ml</span></div><div class="ago">2h ago</div></div>
+        <div class="kpi simet"><div class="head"><span style="font-size:11px">💊</span><span class="lbl">Simet.</span></div><div class="v">2<span class="u">x</span></div></div>
+        <div class="kpi sono"><div class="head"><span style="font-size:11px">🌙</span><span class="lbl">Sono</span></div><div class="v">11h30</div><div class="ago">3h ago</div></div>
+        <div class="kpi diaper"><div class="head"><span style="font-size:11px">💧</span><span class="lbl">Fralda</span></div><div class="v">6</div><div class="ago">1h ago</div></div>
+      </div>
+    </div>
+
+    <!-- ════════════════ COMPACT A ════════════════ -->
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="col-label a">A · RING 160px (-33%)</div>
+      <div class="hdr">
+        <div class="avatar">👶</div>
+        <div class="name"><div class="n">Louise</div><div class="a">10 sem · 2m 6d</div></div>
+        <div class="bell">🔔</div>
+      </div>
+      <div class="ring-mid">
+        <svg viewBox="0 0 160 160">
+          <circle cx="80" cy="80" r="66" fill="none" stroke="rgba(139,124,246,0.10)" stroke-width="10"/>
+          <circle cx="80" cy="80" r="66" fill="none" stroke="#a78bfa" stroke-width="10" stroke-dasharray="240 414" stroke-linecap="round" transform="rotate(-90 80 80)"/>
+        </svg>
+        <div class="center">
+          <div class="lbl">Mercúrio</div>
+          <div class="v">14h23</div>
+          <div class="sub">desde acordar</div>
+        </div>
+      </div>
+      <div class="routine-card compact">
+        <div class="eb">Próximo na rotina</div>
+        <div class="main">
+          <div class="ic" style="color:#a78bfa">☁</div>
+          <div class="info">
+            <div class="ttl">3ª Soneca <span style="color:#fb923c;font-size:10px;font-weight:600;margin-left:4px">· 12min atrasada</span></div>
+            <div class="sub">alvo 13:30 · 4/7 mamadas</div>
+          </div>
+        </div>
+      </div>
+      <div class="quick">
+        <button><span class="em">🍼</span>Mamad.</button>
+        <button><span class="em">🤱</span>Amam.</button>
+        <button><span class="em">💧</span>Fralda</button>
+        <button><span class="em">🌙</span>Sono</button>
+        <button><span class="em">☁</span>Soneca</button>
+        <button><span class="em">💊</span>Medic.</button>
+      </div>
+      <div class="kpis">
+        <div class="kpi bottle"><div class="head"><span style="font-size:11px">🍼</span><span class="lbl">Mamad.</span></div><div class="v">520<span class="u">ml</span></div><div class="ago">2h ago</div></div>
+        <div class="kpi simet"><div class="head"><span style="font-size:11px">💊</span><span class="lbl">Simet.</span></div><div class="v">2<span class="u">x</span></div></div>
+        <div class="kpi sono"><div class="head"><span style="font-size:11px">🌙</span><span class="lbl">Sono</span></div><div class="v">11h30</div><div class="ago">3h ago</div></div>
+        <div class="kpi diaper"><div class="head"><span style="font-size:11px">💧</span><span class="lbl">Fralda</span></div><div class="v">6</div><div class="ago">1h ago</div></div>
+      </div>
+      <div class="fold-mark"></div>
+      <div class="today-h"><span class="l">Hoje</span><span class="d">Qua 13 Mai</span></div>
+      <div class="rows">
+        <div class="row"><div class="ic nap">☁</div><div class="body"><div class="lbl">2ª Soneca · 45min</div><div class="det">na rotina</div></div><div class="t">10:55</div></div>
+      </div>
+    </div>
+
+    <!-- ════════════════ COMPACT B ════════════════ -->
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="col-label b">B · MINIRING 84px + LADO</div>
+      <div class="hdr">
+        <div class="avatar">👶</div>
+        <div class="name"><div class="n">Louise</div><div class="a">10 sem · 2m 6d</div></div>
+        <div class="bell">🔔</div>
+      </div>
+      <div class="ring-row">
+        <div class="miniring">
+          <svg viewBox="0 0 84 84">
+            <circle cx="42" cy="42" r="36" fill="none" stroke="rgba(139,124,246,0.12)" stroke-width="6"/>
+            <circle cx="42" cy="42" r="36" fill="none" stroke="#a78bfa" stroke-width="6" stroke-dasharray="135 226" stroke-linecap="round" transform="rotate(-90 42 42)"/>
+          </svg>
+          <div class="v">14h23</div>
+        </div>
+        <div class="info">
+          <div class="l">Mercúrio</div>
+          <div class="name">desde acordar</div>
+          <div class="age">07:08 · 6h34m até bedtime</div>
+          <div class="next">☁ Próximo: 3ª soneca · 12min atrasada</div>
+        </div>
+      </div>
+      <div class="quick">
+        <button><span class="em">🍼</span>Mamad.</button>
+        <button><span class="em">🤱</span>Amam.</button>
+        <button><span class="em">💧</span>Fralda</button>
+        <button><span class="em">🌙</span>Sono</button>
+        <button><span class="em">☁</span>Soneca</button>
+        <button><span class="em">💊</span>Medic.</button>
+      </div>
+      <div class="kpis">
+        <div class="kpi bottle"><div class="head"><span style="font-size:11px">🍼</span><span class="lbl">Mamad.</span></div><div class="v">520<span class="u">ml</span></div><div class="ago">2h ago</div></div>
+        <div class="kpi simet"><div class="head"><span style="font-size:11px">💊</span><span class="lbl">Simet.</span></div><div class="v">2<span class="u">x</span></div></div>
+        <div class="kpi sono"><div class="head"><span style="font-size:11px">🌙</span><span class="lbl">Sono</span></div><div class="v">11h30</div><div class="ago">3h ago</div></div>
+        <div class="kpi diaper"><div class="head"><span style="font-size:11px">💧</span><span class="lbl">Fralda</span></div><div class="v">6</div><div class="ago">1h ago</div></div>
+      </div>
+      <div class="today-h"><span class="l">Hoje</span><span class="d">Qua 13 Mai</span></div>
+      <div class="rows">
+        <div class="row"><div class="ic nap">☁</div><div class="body"><div class="lbl">2ª Soneca · 45min</div></div><div class="t">10:55</div></div>
+        <div class="row"><div class="ic bottle">🍼</div><div class="body"><div class="lbl">Mamadeira · 130ml</div></div><div class="t">10:00</div></div>
+      </div>
+      <div class="fold-mark"></div>
+      <div class="rows">
+        <div class="row"><div class="ic nap">☁</div><div class="body"><div class="lbl">1ª Soneca · 50min</div></div><div class="t">08:20</div></div>
+      </div>
+    </div>
+
+    <!-- ════════════════ COMPACT C ════════════════ -->
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="col-label c">C · PILL 60px (HORIZONTAL)</div>
+      <div class="hdr">
+        <div class="avatar">👶</div>
+        <div class="name"><div class="n">Louise</div><div class="a">10 sem · 2m 6d</div></div>
+        <div class="bell">🔔</div>
+      </div>
+      <div class="ring-pill">
+        <div class="miniring">
+          <svg viewBox="0 0 60 60">
+            <circle cx="30" cy="30" r="25" fill="none" stroke="rgba(139,124,246,0.12)" stroke-width="5"/>
+            <circle cx="30" cy="30" r="25" fill="none" stroke="#a78bfa" stroke-width="5" stroke-dasharray="95 157" stroke-linecap="round" transform="rotate(-90 30 30)"/>
+          </svg>
+          <div class="v">14:23</div>
+        </div>
+        <div class="info">
+          <div class="l">Mercúrio acordada</div>
+          <div class="v">14h 23m</div>
+        </div>
+        <div class="meta">
+          <div class="age">2m 6d</div>
+          <div class="nxt">→ 6h34m</div>
+        </div>
+      </div>
+      <div class="routine-card compact">
+        <div class="eb">Próximo na rotina</div>
+        <div class="main">
+          <div class="ic" style="color:#a78bfa">☁</div>
+          <div class="info">
+            <div class="ttl">3ª Soneca <span style="color:#fb923c;font-size:10px;font-weight:600;margin-left:4px">· 12min atrasada</span></div>
+            <div class="sub">alvo 13:30 · 4/7 mamadas</div>
+          </div>
+        </div>
+      </div>
+      <div class="quick">
+        <button><span class="em">🍼</span>Mamad.</button>
+        <button><span class="em">🤱</span>Amam.</button>
+        <button><span class="em">💧</span>Fralda</button>
+        <button><span class="em">🌙</span>Sono</button>
+        <button><span class="em">☁</span>Soneca</button>
+        <button><span class="em">💊</span>Medic.</button>
+      </div>
+      <div class="kpis">
+        <div class="kpi bottle"><div class="head"><span style="font-size:11px">🍼</span><span class="lbl">Mamad.</span></div><div class="v">520<span class="u">ml</span></div><div class="ago">2h ago</div></div>
+        <div class="kpi simet"><div class="head"><span style="font-size:11px">💊</span><span class="lbl">Simet.</span></div><div class="v">2<span class="u">x</span></div></div>
+        <div class="kpi sono"><div class="head"><span style="font-size:11px">🌙</span><span class="lbl">Sono</span></div><div class="v">11h30</div><div class="ago">3h ago</div></div>
+        <div class="kpi diaper"><div class="head"><span style="font-size:11px">💧</span><span class="lbl">Fralda</span></div><div class="v">6</div><div class="ago">1h ago</div></div>
+      </div>
+      <div class="today-h"><span class="l">Hoje</span><span class="d">Qua 13 Mai</span></div>
+      <div class="rows">
+        <div class="row"><div class="ic nap">☁</div><div class="body"><div class="lbl">2ª Soneca · 45min</div></div><div class="t">10:55</div></div>
+        <div class="row"><div class="ic bottle">🍼</div><div class="body"><div class="lbl">Mamadeira · 130ml</div></div><div class="t">10:00</div></div>
+        <div class="row"><div class="ic nap">☁</div><div class="body"><div class="lbl">1ª Soneca · 50min</div></div><div class="t">08:20</div></div>
+      </div>
+      <div class="fold-mark"></div>
+    </div>
+
+  </div>
+
+  <div class="annot">
+    <h3>O que muda em cada</h3>
+    <ul>
+      <li><strong>A · Ring 160px:</strong> reduz o anel central de ~240 pra 160px. Mercúrio fica em <code>14h23</code> (sem quebra de linha). Card de rotina compactado (sem progress strip). KPI cards <strong>todos visíveis above-the-fold</strong>. Mantém a identidade visual do app (anel grande sempre foi o branding).</li>
+      <li><strong>B · Miniring 84px + label do lado:</strong> ring vira pequeno (84px) e fica ALADO de uma info textual (nome + idade + próximo evento). Mais info por pixel — ganha 2 linhas de "Hoje" antes da fold. Mas perde a magic do anel circular como elemento visual dominante.</li>
+      <li><strong>C · Pill horizontal:</strong> ring vira 60px dentro de uma "card-pill" + duração ao lado + meta à direita. Mais compacto que B. KPI cards + 3 entries do "Hoje" todos visíveis. <strong>Sacrifica:</strong> o ring vira um detalhe, não mais o herói da tela.</li>
+    </ul>
+
+    <h3 style="margin-top:20px">Bônus — quando rotina ativa, esconder TODOS os alertas engine-driven</h3>
+    <p>Pra essa nova versão, vou estender o <code>!routineState</code> guard que já tinha pro <code>daySchedule</code> também pros banners de <code>napSug</code> (Janela abrindo / Hora ideal / Esticando / Past max window). Quando a pediatra deu uma rotina fixa, esses alertas estimando "tá overtired" baseados em padrão histórico viram ruído contraditório. Mantém só o <code>SleepBlock</code> (dados reais do bedtime), o card de rotina nova e os <code>InsightCards</code> (insights agregados, não eventos).</p>
+
+    <h3 style="margin-top:20px">Sobre o "nap 3 aparece ainda"</h3>
+    <p>Antes de eu codar, preciso confirmar — você está vendo o card lavanda "<strong>Próx. soneca ~13:42 · WW 2h</strong>" (engine-prediction) OU o banner amber "<strong>Esticando / Past max window</strong>" (napSug)? Ambos podem mencionar "nap 3" indiretamente. A versão atual (v11.9.41) já esconde o primeiro com rotina on — então se você ainda vê, ou (a) o toggle não tá ligado no perfil ou (b) é o banner napSug que tô propondo desativar agora.</p>
+  </div>
+
+  <div class="decision">
+    <h3>Qual abordagem? + confirmar os outros 2 fixes</h3>
+    <div class="opt"><b>A · Ring 160px</b> — mais conservador, mantém identidade do anel. Ganha sono/diaper above-the-fold mas perde 1-2 rows do "Hoje".</div>
+    <div class="opt"><b>B · Miniring + lado</b> — radical, info-densa. Ring perde dominância visual.</div>
+    <div class="opt"><b>C · Pill horizontal</b> — máxima compactação. Ring vira detalhe.</div>
+    <p style="margin-top:14px;color:var(--sub);font-size:13.5px">Junto da escolha do ring, faço também:</p>
+    <ul style="color:var(--sub);font-size:13.5px;line-height:1.7;padding-left:20px">
+      <li><strong>Hide napSug banners</strong> (Janela / Ideal / Esticando / Past max window) quando rotina ativa.</li>
+      <li><strong>Debug do "nap 3 aparece"</strong> — me confirma qual elemento exatamente, ou manda screenshot.</li>
+    </ul>
+  </div>
+
+</div>
+</body>
+</html>

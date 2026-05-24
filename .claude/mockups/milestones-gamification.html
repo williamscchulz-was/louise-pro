@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Gamificação de Marcos — 4 direções</title>
+<style>
+  :root{
+    --bg:#070b1e;--text:#e4e6f4;--sub:#9099c3;--dim:#5b6189;
+    --accent:#8b7cf6;--green:#4ade80;--blue:#6ea8ff;--purple:#a78bfa;
+    --pink:#f472b6;--amber:#fbbf24;--cyan:#7dd3fc;--gold:#facc15;
+    --starfield:radial-gradient(ellipse 140% 55% at 50% 100%,#1a1f52 0%,transparent 70%),radial-gradient(ellipse at 50% 0%,#10153d 0%,#070b1e 65%),#070b1e;
+  }
+  *{box-sizing:border-box}
+  body{background:#04061a;color:var(--text);font:500 14px/1.5 -apple-system,BlinkMacSystemFont,"Inter",sans-serif;margin:0;padding:30px 14px 60px}
+  .wrap{max-width:1480px;margin:0 auto}
+  h1{font-size:24px;margin:0 0 6px;font-weight:800;letter-spacing:-.5px}
+  .lede{color:var(--sub);font-size:13.5px;margin:0 0 30px;line-height:1.55;max-width:900px}
+  h2{font-size:13px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--accent);margin:32px 0 14px;padding-bottom:8px;border-bottom:1px solid rgba(139,124,246,.18)}
+  h3{font-size:15px;margin:0 0 10px;color:#c4b5fd;font-weight:700}
+
+  .phones{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;align-items:start}
+  @media(max-width:1100px){.phones{grid-template-columns:repeat(2,1fr)}}
+  .phone{background:var(--starfield);border-radius:34px;padding:18px 14px 32px;border:1px solid rgba(139,124,246,.18);box-shadow:0 20px 60px -20px rgba(0,0,0,.6);position:relative;min-height:680px;overflow:hidden}
+  .phone .notch{width:104px;height:18px;background:#000;border-radius:0 0 14px 14px;margin:-14px auto 14px}
+  .col-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-align:center;margin-bottom:10px}
+  .col-label.a{color:#86efac}
+  .col-label.b{color:#fcd34d}
+  .col-label.c{color:#7dd3fc}
+  .col-label.d{color:#c4b5fd}
+
+  .hdr{display:flex;align-items:center;justify-content:space-between;padding:0 4px 14px}
+  .hdr .ttl{font-size:18px;font-weight:800;letter-spacing:-.3px}
+  .hdr .sub{font-size:11px;color:var(--sub);margin-top:1px}
+  .hdr .add{width:36px;height:36px;border-radius:11px;background:linear-gradient(135deg,#facc15,#f59e0b);color:#1a1f2e;font-size:20px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px -4px rgba(250,204,21,.5)}
+
+  /* ═══════════════════════ A · CONFETTI ═══════════════════════ */
+  .a-card{background:rgba(20,26,60,.5);border:1px solid rgba(139,124,246,.18);border-radius:18px;padding:18px;position:relative;overflow:hidden;text-align:center;animation:saveBurst 1.2s ease-out}
+  @keyframes saveBurst{0%{transform:scale(.9);opacity:0}30%{transform:scale(1.04)}100%{transform:scale(1);opacity:1}}
+  .a-card .confetti{position:absolute;width:6px;height:10px;border-radius:1px;animation:confettiDrop 1.6s ease-out forwards}
+  @keyframes confettiDrop{0%{transform:translateY(-10px) rotate(0);opacity:1}100%{transform:translateY(140px) rotate(720deg);opacity:0}}
+  .a-card .star{font-size:64px;margin-bottom:12px;display:inline-block;animation:starPop 1s cubic-bezier(.34,1.56,.64,1)}
+  @keyframes starPop{0%{transform:scale(0) rotate(-180deg);opacity:0}50%{transform:scale(1.15)}100%{transform:scale(1) rotate(0);opacity:1}}
+  .a-card .saved{font-size:11px;font-weight:800;color:#facc15;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:6px}
+  .a-card .what{font-size:18px;font-weight:800;color:#f0f2ff;letter-spacing:-.2px}
+  .a-card .badge{margin-top:14px;padding:5px 12px;background:rgba(250,204,21,.12);border:1px solid rgba(250,204,21,.32);border-radius:14px;display:inline-block;font-size:10px;font-weight:700;color:#fcd34d;letter-spacing:.4px;text-transform:uppercase}
+
+  /* ═══════════════════════ B · PROGRESS RINGS ═══════════════════════ */
+  .b-rings{display:flex;justify-content:space-around;padding:10px 4px 14px;margin-bottom:8px}
+  .b-ring{width:50px;height:50px;position:relative;display:flex;align-items:center;justify-content:center;flex-direction:column}
+  .b-ring svg{width:100%;height:100%;position:absolute;inset:0;transform:rotate(-90deg)}
+  .b-ring .lbl{font-size:8px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.4px;position:absolute;top:54px;left:50%;transform:translateX(-50%);white-space:nowrap}
+  .b-ring .v{font-size:10px;font-weight:800;color:#f0f2ff;font-variant-numeric:tabular-nums}
+  .b-overall{padding:14px 16px;border-radius:14px;background:linear-gradient(135deg,rgba(250,204,21,.08),rgba(245,158,11,.02));border:1px solid rgba(250,204,21,.22);text-align:center;margin-bottom:18px}
+  .b-overall .num{font-size:32px;font-weight:800;color:#facc15;letter-spacing:-.6px;font-variant-numeric:tabular-nums;line-height:1}
+  .b-overall .of{font-size:13px;color:var(--sub);font-weight:600}
+  .b-overall .lbl{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:.8px;font-weight:700;margin-top:5px}
+  .b-overall .bar{height:6px;border-radius:3px;background:rgba(20,26,60,.5);overflow:hidden;margin-top:12px}
+  .b-overall .bar .fill{height:100%;width:32%;background:linear-gradient(90deg,#facc15,#f59e0b);border-radius:3px}
+
+  /* ═══════════════════════ C · CONSTELLATION ═══════════════════════ */
+  .c-sky{position:relative;height:300px;border-radius:18px;background:radial-gradient(ellipse at 50% 50%,rgba(167,139,250,.10),rgba(8,12,35,.6));border:1px solid rgba(139,124,246,.18);overflow:hidden;margin-bottom:16px}
+  .c-sky::before,.c-sky::after{content:"";position:absolute;width:1px;height:1px;background:#fff;border-radius:50%;box-shadow:23px 47px #fff,67px 12px rgba(255,255,255,.7),103px 65px rgba(255,255,255,.5),149px 28px #fff,189px 55px rgba(255,255,255,.6),221px 18px rgba(255,255,255,.4),35px 95px rgba(255,255,255,.5),98px 102px #fff,158px 88px rgba(255,255,255,.5),200px 115px rgba(255,255,255,.7),68px 145px rgba(255,255,255,.4),130px 158px #fff,195px 180px rgba(255,255,255,.6),45px 195px rgba(255,255,255,.5),168px 220px #fff,90px 245px rgba(255,255,255,.6),210px 240px rgba(255,255,255,.4),58px 268px rgba(255,255,255,.5),125px 280px #fff}
+  .c-star{position:absolute;width:14px;height:14px;border-radius:50%}
+  .c-star.lit{background:radial-gradient(circle,#fcd34d,#facc15);box-shadow:0 0 12px #facc15,0 0 24px rgba(250,204,21,.5);animation:litPulse 3s ease-in-out infinite}
+  @keyframes litPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.18);opacity:.85}}
+  .c-star.dim{background:rgba(167,139,250,.18);border:1px dashed rgba(167,139,250,.35);width:11px;height:11px}
+  .c-star.dim::after{content:"+";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:rgba(167,139,250,.6);font-weight:800;line-height:0}
+  .c-line{position:absolute;height:1px;background:linear-gradient(90deg,transparent,rgba(250,204,21,.45),transparent);transform-origin:left center}
+  .c-label{position:absolute;font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;color:#c4b5fd}
+  .c-legend{padding:8px 14px;border-radius:11px;background:rgba(20,26,60,.32);border:1px solid rgba(139,124,246,.14);display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:11px}
+  .c-legend .l{color:var(--sub);font-weight:600}
+  .c-legend .v{color:#facc15;font-weight:800;font-variant-numeric:tabular-nums}
+
+  /* ═══════════════════════ D · BADGES ═══════════════════════ */
+  .d-stats{padding:12px 14px;border-radius:14px;background:linear-gradient(135deg,rgba(250,204,21,.08),rgba(245,158,11,.02));border:1px solid rgba(250,204,21,.22);display:flex;justify-content:space-around;margin-bottom:14px}
+  .d-stat{text-align:center}
+  .d-stat .n{font-size:20px;font-weight:800;color:#facc15;font-variant-numeric:tabular-nums;line-height:1}
+  .d-stat .l{font-size:8px;color:var(--dim);text-transform:uppercase;letter-spacing:.8px;font-weight:700;margin-top:3px}
+  .d-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .d-badge{aspect-ratio:1;border-radius:14px;background:rgba(20,26,60,.42);border:1px solid rgba(139,124,246,.14);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px;position:relative;overflow:hidden}
+  .d-badge.earned{background:radial-gradient(circle at 50% 30%,rgba(250,204,21,.22),rgba(245,158,11,.04));border-color:rgba(250,204,21,.45);box-shadow:0 0 12px -2px rgba(250,204,21,.3)}
+  .d-badge.locked{opacity:.35}
+  .d-badge .em{font-size:24px;margin-bottom:4px}
+  .d-badge.earned .em{filter:drop-shadow(0 0 6px rgba(250,204,21,.5))}
+  .d-badge .nm{font-size:8.5px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.4px;text-align:center;line-height:1.2}
+  .d-badge.earned .nm{color:#fcd34d}
+  .d-badge .pct{font-size:9px;color:var(--dim);margin-top:2px;font-weight:600;font-variant-numeric:tabular-nums}
+  .d-badge.locked .pct{color:#facc1588;font-weight:700}
+
+  /* Annotation */
+  .annot{background:rgba(139,124,246,.04);border:1px solid rgba(139,124,246,.18);border-radius:14px;padding:18px 22px;margin:22px 0}
+  .annot h4{margin:0 0 10px;font-size:14px;font-weight:800;color:var(--accent)}
+  .annot p{margin:0 0 8px;color:var(--sub);font-size:13px;line-height:1.55}
+  .annot strong{color:var(--text)}
+  .annot ul{margin:6px 0 0;padding-left:18px;color:var(--sub);font-size:13px;line-height:1.7}
+
+  .decision{background:linear-gradient(180deg,rgba(167,139,250,.10),rgba(167,139,250,.03));border:1px solid rgba(167,139,250,.28);border-radius:18px;padding:24px;margin:34px 0 0}
+  .decision h3{margin:0 0 14px;font-size:17px;font-weight:800;color:#c4b5fd}
+  .decision .opt{background:rgba(20,26,60,.32);border:1px solid rgba(139,124,246,.14);border-radius:11px;padding:14px 16px;margin:10px 0;font-size:13.5px;color:var(--sub);line-height:1.55}
+  .decision .opt b{color:#c4b5fd}
+  .decision strong{color:var(--text)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Gamificação de Marcos — 4 direções</h1>
+  <p class="lede">Cada coluna mostra uma abordagem diferente pra fazer o tracking de marcos parecer "jogo" — recompensa visual, progresso, conquistas. Todas mantém a estética cosmic do app. Pode escolher uma OU combinar.</p>
+
+  <div class="phones">
+
+    <!-- ═══════════ A · CONFETTI / SAVE BURST ═══════════ -->
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="col-label a">A · CONFETTI + STAR BURST</div>
+      <div class="hdr">
+        <div><div class="ttl">Marcos</div><div class="sub">acabou de salvar</div></div>
+        <div class="add">+</div>
+      </div>
+
+      <div class="a-card">
+        <span class="confetti" style="background:#facc15;left:10%;top:8%;animation-delay:0s"></span>
+        <span class="confetti" style="background:#f472b6;left:28%;top:5%;animation-delay:.1s"></span>
+        <span class="confetti" style="background:#7dd3fc;left:50%;top:10%;animation-delay:.2s"></span>
+        <span class="confetti" style="background:#a78bfa;left:72%;top:6%;animation-delay:.15s"></span>
+        <span class="confetti" style="background:#4ade80;left:88%;top:9%;animation-delay:.05s"></span>
+        <span class="confetti" style="background:#facc15;left:18%;top:15%;animation-delay:.3s"></span>
+        <span class="confetti" style="background:#f472b6;left:62%;top:18%;animation-delay:.25s"></span>
+        <span class="star">⭐</span>
+        <div class="saved">Marco registrado</div>
+        <div class="what">Sorriso social</div>
+        <div class="badge">🏅 4º marco do mês</div>
+      </div>
+      <div style="margin-top:18px;padding:12px;background:rgba(20,26,60,.32);border-radius:12px;border:1px solid rgba(139,124,246,.12)">
+        <div style="font-size:11px;color:var(--sub);line-height:1.5">Animação rápida (1.2s) ao salvar — confetti colorido cai + estrela gigante pulsa + chip "4º marco do mês". Some sozinho. Sem permanência.</div>
+      </div>
+
+      <div style="margin-top:16px;padding:0 4px">
+        <div style="font-size:9px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:1;margin-bottom:8px">Conquistados</div>
+        <div style="padding:8px 10px;background:rgba(250,204,21,.05);border:1px solid rgba(250,204,21,.18);border-radius:10px;font-size:12px;color:var(--text)">⭐ Sorriso social <span style="font-size:10px;color:var(--dim);margin-left:4px">há 1min</span></div>
+      </div>
+    </div>
+
+    <!-- ═══════════ B · PROGRESS RINGS ═══════════ -->
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="col-label b">B · PROGRESS RINGS</div>
+      <div class="hdr">
+        <div><div class="ttl">Marcos</div><div class="sub">jornada da Louise</div></div>
+        <div class="add">+</div>
+      </div>
+
+      <div class="b-overall">
+        <div style="display:flex;align-items:baseline;justify-content:center;gap:4px"><div class="num">14</div><div class="of">/ 44</div></div>
+        <div class="lbl">marcos · 32% do total</div>
+        <div class="bar"><div class="fill"></div></div>
+      </div>
+
+      <div class="b-rings">
+        <div class="b-ring">
+          <svg viewBox="0 0 50 50"><circle cx="25" cy="25" r="20" fill="none" stroke="rgba(139,124,246,.14)" stroke-width="5"/><circle cx="25" cy="25" r="20" fill="none" stroke="#7dd3fc" stroke-width="5" stroke-dasharray="75 125" stroke-linecap="round"/></svg>
+          <div class="v">6/8</div><div class="lbl">Motor</div>
+        </div>
+        <div class="b-ring">
+          <svg viewBox="0 0 50 50"><circle cx="25" cy="25" r="20" fill="none" stroke="rgba(139,124,246,.14)" stroke-width="5"/><circle cx="25" cy="25" r="20" fill="none" stroke="#fbbf24" stroke-width="5" stroke-dasharray="40 125" stroke-linecap="round"/></svg>
+          <div class="v">4/13</div><div class="lbl">Linguagem</div>
+        </div>
+        <div class="b-ring">
+          <svg viewBox="0 0 50 50"><circle cx="25" cy="25" r="20" fill="none" stroke="rgba(139,124,246,.14)" stroke-width="5"/><circle cx="25" cy="25" r="20" fill="none" stroke="#f472b6" stroke-width="5" stroke-dasharray="55 125" stroke-linecap="round"/></svg>
+          <div class="v">3/12</div><div class="lbl">Social</div>
+        </div>
+        <div class="b-ring">
+          <svg viewBox="0 0 50 50"><circle cx="25" cy="25" r="20" fill="none" stroke="rgba(139,124,246,.14)" stroke-width="5"/><circle cx="25" cy="25" r="20" fill="none" stroke="#a78bfa" stroke-width="5" stroke-dasharray="18 125" stroke-linecap="round"/></svg>
+          <div class="v">1/6</div><div class="lbl">Cognit.</div>
+        </div>
+      </div>
+
+      <div style="margin-top:42px;padding:0 4px">
+        <div style="font-size:9px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:1;margin-bottom:8px">Conquistados</div>
+        <div style="padding:8px 10px;background:rgba(125,211,252,.05);border:1px solid rgba(125,211,252,.18);border-radius:10px;font-size:12px;color:var(--text);margin-bottom:6px">☁ Segura a cabeça <span style="font-size:10px;color:var(--dim);margin-left:4px">15 mai</span></div>
+        <div style="padding:8px 10px;background:rgba(244,114,182,.05);border:1px solid rgba(244,114,182,.18);border-radius:10px;font-size:12px;color:var(--text)">😊 Sorriso social <span style="font-size:10px;color:var(--dim);margin-left:4px">06 abr</span></div>
+      </div>
+    </div>
+
+    <!-- ═══════════ C · CONSTELLATION ═══════════ -->
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="col-label c">C · CONSTELAÇÃO COSMIC</div>
+      <div class="hdr">
+        <div><div class="ttl">Constelação</div><div class="sub">14 estrelas acesas</div></div>
+        <div class="add">+</div>
+      </div>
+
+      <div class="c-sky">
+        <!-- Constelação Social -->
+        <div class="c-label" style="top:18px;left:18px;color:#f472b6">★ Social</div>
+        <div class="c-line" style="top:38px;left:30px;width:42px;transform:rotate(20deg)"></div>
+        <div class="c-line" style="top:54px;left:60px;width:38px;transform:rotate(-12deg)"></div>
+        <div class="c-star lit" style="top:30px;left:25px"></div>
+        <div class="c-star lit" style="top:48px;left:65px"></div>
+        <div class="c-star lit" style="top:56px;left:96px"></div>
+        <div class="c-star dim" style="top:80px;left:48px"></div>
+
+        <!-- Constelação Motor -->
+        <div class="c-label" style="top:18px;right:18px;color:#7dd3fc;text-align:right">Motor ★</div>
+        <div class="c-line" style="top:48px;right:62px;width:36px;transform:rotate(28deg)"></div>
+        <div class="c-line" style="top:78px;right:32px;width:30px;transform:rotate(-22deg)"></div>
+        <div class="c-star lit" style="top:38px;right:62px"></div>
+        <div class="c-star lit" style="top:68px;right:32px"></div>
+        <div class="c-star lit" style="top:88px;right:78px"></div>
+        <div class="c-star lit" style="top:108px;right:46px"></div>
+
+        <!-- Constelação Linguagem -->
+        <div class="c-label" style="top:148px;left:30px;color:#fbbf24">★ Linguagem</div>
+        <div class="c-line" style="top:170px;left:40px;width:50px;transform:rotate(15deg)"></div>
+        <div class="c-star lit" style="top:165px;left:38px"></div>
+        <div class="c-star lit" style="top:180px;left:92px"></div>
+        <div class="c-star dim" style="top:200px;left:148px"></div>
+        <div class="c-star dim" style="top:188px;left:65px"></div>
+
+        <!-- Constelação Cognitivo -->
+        <div class="c-label" style="bottom:24px;right:18px;color:#a78bfa;text-align:right">Cognit. ★</div>
+        <div class="c-star lit" style="bottom:58px;right:38px"></div>
+        <div class="c-star dim" style="bottom:78px;right:72px"></div>
+        <div class="c-star dim" style="bottom:48px;right:90px"></div>
+      </div>
+
+      <div class="c-legend">
+        <span class="l">★ Estrelas acesas</span>
+        <span class="v">14 / 44</span>
+      </div>
+      <div class="c-legend">
+        <span class="l">Próxima a iluminar</span>
+        <span class="v" style="color:#7dd3fc">Sorriso social</span>
+      </div>
+
+      <div style="font-size:10px;color:var(--dim);text-align:center;margin-top:10px;line-height:1.5;padding:0 14px">Cada marco logado acende uma estrela. Categorias formam constelações no céu. Linhas conectam as estrelas da mesma constelação.</div>
+    </div>
+
+    <!-- ═══════════ D · ACHIEVEMENT BADGES ═══════════ -->
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="col-label d">D · CONQUISTAS / BADGES</div>
+      <div class="hdr">
+        <div><div class="ttl">Conquistas</div><div class="sub">5 medalhas ganhas</div></div>
+        <div class="add">+</div>
+      </div>
+
+      <div class="d-stats">
+        <div class="d-stat"><div class="n">14</div><div class="l">marcos</div></div>
+        <div class="d-stat"><div class="n">5</div><div class="l">medalhas</div></div>
+        <div class="d-stat"><div class="n">3</div><div class="l">streak</div></div>
+      </div>
+
+      <div class="d-grid">
+        <div class="d-badge earned"><div class="em">🌟</div><div class="nm">Primeira luz</div><div class="pct">1º marco</div></div>
+        <div class="d-badge earned"><div class="em">😊</div><div class="nm">Sorriso</div><div class="pct">social #1</div></div>
+        <div class="d-badge earned"><div class="em">👶</div><div class="nm">Newborn</div><div class="pct">5/10</div></div>
+        <div class="d-badge earned"><div class="em">🎯</div><div class="nm">2 meses</div><div class="pct">checkup ok</div></div>
+        <div class="d-badge earned"><div class="em">📚</div><div class="nm">Trilíngue</div><div class="pct">3 línguas</div></div>
+        <div class="d-badge locked"><div class="em">🏃</div><div class="nm">Motor pro</div><div class="pct">2/8</div></div>
+        <div class="d-badge locked"><div class="em">🗣️</div><div class="nm">Tagarela</div><div class="pct">4/13</div></div>
+        <div class="d-badge locked"><div class="em">🎂</div><div class="nm">1 ano</div><div class="pct">bloqueado</div></div>
+        <div class="d-badge locked"><div class="em">👣</div><div class="nm">Primeiros passos</div><div class="pct">bloqueado</div></div>
+      </div>
+
+      <div style="font-size:10px;color:var(--dim);text-align:center;margin-top:14px;line-height:1.5;padding:0 14px">Medalhas desbloqueiam por categoria, idade, streak. Algumas surpresas (ex: "1ª palavra"). Visíveis também no Profile.</div>
+    </div>
+  </div>
+
+  <h2>Análise lado a lado</h2>
+
+  <div class="annot">
+    <table style="width:100%;border-collapse:collapse;font-size:12.5px">
+      <thead>
+        <tr style="border-bottom:1px solid rgba(139,124,246,.2);text-align:left">
+          <th style="padding:8px 6px;color:var(--accent);font-weight:700">Dimensão</th>
+          <th style="padding:8px 6px;color:#86efac">A · Confetti</th>
+          <th style="padding:8px 6px;color:#fcd34d">B · Rings</th>
+          <th style="padding:8px 6px;color:#7dd3fc">C · Constelação</th>
+          <th style="padding:8px 6px;color:#c4b5fd">D · Badges</th>
+        </tr>
+      </thead>
+      <tbody style="color:var(--sub);line-height:1.55">
+        <tr style="border-bottom:1px solid rgba(139,124,246,.08)"><td style="padding:8px 6px;color:var(--text);font-weight:600">Tipo de reward</td><td style="padding:8px 6px">Momento (1.2s)</td><td style="padding:8px 6px">Progresso permanente</td><td style="padding:8px 6px">Visual permanente</td><td style="padding:8px 6px">Coleção</td></tr>
+        <tr style="border-bottom:1px solid rgba(139,124,246,.08)"><td style="padding:8px 6px;color:var(--text);font-weight:600">Fit com cosmic theme</td><td style="padding:8px 6px">Médio</td><td style="padding:8px 6px">Médio (Apple-like)</td><td style="padding:8px 6px"><b style="color:#c4b5fd">Alto ⭐</b></td><td style="padding:8px 6px">Baixo (emojis)</td></tr>
+        <tr style="border-bottom:1px solid rgba(139,124,246,.08)"><td style="padding:8px 6px;color:var(--text);font-weight:600">Esforço dev</td><td style="padding:8px 6px">Baixo (~50 linhas)</td><td style="padding:8px 6px">Médio (rings SVG)</td><td style="padding:8px 6px">Alto (layout star map)</td><td style="padding:8px 6px">Alto (regras de unlock)</td></tr>
+        <tr style="border-bottom:1px solid rgba(139,124,246,.08)"><td style="padding:8px 6px;color:var(--text);font-weight:600">Vício / "vontade de logar"</td><td style="padding:8px 6px">Baixo (efêmero)</td><td style="padding:8px 6px">Médio (preencher rings)</td><td style="padding:8px 6px"><b style="color:#c4b5fd">Alto (céu)</b></td><td style="padding:8px 6px"><b style="color:#c4b5fd">Alto (coleção)</b></td></tr>
+        <tr style="border-bottom:1px solid rgba(139,124,246,.08)"><td style="padding:8px 6px;color:var(--text);font-weight:600">Sentimento "infantilizado"</td><td style="padding:8px 6px">Médio</td><td style="padding:8px 6px">Baixo (sério/clean)</td><td style="padding:8px 6px">Baixo (poético)</td><td style="padding:8px 6px">Alto (achievements/emojis)</td></tr>
+        <tr><td style="padding:8px 6px;color:var(--text);font-weight:600">Funciona junto?</td><td style="padding:8px 6px">+ qualquer</td><td style="padding:8px 6px">+ A</td><td style="padding:8px 6px">+ A + B</td><td style="padding:8px 6px">+ A</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="annot">
+    <h4>Minha recomendação</h4>
+    <p><strong>C (Constelação) + A (Confetti ao salvar)</strong> — combinação coerente com a identidade cosmic do Louise Pro:</p>
+    <ul>
+      <li><strong>C dá o "visual permanente"</strong> da gamificação. Cada marco que você registra acende uma estrela. Ao longo dos meses, a Louise vai ter um céu cheio de estrelas — uma constelação por categoria de desenvolvimento. Daqui a anos, ela própria pode olhar e ver "o céu da minha primeira infância". Forte valor emocional + bate perfeito com a estética.</li>
+      <li><strong>A dá o "feedback imediato"</strong> ao salvar. Estrela cai + confetti + chip "Xº marco" pula brevemente. Dura 1.2s. Sensação de "fez algo".</li>
+      <li>B (rings) é estética Apple Watch, sério e clean — funciona mas <strong>compete</strong> com o tema cósmico. Se preferir métrica numérica clara, B faz sentido. Pode coexistir com C como aba alternativa.</li>
+      <li>D (badges) é eficaz pra "vício colecionador" mas o ESTILO (emojis, achievements) é menos sofisticado que o resto do app. Pode entrar futuramente em escala menor (3-4 milestones especiais com badges custom).</li>
+    </ul>
+    <p style="margin-top:10px">Versão MVP: <strong>A + parte de C</strong> (confetti ao salvar + estrelas que acendem na timeline existente, sem reorganizar o layout em constelações). Mais simples, ainda gratificante. Constelação completa pode vir em iteração 2.</p>
+  </div>
+
+  <div class="decision">
+    <h3>Decisão</h3>
+    <div class="opt"><b>A · Confetti + Star Burst</b> — Animação rápida ao salvar. Sem mudanças permanentes na UI.</div>
+    <div class="opt"><b>B · Progress Rings</b> — Rings tipo Apple Watch, 1 por categoria + total. Estilo clean, "sério".</div>
+    <div class="opt" style="border-color:rgba(125,211,252,.4)"><b>C · Constelação cosmic</b> ⭐ — Cada marco = estrela acesa. Categorias = constelações. Forte fit com tema. Esforço alto mas memorável.</div>
+    <div class="opt"><b>D · Badges/Conquistas</b> — Medalhas colecionáveis. "Vício de jogo" forte. Estilo gamey mais juvenil.</div>
+    <div class="opt" style="border-color:rgba(167,139,250,.4);background:rgba(167,139,250,.05)"><b>★ MVP recomendado: A + C light</b> — Confetti ao salvar + estrelas no header da Timeline (sem reorganizar em constelações ainda). Iteração 2: constelações completas com layout dedicado.</div>
+  </div>
+
+</div>
+</body>
+</html>

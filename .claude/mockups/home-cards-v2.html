@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Home cards — age + simeticona swap</title>
+<style>
+  :root{
+    --bg:#070b1e; --card:rgba(22,28,60,.55);
+    --b:rgba(139,124,246,.15); --text:#e4e6f4; --sub:#9099c3; --dim:#5b6189;
+    --accent:#8b7cf6;
+    --green:#4ade80; --blue:#6ea8ff; --purple:#a78bfa; --pink:#f472b6; --amber:#fbbf24;
+    --glass:rgba(14,18,48,.55);
+  }
+  *{box-sizing:border-box}
+  body{background:#04061a;color:var(--text);font:500 14px/1.5 -apple-system,BlinkMacSystemFont,"Inter",sans-serif;margin:0;padding:32px 16px 80px}
+  .wrap{max-width:1080px;margin:0 auto}
+  h1{font-size:22px;margin:0 0 4px;font-weight:800;letter-spacing:-.4px}
+  .lede{color:var(--sub);font-size:13.5px;margin:0 0 28px}
+  h2{font-size:12px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);margin:28px 0 12px}
+  .phones{display:grid;grid-template-columns:repeat(2,1fr);gap:22px}
+  .phone{background:radial-gradient(ellipse 140% 55% at 50% 100%,#1a1f52 0%,transparent 70%),radial-gradient(ellipse at 50% 0%,#10153d 0%,var(--bg) 65%),var(--bg);border-radius:36px;padding:18px 14px 18px;border:1px solid rgba(139,124,246,.18);box-shadow:0 20px 60px -20px rgba(0,0,0,.6);position:relative;min-height:460px}
+  .phone .notch{width:120px;height:20px;background:#000;border-radius:0 0 16px 16px;margin:-18px auto 14px}
+  .sc-label{font-size:10px;font-weight:700;letter-spacing:1px;color:var(--accent);text-transform:uppercase;margin-bottom:6px;padding-left:4px}
+  .sc-label span{color:var(--sub);font-weight:600;letter-spacing:0;margin-left:6px;text-transform:none}
+
+  .head{display:flex;align-items:center;gap:12px;padding:4px 6px 12px}
+  .photo{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#f472b6,#a78bfa);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800}
+  .name{font-size:17px;font-weight:800;letter-spacing:-.3px}
+  .age-row{display:flex;align-items:center;gap:6px;margin-top:3px}
+  .age{font-size:10px;color:var(--accent);font-weight:600}
+  .dot-sep{width:3px;height:3px;border-radius:50%;background:var(--dim)}
+  .today-date{font-size:10px;color:var(--dim)}
+  .bell{margin-left:auto;width:34px;height:34px;border-radius:11px;background:rgba(22,28,60,.6);border:1px solid rgba(139,124,246,.08);display:flex;align-items:center;justify-content:center;color:var(--sub)}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:0 4px;margin-top:16px}
+  .hcard{padding:10px;border-radius:12px;border:1px solid;text-align:left;background:transparent}
+  .hcard .k{display:flex;align-items:center;gap:5px;margin-bottom:3px}
+  .hcard .k .ic{width:12px;height:12px;display:flex;align-items:center;justify-content:center}
+  .hcard .k .lbl{font-size:9px;color:var(--dim)}
+  .hcard .v{font-size:16px;font-weight:800}
+  .hcard .u{font-size:11px;opacity:.6;font-weight:800}
+  .hcard .ago{font-size:12px;font-weight:600;margin-top:3px;opacity:.6}
+  .hcard.bottle{background:rgba(74,222,128,.025);border-color:rgba(74,222,128,.05)}
+  .hcard.bottle .v{color:var(--green)}
+  .hcard.med{background:rgba(251,191,36,.025);border-color:rgba(251,191,36,.05)}
+  .hcard.med .v{color:var(--amber)}
+  .hcard.sleep{background:rgba(167,139,250,.025);border-color:rgba(167,139,250,.05)}
+  .hcard.sleep .v{color:var(--purple)}
+  .hcard.diaper{background:rgba(244,114,182,.025);border-color:rgba(244,114,182,.05)}
+  .hcard.diaper .v{color:var(--pink)}
+  .hcard.nursing{background:rgba(110,168,255,.025);border-color:rgba(110,168,255,.05)}
+  .hcard.nursing .v{color:var(--blue)}
+  .hcard.removed{opacity:.4;position:relative}
+  .hcard.removed::after{content:"REMOVIDO";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;letter-spacing:1px;color:#fca5a5;background:rgba(248,113,113,.1);border-radius:12px;border:1px dashed rgba(248,113,113,.4)}
+
+  .diff-strip{display:flex;gap:6px;margin:10px 0 8px;font-size:9px;font-weight:700;color:var(--dim);letter-spacing:.5px}
+  .diff-strip > span{padding:3px 8px;border-radius:6px;background:rgba(139,124,246,.08);border:1px solid rgba(139,124,246,.1);text-transform:uppercase}
+
+  .call{background:linear-gradient(180deg,rgba(139,124,246,.1),rgba(139,124,246,.03));border:1px solid rgba(139,124,246,.22);border-radius:14px;padding:14px 18px;margin-top:16px;font-size:13px;color:#c7cbea;line-height:1.55}
+  .call h3{margin:0 0 6px;font-size:12px;color:#c4b5fd;text-transform:uppercase;letter-spacing:.5px;font-weight:800}
+  code{background:var(--glass);padding:2px 6px;border-radius:4px;font-size:11.5px;color:#c4b5fd}
+  del{color:#fca5a5}
+  ins{text-decoration:none;color:#86efac;font-weight:700}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Home cards — age + swap nursing→simeticona</h1>
+<p class="lede">Mudanças: (1) idade em dias totais pra bebê novo, (2) card de nursing dá lugar pro medicine com foco na simeticona (contagem do dia + tempo desde a última).</p>
+
+<h2>1. Idade no header</h2>
+
+<div class="phones">
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="sc-label">Antes <span>· v11.8.x</span></div>
+    <div class="head">
+      <div class="photo">L</div>
+      <div>
+        <div class="name">Louise</div>
+        <div class="age-row">
+          <span class="age">1 mês e 13 dias</span>
+          <span class="dot-sep"></span>
+          <span class="today-date">21 abr</span>
+        </div>
+      </div>
+      <div class="bell">🔔</div>
+    </div>
+  </div>
+
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="sc-label">Depois <span>· mais direto</span></div>
+    <div class="head">
+      <div class="photo">L</div>
+      <div>
+        <div class="name">Louise</div>
+        <div class="age-row">
+          <span class="age">43 dias</span>
+          <span class="dot-sep"></span>
+          <span class="today-date">21 abr</span>
+        </div>
+      </div>
+      <div class="bell">🔔</div>
+    </div>
+  </div>
+</div>
+
+<h2>2. Grid de cards — nursing sai, simeticona entra</h2>
+
+<div class="phones">
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="sc-label">Antes</div>
+    <div style="font-size:10px;color:var(--dim);padding:2px 6px 8px;font-weight:700;letter-spacing:.8px">TODAY</div>
+    <div class="grid">
+      <div class="hcard bottle"><div class="k"><span class="ic">🍼</span><span class="lbl">Mamad.</span></div><div class="v">220<span class="u">ml</span></div><div class="ago" style="color:var(--green)">2h30 atrás</div></div>
+      <div class="hcard nursing removed"><div class="k"><span class="ic">🤱</span><span class="lbl">Amam.</span></div><div class="v">0x</div></div>
+      <div class="hcard sleep"><div class="k"><span class="ic">🌙</span><span class="lbl">Sono</span></div><div class="v">14h20</div><div class="ago" style="color:var(--purple)">3h atrás</div></div>
+      <div class="hcard diaper"><div class="k"><span class="ic">🧷</span><span class="lbl">Fralda</span></div><div class="v">4</div><div class="ago" style="color:var(--pink)">45min atrás</div></div>
+    </div>
+    <div class="diff-strip" style="padding:0 6px"><span>Card 2 nunca usado</span></div>
+  </div>
+
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="sc-label">Depois</div>
+    <div style="font-size:10px;color:var(--dim);padding:2px 6px 8px;font-weight:700;letter-spacing:.8px">TODAY</div>
+    <div class="grid">
+      <div class="hcard bottle"><div class="k"><span class="ic">🍼</span><span class="lbl">Mamad.</span></div><div class="v">220<span class="u">ml</span></div><div class="ago" style="color:var(--green)">2h30 atrás</div></div>
+      <div class="hcard med"><div class="k"><span class="ic">💊</span><span class="lbl">Simeticona</span></div><div class="v">2<span class="u">x</span></div><div class="ago" style="color:var(--amber)">1h15 atrás</div></div>
+      <div class="hcard sleep"><div class="k"><span class="ic">🌙</span><span class="lbl">Sono</span></div><div class="v">14h20</div><div class="ago" style="color:var(--purple)">3h atrás</div></div>
+      <div class="hcard diaper"><div class="k"><span class="ic">🧷</span><span class="lbl">Fralda</span></div><div class="v">4</div><div class="ago" style="color:var(--pink)">45min atrás</div></div>
+    </div>
+    <div class="diff-strip" style="padding:0 6px"><span>Tap abre medicine form</span></div>
+  </div>
+</div>
+
+<h2>Comportamento do card simeticona</h2>
+<div class="call">
+  <ul style="margin:0;padding-left:18px">
+    <li><strong>Título</strong>: "Simeticona" (fixo, com ícone 💊)</li>
+    <li><strong>Valor principal</strong>: contagem de simeticonas registradas hoje (ex: <code>2x</code>)</li>
+    <li><strong>Sublinha</strong>: tempo desde a última simeticona (ex: <code>1h15 atrás</code>). Se nenhuma hoje, some ou mostra <code>—</code></li>
+    <li><strong>Tap</strong>: abre o medicine form normal (multi-select aberto, Simeticona pré-marcada? ou sem nada marcado — confirme)</li>
+    <li><strong>Cor</strong>: amber (mesma do medicine no app)</li>
+    <li><strong>Filtro</strong>: conta entries <code>type==="medicine"</code> com <code>name</code> batendo <code>/simet/i</code> (mesmo regex de migração)</li>
+  </ul>
+</div>
+
+<h2>Dúvidas antes de codar</h2>
+<div class="call">
+  <ul style="margin:0;padding-left:18px">
+    <li><strong>Tap no card faz o quê exatamente?</strong> (a) Abre medicine form vazio, ou (b) abre medicine form com Simeticona <em>pré-selecionada</em> (direto pro drops picker no Save)?</li>
+    <li><strong>Título sempre "Simeticona"</strong>, ou você prefere mostrar o nome do último med que você deu hoje (ex: se só deu paracetamol, mostra "Paracetamol 1x")? Votei no fixo pra previsibilidade.</li>
+    <li><strong>Nursing some de vez</strong> ou fica escondido quando total=0 (pra bebê amamentado de leite materno no futuro, a categoria volta)? Acho que some de vez pelo contexto atual; se mudar, retomamos.</li>
+  </ul>
+</div>
+
+</div>
+</body>
+</html>

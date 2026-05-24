@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Mockup — botão + vira popup</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#0a0e1e;color:#f0f2ff;padding:24px;min-height:100vh}
+  h1{font-size:22px;font-weight:800;letter-spacing:-0.4px;margin-bottom:6px}
+  .sub{font-size:13px;color:#8b90b8;margin-bottom:28px;max-width:1000px}
+
+  .row{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;max-width:1500px;margin:0 auto}
+  .col h2{font-size:14px;font-weight:800;letter-spacing:-0.2px;margin-bottom:4px;color:#c4b5fd}
+  .col h2.good{color:#34d399}
+  .col p{font-size:11px;color:#7a80a8;margin-bottom:16px;line-height:1.55;min-height:70px}
+  .pros{font-size:11px;color:#6ee7b7;margin-top:14px;line-height:1.5}
+  .cons{font-size:11px;color:#f87171;margin-top:6px;line-height:1.5}
+
+  /* Phone frame */
+  .phone{
+    width:330px;height:690px;background:#050820;border-radius:42px;overflow:hidden;
+    position:relative;margin:0 auto;
+    box-shadow:0 0 0 10px #1a1f3a, 0 0 0 12px #2a2f4a, 0 30px 60px -20px rgba(139,124,246,0.3);
+  }
+  .phone::before{
+    content:"";position:absolute;top:8px;left:50%;transform:translateX(-50%);
+    width:94px;height:24px;background:#000;border-radius:14px;z-index:100;
+  }
+  .screen{
+    position:absolute;inset:0;
+    background:
+      radial-gradient(ellipse at 50% 10%,rgba(39,48,120,0.55),transparent 60%),
+      radial-gradient(ellipse at 50% 95%,rgba(139,124,246,0.12),transparent 55%),
+      linear-gradient(180deg,#070b1e 0%,#0b1130 100%);
+    overflow:hidden;
+  }
+
+  /* Content underneath */
+  .content{position:absolute;top:52px;left:0;right:0;bottom:90px;padding:16px 16px;opacity:0.45;pointer-events:none}
+  .content h3{font-size:13px;color:#c4b5fd;margin:0 0 8px}
+  .card-sub{background:rgba(20,26,60,0.6);border:1px solid rgba(255,255,255,0.05);border-radius:14px;padding:10px 12px;margin-bottom:8px;font-size:11px;color:#8b90b8}
+
+  /* Nav pill */
+  .nav{
+    position:absolute;left:50%;transform:translateX(-50%);bottom:6px;
+    width:calc(100% - 26px);max-width:308px;
+    display:flex;align-items:center;justify-content:space-around;gap:2px;
+    padding:6px 7px;border-radius:30px;
+    background:linear-gradient(180deg,rgba(38,44,90,0.4),rgba(14,18,48,0.58));
+    backdrop-filter:blur(18px) saturate(180%);-webkit-backdrop-filter:blur(18px) saturate(180%);
+    border:1px solid rgba(255,255,255,0.14);
+    box-shadow:0 1px 0 0 rgba(255,255,255,0.22) inset;
+    z-index:60;
+  }
+  .nav .nb{width:42px;height:38px;border-radius:19px;display:flex;align-items:center;justify-content:center;font-size:15px;color:#8b90b8}
+  .nav .nb.active{background:rgba(139,124,246,0.22);color:#fff}
+  .nav .fab{width:42px;height:38px;border-radius:19px;background:linear-gradient(180deg,#9b8df8,#7c3aed);display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;font-weight:700;box-shadow:0 4px 14px -2px rgba(139,124,246,0.6);position:relative}
+  .nav .fab.open::after{
+    content:"";position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);
+    width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;
+  }
+
+  /* ────────────── Option A: Compact popover above FAB ────────────── */
+  .optA .popover{
+    position:absolute;left:50%;transform:translateX(-50%);bottom:60px;
+    width:calc(100% - 24px);max-width:300px;
+    padding:14px;border-radius:22px;
+    background:linear-gradient(180deg,rgba(28,32,70,0.97),rgba(18,22,56,0.97));
+    backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+    border:1px solid rgba(255,255,255,0.1);
+    box-shadow:0 1px 0 0 rgba(255,255,255,0.08) inset, 0 24px 60px -12px rgba(0,0,0,0.6), 0 0 60px -20px rgba(139,124,246,0.35);
+    z-index:70;
+    animation:popIn .25s cubic-bezier(0.22,1.3,0.36,1);
+  }
+  .optA .popover::after{
+    content:"";position:absolute;bottom:-8px;left:50%;transform:translateX(-50%) rotate(45deg);
+    width:18px;height:18px;background:rgba(18,22,56,0.97);
+    border-right:1px solid rgba(255,255,255,0.1);
+    border-bottom:1px solid rgba(255,255,255,0.1);
+  }
+  .optA .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .optA .item{
+    display:flex;flex-direction:column;align-items:center;gap:4px;
+    padding:9px 4px 7px;border-radius:13px;
+    background:rgba(12,16,40,0.55);
+    border:1px solid rgba(255,255,255,0.04);
+  }
+  .optA .item .ic{width:28px;height:28px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px}
+  .optA .item .lbl{font-size:9px;font-weight:600;color:#c4b5fd;text-align:center;line-height:1.1}
+
+  /* ────────────── Option B: Fan-out arc above FAB ────────────── */
+  .optB .backdrop{
+    position:absolute;inset:0;background:rgba(3,6,20,0.5);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+    z-index:50;
+  }
+  .optB .fab-circle{
+    position:absolute;left:50%;bottom:25px;transform:translateX(-50%);
+    z-index:80;
+  }
+  .optB .item{
+    position:absolute;width:60px;height:60px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%,rgba(50,60,120,0.95),rgba(18,22,55,0.98));
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    box-shadow:0 4px 14px rgba(0,0,0,0.4), 0 0 24px rgba(139,124,246,0.18);
+    animation:fanIn .35s cubic-bezier(0.22,1.3,0.36,1) both;
+  }
+  .optB .item .ic{font-size:18px}
+  .optB .item .lbl{font-size:7px;font-weight:700;color:rgba(255,255,255,0.85);letter-spacing:-0.1px;text-transform:uppercase}
+  @keyframes fanIn {
+    0% {opacity:0;transform:translate(calc(-50% + 0px), 0px) scale(0.3)}
+    100% {opacity:1;transform:translate(calc(-50% + var(--tx,0px)), var(--ty,0px)) scale(1)}
+  }
+  .optB .item{transform:translate(calc(-50% + var(--tx)), var(--ty)) scale(1)}
+
+  /* ────────────── Option C: Center modal ────────────── */
+  .optC .backdrop{
+    position:absolute;inset:0;background:rgba(3,6,20,0.6);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    z-index:50;
+  }
+  .optC .modal{
+    position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    width:calc(100% - 40px);max-width:280px;
+    padding:22px 18px 20px;border-radius:26px;
+    background:linear-gradient(180deg,rgba(24,28,66,0.98),rgba(16,20,50,0.98));
+    border:1px solid rgba(255,255,255,0.08);
+    box-shadow:0 1px 0 0 rgba(255,255,255,0.08) inset, 0 24px 64px -12px rgba(0,0,0,0.7);
+    z-index:70;animation:scaleIn .25s cubic-bezier(0.22,1,0.36,1);
+  }
+  .optC .modal h4{
+    font-size:11px;font-weight:700;color:#7a80a8;letter-spacing:0.5px;
+    text-transform:uppercase;margin-bottom:14px;text-align:center;
+  }
+  .optC .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px 8px}
+  .optC .item{
+    display:flex;flex-direction:column;align-items:center;gap:6px;
+    padding:10px 4px 6px;border-radius:14px;
+    background:rgba(12,16,40,0.5);
+    border:1px solid rgba(255,255,255,0.04);
+  }
+  .optC .item .ic{width:38px;height:38px;border-radius:50%;background:radial-gradient(circle at 35% 30%,rgba(50,60,120,0.95),rgba(18,22,55,0.98));display:flex;align-items:center;justify-content:center;font-size:16px}
+  .optC .item .lbl{font-size:9px;font-weight:600;color:#f0f2ff}
+
+  @keyframes popIn{
+    0%{opacity:0;transform:translateX(-50%) translateY(10px) scale(0.95)}
+    100%{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}
+  }
+  @keyframes scaleIn{
+    0%{opacity:0;transform:translate(-50%,-50%) scale(0.9)}
+    100%{opacity:1;transform:translate(-50%,-50%) scale(1)}
+  }
+
+  /* Item type colors */
+  .c-wakeup{color:#fbbf24;background:rgba(251,191,36,0.15)}
+  .c-bottle{color:#34d399;background:rgba(52,211,153,0.15)}
+  .c-nurse{color:#60a5fa;background:rgba(96,165,250,0.15)}
+  .c-sleep{color:#a78bfa;background:rgba(167,139,250,0.15)}
+  .c-nap{color:#c084fc;background:rgba(192,132,252,0.15)}
+  .c-diaper{color:#f472b6;background:rgba(244,114,182,0.15)}
+  .c-bath{color:#22d3ee;background:rgba(34,211,238,0.15)}
+  .c-med{color:#fb923c;background:rgba(251,146,60,0.15)}
+  .c-temp{color:#f87171;background:rgba(248,113,113,0.15)}
+  .c-tummy{color:#eab308;background:rgba(234,179,8,0.15)}
+
+  .explain{max-width:1500px;margin:40px auto 0;padding:24px 28px;background:rgba(20,26,60,0.4);border:1px solid rgba(255,255,255,0.06);border-radius:16px}
+  .explain h3{font-size:14px;font-weight:800;margin-bottom:10px;color:#c4b5fd}
+  .explain p,.explain li{font-size:13px;color:#b0b6d8;line-height:1.7}
+  .explain ul{margin-left:18px;margin-top:6px}
+  .recommended{background:rgba(52,211,153,0.08);border-color:rgba(52,211,153,0.25)}
+  .recommended h2{color:#34d399 !important}
+</style>
+</head>
+<body>
+
+<h1>Mockup — botão + vira popup (sem mais slide-up)</h1>
+<div class="sub">Hoje o + abre um Sheet que desliza de baixo cobrindo ~78% da tela. Você disse que no iPhone isso bugava. 3 variações sem slide, todas com fade+scale rápido (250ms). Clique no backdrop ou X pra fechar.</div>
+
+<div class="row">
+
+  <!-- OPTION A -->
+  <div class="col">
+    <h2 class="good">A — Popover compacto ancorado no FAB</h2>
+    <p>Bolha pequena aparece logo acima do botão +, com 10 opções em grid 4×3. Seta apontando pro FAB. Fade+scale leve (250ms), sem slide. Clica qualquer lugar fora pra fechar.</p>
+    <div class="phone">
+      <div class="screen">
+        <div class="content">
+          <h3>Today</h3>
+          <div class="card-sub">1st Nap 24min · 08:29</div>
+          <div class="card-sub">Woke up · 07:10</div>
+        </div>
+        <div class="optA"><div class="popover">
+          <div class="grid">
+            <div class="item"><div class="ic c-wakeup">☀</div><div class="lbl">Woke up</div></div>
+            <div class="item"><div class="ic c-bottle">🍼</div><div class="lbl">Bottle</div></div>
+            <div class="item"><div class="ic c-nurse">🤱</div><div class="lbl">Nurse</div></div>
+            <div class="item"><div class="ic c-diaper">⊙</div><div class="lbl">Diaper</div></div>
+            <div class="item"><div class="ic c-sleep">🌙</div><div class="lbl">Sleep</div></div>
+            <div class="item"><div class="ic c-nap">☁</div><div class="lbl">Nap</div></div>
+            <div class="item"><div class="ic c-tummy">◎</div><div class="lbl">Tummy</div></div>
+            <div class="item"><div class="ic c-bath">💧</div><div class="lbl">Bath</div></div>
+            <div class="item"><div class="ic c-med">💊</div><div class="lbl">Med</div></div>
+            <div class="item"><div class="ic c-temp">🌡</div><div class="lbl">Temp</div></div>
+            <div class="item" style="opacity:0;pointer-events:none"></div>
+            <div class="item" style="opacity:0;pointer-events:none"></div>
+          </div>
+        </div></div>
+        <div class="nav">
+          <div class="nb">⌂</div>
+          <div class="nb">🕐</div>
+          <div class="fab open">+</div>
+          <div class="nb">📊</div>
+          <div class="nb">⚙</div>
+        </div>
+      </div>
+    </div>
+    <div class="pros">+ Anchored visual: a seta liga o popover ao botão<br>+ Nunca sobe mais do que precisa<br>+ Fundo continua visível (parcial), não sente "tela invasiva"</div>
+    <div class="cons">− Grid 4 colunas deixa cada célula meio apertada<br>− Labels pequenas</div>
+  </div>
+
+  <!-- OPTION B -->
+  <div class="col">
+    <h2>B — Fan-out radial</h2>
+    <p>10 bolhas se abrem em arco acima do FAB, como um "leque". Cada uma é um círculo cheio (matching o visual de quick-add atual). Backdrop semi-transparente. Tap em qualquer lugar fora fecha.</p>
+    <div class="phone">
+      <div class="screen">
+        <div class="content">
+          <h3>Today</h3>
+          <div class="card-sub">1st Nap 24min · 08:29</div>
+        </div>
+        <div class="optB">
+          <div class="backdrop"></div>
+          <div class="fab-circle">
+            <!-- 10 items in a radial-ish pattern above FAB -->
+            <div class="item" style="--tx:-100px;--ty:-50px;animation-delay:0.03s"><div class="ic c-wakeup">☀</div><div class="lbl">Wake</div></div>
+            <div class="item" style="--tx:-55px;--ty:-115px;animation-delay:0.06s"><div class="ic c-bottle">🍼</div><div class="lbl">Bottle</div></div>
+            <div class="item" style="--tx:5px;--ty:-150px;animation-delay:0.09s"><div class="ic c-nurse">🤱</div><div class="lbl">Nurse</div></div>
+            <div class="item" style="--tx:65px;--ty:-115px;animation-delay:0.12s"><div class="ic c-sleep">🌙</div><div class="lbl">Sleep</div></div>
+            <div class="item" style="--tx:110px;--ty:-50px;animation-delay:0.15s"><div class="ic c-nap">☁</div><div class="lbl">Nap</div></div>
+            <div class="item" style="--tx:-100px;--ty:-180px;animation-delay:0.18s"><div class="ic c-diaper">⊙</div><div class="lbl">Diaper</div></div>
+            <div class="item" style="--tx:-35px;--ty:-225px;animation-delay:0.21s"><div class="ic c-bath">💧</div><div class="lbl">Bath</div></div>
+            <div class="item" style="--tx:35px;--ty:-225px;animation-delay:0.24s"><div class="ic c-med">💊</div><div class="lbl">Med</div></div>
+            <div class="item" style="--tx:110px;--ty:-180px;animation-delay:0.27s"><div class="ic c-temp">🌡</div><div class="lbl">Temp</div></div>
+            <div class="item" style="--tx:0;--ty:-300px;animation-delay:0.3s"><div class="ic c-tummy">◎</div><div class="lbl">Tummy</div></div>
+          </div>
+        </div>
+        <div class="nav">
+          <div class="nb">⌂</div>
+          <div class="nb">🕐</div>
+          <div class="fab open" style="transform:rotate(45deg)">+</div>
+          <div class="nb">📊</div>
+          <div class="nb">⚙</div>
+        </div>
+      </div>
+    </div>
+    <div class="pros">+ Visual impactante (Snapchat/Instagram style)<br>+ Cada item é grande (matching quick-add atual)<br>+ Animação sequencial (0.03s stagger) dá vida</div>
+    <div class="cons">− 10 items num fan é meio apertado<br>− Mais trabalho de CSS<br>− Pode parecer "excessivo" pra task simples</div>
+  </div>
+
+  <!-- OPTION C -->
+  <div class="col recommended">
+    <h2 class="good">C — Modal central 3×4 (recomendado)</h2>
+    <p>Caixa centralizada com o grid 3×4 atual compactado. Igual o iOS Control Center. Scale-in (250ms) sem slide. Backdrop com blur. Tap em qualquer lugar fora pra fechar.</p>
+    <div class="phone">
+      <div class="screen">
+        <div class="content">
+          <h3>Today</h3>
+          <div class="card-sub">1st Nap 24min · 08:29</div>
+          <div class="card-sub">Woke up · 07:10</div>
+          <div class="card-sub">Bottle · 100 ml</div>
+        </div>
+        <div class="optC">
+          <div class="backdrop"></div>
+          <div class="modal">
+            <h4>Adicionar evento</h4>
+            <div class="grid">
+              <div class="item"><div class="ic c-wakeup">☀</div><div class="lbl">Woke up</div></div>
+              <div class="item"><div class="ic c-bottle">🍼</div><div class="lbl">Bottle</div></div>
+              <div class="item"><div class="ic c-nurse">🤱</div><div class="lbl">Nurse</div></div>
+              <div class="item"><div class="ic c-sleep">🌙</div><div class="lbl">Sleep</div></div>
+              <div class="item"><div class="ic c-nap">☁</div><div class="lbl">Nap</div></div>
+              <div class="item"><div class="ic c-diaper">⊙</div><div class="lbl">Diaper</div></div>
+              <div class="item"><div class="ic c-bath">💧</div><div class="lbl">Bath</div></div>
+              <div class="item"><div class="ic c-med">💊</div><div class="lbl">Med</div></div>
+              <div class="item"><div class="ic c-temp">🌡</div><div class="lbl">Temp</div></div>
+              <div class="item"><div class="ic c-tummy">◎</div><div class="lbl">Tummy</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="nav">
+          <div class="nb">⌂</div>
+          <div class="nb">🕐</div>
+          <div class="fab open" style="transform:rotate(45deg)">+</div>
+          <div class="nb">📊</div>
+          <div class="nb">⚙</div>
+        </div>
+      </div>
+    </div>
+    <div class="pros">+ Grid 3×4 igual ao atual, zero re-layout<br>+ Fácil de alvo (célula grande, label clara)<br>+ Zero slide: fade+scale 250ms, sem bug de scroll<br>+ Reusa 90% do CSS atual do Sheet</div>
+    <div class="cons">− Bloqueia visualmente mais do que A<br>− Perde a conexão visual com o FAB</div>
+  </div>
+
+</div>
+
+<div class="explain">
+  <h3>Comportamento em comum das 3 opções</h3>
+  <ul>
+    <li><b>Dispositivo de abrir</b>: mesmo botão + da nav. FAB gira 45° pra virar X, indicando que tocar de novo fecha.</li>
+    <li><b>Dispositivo de fechar</b>: tap no backdrop, tap no FAB (que virou X), ou tecla Esc em desktop.</li>
+    <li><b>Animação</b>: scale+fade 250ms, sem slide. A sensação "tela sobe" some.</li>
+    <li><b>Seleção</b>: tap num item fecha o popup e abre o form daquele tipo imediatamente (no mesmo gesto, sem delay).</li>
+    <li><b>Não muda</b>: o AddForm em si (a tela "Bottle / Amount / Save") continua Sheet bottom-up, porque tem scroll, inputs, pode ficar grande com notes. Só o seletor de tipo vira popup.</li>
+  </ul>
+  <h3 style="margin-top:14px">Minha recomendação</h3>
+  <p><b>C — Modal central 3×4</b>. Por quê: reusa 100% do grid atual (10 items em 3 cols), zero risco de bug novo, zero slide, e a perf no iPhone é melhor (sem drag, sem overflow scroll interno). <b>A (popover)</b> é bonito mas aperta as células em 4 colunas. <b>B (fan-out)</b> é visualmente legal mas é overkill pra task simples e tem mais CSS pra testar.</p>
+</div>
+
+</body>
+</html>

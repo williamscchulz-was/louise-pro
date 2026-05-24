@@ -1,4 +1,7 @@
-.claude/
+.claude/*
+# v11.9.61: mockups precisam ser commitados pra build CI ver e publicar em /preview/
+# (parent eh `.claude/*` em vez de `.claude/` pra permitir negation funcionar)
+!.claude/mockups/
 .validate/
 node_modules/
 dist/
