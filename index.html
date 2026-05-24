@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.57 Botao ★ Marcos no header (entry point sempre visivel, entre nome e sino). Antes so via card condicional no Home.
   v11.9.56 ★ Marcos de desenvolvimento: 44 marcos CDC 2022 + WHO MGRS + SBP, 5 categorias, timeline + Home card + 17 sinais de alerta. Bilingue PT/EN.
   v11.9.55 Wake pill: respiro mais perceptivel — scale 1->1.05, box-shadow 6->30px, border alpha 0.5->0.85, duracao 3.5s. Realmente respira.
   v11.9.54 Wake/Sleep pill: amber em vez de lavanda + labels "Wake"/"Sleep" action-oriented + icone sun->moon + tamanho compacto (revert bump).
@@ -748,8 +749,25 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.56";
+const APP_VERSION = "11.9.57";
 const CHANGELOG = [
+  {
+    v: "11.9.57", date: "2026-05-24",
+    pt: {
+      title: "Botão ★ Marcos no header (entry point sempre visível)",
+      bullets: [
+        '★ **Botão estrela gold no header**, entre nome e sino. Sempre visível. Tap → abre direto a página de Marcos. Antes só dava pelo card no Home (que era condicional).',
+        'Card "Próximos marcos" do Home continua existindo — agora é redundante mas reforça discoverability.',
+      ],
+    },
+    en: {
+      title: "★ Milestones button in header (always-visible entry point)",
+      bullets: [
+        '★ **Gold star button in header**, between name and bell. Always visible. Tap → opens Milestones page directly. Before, only accessible via the Home card (which was conditional).',
+        '"Upcoming milestones" Home card still exists — now redundant but reinforces discoverability.',
+      ],
+    },
+  },
   {
     v: "11.9.56", date: "2026-05-24",
     pt: {
@@ -9342,6 +9360,10 @@ function App(){
           {/* v11.9.24: name com micro-gradient texto + meta letter-spacing refinado */}
           <div style={{flex:1,minWidth:0}}><h1 style={{fontSize:T.fXL,fontWeight:800,margin:0,letterSpacing:-0.45,lineHeight:1.1,background:"linear-gradient(180deg,#ffffff,#c4b5fd)",WebkitBackgroundClip:"text",backgroundClip:"text",WebkitTextFillColor:"transparent",color:"transparent"}}>{babyName}</h1><div style={{display:"flex",alignItems:"center",gap:5,marginTop:5,fontVariantNumeric:"tabular-nums"}}><span style={{fontSize:T.fSM,color:T.accent,fontWeight:600,letterSpacing:0.1}}>{age&&<>{age.totalDays} {_lang==="en"?"days":"dias"}</>}</span><span style={{width:2.5,height:2.5,borderRadius:"50%",background:"rgba(139,124,246,0.4)"}}/><span style={{fontSize:T.fSM,color:T.dim,letterSpacing:0.1}}>{new Date().toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{day:"numeric",month:"short"})}</span></div></div>
           {!isOnline&&<div title={_lang==="en"?"Offline — changes sync when reconnected":"Offline — mudanças sincronizam ao reconectar"} style={{display:"inline-flex",alignItems:"center",gap:4,marginRight:6,padding:"4px 8px",borderRadius:10,background:"rgba(251,146,60,0.1)",border:"1px solid rgba(251,146,60,0.28)",fontSize:T.fXS,color:"#fbbf24",fontWeight:700,letterSpacing:0.3,textTransform:"uppercase",flexShrink:0}}><span style={{width:6,height:6,borderRadius:"50%",background:"#fbbf24",boxShadow:"0 0 6px rgba(251,191,36,0.6)"}}/>off</div>}
+          {/* v11.9.57: botão ★ Marcos no header — entry point sempre visível */}
+          <button aria-label={L("milestonesTitle")} onClick={()=>goTo("milestones")} style={{position:"relative",width:40,height:40,borderRadius:12,background:"rgba(250,204,21,0.08)",border:"1px solid rgba(250,204,21,0.22)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginRight:6}}>
+            <Icon name="star" size={17} color="#facc15"/>
+          </button>
           <button aria-label={inboxUnreadCount>0?(_lang==="en"?`${inboxUnreadCount} new notifications`:`${inboxUnreadCount} notificações novas`):(_lang==="en"?"Notifications":"Notificações")} onClick={()=>setShowInbox(true)} style={{position:"relative",width:40,height:40,borderRadius:12,background:inboxUnreadCount>0?"rgba(139,124,246,0.12)":"rgba(22,28,60,0.6)",border:`1px solid ${inboxUnreadCount>0?"rgba(139,124,246,0.3)":"rgba(139,124,246,0.08)"}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><div style={{animation:inboxUnreadCount>0?"bellWiggle 2.5s ease-in-out infinite":"none",transformOrigin:"top center",display:"flex"}}><Icon name="bell" size={17} color={inboxUnreadCount>0?T.accent:T.dim}/></div>{inboxUnreadCount>0&&<div style={{position:"absolute",top:-5,right:-5,minWidth:18,height:18,borderRadius:9,background:"linear-gradient(135deg,#f87171,#dc2626)",color:"#fff",fontSize:T.fSM,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 5px",border:`2px solid ${T.bg1}`,boxShadow:"0 0 10px rgba(239,68,68,0.6)"}}>{inboxUnreadCount}</div>}</button>
         </div>
         {/* v11.9.24: hairline divider sutil sob o header (separa seção sem caixa) */}
