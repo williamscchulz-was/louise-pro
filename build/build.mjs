@@ -144,4 +144,14 @@ for (const rel of copies) {
   console.log("[build] copied " + rel);
 }
 
+// v11.9.61: copy `.claude/mockups/` → `dist/_preview/` pro William ver os mockups
+// no live URL ao invés de localhost (que ele não consegue acessar do iPhone).
+// Path "_preview" começa com underscore pra não conflitar com rotas do app.
+const mockupSrc = join(ROOT, ".claude", "mockups");
+const mockupDst = join(DIST, "_preview");
+if (existsSync(mockupSrc)) {
+  cpSync(mockupSrc, mockupDst, { recursive: true });
+  console.log("[build] copied .claude/mockups → _preview/");
+}
+
 console.log("[build] done.");
