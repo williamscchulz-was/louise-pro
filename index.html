@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.61 ★ Conquistas: 12 badges colecionaveis no topo da pagina de Marcos. Earned gold glow, locked dim + fracao de progresso.
   v11.9.60 Picker de marcos vira modal centrado (era bottom sheet). Max 440px, radius 22px all corners, shadow forte. Save/Back centrados.
   v11.9.59 +10 marcos newborn (0-2m): nasceu, primeira mamada, primeira fralda, banho, alta, coto umbilical, peso, etc. Pra checar retroativo.
   v11.9.58 Fix: Save do picker de marco ficava atras da nav pill. Nav agora some quando picker abre + padding-bottom maior + maxHeight 90vh.
@@ -754,8 +755,55 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.60";
+const APP_VERSION = "11.9.61";
 const CHANGELOG = [
+  {
+    v: "11.9.61", date: "2026-05-24",
+    pt: {
+      title: "★ Conquistas — 12 badges colecionáveis na página de Marcos",
+      bullets: [
+        '★ **Sistema de conquistas/badges** adicionado no topo da MilestonesPage (acima de "Próximos marcos"). Mockup variant D do gamification mockup — opção colecionável.',
+        'Grid 3 colunas com 12 conquistas. Earned = glow dourado + emoji com drop-shadow. Locked = opacity 0.35 + fração de progresso ("3/10").',
+        '**As 12 conquistas:**',
+        '· **Primeira luz** 🌟 — 1 marco logado',
+        '· **5 conquistas** ⭐ — 5 marcos',
+        '· **10 conquistas** ✨ — 10 marcos',
+        '· **Recém-nascida** 👶 — todos os 10 marcos newborn',
+        '· **6 meses** 🎯 — todos os marcos do checkup 6m',
+        '· **1 ano** 🎂 — todos os marcos do checkup 12m',
+        '· **2 anos** 🎉 — todos os marcos do checkup 24m',
+        '· **Atleta** 🏃 — todos os marcos motor (grosso+fino)',
+        '· **Tagarela** 💬 — todos os marcos de linguagem',
+        '· **Carismática** 😊 — todos os marcos social/emocional',
+        '· **Pensadora** 🧠 — todos os marcos cognitivos',
+        '· **Tudo!** 🏆 — todos os 44+ marcos da base',
+        'Contador no header da seção: "5/12 conquistadas" em texto dourado.',
+        'Stats agregadas via `useMemo` — recomputa só quando entries muda.',
+      ],
+    },
+    en: {
+      title: "★ Achievements — 12 collectible badges on the Milestones page",
+      bullets: [
+        '★ **Achievements/badges system** added to the top of MilestonesPage (above "Upcoming milestones"). Mockup variant D from the gamification mockup — collectible flavor.',
+        '3-column grid with 12 achievements. Earned = golden glow + emoji with drop-shadow. Locked = 0.35 opacity + progress fraction ("3/10").',
+        '**The 12 achievements:**',
+        '· **First light** 🌟 — 1 milestone logged',
+        '· **5 logged** ⭐ — 5 milestones',
+        '· **10 logged** ✨ — 10 milestones',
+        '· **Newborn** 👶 — all 10 newborn milestones',
+        '· **6 months** 🎯 — all milestones from the 6m checkup',
+        '· **1 year** 🎂 — all milestones from the 12m checkup',
+        '· **2 years** 🎉 — all milestones from the 24m checkup',
+        '· **Athlete** 🏃 — all motor (gross+fine) milestones',
+        '· **Chatty** 💬 — all language milestones',
+        '· **Charming** 😊 — all social/emotional milestones',
+        '· **Thinker** 🧠 — all cognitive milestones',
+        '· **All done!** 🏆 — all 44+ milestones',
+        'Section header shows count: "5/12 earned" in golden text.',
+        'Stats computed via `useMemo` — only recomputes when entries change.',
+      ],
+    },
+  },
   {
     v: "11.9.60", date: "2026-05-24",
     pt: {
@@ -5311,6 +5359,9 @@ const I={
   bottlesDay:{pt:"Mamadas/dia",en:"Bottles/day"},
   napsDay:{pt:"Sonecas · 4 por dia",en:"Naps · 4 per day"},
   napNth:{pt:["1ª soneca","2ª soneca","3ª soneca","4ª soneca"],en:["1st nap","2nd nap","3rd nap","4th nap"]},
+  // v11.9.61: conquistas (badges)
+  achievementsTitle:{pt:"Conquistas",en:"Achievements"},
+  earnedCount:{pt:"conquistadas",en:"earned"},
   // v11.9.56: marcos de crescimento (milestones)
   milestonesTitle:{pt:"Marcos",en:"Milestones"},
   milestonesDone:{pt:"feitos",en:"done"},
@@ -8110,6 +8161,23 @@ function GrowthPage({entries,birthDate,profile,onBack,onAddEntry,onDeleteEntry})
   </div>);
 }
 
+// v11.9.61: 12 badges/conquistas pra dar vibe colecionável.
+// Cada badge tem check(stats) e progress(stats) — stats agregadas dos entries.
+const MILESTONE_BADGES = [
+  {key:"first_light",emoji:"\u{1F31F}",label:{pt:"Primeira luz",en:"First light"},check:s=>s.total>=1,progress:s=>({c:Math.min(s.total,1),t:1})},
+  {key:"five_lights",emoji:"⭐",label:{pt:"5 conquistas",en:"5 logged"},check:s=>s.total>=5,progress:s=>({c:Math.min(s.total,5),t:5})},
+  {key:"ten_lights",emoji:"✨",label:{pt:"10 conquistas",en:"10 logged"},check:s=>s.total>=10,progress:s=>({c:Math.min(s.total,10),t:10})},
+  {key:"newborn_pro",emoji:"\u{1F476}",label:{pt:"Recém-nascida",en:"Newborn"},check:s=>s.totalsByCheckup[0]>0&&s.byCheckup[0]>=s.totalsByCheckup[0],progress:s=>({c:s.byCheckup[0]||0,t:s.totalsByCheckup[0]||10})},
+  {key:"checkup_6m",emoji:"\u{1F3AF}",label:{pt:"6 meses",en:"6 months"},check:s=>s.totalsByCheckup[6]>0&&s.byCheckup[6]>=s.totalsByCheckup[6],progress:s=>({c:s.byCheckup[6]||0,t:s.totalsByCheckup[6]||5})},
+  {key:"checkup_12m",emoji:"\u{1F382}",label:{pt:"1 ano",en:"1 year"},check:s=>s.totalsByCheckup[12]>0&&s.byCheckup[12]>=s.totalsByCheckup[12],progress:s=>({c:s.byCheckup[12]||0,t:s.totalsByCheckup[12]||6})},
+  {key:"checkup_24m",emoji:"\u{1F389}",label:{pt:"2 anos",en:"2 years"},check:s=>s.totalsByCheckup[24]>0&&s.byCheckup[24]>=s.totalsByCheckup[24],progress:s=>({c:s.byCheckup[24]||0,t:s.totalsByCheckup[24]||5})},
+  {key:"motor_pro",emoji:"\u{1F3C3}",label:{pt:"Atleta",en:"Athlete"},check:s=>{const t=s.totalsByCat.motor_gross+s.totalsByCat.motor_fine;const c=s.byCat.motor_gross+s.byCat.motor_fine;return t>0&&c>=t},progress:s=>({c:s.byCat.motor_gross+s.byCat.motor_fine,t:s.totalsByCat.motor_gross+s.totalsByCat.motor_fine})},
+  {key:"chatty",emoji:"\u{1F4AC}",label:{pt:"Tagarela",en:"Chatty"},check:s=>s.totalsByCat.language>0&&s.byCat.language>=s.totalsByCat.language,progress:s=>({c:s.byCat.language||0,t:s.totalsByCat.language||13})},
+  {key:"charming",emoji:"\u{1F60A}",label:{pt:"Carismática",en:"Charming"},check:s=>s.totalsByCat.social_emotional>0&&s.byCat.social_emotional>=s.totalsByCat.social_emotional,progress:s=>({c:s.byCat.social_emotional||0,t:s.totalsByCat.social_emotional||22})},
+  {key:"thinker",emoji:"\u{1F9E0}",label:{pt:"Pensadora",en:"Thinker"},check:s=>s.totalsByCat.cognitive>0&&s.byCat.cognitive>=s.totalsByCat.cognitive,progress:s=>({c:s.byCat.cognitive||0,t:s.totalsByCat.cognitive||6})},
+  {key:"all_done",emoji:"\u{1F3C6}",label:{pt:"Tudo!",en:"All done!"},check:s=>s.allTotal>0&&s.total>=s.allTotal,progress:s=>({c:s.total,t:s.allTotal||54})},
+];
+
 // v11.9.56: Marcos de desenvolvimento (Timeline + picker). Dados em window.DEV_MILESTONES
 // (~44 itens 0-24m, CDC 2022 + WHO MGRS + SBP) e window.CONCERNING_SIGNS (~17 itens).
 // Note: window.MILESTONES (sem DEV_) ja existe em curiosities.js — sao curiosidades
@@ -8132,6 +8200,26 @@ function MilestonesPage({entries,birthDate,profile,onBack,onAddEntry,onDeleteEnt
     !doneKeys.has(m.key)
   );
   const signs=allSigns.filter(s=>s.checkupAge<=ageMonths+2);
+  // v11.9.61: stats agregadas pros badges (count por categoria + checkupAge)
+  const badgeStats=useMemo(()=>{
+    const byCat={motor_gross:0,motor_fine:0,language:0,social_emotional:0,cognitive:0};
+    const byCheckup={0:0,2:0,4:0,6:0,9:0,12:0,15:0,18:0,24:0};
+    const totalsByCat={motor_gross:0,motor_fine:0,language:0,social_emotional:0,cognitive:0};
+    const totalsByCheckup={0:0,2:0,4:0,6:0,9:0,12:0,15:0,18:0,24:0};
+    all.forEach(m=>{
+      if(totalsByCat[m.category]!==undefined)totalsByCat[m.category]++;
+      if(totalsByCheckup[m.checkupAge]!==undefined)totalsByCheckup[m.checkupAge]++;
+    });
+    milestoneEntries.forEach(e=>{
+      const m=all.find(x=>x.key===e.key);
+      if(!m)return;
+      if(byCat[m.category]!==undefined)byCat[m.category]++;
+      if(byCheckup[m.checkupAge]!==undefined)byCheckup[m.checkupAge]++;
+    });
+    return{total:milestoneEntries.length,byCat,byCheckup,totalsByCat,totalsByCheckup,allTotal:all.length};
+  },[milestoneEntries,all]);
+  const badges=MILESTONE_BADGES.map(b=>({...b,earned:b.check(badgeStats),progress:b.progress?b.progress(badgeStats):null}));
+  const earnedBadges=badges.filter(b=>b.earned).length;
   const[showAdd,setShowAdd]=useState(false);
   const[showSigns,setShowSigns]=useState(false);
   const[pickedKey,setPickedKey]=useState(null);
@@ -8180,6 +8268,26 @@ function MilestonesPage({entries,birthDate,profile,onBack,onAddEntry,onDeleteEnt
         <div style={{fontSize:T.fSM,color:T.sub,marginTop:1,fontVariantNumeric:"tabular-nums"}}>{milestoneEntries.length} {L("milestonesDone")} · {ageMonths}m</div>
       </div>
       <button onClick={()=>{setPickedKey(null);setShowAdd(true)}} aria-label={_lang==="en"?"Add milestone":"Adicionar marco"} style={{width:40,height:40,borderRadius:12,background:"linear-gradient(135deg,#facc15,#f59e0b)",border:"none",display:"flex",alignItems:"center",justifyContent:"center",color:"#1a1f2e",fontSize:24,fontWeight:800,boxShadow:"0 4px 14px -4px rgba(250,204,21,0.5)",cursor:"pointer"}}>+</button>
+    </div>
+    {/* v11.9.61: Conquistas (badges grid) — earned gold glow, locked dim + progress */}
+    <div style={{padding:"0 20px 14px"}}>
+      <div style={{display:"flex",alignItems:"baseline",justifyContent:"space-between",marginBottom:10}}>
+        <span style={{fontSize:T.fSM,fontWeight:800,color:T.accent,textTransform:"uppercase",letterSpacing:1,display:"flex",alignItems:"center",gap:6}}>
+          <span style={{fontSize:T.fMD}}>{"\u{1F3C6}"}</span>
+          {L("achievementsTitle")}
+        </span>
+        <span style={{fontSize:T.fXS,color:"#fcd34d",fontWeight:800,fontVariantNumeric:"tabular-nums",letterSpacing:0.3,textTransform:"uppercase"}}>{earnedBadges}/{badges.length} {L("earnedCount")}</span>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
+        {badges.map(b=>{
+          const isEarned=b.earned;
+          return<div key={b.key} style={{aspectRatio:"1",borderRadius:14,background:isEarned?"radial-gradient(circle at 50% 30%,rgba(250,204,21,0.22),rgba(245,158,11,0.04))":"rgba(20,26,60,0.42)",border:`1px solid ${isEarned?"rgba(250,204,21,0.45)":"rgba(139,124,246,0.12)"}`,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"8px 4px",position:"relative",opacity:isEarned?1:0.35,boxShadow:isEarned?"0 0 14px -2px rgba(250,204,21,0.30)":"none",transition:"opacity .3s ease, box-shadow .3s ease"}}>
+            <div style={{fontSize:26,marginBottom:5,filter:isEarned?"drop-shadow(0 0 6px rgba(250,204,21,0.5))":"none",lineHeight:1}}>{b.emoji}</div>
+            <div style={{fontSize:T.fXS,fontWeight:800,color:isEarned?"#fcd34d":T.text,textTransform:"uppercase",letterSpacing:0.4,textAlign:"center",lineHeight:1.2,padding:"0 2px"}}>{b.label[_lang]||b.label.en}</div>
+            {!isEarned&&b.progress&&<div style={{fontSize:9,color:"rgba(252,211,77,0.65)",marginTop:3,fontWeight:700,fontVariantNumeric:"tabular-nums"}}>{b.progress.c}/{b.progress.t}</div>}
+          </div>
+        })}
+      </div>
     </div>
     {/* Upcoming */}
     {upcoming.length>0&&<div style={{padding:"0 20px 14px"}}>
