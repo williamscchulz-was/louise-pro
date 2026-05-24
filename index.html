@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.60 Picker de marcos vira modal centrado (era bottom sheet). Max 440px, radius 22px all corners, shadow forte. Save/Back centrados.
   v11.9.59 +10 marcos newborn (0-2m): nasceu, primeira mamada, primeira fralda, banho, alta, coto umbilical, peso, etc. Pra checar retroativo.
   v11.9.58 Fix: Save do picker de marco ficava atras da nav pill. Nav agora some quando picker abre + padding-bottom maior + maxHeight 90vh.
   v11.9.57 Botao ★ Marcos no header (entry point sempre visivel, entre nome e sino). Antes so via card condicional no Home.
@@ -753,8 +754,27 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.59";
+const APP_VERSION = "11.9.60";
 const CHANGELOG = [
+  {
+    v: "11.9.60", date: "2026-05-24",
+    pt: {
+      title: "Picker de marcos vira modal centrado (era bottom sheet)",
+      bullets: [
+        '★ **Picker agora abre no meio da tela** em vez de subir do rodapé. Width max 440px, maxHeight `calc(100vh - 80px)`, padding interno 18px, borderRadius 22px em todos os cantos, drop-shadow forte (0 24px 60px). Lê melhor com Save/Back centrados.',
+        'Removida lógica de safe-area-bottom no padding (não precisa mais já que tá centrado).',
+        '`body.milestone-picker-open #nav-host{display:none}` (v11.9.58) ainda ativo — nav some quando picker abre.',
+      ],
+    },
+    en: {
+      title: "Milestone picker becomes a centered modal (was bottom sheet)",
+      bullets: [
+        '★ **Picker now opens in the middle of the screen** instead of rising from the bottom. Max width 440px, maxHeight `calc(100vh - 80px)`, 18px inner padding, 22px borderRadius on all corners, strong drop-shadow (0 24px 60px). Save/Back read better centered.',
+        'Removed safe-area-bottom padding logic (not needed now that it\'s centered).',
+        '`body.milestone-picker-open #nav-host{display:none}` (v11.9.58) still active — nav hides when picker opens.',
+      ],
+    },
+  },
   {
     v: "11.9.59", date: "2026-05-24",
     pt: {
@@ -8229,9 +8249,9 @@ function MilestonesPage({entries,birthDate,profile,onBack,onAddEntry,onDeleteEnt
     <div style={{padding:"10px 20px 20px",fontSize:T.fXS,color:T.dim,textAlign:"center",lineHeight:1.5}}>
       {L("source")}: CDC "Learn the Signs. Act Early." (Fev 2022) · WHO MGRS · SBP
     </div>
-    {/* Add picker bottom sheet */}
-    {showAdd&&<div style={{position:"fixed",inset:0,zIndex:300,background:"rgba(4,6,22,0.85)",backdropFilter:"blur(8px)",display:"flex",alignItems:"flex-end",justifyContent:"center"}} onClick={()=>{setShowAdd(false);setPickedKey(null)}}>
-      <div onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:480,maxHeight:"90vh",background:"radial-gradient(ellipse at 50% 0%, #15124a 0%, #080a26 65%), #040616",borderTopLeftRadius:24,borderTopRightRadius:24,border:`1px solid ${T.gBSoft}`,borderBottomWidth:0,padding:"18px 18px calc(32px + env(safe-area-inset-bottom))",overflowY:"auto",animation:"slideUp .3s cubic-bezier(0.22,1,0.36,1)"}}>
+    {/* v11.9.60: Add picker — centrado vertical (era bottom sheet em v11.9.56) */}
+    {showAdd&&<div style={{position:"fixed",inset:0,zIndex:300,background:"rgba(4,6,22,0.85)",backdropFilter:"blur(8px)",display:"flex",alignItems:"center",justifyContent:"center",padding:"20px"}} onClick={()=>{setShowAdd(false);setPickedKey(null)}}>
+      <div onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:440,maxHeight:"calc(100vh - 80px)",background:"radial-gradient(ellipse at 50% 0%, #15124a 0%, #080a26 65%), #040616",borderRadius:22,border:`1px solid ${T.gBSoft}`,boxShadow:"0 24px 60px -16px rgba(0,0,0,0.7), 0 0 0 1px rgba(167,139,250,0.08)",padding:"18px 18px 22px",overflowY:"auto",animation:"slideUp .3s cubic-bezier(0.22,1,0.36,1)"}}>
         <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}>
           <div style={{flex:1,fontSize:T.fLG,fontWeight:800,letterSpacing:-0.2,minWidth:0}}>{picked?(picked.label[_lang]||picked.label.en):L("pickMilestone")}</div>
           <button onClick={()=>{setShowAdd(false);setPickedKey(null)}} style={{width:30,height:30,borderRadius:10,background:T.glass,border:`1px solid ${T.gBSoft}`,color:T.sub,fontSize:T.fXL,fontWeight:600,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>×</button>
