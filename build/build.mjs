@@ -144,14 +144,18 @@ for (const rel of copies) {
   console.log("[build] copied " + rel);
 }
 
-// v11.9.61: copy `.claude/mockups/` → `dist/_preview/` pro William ver os mockups
+// v11.9.61: copy `.claude/mockups/` → `dist/preview/` pro William ver os mockups
 // no live URL ao invés de localhost (que ele não consegue acessar do iPhone).
-// Path "_preview" começa com underscore pra não conflitar com rotas do app.
+// PATH SEM UNDERSCORE: o GitHub Pages com fallback Jekyll ignora dirs `_*`.
+// Adicionado `.nojekyll` no root como defesa adicional.
 const mockupSrc = join(ROOT, ".claude", "mockups");
-const mockupDst = join(DIST, "_preview");
+const mockupDst = join(DIST, "preview");
 if (existsSync(mockupSrc)) {
   cpSync(mockupSrc, mockupDst, { recursive: true });
-  console.log("[build] copied .claude/mockups → _preview/");
+  console.log("[build] copied .claude/mockups → preview/");
 }
+// Cria .nojekyll vazio no root pra forçar Pages a servir tudo sem Jekyll
+writeFileSync(join(DIST, ".nojekyll"), "");
+console.log("[build] wrote .nojekyll");
 
 console.log("[build] done.");
