@@ -30,6 +30,7 @@ const PRECACHE_LOCAL = [
   "./js/splash-icon.js",
   "./js/who-growth.js",
   "./js/curiosities.js",
+  "./js/milestones.js",
   "./js/wake-lock.js",
   "./js/device-features.js",
   "./js/routine-engine.js",

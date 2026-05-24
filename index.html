@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.56 ★ Marcos de desenvolvimento: 44 marcos CDC 2022 + WHO MGRS + SBP, 5 categorias, timeline + Home card + 17 sinais de alerta. Bilingue PT/EN.
   v11.9.55 Wake pill: respiro mais perceptivel — scale 1->1.05, box-shadow 6->30px, border alpha 0.5->0.85, duracao 3.5s. Realmente respira.
   v11.9.54 Wake/Sleep pill: amber em vez de lavanda + labels "Wake"/"Sleep" action-oriented + icone sun->moon + tamanho compacto (revert bump).
   v11.9.53 Resumo do dia removido — card "Resumo de hoje" 19h-23h59 com totais bottle/sono/sonecas/fraldas tirado do Home.
@@ -732,6 +733,8 @@ dbg('Firebase ready');
 
 <script src="js/curiosities.js"></script>
 
+<script src="js/milestones.js"></script>
+
 <script src="js/wake-lock.js"></script>
 
 <script src="js/device-features.js"></script>
@@ -745,8 +748,41 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.55";
+const APP_VERSION = "11.9.56";
 const CHANGELOG = [
+  {
+    v: "11.9.56", date: "2026-05-24",
+    pt: {
+      title: "★ Marcos de desenvolvimento — 44 marcos CDC 2022 + timeline + sinais de alerta",
+      bullets: [
+        '★ **Nova feature: Marcos de crescimento** com 44 marcos de desenvolvimento de 0 a 24 meses, divididos em 5 categorias (motor grosso, motor fino, linguagem, social/emocional, cognitivo). Bilíngue PT/EN.',
+        '★ **Fonte: CDC "Learn the Signs. Act Early."** (revisão Fev 2022) — base científica. Cross-check com WHO MGRS pros marcos motor grosso (janelas de aquisição) e SBP pra terminologia PT-BR.',
+        '★ **Card "Próximos marcos" no Home** — aparece automaticamente entre os KPI cards e a lista do dia. Mostra até 3 marcos esperados pra idade atual da Louise (ainda não registrados). Tap → abre página completa.',
+        '★ **Página dedicada de Marcos** acessível pelo card. Tem 3 seções:',
+        '  · **Próximos marcos** — chips clicáveis com cor por categoria, tap pra registrar.',
+        '  · **Conquistados** — timeline cronológica com data + categoria + nota opcional. Vira álbum digital pra rever.',
+        '  · **Sinais pra conversar com a pediatra** — colapsável, ~17 sinais "Act Early" filtrados pela idade atual. Tom não-alarmista ("ponto de atenção").',
+        '★ **Picker de marcos** (bottom sheet) com filtro por categoria + lista de marcos não-feitos ordenados por idade. Tap → detalhe com descrição + dica + campo de data + nota → Salvar.',
+        '**Tipo "milestone"** novo no TYPES (ícone star, cor #facc15 gold). Entries armazenam: `type:"milestone"`, `key`, `category`, `date`, `note` opcional. Compatível com sync do Firestore existente.',
+        'Build: `js/milestones.js` (~25kb) bundled em `app-libs.js`. SW precache atualizado.',
+      ],
+    },
+    en: {
+      title: "★ Developmental milestones — 44 CDC 2022 milestones + timeline + warning signs",
+      bullets: [
+        '★ **New feature: Growth milestones** with 44 developmental milestones from 0 to 24 months, split into 5 categories (gross motor, fine motor, language, social/emotional, cognitive). Bilingual PT/EN.',
+        '★ **Source: CDC "Learn the Signs. Act Early."** (Feb 2022 revision) — scientific basis. Cross-checked with WHO MGRS for gross motor milestones (windows of achievement) and SBP for PT-BR terminology.',
+        '★ **"Upcoming milestones" card on Home** — appears automatically between KPI cards and the day list. Shows up to 3 milestones expected for Louise\'s current age (not yet logged). Tap → opens full page.',
+        '★ **Dedicated Milestones page** accessible from the card. 3 sections:',
+        '  · **Upcoming** — clickable chips colored by category, tap to log.',
+        '  · **Achieved** — chronological timeline with date + category + optional note. Becomes digital album to review.',
+        '  · **Signs to discuss with pediatrician** — collapsible, ~17 "Act Early" signs filtered by current age. Non-alarmist tone ("attention point").',
+        '★ **Milestone picker** (bottom sheet) with category filter + list of undone milestones sorted by age. Tap → detail with description + tip + date + note → Save.',
+        '**New "milestone" type** in TYPES (star icon, #facc15 gold color). Entries store: `type:"milestone"`, `key`, `category`, `date`, optional `note`. Compatible with existing Firestore sync.',
+        'Build: `js/milestones.js` (~25kb) bundled into `app-libs.js`. SW precache updated.',
+      ],
+    },
+  },
   {
     v: "11.9.55", date: "2026-05-13",
     pt: {
@@ -5115,7 +5151,7 @@ function Icon({name,size=20,color="currentColor",fill="none"}){
 //   T.f3XL=28 (display)                           — absorveu 26, 28
 // Sobram inline apenas hero displays raros (34, 36, 52) — 5 ocorrências total.
 const T={bg1:"#070b1e",bg2:"#0d1133",bg3:"#141a42",glass:"rgba(22,28,60,0.6)",gB:"rgba(90,100,180,0.12)",gBSoft:"rgba(255,255,255,0.06)",insetTop:"0 1px 0 0 rgba(255,255,255,0.04) inset",insetTopStrong:"0 1px 0 0 rgba(255,255,255,0.08) inset",text:"#e4e6f5",sub:"#a3aac8",dim:"#555a80",accent:"#8b7cf6",green:"#34d399",greenS:"rgba(52,211,153,0.1)",purple:"#a78bfa",purpleS:"rgba(167,139,250,0.1)",pink:"#f472b6",pinkS:"rgba(244,114,182,0.1)",amber:"#fbbf24",amberS:"rgba(251,191,36,0.1)",orange:"#fb923c",orangeS:"rgba(251,146,60,0.1)",blue:"#38bdf8",blueS:"rgba(56,189,248,0.12)",red:"#f87171",redS:"rgba(248,113,113,0.1)",cyan:"#22d3ee",cyanS:"rgba(34,211,238,0.1)",fXS:9,fSM:11,fMD:13,fLG:15,fXL:17,f2XL:22,f3XL:28};
-const TYPES={bottle:{label:{pt:"Mamadeira",en:"Bottle"},icon:"bottle",color:T.green,bg:T.greenS},nursing:{label:{pt:"Amamentação",en:"Nursing"},icon:"breast",color:T.blue,bg:T.blueS},sleep:{label:{pt:"Sono",en:"Bedtime"},icon:"bed",color:T.purple,bg:T.purpleS},wakeup:{label:{pt:"Acordou",en:"Woke up"},icon:"sun",color:T.amber,bg:T.amberS},nap:{label:{pt:"Soneca",en:"Nap"},icon:"cloud",color:T.purple,bg:T.purpleS},nightwaking:{label:{pt:"Acordou à noite",en:"Night waking"},icon:"zap",color:T.orange,bg:T.orangeS},diaper:{label:{pt:"Fralda",en:"Diaper"},icon:"diaper",color:T.pink,bg:T.pinkS},medicine:{label:{pt:"Medicamento",en:"Medicine"},icon:"pill",color:T.amber,bg:T.amberS},temperature:{label:{pt:"Temperatura",en:"Temperature"},icon:"thermo",color:T.red,bg:T.redS},bath:{label:{pt:"Banho",en:"Bath"},icon:"bath",color:T.cyan,bg:T.cyanS},tummytime:{label:{pt:"Tummy time",en:"Tummy time"},icon:"baby",color:T.amber,bg:T.amberS},growth:{label:{pt:"Crescimento",en:"Growth"},icon:"ruler",color:"#a3e635",bg:"rgba(163,230,53,0.1)"}};
+const TYPES={bottle:{label:{pt:"Mamadeira",en:"Bottle"},icon:"bottle",color:T.green,bg:T.greenS},nursing:{label:{pt:"Amamentação",en:"Nursing"},icon:"breast",color:T.blue,bg:T.blueS},sleep:{label:{pt:"Sono",en:"Bedtime"},icon:"bed",color:T.purple,bg:T.purpleS},wakeup:{label:{pt:"Acordou",en:"Woke up"},icon:"sun",color:T.amber,bg:T.amberS},nap:{label:{pt:"Soneca",en:"Nap"},icon:"cloud",color:T.purple,bg:T.purpleS},nightwaking:{label:{pt:"Acordou à noite",en:"Night waking"},icon:"zap",color:T.orange,bg:T.orangeS},diaper:{label:{pt:"Fralda",en:"Diaper"},icon:"diaper",color:T.pink,bg:T.pinkS},medicine:{label:{pt:"Medicamento",en:"Medicine"},icon:"pill",color:T.amber,bg:T.amberS},temperature:{label:{pt:"Temperatura",en:"Temperature"},icon:"thermo",color:T.red,bg:T.redS},bath:{label:{pt:"Banho",en:"Bath"},icon:"bath",color:T.cyan,bg:T.cyanS},tummytime:{label:{pt:"Tummy time",en:"Tummy time"},icon:"baby",color:T.amber,bg:T.amberS},growth:{label:{pt:"Crescimento",en:"Growth"},icon:"ruler",color:"#a3e635",bg:"rgba(163,230,53,0.1)"},milestone:{label:{pt:"Marco",en:"Milestone"},icon:"star",color:"#facc15",bg:"rgba(250,204,21,0.10)"}};
 
 // ── i18n ──
 const I={
@@ -5193,6 +5229,26 @@ const I={
   bottlesDay:{pt:"Mamadas/dia",en:"Bottles/day"},
   napsDay:{pt:"Sonecas · 4 por dia",en:"Naps · 4 per day"},
   napNth:{pt:["1ª soneca","2ª soneca","3ª soneca","4ª soneca"],en:["1st nap","2nd nap","3rd nap","4th nap"]},
+  // v11.9.56: marcos de crescimento (milestones)
+  milestonesTitle:{pt:"Marcos",en:"Milestones"},
+  milestonesDone:{pt:"feitos",en:"done"},
+  upcomingMilestones:{pt:"Próximos marcos",en:"Upcoming milestones"},
+  expectedAround:{pt:"esperado em torno de",en:"expected around"},
+  expectedNow:{pt:"esperado agora",en:"expected now"},
+  noMilestonesYet:{pt:"Nenhum marco registrado ainda. Toque + pra adicionar o primeiro.",en:"No milestones logged yet. Tap + to add the first one."},
+  pickMilestone:{pt:"Escolher marco",en:"Pick milestone"},
+  addNote:{pt:"Nota (opcional)",en:"Note (optional)"},
+  catMotorGross:{pt:"Motor grosso",en:"Gross motor"},
+  catMotorFine:{pt:"Motor fino",en:"Fine motor"},
+  catLanguage:{pt:"Linguagem",en:"Language"},
+  catSocial:{pt:"Social",en:"Social"},
+  catCognitive:{pt:"Cognitivo",en:"Cognitive"},
+  concerningSigns:{pt:"Sinais pra conversar com a pediatra",en:"Signs to discuss with pediatrician"},
+  concerningSignsHelp:{pt:"Não é alarme — apenas pontos de atenção pra trazer no próximo retorno.",en:"Not an alarm — just attention points to bring up at the next visit."},
+  seeAll:{pt:"ver tudo",en:"see all"},
+  source:{pt:"Fonte",en:"Source"},
+  weeksOld:{pt:"sem",en:"wks"},
+  monthsOld:{pt:"meses",en:"months"},
   // v11.9.40: card do Home
   nextEvent:{pt:"Próximo na rotina",en:"Next in routine"},
   onSchedule:{pt:"no horário",en:"on schedule"},
@@ -7972,6 +8028,187 @@ function GrowthPage({entries,birthDate,profile,onBack,onAddEntry,onDeleteEntry})
   </div>);
 }
 
+// v11.9.56: Marcos de desenvolvimento (Timeline + picker). Dados em window.DEV_MILESTONES
+// (~44 itens 0-24m, CDC 2022 + WHO MGRS + SBP) e window.CONCERNING_SIGNS (~17 itens).
+// Note: window.MILESTONES (sem DEV_) ja existe em curiosities.js — sao curiosidades
+// mensais (2-12m). Namespaces separados pra evitar collision.
+// Entries com type:"milestone" guardam: key (chave do DEV_MILESTONES), category, date, note.
+function MilestonesPage({entries,birthDate,profile,onBack,onAddEntry,onDeleteEntry}){
+  const all=window.DEV_MILESTONES||[];
+  const allSigns=window.CONCERNING_SIGNS||[];
+  const milestoneEntries=entries.filter(e=>e.type==="milestone")
+    .sort((a,b)=>`${b.date}T${b.time||"00:00"}`.localeCompare(`${a.date}T${a.time||"00:00"}`));
+  const age=calcAge(birthDate);
+  const ageMonths=age?.months||0;
+  const checkups=[2,4,6,9,12,15,18,24];
+  const currentCheckup=checkups.filter(c=>c<=ageMonths+1).slice(-1)[0]||2;
+  const nextCheckup=checkups.find(c=>c>ageMonths);
+  const doneKeys=new Set(milestoneEntries.map(e=>e.key));
+  const upcoming=all.filter(m=>
+    m.checkupAge>=Math.max(2,currentCheckup-2)&&
+    m.checkupAge<=(nextCheckup||currentCheckup+3)&&
+    !doneKeys.has(m.key)
+  );
+  const signs=allSigns.filter(s=>s.checkupAge<=ageMonths+2);
+  const[showAdd,setShowAdd]=useState(false);
+  const[showSigns,setShowSigns]=useState(false);
+  const[pickedKey,setPickedKey]=useState(null);
+  const[pickedDate,setPickedDate]=useState(todayStr());
+  const[pickedNote,setPickedNote]=useState("");
+  const[pickedCategory,setPickedCategory]=useState("all");
+  const[busy,setBusy]=useState(false);
+  const picked=pickedKey?all.find(m=>m.key===pickedKey):null;
+  const catColors={motor_gross:T.cyan,motor_fine:T.cyan,language:T.amber,social_emotional:T.pink,cognitive:T.accent};
+  const catLabels={motor_gross:L("catMotorGross"),motor_fine:L("catMotorFine"),language:L("catLanguage"),social_emotional:L("catSocial"),cognitive:L("catCognitive")};
+  const saveMilestone=async()=>{
+    if(!picked||busy)return;
+    setBusy(true);
+    Haptic.medium();
+    const entry={
+      id:`ms-${Date.now()}-${Math.random().toString(36).slice(2,8)}`,
+      type:"milestone",
+      key:picked.key,
+      category:picked.category,
+      date:pickedDate,
+      time:"12:00",
+    };
+    if(pickedNote.trim())entry.note=pickedNote.trim();
+    try{
+      await onAddEntry(entry);
+      Haptic.success();
+      setShowAdd(false);
+      setPickedKey(null);
+      setPickedDate(todayStr());
+      setPickedNote("");
+    }catch(e){Haptic.warning()}
+    setBusy(false);
+  };
+  return(<div style={{position:"fixed",inset:0,zIndex:200,maxWidth:480,margin:"0 auto",background:"radial-gradient(ellipse 140% 55% at 50% 100%, #1a1f52 0%, transparent 70%), radial-gradient(ellipse at 50% 0%, #10153d 0%, #070b1e 65%), #070b1e",overflowY:"auto",overflowX:"hidden",overscrollBehavior:"contain",WebkitOverflowScrolling:"touch",paddingTop:"env(safe-area-inset-top)",paddingBottom:"calc(100px + env(safe-area-inset-bottom))"}}>
+    {/* Header */}
+    <div style={{display:"flex",alignItems:"center",gap:10,padding:"16px 14px 14px 20px"}}>
+      <button aria-label={_lang==="en"?"Back":"Voltar"} onClick={onBack} style={{width:36,height:36,borderRadius:10,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name="back" size={18} color={T.sub}/></button>
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{fontSize:T.fXL,fontWeight:800,letterSpacing:-0.2}}>{L("milestonesTitle")}</div>
+        <div style={{fontSize:T.fSM,color:T.sub,marginTop:1,fontVariantNumeric:"tabular-nums"}}>{milestoneEntries.length} {L("milestonesDone")} · {ageMonths}m</div>
+      </div>
+      <button onClick={()=>{setPickedKey(null);setShowAdd(true)}} aria-label={_lang==="en"?"Add milestone":"Adicionar marco"} style={{width:40,height:40,borderRadius:12,background:"linear-gradient(135deg,#facc15,#f59e0b)",border:"none",display:"flex",alignItems:"center",justifyContent:"center",color:"#1a1f2e",fontSize:24,fontWeight:800,boxShadow:"0 4px 14px -4px rgba(250,204,21,0.5)",cursor:"pointer"}}>+</button>
+    </div>
+    {/* Upcoming */}
+    {upcoming.length>0&&<div style={{padding:"0 20px 14px"}}>
+      <div style={{fontSize:T.fSM,fontWeight:800,color:T.accent,textTransform:"uppercase",letterSpacing:1,marginBottom:10}}>{L("upcomingMilestones")}</div>
+      <div style={{display:"flex",flexDirection:"column",gap:8}}>
+        {upcoming.slice(0,4).map(m=>{
+          const isExpected=m.checkupAge<=ageMonths+1;
+          const col=catColors[m.category]||T.accent;
+          return<button key={m.key} onClick={()=>{setPickedKey(m.key);setShowAdd(true)}} style={{padding:"10px 12px",borderRadius:12,background:`linear-gradient(135deg,${col}14,${col}06)`,border:`1px solid ${col}28`,display:"flex",alignItems:"center",gap:11,textAlign:"left",cursor:"pointer"}}>
+            <div style={{width:32,height:32,borderRadius:9,background:`${col}1a`,border:`1px solid ${col}30`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+              <Icon name="star" size={15} color={col}/>
+            </div>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontSize:T.fMD,fontWeight:700,color:T.text,letterSpacing:-0.1}}>{m.label[_lang]||m.label.en}</div>
+              <div style={{fontSize:T.fXS,color:T.dim,marginTop:1}}>{isExpected?L("expectedNow"):`${L("expectedAround")} ${m.checkupAge}m`}</div>
+            </div>
+            <div style={{fontSize:T.fXL,color:col,fontWeight:700,opacity:0.6}}>+</div>
+          </button>
+        })}
+      </div>
+    </div>}
+    {/* Done timeline */}
+    <div style={{padding:"0 20px 14px"}}>
+      <div style={{fontSize:T.fSM,fontWeight:800,color:T.accent,textTransform:"uppercase",letterSpacing:1,marginBottom:14}}>{_lang==="en"?"Achieved":"Conquistados"}</div>
+      {milestoneEntries.length===0?<div style={{padding:"30px 20px",textAlign:"center",color:T.dim,fontSize:T.fMD,lineHeight:1.5}}>{L("noMilestonesYet")}</div>:
+        <div style={{position:"relative",paddingLeft:24}}>
+          <div style={{position:"absolute",left:9,top:0,bottom:0,width:1,background:`linear-gradient(180deg,${T.accent}88,${T.accent}11)`}}/>
+          {milestoneEntries.map(e=>{
+            const m=all.find(x=>x.key===e.key);
+            const cat=e.category||m?.category||"social_emotional";
+            const col=catColors[cat]||T.accent;
+            return<div key={e.id} style={{position:"relative",paddingBottom:16}}>
+              <div style={{position:"absolute",left:-19,top:4,width:11,height:11,borderRadius:"50%",background:col,border:"2px solid #070b1e",boxShadow:`0 0 0 1px ${col}88`}}/>
+              <div style={{fontSize:T.fXS,fontWeight:800,color:T.accent,textTransform:"uppercase",letterSpacing:0.8,marginBottom:3,fontVariantNumeric:"tabular-nums"}}>{new Date(e.date+"T12:00").toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{day:"numeric",month:"short",year:"numeric"})}</div>
+              <div style={{fontSize:T.fMD,fontWeight:700,color:T.text,letterSpacing:-0.1,display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
+                <span>{m?(m.label[_lang]||m.label.en):e.key}</span>
+                <span style={{fontSize:T.fXS,fontWeight:700,color:col,padding:"1px 6px",borderRadius:5,background:`${col}1a`,letterSpacing:0.3,textTransform:"uppercase"}}>{catLabels[cat]||""}</span>
+              </div>
+              {e.note&&<div style={{fontSize:T.fSM,color:T.sub,lineHeight:1.45,marginTop:3}}>{e.note}</div>}
+              <button onClick={()=>{if(confirm(_lang==="en"?"Delete this milestone?":"Excluir este marco?"))onDeleteEntry(e.id)}} style={{fontSize:T.fXS,color:T.dim,marginTop:5,padding:"2px 6px",background:"transparent",border:"none",cursor:"pointer",opacity:0.5,letterSpacing:0.2}}>{_lang==="en"?"delete":"excluir"}</button>
+            </div>
+          })}
+        </div>
+      }
+    </div>
+    {/* Concerning signs collapsible */}
+    {signs.length>0&&<div style={{padding:"0 20px 14px"}}>
+      <button onClick={()=>setShowSigns(!showSigns)} style={{width:"100%",padding:"12px 14px",borderRadius:12,background:"rgba(20,26,60,0.32)",border:`1px solid ${T.gBSoft}`,display:"flex",alignItems:"center",gap:10,textAlign:"left",cursor:"pointer"}}>
+        <Icon name="zap" size={16} color="#fb923c"/>
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{fontSize:T.fSM,fontWeight:700,color:T.text}}>{L("concerningSigns")}</div>
+          <div style={{fontSize:T.fXS,color:T.dim,marginTop:1}}>{signs.length} {_lang==="en"?"items":"itens"}</div>
+        </div>
+        <div style={{transform:showSigns?"rotate(180deg)":"rotate(0)",transition:"transform .2s",color:T.dim,flexShrink:0}}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+      </button>
+      {showSigns&&<div style={{marginTop:8,padding:"12px 14px",borderRadius:12,background:"rgba(251,146,60,0.06)",border:"1px solid rgba(251,146,60,0.18)"}}>
+        <div style={{fontSize:T.fXS,color:T.dim,lineHeight:1.5,marginBottom:10,fontStyle:"italic"}}>{L("concerningSignsHelp")}</div>
+        {signs.map(s=><div key={s.key} style={{display:"flex",alignItems:"flex-start",gap:8,padding:"6px 0",borderTop:"1px solid rgba(251,146,60,0.10)"}}>
+          <span style={{color:"#fb923c",fontSize:T.fSM,fontWeight:800,marginTop:0}}>•</span>
+          <span style={{fontSize:T.fSM,color:T.text,lineHeight:1.45,flex:1}}>{s.label[_lang]||s.label.en}</span>
+        </div>)}
+      </div>}
+    </div>}
+    {/* Source footer */}
+    <div style={{padding:"10px 20px 20px",fontSize:T.fXS,color:T.dim,textAlign:"center",lineHeight:1.5}}>
+      {L("source")}: CDC "Learn the Signs. Act Early." (Fev 2022) · WHO MGRS · SBP
+    </div>
+    {/* Add picker bottom sheet */}
+    {showAdd&&<div style={{position:"fixed",inset:0,zIndex:300,background:"rgba(4,6,22,0.85)",backdropFilter:"blur(8px)",display:"flex",alignItems:"flex-end",justifyContent:"center"}} onClick={()=>{setShowAdd(false);setPickedKey(null)}}>
+      <div onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:480,maxHeight:"85vh",background:"radial-gradient(ellipse at 50% 0%, #15124a 0%, #080a26 65%), #040616",borderTopLeftRadius:24,borderTopRightRadius:24,border:`1px solid ${T.gBSoft}`,borderBottomWidth:0,padding:"18px 18px calc(20px + env(safe-area-inset-bottom))",overflowY:"auto",animation:"slideUp .3s cubic-bezier(0.22,1,0.36,1)"}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}>
+          <div style={{flex:1,fontSize:T.fLG,fontWeight:800,letterSpacing:-0.2,minWidth:0}}>{picked?(picked.label[_lang]||picked.label.en):L("pickMilestone")}</div>
+          <button onClick={()=>{setShowAdd(false);setPickedKey(null)}} style={{width:30,height:30,borderRadius:10,background:T.glass,border:`1px solid ${T.gBSoft}`,color:T.sub,fontSize:T.fXL,fontWeight:600,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>×</button>
+        </div>
+        {!picked?<>
+          <div style={{display:"flex",gap:6,marginBottom:12,overflowX:"auto",paddingBottom:4}}>
+            {[{k:"all",l:_lang==="en"?"All":"Todos"},{k:"social_emotional",l:L("catSocial")},{k:"language",l:L("catLanguage")},{k:"motor_gross",l:L("catMotorGross")},{k:"motor_fine",l:L("catMotorFine")},{k:"cognitive",l:L("catCognitive")}].map(c=>
+              <button key={c.k} onClick={()=>setPickedCategory(c.k)} style={{padding:"5px 11px",borderRadius:8,background:pickedCategory===c.k?`${T.accent}28`:T.glass,border:`1px solid ${pickedCategory===c.k?T.accent+"55":T.gBSoft}`,fontSize:T.fXS,fontWeight:700,color:pickedCategory===c.k?"#c4b5fd":T.sub,letterSpacing:0.3,textTransform:"uppercase",whiteSpace:"nowrap",flexShrink:0}}>{c.l}</button>
+            )}
+          </div>
+          <div style={{display:"flex",flexDirection:"column",gap:6}}>
+            {all.filter(m=>!doneKeys.has(m.key)&&(pickedCategory==="all"||m.category===pickedCategory))
+              .sort((a,b)=>a.checkupAge-b.checkupAge)
+              .slice(0,40)
+              .map(m=>{
+                const col=catColors[m.category]||T.accent;
+                return<button key={m.key} onClick={()=>setPickedKey(m.key)} style={{padding:"10px 12px",borderRadius:11,background:"rgba(20,26,60,0.32)",border:`1px solid ${T.gBSoft}`,display:"flex",alignItems:"center",gap:10,textAlign:"left",cursor:"pointer"}}>
+                  <div style={{width:6,height:32,borderRadius:3,background:col,flexShrink:0}}/>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:T.fMD,fontWeight:700,color:T.text,letterSpacing:-0.1}}>{m.label[_lang]||m.label.en}</div>
+                    <div style={{fontSize:T.fXS,color:T.dim,marginTop:1}}>{m.checkupAge}m · {catLabels[m.category]}</div>
+                  </div>
+                </button>
+              })
+            }
+          </div>
+        </>:<>
+          <div style={{fontSize:T.fSM,color:T.sub,lineHeight:1.5,marginBottom:14}}>{picked.description[_lang]||picked.description.en}</div>
+          {picked.tip&&<div style={{padding:"10px 12px",borderRadius:10,background:"rgba(167,139,250,0.06)",border:"1px solid rgba(167,139,250,0.16)",fontSize:T.fSM,color:T.sub,lineHeight:1.5,marginBottom:14}}>{picked.tip[_lang]||picked.tip.en}</div>}
+          <Fld label={_lang==="en"?"Date":"Data"}>
+            <input type="date" value={pickedDate} onChange={e=>setPickedDate(e.target.value)} max={todayStr()} style={{width:"100%",padding:"14px 12px",background:"rgba(14,18,48,0.7)",border:`1px solid ${T.gBSoft}`,borderRadius:12,color:T.text,fontSize:T.fLG,fontWeight:700,textAlign:"center",fontVariantNumeric:"tabular-nums",outline:"none",colorScheme:"dark",boxSizing:"border-box"}}/>
+          </Fld>
+          <Fld label={L("addNote")}>
+            <textarea value={pickedNote} onChange={e=>setPickedNote(e.target.value)} rows={3} placeholder={_lang==="en"?"e.g. smiled when I came in the room":"Ex: sorriu quando entrei no quarto"} style={{width:"100%",padding:"12px 14px",background:"rgba(14,18,48,0.7)",border:`1px solid ${T.gBSoft}`,borderRadius:12,color:T.text,fontSize:T.fMD,outline:"none",resize:"none",fontFamily:"inherit",boxSizing:"border-box"}}/>
+          </Fld>
+          <div style={{display:"flex",gap:8}}>
+            <button onClick={()=>setPickedKey(null)} style={{flex:1,padding:"12px 0",borderRadius:11,background:T.glass,border:`1px solid ${T.gBSoft}`,color:T.sub,fontSize:T.fMD,fontWeight:700,cursor:"pointer"}}>{_lang==="en"?"Back":"Voltar"}</button>
+            <button disabled={busy} onClick={saveMilestone} style={{flex:2,padding:"12px 0",borderRadius:11,background:"linear-gradient(135deg,#facc15,#f59e0b)",border:"none",color:"#1a1f2e",fontSize:T.fMD,fontWeight:800,letterSpacing:0.3,boxShadow:"0 4px 14px -4px rgba(250,204,21,0.5)",opacity:busy?0.6:1,cursor:busy?"not-allowed":"pointer"}}>{_lang==="en"?"Save":"Save"}</button>
+          </div>
+        </>}
+      </div>
+    </div>}
+  </div>);
+}
+
 // Starfield gerado 1x por sessão (dados aleatórios mas estáveis enquanto o app tá aberto).
 // Extraído pra cá + React.memo pra nunca re-renderizar junto com o App. v10.5.3.
 const _STARFIELD_COLORS = ["rgba(251,191,36,0.6)","rgba(167,139,250,0.5)","rgba(52,211,153,0.45)","rgba(96,165,250,0.5)","rgba(244,114,182,0.4)","rgba(251,191,36,0.5)","rgba(200,210,255,0.6)","rgba(167,139,250,0.45)"];
@@ -9222,6 +9459,41 @@ function App(){
         // Diaper breakdown wet/dirty (v10.8.0). Opção C do mockup — ícones coloridos.
         const diaperBreakdown=p.tap==="diaper"&&(wetDiapers>0||dirtyDiapers>0)?(<div style={{display:"flex",gap:8,marginTop:3,fontSize:T.fSM,fontWeight:700,fontVariantNumeric:"tabular-nums"}}>{wetDiapers>0&&<span style={{display:"inline-flex",alignItems:"center",gap:3,color:"#93c5fd"}}><Icon name="droplet" size={11} color="#93c5fd"/>{wetDiapers}</span>}{dirtyDiapers>0&&<span style={{display:"inline-flex",alignItems:"center",gap:3,color:"#a16b4a"}}><Icon name="poop" size={11} color="#a16b4a"/>{dirtyDiapers}</span>}</div>):null;
         return<div key={idx} className="home-card" style={{padding:"9px 11px",borderRadius:14,background:`${p.c}07`,border:`1px solid ${p.c}14`,textAlign:"left",cursor:"default",position:"relative",overflow:"hidden",boxShadow:"0 1px 0 0 rgba(255,255,255,0.04) inset"}}><div style={{position:"absolute",top:0,left:0,right:0,height:1,background:`linear-gradient(90deg,transparent,${p.c}66,transparent)`,opacity:0.3,pointerEvents:"none"}}/><div style={{display:"flex",alignItems:"center",gap:5,marginBottom:2}}><Icon name={p.i} size={11} color={p.c}/><span style={{fontSize:T.fXS,color:T.dim,fontWeight:600,letterSpacing:0.3,textTransform:"uppercase"}}>{p.l}</span></div><div style={{fontSize:T.fLG,fontWeight:800,color:p.c,lineHeight:1,letterSpacing:-0.2,fontVariantNumeric:"tabular-nums"}}><span key={p.v} className="val-pulse">{p.v}</span>{p.u?<span style={{fontSize:T.fSM,opacity:0.5,fontWeight:700,marginLeft:1}}>{p.u}</span>:null}{p.tap==="bottle"&&profile.mlGoal>0&&totalMl>0?<span style={{fontSize:T.fXS,opacity:0.55,fontWeight:700,marginLeft:5}}>· {Math.round((totalMl/profile.mlGoal)*100)}%</span>:null}</div>{diaperBreakdown}{feedProg?<><div style={{height:3,borderRadius:2,background:`${p.c}1a`,marginTop:6,overflow:"hidden"}}><div style={{height:"100%",width:`${Math.min(100,feedProg.prog*100)}%`,background:feedProg.prog>=0.8?feedProg.barColor:`linear-gradient(90deg,${p.c},${p.c}cc)`,borderRadius:2,transition:"width .4s ease, background .3s ease"}}/></div><div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginTop:3,fontSize:T.fXS,fontWeight:600,fontVariantNumeric:"tabular-nums"}}><span style={{color:`${p.c}88`}}>{ago}</span><span style={{color:feedProg.barColor,fontWeight:700}}>{feedProg.prog>=1?`+${feedProg.lateMin}m late`:`→ ${feedProg.nextStr}`}</span></div></>:(ago&&<div style={{fontSize:T.fSM,color:`${p.c}88`,fontWeight:600,marginTop:1,fontVariantNumeric:"tabular-nums"}}>{ago}</div>)}</div>})}</div>
+        {/* v11.9.56: card "Próximos marcos" — só renderiza se houver marcos esperados pra idade atual ainda não logados */}
+        {(()=>{
+          const all=window.DEV_MILESTONES||[];
+          if(all.length===0)return null;
+          const age=calcAge(profile.birthDate);
+          const ageMonths=age?.months||0;
+          const checkups=[2,4,6,9,12,15,18,24];
+          const currentCheckup=checkups.filter(c=>c<=ageMonths+1).slice(-1)[0]||2;
+          const nextCheckup=checkups.find(c=>c>ageMonths);
+          const doneKeys=new Set(entries.filter(e=>e.type==="milestone").map(e=>e.key));
+          const upcoming=all.filter(m=>m.checkupAge>=Math.max(2,currentCheckup-1)&&m.checkupAge<=(nextCheckup||currentCheckup+2)&&!doneKeys.has(m.key)).slice(0,3);
+          if(upcoming.length===0)return null;
+          const catCol={motor_gross:T.cyan,motor_fine:T.cyan,language:T.amber,social_emotional:T.pink,cognitive:T.accent};
+          return<button onClick={()=>goTo("milestones")} style={{display:"block",width:"calc(100% - 40px)",margin:"0 20px 14px",padding:"11px 14px 9px 16px",borderRadius:14,background:"linear-gradient(135deg,rgba(250,204,21,0.06),rgba(245,158,11,0.02))",border:"1px solid rgba(250,204,21,0.20)",textAlign:"left",cursor:"pointer",boxShadow:"0 1px 0 0 rgba(255,255,255,0.04) inset"}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
+              <span style={{fontSize:T.fXS,fontWeight:800,color:"#fcd34d",textTransform:"uppercase",letterSpacing:1.1,display:"flex",alignItems:"center",gap:6}}>
+                <Icon name="star" size={11} color="#fcd34d"/>
+                {L("upcomingMilestones")}
+              </span>
+              <span style={{fontSize:T.fXS,color:T.dim,fontWeight:600,letterSpacing:0.3}}>{L("seeAll")} →</span>
+            </div>
+            <div style={{display:"flex",flexDirection:"column",gap:5}}>
+              {upcoming.map(m=>{
+                const col=catCol[m.category]||T.accent;
+                return<div key={m.key} style={{display:"flex",alignItems:"center",gap:9,padding:"3px 0"}}>
+                  <div style={{width:5,height:22,borderRadius:3,background:col,flexShrink:0}}/>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:T.fMD,fontWeight:600,color:T.text,letterSpacing:-0.1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.label[_lang]||m.label.en}</div>
+                  </div>
+                  <div style={{fontSize:T.fXS,color:T.dim,fontWeight:700,fontVariantNumeric:"tabular-nums"}}>{m.checkupAge}m</div>
+                </div>
+              })}
+            </div>
+          </button>
+        })()}
         <div style={{padding:"0 20px"}}><div style={{display:"flex",alignItems:"baseline",justifyContent:"space-between",marginBottom:10,padding:"0 4px"}}><span style={{fontSize:T.fSM,fontWeight:700,color:T.accent,textTransform:"uppercase",letterSpacing:1}}>{L("today")}</span><span style={{fontSize:T.fSM,color:T.dim,fontWeight:500,letterSpacing:0.4,textTransform:"uppercase",fontVariantNumeric:"tabular-nums"}}>{new Date().toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{weekday:"short",day:"numeric"}).replace(".","").toUpperCase()}</span></div>{todayE.length===0&&!liveBedtime&&<div style={{textAlign:"center",padding:"32px 20px",color:T.dim}}><Icon name="star" size={32} color={T.dim} fill={T.dim}/><div style={{fontSize:T.fMD,marginTop:8}}>{(()=>{const h=new Date().getHours();if(_lang==="en"){if(h<7)return"Quiet morning — first feed soon?";if(h<11)return"Good morning! Log the first bottle";if(h<14)return"Tap + to add";if(h<19)return"Afternoon — track naps and feeds";if(h<22)return"Evening — wind-down soon";return"Night — bedtime starting?"}if(h<7)return"Manhã tranquila — primeira mamada?";if(h<11)return"Bom dia! Registre a primeira mamada";if(h<14)return"Toque + para registrar";if(h<19)return"Tarde — acompanhe sonecas e mamadas";if(h<22)return"Noite chegando — wind-down em breve";return"Noite — hora de dormir?"})()}</div></div>}{liveBedtime&&<SleepBlock entry={liveBedtime} entries={entries} isLive={true} activeTimer={activeTimer} onSaveTimer={FB.saveTimer} onSaveEntry={FB.addEntry} onDelete={deleteEntry} onEdit={startEdit}/>}{todayE.filter(e=>{
           // Only hide events linked to the live bedtime if their time actually falls within it.
           // Protects against legacy data where retroactive events got wrongly linked (pre v9.8.1).
@@ -9253,6 +9525,7 @@ function App(){
         </div>
       </div>:null}
       {page==="growth"&&<GrowthPage entries={entries} birthDate={profile.birthDate} profile={profile} onBack={()=>goTo("stats")} onAddEntry={addEntry} onDeleteEntry={deleteEntry}/>}
+      {page==="milestones"&&<MilestonesPage entries={entries} birthDate={profile.birthDate} profile={profile} onBack={()=>goTo("home")} onAddEntry={addEntry} onDeleteEntry={deleteEntry}/>}
       {/* Bottom spacer so content clears nav bar + timer (dynamic w/ safe-area) */}
       {/* Sem bottom spacer (v10.2.9) — queremos conteúdo passando ATRÁS da nav
           pill translúcida (Instagram-style: você rola até o fim, o último card

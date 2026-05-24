@@ -78,6 +78,7 @@ const JS_BUNDLE_FILES = [
   "splash-icon.js",
   "who-growth.js",
   "curiosities.js",
+  "milestones.js",
   "wake-lock.js",
   "device-features.js",
   "routine-engine.js",
@@ -91,14 +92,15 @@ mkdirSync(join(DIST, "js"), { recursive: true });
 writeFileSync(join(DIST, "js", "app-libs.js"), bundle);
 console.log("[build] bundled js/ into app-libs.js (" + bundle.length + " chars)");
 
-// Collapse the 6 <script src="js/X.js"> tags into 1 reference to the bundle.
+// Collapse the 7 <script src="js/X.js"> tags into 1 reference to the bundle.
 // Regex matches the first tag through the last, including blank lines between.
+// (v11.9.56: era 6, agora 7 com milestones.js)
 const BUNDLE_SCRIPT_RE = /<script src="js\/splash-icon\.js"><\/script>[\s\S]*?<script src="js\/routine-engine\.js"><\/script>/;
 if (BUNDLE_SCRIPT_RE.test(html)) {
   html = html.replace(BUNDLE_SCRIPT_RE, '<script src="js/app-libs.js"></script>');
-  console.log("[build] collapsed 6 <script> tags into 1 bundle reference");
+  console.log("[build] collapsed 7 <script> tags into 1 bundle reference");
 } else {
-  console.warn("[build] WARN: could not find 6-script block to bundle, HTML unchanged");
+  console.warn("[build] WARN: could not find 7-script block to bundle, HTML unchanged");
 }
 
 writeFileSync(join(DIST, "index.html"), html);
