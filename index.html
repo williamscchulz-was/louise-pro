@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.58 Fix: Save do picker de marco ficava atras da nav pill. Nav agora some quando picker abre + padding-bottom maior + maxHeight 90vh.
   v11.9.57 Botao ★ Marcos no header (entry point sempre visivel, entre nome e sino). Antes so via card condicional no Home.
   v11.9.56 ★ Marcos de desenvolvimento: 44 marcos CDC 2022 + WHO MGRS + SBP, 5 categorias, timeline + Home card + 17 sinais de alerta. Bilingue PT/EN.
   v11.9.55 Wake pill: respiro mais perceptivel — scale 1->1.05, box-shadow 6->30px, border alpha 0.5->0.85, duracao 3.5s. Realmente respira.
@@ -340,6 +341,8 @@
         #040616;
       transition:background 0.8s ease;
     }
+    /* v11.9.58: esconde nav pill quando picker de marco aberto — Save ficava atras */
+    body.milestone-picker-open #nav-host{display:none}
     @keyframes progressShimmer{0%,100%{opacity:0.7}50%{opacity:1}}
     @keyframes nwIconPulseAmber{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
     /* v11.9.1: confetti pra marcos (1m, 100d, etc). Cada particula com delay/distancia
@@ -749,8 +752,25 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.57";
+const APP_VERSION = "11.9.58";
 const CHANGELOG = [
+  {
+    v: "11.9.58", date: "2026-05-24",
+    pt: {
+      title: "Fix: Save do picker de marco ficava atrás da nav pill",
+      bullets: [
+        '★ **Bug:** ao abrir um marco no picker, os botões "Voltar" + "Salvar" no fim do bottom-sheet ficavam visualmente cobertos pela nav pill flutuante (z-index 300).',
+        '**Fix em camadas:** (a) nav pill agora SOME enquanto o picker tá aberto via `body.milestone-picker-open #nav-host{display:none}` + useEffect togglando a classe. (b) padding-bottom do sheet subiu de `calc(20px + safe-area)` pra `calc(32px + safe-area)` como defesa adicional. (c) maxHeight do sheet 85vh → 90vh pra mais espaço pra scroll.',
+      ],
+    },
+    en: {
+      title: "Fix: Picker's Save button was hidden behind the nav pill",
+      bullets: [
+        '★ **Bug:** When opening a milestone in the picker, the "Back" + "Save" buttons at the bottom-sheet end were visually covered by the floating nav pill (z-index 300).',
+        '**Layered fix:** (a) nav pill now HIDES while picker is open via `body.milestone-picker-open #nav-host{display:none}` + useEffect toggling the class. (b) sheet padding-bottom bumped from `calc(20px + safe-area)` to `calc(32px + safe-area)` as additional defense. (c) sheet maxHeight 85vh → 90vh for more scroll room.',
+      ],
+    },
+  },
   {
     v: "11.9.57", date: "2026-05-24",
     pt: {
@@ -8078,6 +8098,12 @@ function MilestonesPage({entries,birthDate,profile,onBack,onAddEntry,onDeleteEnt
   const picked=pickedKey?all.find(m=>m.key===pickedKey):null;
   const catColors={motor_gross:T.cyan,motor_fine:T.cyan,language:T.amber,social_emotional:T.pink,cognitive:T.accent};
   const catLabels={motor_gross:L("catMotorGross"),motor_fine:L("catMotorFine"),language:L("catLanguage"),social_emotional:L("catSocial"),cognitive:L("catCognitive")};
+  // v11.9.58: esconde nav pill enquanto picker aberto (senao Save fica atras)
+  useEffect(()=>{
+    if(!document.body)return;
+    document.body.classList.toggle("milestone-picker-open",showAdd);
+    return()=>{document.body.classList.remove("milestone-picker-open")};
+  },[showAdd]);
   const saveMilestone=async()=>{
     if(!picked||busy)return;
     setBusy(true);
@@ -8181,7 +8207,7 @@ function MilestonesPage({entries,birthDate,profile,onBack,onAddEntry,onDeleteEnt
     </div>
     {/* Add picker bottom sheet */}
     {showAdd&&<div style={{position:"fixed",inset:0,zIndex:300,background:"rgba(4,6,22,0.85)",backdropFilter:"blur(8px)",display:"flex",alignItems:"flex-end",justifyContent:"center"}} onClick={()=>{setShowAdd(false);setPickedKey(null)}}>
-      <div onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:480,maxHeight:"85vh",background:"radial-gradient(ellipse at 50% 0%, #15124a 0%, #080a26 65%), #040616",borderTopLeftRadius:24,borderTopRightRadius:24,border:`1px solid ${T.gBSoft}`,borderBottomWidth:0,padding:"18px 18px calc(20px + env(safe-area-inset-bottom))",overflowY:"auto",animation:"slideUp .3s cubic-bezier(0.22,1,0.36,1)"}}>
+      <div onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:480,maxHeight:"90vh",background:"radial-gradient(ellipse at 50% 0%, #15124a 0%, #080a26 65%), #040616",borderTopLeftRadius:24,borderTopRightRadius:24,border:`1px solid ${T.gBSoft}`,borderBottomWidth:0,padding:"18px 18px calc(32px + env(safe-area-inset-bottom))",overflowY:"auto",animation:"slideUp .3s cubic-bezier(0.22,1,0.36,1)"}}>
         <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}>
           <div style={{flex:1,fontSize:T.fLG,fontWeight:800,letterSpacing:-0.2,minWidth:0}}>{picked?(picked.label[_lang]||picked.label.en):L("pickMilestone")}</div>
           <button onClick={()=>{setShowAdd(false);setPickedKey(null)}} style={{width:30,height:30,borderRadius:10,background:T.glass,border:`1px solid ${T.gBSoft}`,color:T.sub,fontSize:T.fXL,fontWeight:600,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>×</button>
