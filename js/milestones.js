@@ -32,6 +32,167 @@
 window.DEV_MILESTONES = [
 
   // ════════════════════════════════════════════════════
+  //   0 MONTHS — Newborn (10 marcos emocionais)
+  //   Não-CDC, "Louise Pro Newborn Pack" — primeiros
+  //   momentos / experiências que pais querem celebrar.
+  // ════════════════════════════════════════════════════
+
+  {
+    key: "born",
+    category: "social_emotional",
+    checkupAge: 0,
+    ageRange: { minWeeks: 0, maxWeeks: 1, typicalWeeks: 0 },
+    label: {
+      pt: "Nasceu!",
+      en: "Born!"
+    },
+    description: {
+      pt: "O dia em que tudo começou.",
+      en: "The day it all began."
+    },
+    source: "Louise Pro Newborn"
+  },
+  {
+    key: "first_feed",
+    category: "social_emotional",
+    checkupAge: 0,
+    ageRange: { minWeeks: 0, maxWeeks: 1, typicalWeeks: 0 },
+    label: {
+      pt: "Primeira mamada",
+      en: "First feed"
+    },
+    description: {
+      pt: "A primeira vez que mamou.",
+      en: "The first time she fed."
+    },
+    source: "Louise Pro Newborn"
+  },
+  {
+    key: "first_diaper",
+    category: "social_emotional",
+    checkupAge: 0,
+    ageRange: { minWeeks: 0, maxWeeks: 1, typicalWeeks: 0 },
+    label: {
+      pt: "Primeira fralda",
+      en: "First diaper"
+    },
+    description: {
+      pt: "A primeira fralda — geralmente mecônio nas primeiras 24h.",
+      en: "First diaper — usually meconium in the first 24h."
+    },
+    source: "Louise Pro Newborn"
+  },
+  {
+    key: "first_bath",
+    category: "social_emotional",
+    checkupAge: 0,
+    ageRange: { minWeeks: 0, maxWeeks: 4, typicalWeeks: 1 },
+    label: {
+      pt: "Primeiro banho",
+      en: "First bath"
+    },
+    description: {
+      pt: "O primeiro banho — geralmente depois do coto cair.",
+      en: "First bath — usually after the umbilical stump falls off."
+    },
+    source: "Louise Pro Newborn"
+  },
+  {
+    key: "discharge",
+    category: "social_emotional",
+    checkupAge: 0,
+    ageRange: { minWeeks: 0, maxWeeks: 2, typicalWeeks: 0 },
+    label: {
+      pt: "Alta hospitalar",
+      en: "Hospital discharge"
+    },
+    description: {
+      pt: "Saída do hospital — primeira viagem pra casa.",
+      en: "Leaving the hospital — first trip home."
+    },
+    source: "Louise Pro Newborn"
+  },
+  {
+    key: "first_night_home",
+    category: "social_emotional",
+    checkupAge: 0,
+    ageRange: { minWeeks: 0, maxWeeks: 2, typicalWeeks: 0 },
+    label: {
+      pt: "Primeira noite em casa",
+      en: "First night at home"
+    },
+    description: {
+      pt: "A primeira noite fora do hospital.",
+      en: "First night outside the hospital."
+    },
+    source: "Louise Pro Newborn"
+  },
+  {
+    key: "umbilical_cord_fell",
+    category: "social_emotional",
+    checkupAge: 0,
+    ageRange: { minWeeks: 1, maxWeeks: 3, typicalWeeks: 2 },
+    label: {
+      pt: "Coto umbilical caiu",
+      en: "Umbilical cord fell off"
+    },
+    description: {
+      pt: "Geralmente entre 1 e 3 semanas após o nascimento.",
+      en: "Usually between 1 and 3 weeks after birth."
+    },
+    source: "Louise Pro Newborn"
+  },
+  {
+    key: "regained_birth_weight",
+    category: "social_emotional",
+    checkupAge: 0,
+    ageRange: { minWeeks: 1, maxWeeks: 3, typicalWeeks: 2 },
+    label: {
+      pt: "Voltou ao peso de nascimento",
+      en: "Regained birth weight"
+    },
+    description: {
+      pt: "Após perder 5-10% inicial, retoma o peso de quando nasceu.",
+      en: "After losing the initial 5-10%, regains birth weight."
+    },
+    source: "Louise Pro Newborn"
+  },
+  {
+    key: "first_pediatrician_visit",
+    category: "social_emotional",
+    checkupAge: 0,
+    ageRange: { minWeeks: 0, maxWeeks: 4, typicalWeeks: 1 },
+    label: {
+      pt: "Primeira consulta com pediatra",
+      en: "First pediatrician visit"
+    },
+    description: {
+      pt: "Primeira ida ao consultório do pediatra (não o do hospital).",
+      en: "First visit to the pediatrician's office (not at the hospital)."
+    },
+    source: "Louise Pro Newborn"
+  },
+  {
+    key: "looks_at_faces_early",
+    category: "social_emotional",
+    checkupAge: 0,
+    ageRange: { minWeeks: 0, maxWeeks: 6, typicalWeeks: 3 },
+    label: {
+      pt: "Olha para rostos",
+      en: "Looks at faces"
+    },
+    description: {
+      pt: "Foca no seu rosto especialmente — preferência por padrões humanos.",
+      en: "Focuses on your face — preference for human patterns."
+    },
+    tip: {
+      pt: "Foque a 20-30cm dela. Olha contato direto. Ela vai responder.",
+      en: "Stay 20-30cm from her face. Make direct eye contact. She'll respond."
+    },
+    source: "Louise Pro Newborn"
+  },
+
+  // ════════════════════════════════════════════════════
   //   2 MONTHS (5 marcos)
   // ════════════════════════════════════════════════════
 

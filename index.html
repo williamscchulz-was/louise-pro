@@ -5,6 +5,7 @@
 
   Ultimas versoes (historico completo no modal "Ler novidades"):
 
+  v11.9.59 +10 marcos newborn (0-2m): nasceu, primeira mamada, primeira fralda, banho, alta, coto umbilical, peso, etc. Pra checar retroativo.
   v11.9.58 Fix: Save do picker de marco ficava atras da nav pill. Nav agora some quando picker abre + padding-bottom maior + maxHeight 90vh.
   v11.9.57 Botao ★ Marcos no header (entry point sempre visivel, entre nome e sino). Antes so via card condicional no Home.
   v11.9.56 ★ Marcos de desenvolvimento: 44 marcos CDC 2022 + WHO MGRS + SBP, 5 categorias, timeline + Home card + 17 sinais de alerta. Bilingue PT/EN.
@@ -752,8 +753,31 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.58";
+const APP_VERSION = "11.9.59";
 const CHANGELOG = [
+  {
+    v: "11.9.59", date: "2026-05-24",
+    pt: {
+      title: "Marcos newborn (0-2 meses) — 10 marcos emocionais",
+      bullets: [
+        '★ **10 marcos do período recém-nascido** adicionados ao `js/milestones.js` com `checkupAge: 0`. Não são CDC (CDC começa em 2 meses) — são emocionais/experienciais:',
+        '  Nasceu · Primeira mamada · Primeira fralda · Primeiro banho · Alta hospitalar · Primeira noite em casa · Coto umbilical caiu · Voltou ao peso de nascimento · Primeira consulta pediatra · Olha para rostos',
+        'Fonte marcada como "Louise Pro Newborn" — distinto do CDC pra não confundir com diretriz clínica.',
+        'Filtro de checkups na MilestonesPage atualizado pra incluir o 0 (era [2,4,6,9,12,15,18,24], agora [0,2,4,6,...]). Agora a Louise pode ter os primeiros marcos retroativos checados antes do CDC 2m kick in.',
+        '**Próximo:** gamificação (constelação + confetti) — mockup em `.claude/mockups/milestones-gamification.html` pra você escolher direção.',
+      ],
+    },
+    en: {
+      title: "Newborn milestones (0-2 months) — 10 emotional milestones",
+      bullets: [
+        '★ **10 newborn period milestones** added to `js/milestones.js` with `checkupAge: 0`. Not CDC (CDC starts at 2 months) — these are emotional/experiential:',
+        '  Born · First feed · First diaper · First bath · Hospital discharge · First night at home · Umbilical cord fell off · Regained birth weight · First pediatrician visit · Looks at faces',
+        'Source marked as "Louise Pro Newborn" — distinct from CDC to not confuse with clinical guideline.',
+        'Checkups filter in MilestonesPage updated to include 0 (was [2,4,6,9,12,15,18,24], now [0,2,4,6,...]). Louise can now retroactively check off the first milestones before the CDC 2m kicks in.',
+        '**Next up:** gamification (constellation + confetti) — mockup at `.claude/mockups/milestones-gamification.html` for you to pick direction.',
+      ],
+    },
+  },
   {
     v: "11.9.58", date: "2026-05-24",
     pt: {
@@ -8078,7 +8102,7 @@ function MilestonesPage({entries,birthDate,profile,onBack,onAddEntry,onDeleteEnt
     .sort((a,b)=>`${b.date}T${b.time||"00:00"}`.localeCompare(`${a.date}T${a.time||"00:00"}`));
   const age=calcAge(birthDate);
   const ageMonths=age?.months||0;
-  const checkups=[2,4,6,9,12,15,18,24];
+  const checkups=[0,2,4,6,9,12,15,18,24];
   const currentCheckup=checkups.filter(c=>c<=ageMonths+1).slice(-1)[0]||2;
   const nextCheckup=checkups.find(c=>c>ageMonths);
   const doneKeys=new Set(milestoneEntries.map(e=>e.key));
@@ -9513,7 +9537,7 @@ function App(){
           if(all.length===0)return null;
           const age=calcAge(profile.birthDate);
           const ageMonths=age?.months||0;
-          const checkups=[2,4,6,9,12,15,18,24];
+          const checkups=[0,2,4,6,9,12,15,18,24];
           const currentCheckup=checkups.filter(c=>c<=ageMonths+1).slice(-1)[0]||2;
           const nextCheckup=checkups.find(c=>c>ageMonths);
           const doneKeys=new Set(entries.filter(e=>e.type==="milestone").map(e=>e.key));
