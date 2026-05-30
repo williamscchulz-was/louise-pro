@@ -372,7 +372,7 @@
     /* v11.9.16: spring no valPulse — overshoot leve (1.12 → 0.97 → 1) em vez de plain ease.
        Sensação tátil quando totalMl/totalDiapers/etc muda. ~500ms total. */
     @keyframes valPulse{0%{transform:scale(1.12);opacity:0.55}40%{transform:scale(0.97);opacity:1}70%{transform:scale(1.02)}100%{transform:scale(1);opacity:1}}
-    .home-card{transition:transform .14s ease-out;font-variant-numeric:tabular-nums}
+    .home-card{transition:transform .16s cubic-bezier(0.34,1.56,0.64,1);font-variant-numeric:tabular-nums}
     .home-card:active{transform:scale(0.97)}
     .val-pulse{display:inline-block;animation:valPulse .5s cubic-bezier(0.34,1.56,0.64,1)}
     .navbtn{transition:transform .12s ease-out, background .18s ease-out, color .18s ease-out}
@@ -390,7 +390,7 @@
       button:where(:hover):where(:not(:disabled)){filter:brightness(1.08)}
     }
     /* Compat: classe explícita continua disponível pra non-button elements. */
-    .tap-fb{transition:transform .14s ease-out, opacity .14s ease-out}
+    .tap-fb{transition:transform .16s cubic-bezier(0.34,1.56,0.64,1), opacity .14s ease-out}
     .tap-fb:active{transform:scale(0.97)}
     /* v11.9.1: animations migradas pra classes (regra do CLAUDE.md): inline animation
        em elementos que recebem prop tick reseta a cada re-render. CSS class persiste. */
@@ -761,8 +761,27 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.71";
+const APP_VERSION = "11.9.72";
 const CHANGELOG = [
+  {
+    v: "11.9.72", date: "2026-05-30",
+    pt: {
+      title: "Polimento premium — toque com mola + haptic na navegação",
+      bullets: [
+        '★ **Toque nos cards agora volta com uma micro-mola** — a mesma curva de assinatura do botão "+" e dos números que pulsam. Pressão crispa, volta com um quique sutil. Sensação de app nativo.',
+        '**Haptic de seleção** ao trocar de aba e ao abrir o "+": aquele tap-tap discreto que app premium tem.',
+        'Nota: a base de micro-interações já era forte (feedback de toque global, haptics, springs nos valores) — isto é o lustro fino por cima, mantendo a linguagem minimalista (botões continuam crispos; só os cards e momentos-chave ganham mola).',
+      ],
+    },
+    en: {
+      title: "Premium polish — springy taps + navigation haptics",
+      bullets: [
+        '★ **Card taps now spring back** — the same signature curve as the "+" button and the pulsing numbers. Crisp press, subtle bounce-back. Native-app feel.',
+        '**Selection haptic** when switching tabs and opening "+": that subtle tap-tap premium apps have.',
+        'Note: the micro-interaction foundation was already strong (global tap feedback, haptics, value springs) — this is the fine polish on top, keeping the minimalist language (buttons stay crisp; only cards and key moments get the spring).',
+      ],
+    },
+  },
   {
     v: "11.9.71", date: "2026-05-30",
     pt: {
@@ -10043,9 +10062,9 @@ function App(){
         </button>
       </div>
     </nav>:<nav style={{position:"absolute",bottom:"calc(8px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 32px)",maxWidth:360,pointerEvents:"auto",display:"flex",alignItems:"center",justifyContent:"space-around",gap:2,padding:"4px 10px",background:"linear-gradient(180deg,rgba(38,44,90,0.38),rgba(14,18,48,0.62))",backdropFilter:"blur(18px) saturate(180%)",WebkitBackdropFilter:"blur(18px) saturate(180%)",borderRadius:24,border:"1px solid rgba(255,255,255,0.12)",boxShadow:"0 1px 0 0 rgba(255,255,255,0.2) inset, 0 -1px 2px 0 rgba(0,0,0,0.18) inset, 0 8px 24px -8px rgba(0,0,0,0.55)"}}>
-      {[{icon:"home",label:L("home"),active:page==="home"&&!showAdd,action:()=>goTo("home")},{icon:"clock",label:L("history"),active:page==="history",action:()=>goTo("history")}].map(n=><button key={n.icon} aria-label={n.label} className="navbtn" onClick={n.action} style={{display:"flex",alignItems:"center",justifyContent:"center",width:46,height:44,borderRadius:18,background:n.active?"rgba(139,124,246,0.22)":"transparent",border:"none",padding:0}}><Icon name={n.icon} size={n.active?18:17} color={n.active?"#ffffff":T.dim}/></button>)}
-      <button aria-label={showAdd?L("close"):L("addEvent")} className="navfab" onClick={()=>{setShowAdd(!showAdd);setFormType(null);setPage("home")}} style={{width:44,height:44,borderRadius:18,background:`linear-gradient(180deg,#9b8df8,#7c3aed)`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 1px 0 0 rgba(255,255,255,0.22) inset, 0 4px 12px -2px ${T.accent}70`,transform:showAdd?"rotate(45deg)":"rotate(0deg)",margin:"-2px 2px",border:"none",padding:0}}><Icon name="plus" size={18} color="#fff"/></button>
-      {[{icon:"chart",label:L("stats"),active:page==="stats"||page==="growth",action:()=>goTo("stats")},{icon:"gear",label:L("settings"),active:false,action:()=>setShowProfile(true)}].map(n=><button key={n.icon} aria-label={n.label} className="navbtn" onClick={n.action} style={{display:"flex",alignItems:"center",justifyContent:"center",width:46,height:44,borderRadius:18,background:n.active?"rgba(139,124,246,0.22)":"transparent",border:"none",padding:0}}><Icon name={n.icon} size={n.active?18:17} color={n.active?"#ffffff":T.dim}/></button>)}
+      {[{icon:"home",label:L("home"),active:page==="home"&&!showAdd,action:()=>goTo("home")},{icon:"clock",label:L("history"),active:page==="history",action:()=>goTo("history")}].map(n=><button key={n.icon} aria-label={n.label} className="navbtn" onClick={()=>{if(window.Haptic&&Haptic.light)Haptic.light();n.action()}} style={{display:"flex",alignItems:"center",justifyContent:"center",width:46,height:44,borderRadius:18,background:n.active?"rgba(139,124,246,0.22)":"transparent",border:"none",padding:0}}><Icon name={n.icon} size={n.active?18:17} color={n.active?"#ffffff":T.dim}/></button>)}
+      <button aria-label={showAdd?L("close"):L("addEvent")} className="navfab" onClick={()=>{if(window.Haptic&&Haptic.light)Haptic.light();setShowAdd(!showAdd);setFormType(null);setPage("home")}} style={{width:44,height:44,borderRadius:18,background:`linear-gradient(180deg,#9b8df8,#7c3aed)`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 1px 0 0 rgba(255,255,255,0.22) inset, 0 4px 12px -2px ${T.accent}70`,transform:showAdd?"rotate(45deg)":"rotate(0deg)",margin:"-2px 2px",border:"none",padding:0}}><Icon name="plus" size={18} color="#fff"/></button>
+      {[{icon:"chart",label:L("stats"),active:page==="stats"||page==="growth",action:()=>goTo("stats")},{icon:"gear",label:L("settings"),active:false,action:()=>setShowProfile(true)}].map(n=><button key={n.icon} aria-label={n.label} className="navbtn" onClick={()=>{if(window.Haptic&&Haptic.light)Haptic.light();n.action()}} style={{display:"flex",alignItems:"center",justifyContent:"center",width:46,height:44,borderRadius:18,background:n.active?"rgba(139,124,246,0.22)":"transparent",border:"none",padding:0}}><Icon name={n.icon} size={n.active?18:17} color={n.active?"#ffffff":T.dim}/></button>)}
     </nav>}
     </>, document.getElementById("nav-host"))}
   </div>);
