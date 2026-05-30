@@ -288,6 +288,10 @@
     @keyframes pageSwitch{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
     @keyframes slideUp{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
     @keyframes slideUpCentered{from{transform:translateX(-50%) translateY(12px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
+    /* v11.9.70: micro-interação do segmento "próximo" da rotina — pulse sutil via CLASSE
+       (não inline: a rotina re-renderiza a cada tick e inline resetaria a animação). */
+    @keyframes rtSegPulse{0%,100%{opacity:1}50%{opacity:0.45}}
+    .rt-seg-next{animation:rtSegPulse 1.8s ease-in-out infinite}
     @keyframes mercurySpin{to{transform:rotate(360deg)}}
     @keyframes slideDown{from{transform:translateX(-50%) translateY(-20px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
     @keyframes toastSlideDown{from{transform:translateY(-20px);opacity:0}to{transform:translateY(0);opacity:1}}
@@ -755,8 +759,27 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.69";
+const APP_VERSION = "11.9.70";
 const CHANGELOG = [
+  {
+    v: "11.9.70", date: "2026-05-30",
+    pt: {
+      title: "Card de rotina minimalista + micro-interações",
+      bullets: [
+        '★ O card de rotina na Home ficou **bem mais enxuto**: de 3 blocos empilhados (ícone grande + grade de bolinhas com rótulo + linha de mamadas) pra **uma linha só** — próximo passo · horário · mamadas — com uma **barra de progresso fina segmentada** embaixo.',
+        '**Micro-interação:** cada segmento muda de cor com transição suave quando o passo é concluído, e o segmento do "próximo" pulsa de leve. Feito via classe CSS (não inline) pra não pesar no tick.',
+        'Os detalhes completos da rotina continuam na configuração do Perfil.',
+      ],
+    },
+    en: {
+      title: "Minimalist routine card + micro-interactions",
+      bullets: [
+        '★ The Home routine card is now **far leaner**: from 3 stacked blocks (big icon + labeled dot grid + bottles row) to **a single line** — next step · time · bottles — with a **slim segmented progress bar** below.',
+        '**Micro-interaction:** each segment eases its color when a step completes, and the "next" segment pulses gently. Done via CSS class (not inline) so it stays cheap on the tick.',
+        'Full routine details still live in Profile settings.',
+      ],
+    },
+  },
   {
     v: "11.9.69", date: "2026-05-30",
     pt: {
@@ -9779,41 +9802,27 @@ function App(){
             const accentCol=isLate?"#fb923c":T.accent;
             const accentBg=isLate?"rgba(251,146,60,0.10)":`${T.accent}10`;
             const accentBd=isLate?"rgba(251,146,60,0.32)":`${T.accent}28`;
-            return<div style={{padding:"14px 16px",borderRadius:14,background:`linear-gradient(135deg,${accentBg},${accentBg.replace("0.10","0.04").replace("28","12")})`,border:`1px solid ${accentBd}`,position:"relative",overflow:"hidden"}}>
-              <div style={{position:"absolute",top:0,left:0,width:4,height:"100%",background:`linear-gradient(180deg,${accentCol},${accentCol}50)`,pointerEvents:"none"}}/>
-              <div style={{fontSize:T.fXS,fontWeight:800,color:accentCol,textTransform:"uppercase",letterSpacing:1.1,marginBottom:6,marginLeft:6}}>{L("nextEvent")}</div>
-              <div style={{display:"flex",alignItems:"center",gap:12,marginLeft:6}}>
-                <div style={{width:38,height:38,borderRadius:11,background:`${h.col}1f`,border:`1px solid ${h.col}40`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name={h.icon} size={20} color={h.col}/></div>
-                <div style={{flex:1,minWidth:0}}>
-                  <div style={{fontSize:T.fLG,fontWeight:800,color:T.heading,letterSpacing:-0.2}}>{h.lbl}{isLate&&<span style={{fontSize:T.fSM,color:accentCol,fontWeight:600,marginLeft:6,letterSpacing:0}}>· {fmtDur(lateMin)} {L("lateMin")}</span>}</div>
-                  <div style={{fontSize:T.fSM,color:T.sub,marginTop:2,fontVariantNumeric:"tabular-nums"}}>{L("scheduledFor")} <span style={{color:accentCol,fontWeight:700}}>{h.target}</span>{!isLate&&earlyMin>0&&earlyMin<=180&&<span> · {L("earlyMin")} {fmtDur(earlyMin)}</span>}</div>
+            // v11.9.70: card minimalista — uma linha de info + barra de progresso fina
+            // segmentada. Detalhes (chips, labels) saíram; a página/rotina é o lugar deles.
+            return<div style={{padding:"11px 14px 12px",borderRadius:13,background:`${accentCol}0d`,border:`1px solid ${accentCol}26`}}>
+              <div style={{display:"flex",alignItems:"center",gap:9}}>
+                <Icon name={h.icon} size={16} color={h.col}/>
+                <div style={{flex:1,minWidth:0,display:"flex",alignItems:"baseline",gap:6,flexWrap:"wrap"}}>
+                  <span style={{fontSize:T.fXS,fontWeight:800,color:accentCol,textTransform:"uppercase",letterSpacing:0.8}}>{L("nextEvent")}</span>
+                  <span style={{fontSize:T.fMD,fontWeight:700,color:T.heading,letterSpacing:-0.1}}>{h.lbl}</span>
+                  <span style={{fontSize:T.fSM,color:accentCol,fontWeight:700,fontVariantNumeric:"tabular-nums"}}>{h.target}</span>
+                  {isLate?<span style={{fontSize:T.fXS,color:accentCol,fontWeight:600}}>· +{fmtDur(lateMin)}</span>:(earlyMin>0&&earlyMin<=180?<span style={{fontSize:T.fXS,color:T.dim,fontWeight:600}}>· {L("earlyMin")} {fmtDur(earlyMin)}</span>:null)}
                 </div>
+                <span style={{fontSize:T.fSM,color:T.green,fontWeight:800,fontVariantNumeric:"tabular-nums",display:"inline-flex",alignItems:"center",gap:3,flexShrink:0}}><Icon name="bottle" size={12} color={T.green}/>{routineState.bottlesDone}<span style={{color:T.dim,fontWeight:600,fontSize:T.fXS}}>/{routineState.bottlesTarget}</span></span>
               </div>
-              {/* Progress strip: chips de cada slot + bottles count */}
-              <div style={{display:"flex",gap:5,marginTop:14,paddingTop:12,borderTop:`1px solid ${accentBd}`,marginLeft:6}}>
+              <div style={{display:"flex",gap:5,marginTop:11}}>
                 {routineState.slots.map(s=>{
                   const isDone=s.status==="done";
-                  const isLateChip=s.status==="late"||s.status==="next-late";
-                  const isNextChip=s.status==="next";
-                  const dotBg=isDone?T.green:isLateChip?"rgba(251,146,60,0.32)":isNextChip?`${T.accent}40`:"rgba(139,124,246,0.10)";
-                  const dotBd=isDone?T.green:isLateChip?"#fb923c":isNextChip?T.accent:"rgba(139,124,246,0.22)";
-                  const dotCol=isDone?"#04061a":isLateChip?"#fb923c":isNextChip?"#fff":T.dim;
-                  return<div key={s.key} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:3}}>
-                    <div style={{width:18,height:18,borderRadius:"50%",background:dotBg,border:`1px solid ${dotBd}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:T.fXS,fontWeight:800,color:dotCol,boxShadow:isNextChip?`0 0 8px ${T.accent}55`:"none"}}>{isDone?"✓":isLateChip?"!":""}</div>
-                    <div style={{fontSize:T.fXS,color:T.dim,fontWeight:600,letterSpacing:0.2,textAlign:"center",fontVariantNumeric:"tabular-nums"}}>{s.chip}</div>
-                  </div>
+                  const isLateSeg=s.status==="late"||s.status==="next-late";
+                  const isNextSeg=s.status==="next";
+                  const segBg=isDone?T.green:isLateSeg?"#fb923c":isNextSeg?T.accent:`${T.accent}22`;
+                  return<div key={s.key} title={s.lbl} className={isNextSeg?"rt-seg-next":""} style={{flex:1,height:5,borderRadius:3,background:segBg,transition:"background .4s ease"}}/>
                 })}
-              </div>
-              {/* Bottles row */}
-              <div style={{display:"flex",alignItems:"center",gap:8,marginTop:10,marginLeft:6,paddingTop:8,borderTop:`1px dashed ${accentBd}`}}>
-                <Icon name="bottle" size={14} color={T.green}/>
-                <span style={{fontSize:T.fSM,color:T.sub,fontWeight:600,flex:1}}>{_lang==="en"?"Bottles today":"Mamadas hoje"}</span>
-                <div style={{display:"flex",gap:3,marginRight:6}}>
-                  {Array.from({length:routineState.bottlesTarget}).map((_,i)=>
-                    <div key={i} style={{width:8,height:8,borderRadius:2,background:i<routineState.bottlesDone?T.green:`${T.green}18`,border:`1px solid ${i<routineState.bottlesDone?T.green:T.green+"32"}`}}/>
-                  )}
-                </div>
-                <span style={{fontSize:T.fSM,color:T.green,fontWeight:800,fontVariantNumeric:"tabular-nums"}}>{routineState.bottlesDone}<span style={{color:T.dim,fontWeight:600,fontSize:T.fXS}}>/{routineState.bottlesTarget}</span></span>
               </div>
             </div>
           })():null}
