@@ -755,8 +755,29 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.64";
+const APP_VERSION = "11.9.65";
 const CHANGELOG = [
+  {
+    v: "11.9.65", date: "2026-05-29",
+    pt: {
+      title: "Auditoria · bloco 2 — usabilidade (alcance e toque)",
+      bullets: [
+        '★ **Desfazer agora fica embaixo:** o toast de "excluído · desfazer" saiu do topo (longe do polegar) pra base da tela, acima do nav, e dura **4,5s** (era 2s). Muito mais fácil de alcançar com uma mão.',
+        '**Safe-area no Pro Max:** o modal central e o picker de marcos agora respeitam o Dynamic Island e a barra inferior — o botão de fechar não fica mais escondido atrás do notch.',
+        '**Alvos de toque maiores:** estrela e sino do topo (44pt), botões de fechar dos modais (40pt), e os botões de editar/excluir eventos da madrugada dentro do bloco de sono — cresceram pra errar menos às 3h da manhã.',
+        '**Excluir marco** agora usa confirmação inline de 2 toques (igual o resto do app), no lugar do alerta cinza do Safari.',
+      ],
+    },
+    en: {
+      title: "Audit · block 2 — usability (reach & touch)",
+      bullets: [
+        '★ **Undo now sits at the bottom:** the "deleted · undo" toast moved from the top (out of thumb reach) to the bottom, above the nav, and lasts **4.5s** (was 2s). Much easier one-handed.',
+        '**Safe-area on Pro Max:** the center modal and milestone picker now respect the Dynamic Island and home bar — the close button no longer hides behind the notch.',
+        '**Bigger tap targets:** header star and bell (44pt), modal close buttons (40pt), and the edit/delete buttons for night events inside the sleep block — all grown to miss less at 3am.',
+        '**Deleting a milestone** now uses a 2-tap inline confirm (like the rest of the app) instead of the gray Safari alert.',
+      ],
+    },
+  },
   {
     v: "11.9.64", date: "2026-05-29",
     pt: {
@@ -5933,9 +5954,9 @@ const InsightCards = React.memo(function InsightCards({insights,phase}){
 
 function Toast({message,onUndo,onRepeat,onClose}){const closeRef=useRef(onClose);closeRef.current=onClose;
   // v11.9.27: timeout maior (3s) quando ha onRepeat, pra dar tempo de clicar
-  const ttl=onRepeat?3500:2000;
+  const ttl=onRepeat?5000:4500;
   useEffect(()=>{const t=setTimeout(()=>closeRef.current(),ttl);return()=>clearTimeout(t)},[]);
-  return(<div style={{position:"fixed",top:"calc(20px + env(safe-area-inset-top))",left:"50%",transform:"translateX(-50%)",zIndex:300,padding:"12px 14px",borderRadius:18,background:"linear-gradient(180deg,rgba(20,26,66,0.95),rgba(14,18,52,0.95))",border:`1px solid ${T.gBSoft}`,backdropFilter:"blur(14px)",WebkitBackdropFilter:"blur(14px)",display:"flex",alignItems:"center",gap:8,boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset, 0 12px 32px -8px rgba(0,0,0,0.6)",animation:"slideDown .3s ease",maxWidth:"calc(100vw - 32px)"}}>
+  return(<div style={{position:"fixed",bottom:"calc(96px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",zIndex:300,padding:"12px 14px",borderRadius:18,background:"linear-gradient(180deg,rgba(20,26,66,0.95),rgba(14,18,52,0.95))",border:`1px solid ${T.gBSoft}`,backdropFilter:"blur(14px)",WebkitBackdropFilter:"blur(14px)",display:"flex",alignItems:"center",gap:8,boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset, 0 12px 32px -8px rgba(0,0,0,0.6)",animation:"slideUpCentered .3s ease",maxWidth:"calc(100vw - 32px)"}}>
     <span style={{fontSize:T.fMD,color:"#f0f2ff",fontWeight:600,letterSpacing:-0.2,flex:"0 1 auto",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{message}</span>
     {onRepeat&&<button onClick={onRepeat} aria-label={_lang==="en"?"Log another":"Logar outra"} style={{padding:"6px 11px",borderRadius:10,background:"rgba(74,222,128,0.14)",color:"#86efac",fontSize:T.fMD,fontWeight:700,letterSpacing:-0.1,border:"1px solid rgba(74,222,128,0.32)",display:"inline-flex",alignItems:"center",gap:4,flexShrink:0}}>↻ {_lang==="en"?"Again":"Repetir"}</button>}
     {onUndo&&<button onClick={onUndo} style={{padding:"6px 12px",borderRadius:10,background:`linear-gradient(180deg,#9b8df8,#7c3aed)`,color:"#fff",fontSize:T.fMD,fontWeight:700,letterSpacing:-0.1,border:"1px solid rgba(139,124,246,0.5)",boxShadow:`0 1px 0 0 rgba(255,255,255,0.18) inset, 0 4px 12px -4px ${T.accent}55`,flexShrink:0}}>{L("undo")}</button>}
@@ -5947,11 +5968,11 @@ function Modal({open,onClose,children,wide}){const[vis,setVis]=useState(false),[
   // interno pra forms altos (growth com 3 medi\u00e7\u00f5es etc). X button fixo no canto superior direito
   // do frame do modal; conte\u00fado com scroll abaixo dele.
   const mw=wide?400:340;
-  return(<div style={{position:"fixed",inset:0,zIndex:150,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={onClose}>
+  return(<div style={{position:"fixed",inset:0,zIndex:150,display:"flex",alignItems:"center",justifyContent:"center",padding:"calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom))"}} onClick={onClose}>
     <div style={{position:"absolute",inset:0,background:"rgba(2,3,10,0.55)",backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",opacity:show?1:0,transition:"opacity .35s"}}/>
     <div onClick={e=>e.stopPropagation()} style={{position:"relative",width:"100%",maxWidth:mw,maxHeight:"88vh",background:"linear-gradient(180deg,rgba(20,26,60,0.94),rgba(14,18,52,0.93))",backdropFilter:"blur(18px)",WebkitBackdropFilter:"blur(18px)",borderRadius:26,border:"1px solid rgba(255,255,255,0.08)",boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset, 0 0 0 1px rgba(255,255,255,0.03), 0 24px 64px -12px rgba(0,0,0,0.65), 0 0 80px -20px rgba(139,124,246,0.18)",transform:show?"scale(1)":"scale(0.92)",opacity:show?1:0,transition:"all .35s cubic-bezier(0.22,1,0.36,1)",overflow:"hidden",display:"flex",flexDirection:"column"}}>
       <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse at 50% 0%,rgba(255,255,255,0.04),transparent 50%)",pointerEvents:"none",borderRadius:26}}/>
-      <button aria-label={L("close")} onClick={onClose} style={{position:"absolute",top:14,right:14,width:32,height:32,borderRadius:11,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"center",color:T.dim,boxShadow:T.insetTop,zIndex:3}}><Icon name="x" size={14} color={T.dim}/></button>
+      <button aria-label={L("close")} onClick={onClose} style={{position:"absolute",top:12,right:12,width:40,height:40,borderRadius:12,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"center",color:T.dim,boxShadow:T.insetTop,zIndex:3}}><Icon name="x" size={14} color={T.dim}/></button>
       <div style={{position:"relative",overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch",padding:wide?"22px 14px 18px":"28px 24px 24px"}}>{children}</div>
     </div>
   </div>)}
@@ -6013,7 +6034,7 @@ const SleepBlock = React.memo(function SleepBlock({entry,onDelete,onEdit,entries
     else if(le.type==="bath")txt=_lang==="en"?"Bath":"Banho";
     else txt=TL(le.type);
     return(<div style={{display:"flex",alignItems:"center",gap:10,padding:"5px 0"}}>
-      <button aria-label={_lang==="en"?"Edit":"Editar"} onClick={ev=>{ev.stopPropagation();onEdit&&onEdit(le)}} style={{width:24,height:24,borderRadius:7,background:cfg.bg,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,cursor:"pointer",border:"none",padding:0}}>
+      <button aria-label={_lang==="en"?"Edit":"Editar"} onClick={ev=>{ev.stopPropagation();onEdit&&onEdit(le)}} style={{width:34,height:34,borderRadius:9,background:cfg.bg,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,cursor:"pointer",border:"none",padding:0}}>
         <Icon name={cfg.icon} size={13} color={cfg.color}/>
       </button>
       <button onClick={ev=>{ev.stopPropagation();onEdit&&onEdit(le)}} style={{flex:1,fontSize:T.fMD,color:T.text,fontWeight:500,letterSpacing:-0.1,cursor:"pointer",textAlign:"left",background:"transparent",border:"none",padding:0}}>{txt}</button>
@@ -6029,7 +6050,7 @@ const SleepBlock = React.memo(function SleepBlock({entry,onDelete,onEdit,entries
         }
         setConfirmDelEventId(null);
         onDelete&&onDelete(le.id);
-      }} style={{width:confirmDelEventId===le.id?54:24,height:24,borderRadius:7,background:confirmDelEventId===le.id?"rgba(248,113,113,0.30)":"transparent",border:confirmDelEventId===le.id?"1px solid rgba(248,113,113,0.6)":"none",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,opacity:confirmDelEventId===le.id?1:0.55,cursor:"pointer",padding:0,fontSize:T.fSM,fontWeight:700,color:"#fca5a5",letterSpacing:0.2,transition:"all .2s"}}>
+      }} style={{width:confirmDelEventId===le.id?64:34,height:34,borderRadius:9,background:confirmDelEventId===le.id?"rgba(248,113,113,0.30)":"transparent",border:confirmDelEventId===le.id?"1px solid rgba(248,113,113,0.6)":"none",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,opacity:confirmDelEventId===le.id?1:0.55,cursor:"pointer",padding:0,fontSize:T.fSM,fontWeight:700,color:"#fca5a5",letterSpacing:0.2,transition:"all .2s"}}>
         {confirmDelEventId===le.id?(_lang==="en"?"Sure?":"Certo?"):<Icon name="trash" size={11} color={T.dim}/>}
       </button>
     </div>);
@@ -8253,6 +8274,7 @@ const MILESTONE_BADGES = [
 // mensais (2-12m). Namespaces separados pra evitar collision.
 // Entries com type:"milestone" guardam: key (chave do DEV_MILESTONES), category, date, note.
 function MilestonesPage({entries,birthDate,profile,onBack,onAddEntry,onDeleteEntry}){
+  const[confirmDelKey,setConfirmDelKey]=useState(null); // v11.9.65: 2-step inline delete (substitui confirm() nativo)
   const all=window.DEV_MILESTONES||[];
   const allSigns=window.CONCERNING_SIGNS||[];
   const milestoneEntries=entries.filter(e=>e.type==="milestone")
@@ -8396,7 +8418,7 @@ function MilestonesPage({entries,birthDate,profile,onBack,onAddEntry,onDeleteEnt
                 <span style={{fontSize:T.fXS,fontWeight:700,color:col,padding:"1px 6px",borderRadius:5,background:`${col}1a`,letterSpacing:0.3,textTransform:"uppercase"}}>{catLabels[cat]||""}</span>
               </div>
               {e.note&&<div style={{fontSize:T.fSM,color:T.sub,lineHeight:1.45,marginTop:3}}>{e.note}</div>}
-              <button onClick={()=>{if(confirm(_lang==="en"?"Delete this milestone?":"Excluir este marco?"))onDeleteEntry(e.id)}} style={{fontSize:T.fXS,color:T.dim,marginTop:5,padding:"2px 6px",background:"transparent",border:"none",cursor:"pointer",opacity:0.5,letterSpacing:0.2}}>{_lang==="en"?"delete":"excluir"}</button>
+              <button aria-label={confirmDelKey===e.id?(_lang==="en"?"Confirm delete":"Confirmar exclusão"):(_lang==="en"?"Delete":"Excluir")} onClick={()=>{if(confirmDelKey!==e.id){setConfirmDelKey(e.id);if(window.Haptic&&Haptic.warning)Haptic.warning();setTimeout(()=>setConfirmDelKey(prev=>prev===e.id?null:prev),3000);return}setConfirmDelKey(null);onDeleteEntry(e.id)}} style={{fontSize:T.fXS,color:confirmDelKey===e.id?"#fca5a5":T.dim,marginTop:6,padding:"7px 12px",minHeight:36,background:confirmDelKey===e.id?"rgba(248,113,113,0.16)":"transparent",border:confirmDelKey===e.id?"1px solid rgba(248,113,113,0.5)":"1px solid transparent",borderRadius:9,cursor:"pointer",opacity:confirmDelKey===e.id?1:0.6,letterSpacing:0.2,fontWeight:confirmDelKey===e.id?700:500}}>{confirmDelKey===e.id?(_lang==="en"?"Tap to confirm":"Tocar p/ confirmar"):(_lang==="en"?"delete":"excluir")}</button>
             </div>
           })}
         </div>
@@ -8427,11 +8449,11 @@ function MilestonesPage({entries,birthDate,profile,onBack,onAddEntry,onDeleteEnt
       {L("source")}: CDC "Learn the Signs. Act Early." (Fev 2022) · WHO MGRS · SBP
     </div>
     {/* v11.9.60: Add picker — centrado vertical (era bottom sheet em v11.9.56) */}
-    {showAdd&&<div style={{position:"fixed",inset:0,zIndex:300,background:"rgba(4,6,22,0.85)",backdropFilter:"blur(8px)",display:"flex",alignItems:"center",justifyContent:"center",padding:"20px"}} onClick={()=>{setShowAdd(false);setPickedKey(null)}}>
-      <div onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:440,maxHeight:"calc(100vh - 80px)",background:"radial-gradient(ellipse at 50% 0%, #15124a 0%, #080a26 65%), #040616",borderRadius:22,border:`1px solid ${T.gBSoft}`,boxShadow:"0 24px 60px -16px rgba(0,0,0,0.7), 0 0 0 1px rgba(167,139,250,0.08)",padding:"18px 18px 22px",overflowY:"auto",animation:"slideUp .3s cubic-bezier(0.22,1,0.36,1)"}}>
+    {showAdd&&<div style={{position:"fixed",inset:0,zIndex:300,background:"rgba(4,6,22,0.85)",backdropFilter:"blur(8px)",display:"flex",alignItems:"center",justifyContent:"center",padding:"calc(20px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom))"}} onClick={()=>{setShowAdd(false);setPickedKey(null)}}>
+      <div onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:440,maxHeight:"calc(100vh - 40px - env(safe-area-inset-top) - env(safe-area-inset-bottom))",background:"radial-gradient(ellipse at 50% 0%, #15124a 0%, #080a26 65%), #040616",borderRadius:22,border:`1px solid ${T.gBSoft}`,boxShadow:"0 24px 60px -16px rgba(0,0,0,0.7), 0 0 0 1px rgba(167,139,250,0.08)",padding:"18px 18px 22px",overflowY:"auto",animation:"slideUp .3s cubic-bezier(0.22,1,0.36,1)"}}>
         <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}>
           <div style={{flex:1,fontSize:T.fLG,fontWeight:800,letterSpacing:-0.2,minWidth:0}}>{picked?(picked.label[_lang]||picked.label.en):L("pickMilestone")}</div>
-          <button onClick={()=>{setShowAdd(false);setPickedKey(null)}} style={{width:30,height:30,borderRadius:10,background:T.glass,border:`1px solid ${T.gBSoft}`,color:T.sub,fontSize:T.fXL,fontWeight:600,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>×</button>
+          <button onClick={()=>{setShowAdd(false);setPickedKey(null)}} style={{width:40,height:40,borderRadius:12,background:T.glass,border:`1px solid ${T.gBSoft}`,color:T.sub,fontSize:T.fXL,fontWeight:600,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>×</button>
         </div>
         {!picked?<>
           <div style={{display:"flex",gap:6,marginBottom:12,overflowX:"auto",paddingBottom:4}}>
@@ -9612,10 +9634,10 @@ function App(){
           <div style={{flex:1,minWidth:0}}><h1 style={{fontSize:T.fXL,fontWeight:800,margin:0,letterSpacing:-0.45,lineHeight:1.1,background:"linear-gradient(180deg,#ffffff,#c4b5fd)",WebkitBackgroundClip:"text",backgroundClip:"text",WebkitTextFillColor:"transparent",color:"transparent"}}>{babyName}</h1><div style={{display:"flex",alignItems:"center",gap:5,marginTop:5,fontVariantNumeric:"tabular-nums"}}><span style={{fontSize:T.fSM,color:T.accent,fontWeight:600,letterSpacing:0.1}}>{age&&<>{age.totalDays} {_lang==="en"?"days":"dias"}</>}</span><span style={{width:2.5,height:2.5,borderRadius:"50%",background:"rgba(139,124,246,0.4)"}}/><span style={{fontSize:T.fSM,color:T.dim,letterSpacing:0.1}}>{new Date().toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{day:"numeric",month:"short"})}</span></div></div>
           {!isOnline&&<div title={_lang==="en"?"Offline — changes sync when reconnected":"Offline — mudanças sincronizam ao reconectar"} style={{display:"inline-flex",alignItems:"center",gap:4,marginRight:6,padding:"4px 8px",borderRadius:10,background:"rgba(251,146,60,0.1)",border:"1px solid rgba(251,146,60,0.28)",fontSize:T.fXS,color:"#fbbf24",fontWeight:700,letterSpacing:0.3,textTransform:"uppercase",flexShrink:0}}><span style={{width:6,height:6,borderRadius:"50%",background:"#fbbf24",boxShadow:"0 0 6px rgba(251,191,36,0.6)"}}/>off</div>}
           {/* v11.9.57: botão ★ Marcos no header — entry point sempre visível */}
-          <button aria-label={L("milestonesTitle")} onClick={()=>goTo("milestones")} style={{position:"relative",width:40,height:40,borderRadius:12,background:"rgba(250,204,21,0.08)",border:"1px solid rgba(250,204,21,0.22)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginRight:6}}>
+          <button aria-label={L("milestonesTitle")} onClick={()=>goTo("milestones")} style={{position:"relative",width:44,height:44,borderRadius:13,background:"rgba(250,204,21,0.08)",border:"1px solid rgba(250,204,21,0.22)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginRight:6}}>
             <Icon name="star" size={17} color="#facc15"/>
           </button>
-          <button aria-label={inboxUnreadCount>0?(_lang==="en"?`${inboxUnreadCount} new notifications`:`${inboxUnreadCount} notificações novas`):(_lang==="en"?"Notifications":"Notificações")} onClick={()=>setShowInbox(true)} style={{position:"relative",width:40,height:40,borderRadius:12,background:inboxUnreadCount>0?"rgba(139,124,246,0.12)":"rgba(22,28,60,0.6)",border:`1px solid ${inboxUnreadCount>0?"rgba(139,124,246,0.3)":"rgba(139,124,246,0.08)"}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><div style={{animation:inboxUnreadCount>0?"bellWiggle 2.5s ease-in-out infinite":"none",transformOrigin:"top center",display:"flex"}}><Icon name="bell" size={17} color={inboxUnreadCount>0?T.accent:T.dim}/></div>{inboxUnreadCount>0&&<div style={{position:"absolute",top:-5,right:-5,minWidth:18,height:18,borderRadius:9,background:"linear-gradient(135deg,#f87171,#dc2626)",color:"#fff",fontSize:T.fSM,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 5px",border:`2px solid ${T.bg1}`,boxShadow:"0 0 10px rgba(239,68,68,0.6)"}}>{inboxUnreadCount}</div>}</button>
+          <button aria-label={inboxUnreadCount>0?(_lang==="en"?`${inboxUnreadCount} new notifications`:`${inboxUnreadCount} notificações novas`):(_lang==="en"?"Notifications":"Notificações")} onClick={()=>setShowInbox(true)} style={{position:"relative",width:44,height:44,borderRadius:13,background:inboxUnreadCount>0?"rgba(139,124,246,0.12)":"rgba(22,28,60,0.6)",border:`1px solid ${inboxUnreadCount>0?"rgba(139,124,246,0.3)":"rgba(139,124,246,0.08)"}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><div style={{animation:inboxUnreadCount>0?"bellWiggle 2.5s ease-in-out infinite":"none",transformOrigin:"top center",display:"flex"}}><Icon name="bell" size={17} color={inboxUnreadCount>0?T.accent:T.dim}/></div>{inboxUnreadCount>0&&<div style={{position:"absolute",top:-5,right:-5,minWidth:18,height:18,borderRadius:9,background:"linear-gradient(135deg,#f87171,#dc2626)",color:"#fff",fontSize:T.fSM,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 5px",border:`2px solid ${T.bg1}`,boxShadow:"0 0 10px rgba(239,68,68,0.6)"}}>{inboxUnreadCount}</div>}</button>
         </div>
         {/* v11.9.24: hairline divider sutil sob o header (separa seção sem caixa) */}
         <div style={{height:1,margin:"0 22px 14px",background:"linear-gradient(90deg,transparent,rgba(139,124,246,0.12),transparent)"}}/>
