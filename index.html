@@ -755,8 +755,31 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.63";
+const APP_VERSION = "11.9.64";
 const CHANGELOG = [
+  {
+    v: "11.9.64", date: "2026-05-29",
+    pt: {
+      title: "Auditoria · bloco 1 — performance e 2 bugs",
+      bullets: [
+        '★ **Bateria à noite:** a página de Stats (sempre montada no swipe) recalculava todas as estatísticas a cada 5s durante um timer ativo — um `React.memo` quebrado por uma função inline. Corrigido com callback estável. Maior dreno noturno do app, resolvido.',
+        '**Bug i18n:** o tempo relativo ("2h30m ago") agora traduz pra **"2h30m atrás"** em português — aparecia em inglês no card "Última mamada" e em outros 4 lugares.',
+        '**Bug Confetti:** a animação de comemoração violava as Rules of Hooks (podia falhar silenciosamente). Corrigido.',
+        'Blur do nav voltou de 22px pro teto documentado de 18px (custo de GPU é quadrático no raio; diferença visual imperceptível).',
+        'Removida função morta `tl()`.',
+      ],
+    },
+    en: {
+      title: "Audit · block 1 — performance and 2 bugs",
+      bullets: [
+        '★ **Night battery:** the Stats page (always mounted for the swipe) recomputed all stats every 5s during an active timer — a `React.memo` defeated by an inline function. Fixed with a stable callback. The app\'s biggest overnight drain, gone.',
+        '**i18n bug:** relative time ("2h30m ago") now translates to **"2h30m atrás"** in Portuguese — it showed in English on the "Last feed" card and 4 other spots.',
+        '**Confetti bug:** the celebration animation violated the Rules of Hooks (could fail silently). Fixed.',
+        'Nav blur went back from 22px to the documented 18px ceiling (GPU cost is quadratic in radius; visually imperceptible).',
+        'Removed dead function `tl()`.',
+      ],
+    },
+  },
   {
     v: "11.9.63", date: "2026-05-29",
     pt: {
@@ -5015,7 +5038,7 @@ function fmtRelDate(dateStr){
   return b.toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{day:"numeric",month:"short"}).replace(".","");
 }
 function fmtTimer(s){return`${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`}
-function timeSince(d,t){if(!d||!t)return"";const diff=Math.floor((new Date()-new Date(`${d}T${t}`))/6e4);if(diff<1)return"now";if(diff<60)return`${diff}min ago`;const h=Math.floor(diff/60),m=diff%60;if(h<24)return m>0?`${h}h${m}m ago`:`${h}h ago`;return`${Math.floor(h/24)}d ago`}
+function timeSince(d,t){if(!d||!t)return"";const diff=Math.floor((new Date()-new Date(`${d}T${t}`))/6e4);const ago=_lang==="en"?"ago":"atrás";if(diff<1)return _lang==="en"?"now":"agora";if(diff<60)return`${diff}min ${ago}`;const h=Math.floor(diff/60),m=diff%60;if(h<24)return m>0?`${h}h${m}m ${ago}`:`${h}h ${ago}`;return`${Math.floor(h/24)}d ${ago}`}
 function minSince(d,t){if(!d||!t)return null;return Math.max(0,Math.floor((new Date()-new Date(`${d}T${t}`))/6e4))}
 // Real sleep helpers: subtract waking time from sleep entries with wakings
 // realSleepMin(entry) returns durationMin minus awake time inside (for sleep entries with wakings)
@@ -5434,7 +5457,6 @@ const I={
   lateMin:{pt:"atrasado",en:"late"},
   scheduledFor:{pt:"alvo",en:"target"},
 };
-function tl(key,lang){return I[key]?.[lang]||I[key]?.en||key}
 function typeLabel(type,lang){const t=TYPES[type];return t?.label?.[lang]||t?.label?.en||type}
 // Global lang for components without prop
 let _lang="en";
@@ -5859,6 +5881,14 @@ const CuriosityCard = React.memo(function CuriosityCard({age,lang,tick}){
 // v11.9.1: confetti minimalista pra marcos (1 mes, 100 dias). Trigger 1x via localStorage.
 // 28 particulas com cores variadas, drop 1.4s, fade out. Cleanup por timeout.
 function Confetti({trigger,onDone}){
+  // v11.9.64: hook ANTES de qualquer return condicional (Rules of Hooks).
+  // Antes o useEffect ficava após `if(!trigger)return null`, mudando a contagem
+  // de hooks 0->1 quando o confetti disparava — React lançava erro.
+  useEffect(()=>{
+    if(!trigger)return;
+    const t=setTimeout(()=>onDone&&onDone(),1700);
+    return()=>clearTimeout(t);
+  },[trigger]);
   if(!trigger)return null;
   const colors=["#a78bfa","#fbbf24","#f472b6","#6ee7b7","#7dd3fc","#fb923c"];
   const pieces=Array.from({length:28},(_,i)=>{
@@ -5871,10 +5901,6 @@ function Confetti({trigger,onDone}){
     const c=colors[i%colors.length];
     return{key:i,style:{"--cx":`${cx}px`,"--cy":`${cy}px`,"--cr":`${cr}deg`,background:c,animationDelay:`${delay}s`}};
   });
-  useEffect(()=>{
-    const t=setTimeout(()=>onDone&&onDone(),1700);
-    return()=>clearTimeout(t);
-  },[]);
   return(<div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:400}}>
     {pieces.map(p=><span key={p.key} className="confetti-piece" style={p.style}/>)}
   </div>);
@@ -9465,6 +9491,10 @@ function App(){
     </div>
   );
   const goTo=p=>{setPage(p);setShowAdd(false);setFormType(null)};
+  // v11.9.64: callback estável pro StatsPage — sem isto o arrow inline nova a cada
+  // render quebrava o React.memo do StatsPage (que fica sempre montado no swipe),
+  // forçando recálculo das stats a cada 5s durante timer ativo. Maior dreno noturno.
+  const goGrowth=useCallback(()=>{setPage("growth");setShowAdd(false);setFormType(null)},[]);
 
   // SWIPE handlers (v9.9.2) — touch events, velocity tracking, low-threshold flick
   const onSwipeStart=e=>{
@@ -9747,7 +9777,7 @@ function App(){
       </div>
           </div>
           <div style={{width:`${100/3}%`,flexShrink:0,minWidth:0,contentVisibility:"auto",containIntrinsicSize:"auto 100vh"}}>
-            <StatsPage entries={entries} onGrowth={()=>goTo("growth")}/>
+            <StatsPage entries={entries} onGrowth={goGrowth}/>
           </div>
           <div style={{width:`${100/3}%`,flexShrink:0,minWidth:0,contentVisibility:"auto",containIntrinsicSize:"auto 100vh"}}>
             <HistoryPage entries={entries} onDelete={deleteEntry} onEdit={startEdit} activeTimer={activeTimer}/>
@@ -9857,7 +9887,7 @@ function App(){
           <Icon name="home" size={20} color="#c4b5fd"/>
         </button>
       </div>
-    </nav>:<nav style={{position:"absolute",bottom:"calc(8px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 32px)",maxWidth:360,pointerEvents:"auto",display:"flex",alignItems:"center",justifyContent:"space-around",gap:2,padding:"4px 10px",background:"linear-gradient(180deg,rgba(38,44,90,0.38),rgba(14,18,48,0.62))",backdropFilter:"blur(22px) saturate(180%)",WebkitBackdropFilter:"blur(22px) saturate(180%)",borderRadius:24,border:"1px solid rgba(255,255,255,0.12)",boxShadow:"0 1px 0 0 rgba(255,255,255,0.2) inset, 0 -1px 2px 0 rgba(0,0,0,0.18) inset, 0 8px 24px -8px rgba(0,0,0,0.55)"}}>
+    </nav>:<nav style={{position:"absolute",bottom:"calc(8px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 32px)",maxWidth:360,pointerEvents:"auto",display:"flex",alignItems:"center",justifyContent:"space-around",gap:2,padding:"4px 10px",background:"linear-gradient(180deg,rgba(38,44,90,0.38),rgba(14,18,48,0.62))",backdropFilter:"blur(18px) saturate(180%)",WebkitBackdropFilter:"blur(18px) saturate(180%)",borderRadius:24,border:"1px solid rgba(255,255,255,0.12)",boxShadow:"0 1px 0 0 rgba(255,255,255,0.2) inset, 0 -1px 2px 0 rgba(0,0,0,0.18) inset, 0 8px 24px -8px rgba(0,0,0,0.55)"}}>
       {[{icon:"home",label:L("home"),active:page==="home"&&!showAdd,action:()=>goTo("home")},{icon:"clock",label:L("history"),active:page==="history",action:()=>goTo("history")}].map(n=><button key={n.icon} aria-label={n.label} className="navbtn" onClick={n.action} style={{display:"flex",alignItems:"center",justifyContent:"center",width:46,height:44,borderRadius:18,background:n.active?"rgba(139,124,246,0.22)":"transparent",border:"none",padding:0}}><Icon name={n.icon} size={n.active?18:17} color={n.active?"#ffffff":T.dim}/></button>)}
       <button aria-label={showAdd?L("close"):L("addEvent")} className="navfab" onClick={()=>{setShowAdd(!showAdd);setFormType(null);setPage("home")}} style={{width:44,height:44,borderRadius:18,background:`linear-gradient(180deg,#9b8df8,#7c3aed)`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 1px 0 0 rgba(255,255,255,0.22) inset, 0 4px 12px -2px ${T.accent}70`,transform:showAdd?"rotate(45deg)":"rotate(0deg)",margin:"-2px 2px",border:"none",padding:0}}><Icon name="plus" size={18} color="#fff"/></button>
       {[{icon:"chart",label:L("stats"),active:page==="stats"||page==="growth",action:()=>goTo("stats")},{icon:"gear",label:L("settings"),active:false,action:()=>setShowProfile(true)}].map(n=><button key={n.icon} aria-label={n.label} className="navbtn" onClick={n.action} style={{display:"flex",alignItems:"center",justifyContent:"center",width:46,height:44,borderRadius:18,background:n.active?"rgba(139,124,246,0.22)":"transparent",border:"none",padding:0}}><Icon name={n.icon} size={n.active?18:17} color={n.active?"#ffffff":T.dim}/></button>)}
