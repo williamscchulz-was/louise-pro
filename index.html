@@ -755,8 +755,27 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.68";
+const APP_VERSION = "11.9.69";
 const CHANGELOG = [
+  {
+    v: "11.9.69", date: "2026-05-30",
+    pt: {
+      title: "Rotina não trava mais quando foge do horário",
+      bullets: [
+        '★ **Acordar fora do horário não buga mais o card.** Acordou 6:30 quando o alvo era 7:00? Agora conta como feito e segue pro próximo passo. Antes a janela do "Acordar" era ±20min, então acordar cedo deixava o passo eternamente pendente.',
+        'A janela do "Acordar" virou **generosa e assimétrica**: acordou cedo praticamente sempre conta (até 2h30 antes), e até 1h30 depois. Sonecas/banho/bedtime seguem em ±60min.',
+        'Princípio por trás: **a rotina é um guia, não uma cobrança** — se o evento aconteceu, conta e segue.',
+      ],
+    },
+    en: {
+      title: "Routine no longer gets stuck when off-schedule",
+      bullets: [
+        '★ **Waking off-schedule no longer breaks the card.** Woke at 6:30 when the target was 7:00? It now counts as done and moves to the next step. Before, the "Wake" window was ±20min, so waking early left the step stuck as pending.',
+        'The "Wake" window is now **generous and asymmetric**: waking early almost always counts (up to 2h30 before), and up to 1h30 after. Naps/bath/bedtime stay at ±60min.',
+        'The principle: **the routine is a guide, not a scorecard** — if it happened, it counts.',
+      ],
+    },
+  },
   {
     v: "11.9.68", date: "2026-05-29",
     pt: {
@@ -9330,22 +9349,28 @@ function App(){
     // v11.9.46: timer ATIVO (nap/sleep em andamento) também conta como "done".
     // Cenário: você toca em "Iniciar soneca" às 13:25 — slot da 3ª (alvo 13:30) já fica ✓
     // verde sem precisar esperar terminar o timer pra criar a entry no Firestore.
-    const activeTimerMatch=(types,tMin,tolMin)=>{
+    // v11.9.69: janela ASSIMÉTRICA. earlyTol = quanto ANTES do alvo ainda conta como
+    // "feito"; lateTol = quanto DEPOIS. Se lateTol omitido, é simétrico (= earlyTol).
+    // Princípio: se o evento ACONTECEU (mesmo fora do horário), conta e segue — a rotina
+    // é guia, não cobrança. Acordar 6:30 quando o alvo era 7:00 tem que contar (não bugar).
+    const activeTimerMatch=(types,tMin,earlyTol,lateTol)=>{
       if(!activeTimer)return null;
       if(!types.includes(activeTimer.type))return null;
       const st=new Date(activeTimer.startTime);
       const tStart=st.getHours()*60+st.getMinutes();
-      if(Math.abs(tStart-tMin)>tolMin)return null;
+      if(tStart<tMin-earlyTol||tStart>tMin+lateTol)return null;
       return{type:activeTimer.type,time:`${String(st.getHours()).padStart(2,"0")}:${String(st.getMinutes()).padStart(2,"0")}`,_active:true};
     };
-    const findMatch=(types,tMin,tolMin)=>{
-      const liveT=activeTimerMatch(types,tMin,tolMin);
+    const findMatch=(types,tMin,earlyTol,lateTol)=>{
+      if(lateTol==null)lateTol=earlyTol;
+      const liveT=activeTimerMatch(types,tMin,earlyTol,lateTol);
       if(liveT)return liveT;
-      return todayE.find(e=>types.includes(e.type)&&Math.abs(toMinutes(e.time)-tMin)<=tolMin);
+      return todayE.find(e=>types.includes(e.type)&&toMinutes(e.time)>=tMin-earlyTol&&toMinutes(e.time)<=tMin+lateTol);
     };
-    // v11.9.45: tolerância mais generosa (40-50min late ainda conta como "feito").
-    // Wake fica em ±20min (time-sensitive). Naps/banho/bed sobem pra ±60min.
-    if(r.wakeTime){const tMin=toMinutes(r.wakeTime);slots.push({key:"wake",type:"wake",icon:"sun",col:T.amber,target:r.wakeTime,targetMin:tMin,tolMin:20,match:findMatch(["wakeup"],tMin,20),lbl:_lang==="en"?"Wake up":"Acordar",chip:_lang==="en"?"Wake":"Wake"})}
+    // v11.9.45: tolerância generosa (40-50min late ainda conta como "feito").
+    // v11.9.69: WAKE é assimétrico — acordou cedo SEMPRE conta (early 150min, late 90min).
+    // Naps/banho/bed seguem simétricos ±60min (gaps de ~150min não deixam cruzar slots).
+    if(r.wakeTime){const tMin=toMinutes(r.wakeTime);slots.push({key:"wake",type:"wake",icon:"sun",col:T.amber,target:r.wakeTime,targetMin:tMin,tolMin:90,match:findMatch(["wakeup"],tMin,150,90),lbl:_lang==="en"?"Wake up":"Acordar",chip:_lang==="en"?"Wake":"Wake"})}
     (r.naps||[]).forEach((nap,i)=>{
       if(!nap?.time)return;
       const tMin=toMinutes(nap.time);
