@@ -755,8 +755,25 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.67";
+const APP_VERSION = "11.9.68";
 const CHANGELOG = [
+  {
+    v: "11.9.68", date: "2026-05-29",
+    pt: {
+      title: "Hotfix — corrige o crash 'Oops!' na abertura",
+      bullets: [
+        '★ Corrigido o crash (React #310) que mostrava **"Oops! Algo quebrou"** ao abrir o app.',
+        'Causa: um callback que entrou na v11.9.64 ficou **depois** do gate de splash/loading, violando as regras de hooks do React (o hook era pulado no primeiro render e rodava no segundo). Movido pra cima do early-return. Desculpa o susto. 🙏',
+      ],
+    },
+    en: {
+      title: "Hotfix — fixes the 'Oops!' crash on open",
+      bullets: [
+        '★ Fixed the crash (React #310) showing **"Oops! Something broke"** on app open.',
+        'Cause: a callback added in v11.9.64 ended up **after** the splash/loading gate, violating React\'s rules of hooks (the hook was skipped on the first render and ran on the second). Moved above the early-return. Sorry for the scare. 🙏',
+      ],
+    },
+  },
   {
     v: "11.9.67", date: "2026-05-29",
     pt: {
@@ -9529,6 +9546,10 @@ function App(){
 
   // Starfield foi extraído pra módulo-level (ver `<Starfield/>` logo antes do App). v10.5.3.
 
+  // v11.9.68 HOTFIX: goGrowth (useCallback) DEVE ficar ANTES deste early-return de
+  // splash/loading. Senão o hook é pulado no render de splash e roda no render normal
+  // -> contagem de hooks muda -> React #310 (crash). Hooks sempre antes de qualquer return.
+  const goGrowth=useCallback(()=>{setPage("growth");setShowAdd(false);setFormType(null)},[]);
   if(splash||loading)return(
     <div style={{background:"linear-gradient(180deg,#0e0825,#070b1e 70%,#070b1e)",minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",fontFamily:"'Outfit',sans-serif",overflow:"hidden",opacity:splash?1:0,transition:"opacity .4s",position:"relative"}}>
       <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
@@ -9552,10 +9573,6 @@ function App(){
     </div>
   );
   const goTo=p=>{setPage(p);setShowAdd(false);setFormType(null)};
-  // v11.9.64: callback estável pro StatsPage — sem isto o arrow inline nova a cada
-  // render quebrava o React.memo do StatsPage (que fica sempre montado no swipe),
-  // forçando recálculo das stats a cada 5s durante timer ativo. Maior dreno noturno.
-  const goGrowth=useCallback(()=>{setPage("growth");setShowAdd(false);setFormType(null)},[]);
 
   // SWIPE handlers (v9.9.2) — touch events, velocity tracking, low-threshold flick
   const onSwipeStart=e=>{

@@ -14,7 +14,7 @@ Este `CLAUDE.md` é lido automaticamente pelo Claude Code no início de toda ses
 - **Localização**: Blumenau, SC, Brasil (BRT, UTC-3)
 - **Repositório**: https://github.com/williamscchulz-was/louise-pro
 - **Live**: https://williamscchulz-was.github.io/louise-pro/
-- **Versão atual**: v11.9.67 (app) / routine-engine v2.2.4
+- **Versão atual**: v11.9.68 (app) / routine-engine v2.2.4
 - **Bilíngue**: Português e Inglês (toda a interface, insights, curiosidades e changelog)
 
 ## Stack
@@ -238,6 +238,7 @@ Filtro complexo que já gerou vários bugs. Estado atual (v10.4.6+):
 - Variáveis usadas dentro de callbacks devem estar definidas no escopo correto
 - Verificar shadowing entre helpers globais e variáveis locais (já aconteceu com `realSleepMin`)
 - Usar `e.stopPropagation()` em botões dentro de elementos clickable pra evitar bubbling
+- **⚠️ LANDMINE de Rules of Hooks (v11.9.68):** o componente `App` tem um early-return de splash/loading (`if(splash||loading)return(...)`, ~linha 9536). **TODO hook (`useState/useEffect/useMemo/useCallback/useRef`) tem que ficar ACIMA desse return.** Adicionar um hook depois dele = o hook é pulado no render de splash e roda no render normal → contagem de hooks muda → **React #310 (crash "Oops! Algo quebrou")**. Foi exatamente isso que a v11.9.64 quebrou (um `useCallback` colocado logo antes do `goTo`, que vive *depois* do gate). `goTo`/`goGrowth` e afins: a função pode ficar onde quiser, mas se for `useCallback`, sobe pra cima do early-return. Mesma regra vale pra `Confetti` e qualquer componente com `return null` condicional: hook antes do return, sempre. **Validação:** `node build/build.mjs` NÃO pega isso (é erro de runtime, não de sintaxe) — só um smoke test no app pega. Cuidado redobrado ao mexer em hooks.
 
 ### Comunicação
 
