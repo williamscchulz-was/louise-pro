@@ -14,7 +14,7 @@ Este `CLAUDE.md` é lido automaticamente pelo Claude Code no início de toda ses
 - **Localização**: Blumenau, SC, Brasil (BRT, UTC-3)
 - **Repositório**: https://github.com/williamscchulz-was/louise-pro
 - **Live**: https://williamscchulz-was.github.io/louise-pro/
-- **Versão atual**: v11.9.65 (app) / routine-engine v2.2.4
+- **Versão atual**: v11.9.66 (app) / routine-engine v2.2.4
 - **Bilíngue**: Português e Inglês (toda a interface, insights, curiosidades e changelog)
 
 ## Stack
@@ -140,6 +140,10 @@ Escala fixa de 7 níveis em `T`. **Toda nova label/texto inline deve usar uma de
 Hero displays raros (34, 36, 52) ficam inline — usar só pra splash, conquista, momento especial. Não criar constante pra menos de 5 usos.
 
 Mudar a escala = mudar valor da constante em 1 lugar — reflete em todos os ~390 usos automaticamente. Por isso a escala não cresce: 7 níveis é o limite. Se quiser um valor "no meio" (ex: 14), pensar duas vezes — provavelmente um dos níveis já serve.
+
+### Tokens de cor (v11.9.66)
+
+Além de `accent/text/sub/dim/purple/green/...`, o `T` ganhou 3 tokens que antes eram hex soltos espalhados (~68 ocorrências consolidadas): `T.heading` (`#f0f2ff`, branco de título sobre card), `T.label` (`#7a80a8`, label de campo), `T.lilac` (`#c4b5fd`, lavanda de destaque/ativo). **Toda nova cor de texto deve usar um token** — não reintroduzir hex literal em `color:"#..."`. Hex literal AINDA é ok dentro de gradientes/box-shadow (strings planas onde não dá pra interpolar variável). Pendente (adiado pra mockup): escala de raio de borda — hoje há ~20 valores de `borderRadius` (9/10/11/12/13/14 fazem o mesmo papel); snap muda o visual, então precisa de revisão antes.
 
 ### Helper `edgeGlow()` — dormindo
 

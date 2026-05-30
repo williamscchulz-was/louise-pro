@@ -755,8 +755,27 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.65";
+const APP_VERSION = "11.9.66";
 const CHANGELOG = [
+  {
+    v: "11.9.66", date: "2026-05-29",
+    pt: {
+      title: "Auditoria · bloco 3 — tokens de cor",
+      bullets: [
+        '**Consistência interna:** 68 cores escritas à mão no código viraram tokens centralizados (`T.heading`, `T.label`, `T.lilac`) e o roxo `#a78bfa` duplicado passou a usar o `T.purple` que já existia.',
+        '**Zero mudança visual** — cada token tem exatamente o mesmo valor de antes. Ganho é só de manutenção: mudar uma cor agora é em 1 lugar.',
+        'A escala de raio de borda ficou pra depois (mexer nos cantos muda o visual; quero te mostrar um mockup antes).',
+      ],
+    },
+    en: {
+      title: "Audit · block 3 — color tokens",
+      bullets: [
+        '**Internal consistency:** 68 hand-written colors became centralized tokens (`T.heading`, `T.label`, `T.lilac`), and the duplicated purple `#a78bfa` now uses the existing `T.purple`.',
+        '**Zero visual change** — each token holds the exact same value as before. Pure maintenance win: changing a color is now a one-place edit.',
+        'The border-radius scale was deferred (snapping corners changes the look; I want to show you a mockup first).',
+      ],
+    },
+  },
   {
     v: "11.9.65", date: "2026-05-29",
     pt: {
@@ -5366,7 +5385,7 @@ function Icon({name,size=20,color="currentColor",fill="none"}){
 //   T.f2XL=22 (display sm)                        — absorveu 20, 22
 //   T.f3XL=28 (display)                           — absorveu 26, 28
 // Sobram inline apenas hero displays raros (34, 36, 52) — 5 ocorrências total.
-const T={bg1:"#070b1e",bg2:"#0d1133",bg3:"#141a42",glass:"rgba(22,28,60,0.6)",gB:"rgba(90,100,180,0.12)",gBSoft:"rgba(255,255,255,0.06)",insetTop:"0 1px 0 0 rgba(255,255,255,0.04) inset",insetTopStrong:"0 1px 0 0 rgba(255,255,255,0.08) inset",text:"#e4e6f5",sub:"#a3aac8",dim:"#555a80",accent:"#8b7cf6",green:"#34d399",greenS:"rgba(52,211,153,0.1)",purple:"#a78bfa",purpleS:"rgba(167,139,250,0.1)",pink:"#f472b6",pinkS:"rgba(244,114,182,0.1)",amber:"#fbbf24",amberS:"rgba(251,191,36,0.1)",orange:"#fb923c",orangeS:"rgba(251,146,60,0.1)",blue:"#38bdf8",blueS:"rgba(56,189,248,0.12)",red:"#f87171",redS:"rgba(248,113,113,0.1)",cyan:"#22d3ee",cyanS:"rgba(34,211,238,0.1)",fXS:9,fSM:11,fMD:13,fLG:15,fXL:17,f2XL:22,f3XL:28};
+const T={bg1:"#070b1e",bg2:"#0d1133",bg3:"#141a42",glass:"rgba(22,28,60,0.6)",gB:"rgba(90,100,180,0.12)",gBSoft:"rgba(255,255,255,0.06)",insetTop:"0 1px 0 0 rgba(255,255,255,0.04) inset",insetTopStrong:"0 1px 0 0 rgba(255,255,255,0.08) inset",text:"#e4e6f5",sub:"#a3aac8",dim:"#555a80",accent:"#8b7cf6",green:"#34d399",greenS:"rgba(52,211,153,0.1)",purple:"#a78bfa",purpleS:"rgba(167,139,250,0.1)",pink:"#f472b6",pinkS:"rgba(244,114,182,0.1)",amber:"#fbbf24",amberS:"rgba(251,191,36,0.1)",orange:"#fb923c",orangeS:"rgba(251,146,60,0.1)",blue:"#38bdf8",blueS:"rgba(56,189,248,0.12)",red:"#f87171",redS:"rgba(248,113,113,0.1)",cyan:"#22d3ee",cyanS:"rgba(34,211,238,0.1)",heading:"#f0f2ff",label:"#7a80a8",lilac:"#c4b5fd",fXS:9,fSM:11,fMD:13,fLG:15,fXL:17,f2XL:22,f3XL:28};
 const TYPES={bottle:{label:{pt:"Mamadeira",en:"Bottle"},icon:"bottle",color:T.green,bg:T.greenS},nursing:{label:{pt:"Amamentação",en:"Nursing"},icon:"breast",color:T.blue,bg:T.blueS},sleep:{label:{pt:"Sono",en:"Bedtime"},icon:"bed",color:T.purple,bg:T.purpleS},wakeup:{label:{pt:"Acordou",en:"Woke up"},icon:"sun",color:T.amber,bg:T.amberS},nap:{label:{pt:"Soneca",en:"Nap"},icon:"cloud",color:T.purple,bg:T.purpleS},nightwaking:{label:{pt:"Acordou à noite",en:"Night waking"},icon:"zap",color:T.orange,bg:T.orangeS},diaper:{label:{pt:"Fralda",en:"Diaper"},icon:"diaper",color:T.pink,bg:T.pinkS},medicine:{label:{pt:"Medicamento",en:"Medicine"},icon:"pill",color:T.amber,bg:T.amberS},temperature:{label:{pt:"Temperatura",en:"Temperature"},icon:"thermo",color:T.red,bg:T.redS},bath:{label:{pt:"Banho",en:"Bath"},icon:"bath",color:T.cyan,bg:T.cyanS},tummytime:{label:{pt:"Tummy time",en:"Tummy time"},icon:"baby",color:T.amber,bg:T.amberS},growth:{label:{pt:"Crescimento",en:"Growth"},icon:"ruler",color:"#a3e635",bg:"rgba(163,230,53,0.1)"},milestone:{label:{pt:"Marco",en:"Milestone"},icon:"star",color:"#facc15",bg:"rgba(250,204,21,0.10)"}};
 
 // ── i18n ──
@@ -5620,7 +5639,7 @@ const Ring = React.memo(function Ring({activeTimer,napSug,tick,recentEvents,lang
         </div>}
       </div>)})}
       {anchorSun&&<div style={{position:"absolute",left:anchorSun.x-anchorSz/2,top:anchorSun.y-anchorSz/2,display:"flex",flexDirection:"column",alignItems:"center",zIndex:5,pointerEvents:"none"}}><div style={{width:anchorSz,height:anchorSz,borderRadius:"50%",background:"radial-gradient(circle at 40% 30%,rgba(251,191,36,0.28),rgba(251,146,60,0.08))",border:"2px solid rgba(251,191,36,0.55)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 14px rgba(251,191,36,0.3)"}}><Icon name="sun" size={anchorIconSz} color="#fbbf24"/></div><span style={{fontSize:T.fXS,fontWeight:700,color:"#fbbf24",marginTop:2,textShadow:"0 1px 4px rgba(0,0,0,0.8)"}}>{anchorSun.time}</span></div>}
-      {anchorMoon&&<div style={{position:"absolute",left:anchorMoon.x-anchorSz/2,top:anchorMoon.y-anchorSz/2,display:"flex",flexDirection:"column",alignItems:"center",zIndex:5,pointerEvents:"none"}}><div style={{width:anchorSz,height:anchorSz,borderRadius:"50%",background:"radial-gradient(circle at 40% 30%,rgba(167,139,250,0.28),rgba(139,124,246,0.08))",border:"2px solid rgba(167,139,250,0.55)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 14px rgba(167,139,250,0.3)"}}><Icon name="moon" size={anchorIconSz} color="#a78bfa"/></div><span style={{fontSize:T.fXS,fontWeight:700,color:"#a78bfa",marginTop:2,textShadow:"0 1px 4px rgba(0,0,0,0.8)"}}>{anchorMoon.time}</span></div>}
+      {anchorMoon&&<div style={{position:"absolute",left:anchorMoon.x-anchorSz/2,top:anchorMoon.y-anchorSz/2,display:"flex",flexDirection:"column",alignItems:"center",zIndex:5,pointerEvents:"none"}}><div style={{width:anchorSz,height:anchorSz,borderRadius:"50%",background:"radial-gradient(circle at 40% 30%,rgba(167,139,250,0.28),rgba(139,124,246,0.08))",border:"2px solid rgba(167,139,250,0.55)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 14px rgba(167,139,250,0.3)"}}><Icon name="moon" size={anchorIconSz} color="#a78bfa"/></div><span style={{fontSize:T.fXS,fontWeight:700,color:T.purple,marginTop:2,textShadow:"0 1px 4px rgba(0,0,0,0.8)"}}>{anchorMoon.time}</span></div>}
       <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}><span style={{fontSize:T.fMD,color:isBedtime?"#c084fc":T.sub,fontWeight:600,letterSpacing:1.5,textTransform:"uppercase",display:"flex",alignItems:"center",gap:5,animation:isBedtime?"bedtimeSubBreath 5s ease-in-out infinite":"none"}}>{isBedtime&&<Icon name="bed" size={13} color="#c084fc"/>}{sub}{screenLockActive&&<span title={lang==="en"?"Screen on":"Tela ligada"} style={{display:"inline-flex",alignItems:"center",gap:3,marginLeft:4,padding:"2px 6px",borderRadius:8,background:"rgba(251,191,36,0.12)",border:"1px solid rgba(251,191,36,0.3)"}}><span style={{width:5,height:5,borderRadius:"50%",background:"#fbbf24",boxShadow:"0 0 6px #fbbf24",animation:"pulse 1.5s ease-in-out infinite"}}/><span style={{fontSize:T.fXS,fontWeight:700,color:"#fbbf24",letterSpacing:0.5,textTransform:"uppercase"}}>{lang==="en"?"On":"On"}</span></span>}</span><span style={{fontSize:bigFont,fontWeight:800,letterSpacing:-1.8,marginTop:4,background:isBedtime?"linear-gradient(110deg, #7c3aed 0%, #8b5cf6 25%, #e9d5ff 48%, #ffffff 50%, #e9d5ff 52%, #8b5cf6 75%, #7c3aed 100%)":(hasProgress?`linear-gradient(135deg,${col2},${col1})`:`linear-gradient(180deg,#ffffff 0%,#a78bfa 95%)`),backgroundSize:isBedtime?"300% 100%":"100% 100%",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",filter:isBedtime?"drop-shadow(0 0 18px rgba(167,139,250,0.55))":(hasProgress?`drop-shadow(0 0 20px ${col1}55)`:"drop-shadow(0 0 24px rgba(167,139,250,0.32))"),animation:isBedtime?"bedtimeShimmer 10s linear infinite":"none",fontVariantNumeric:"tabular-nums"}}>{lbl}</span>{napSug&&napSug.predictedTime&&!activeTimer&&<span style={{fontSize:T.fSM,fontWeight:600,color:col1,opacity:0.7,marginTop:2}}>{lang==="en"?"Nap":"Nap"} {napSug.napPos||""} ~{napSug.predictedTime}</span>}</div>
       {tip!==null&&<div onClick={()=>setTip(null)} style={{position:"absolute",inset:0,zIndex:1}}/>}
       {showOrbit&&<div key={Date.now()} style={{position:"absolute",left:cx-3,top:cy-3,width:6,height:6,zIndex:10,pointerEvents:"none",animation:"orbitComet 1.2s cubic-bezier(0.25,0.1,0.25,1) forwards"}}><div style={{width:6,height:6,borderRadius:"50%",background:"#fff",boxShadow:"0 0 8px #fff, 0 0 20px rgba(139,124,246,0.6), -8px 0 12px rgba(139,124,246,0.3), -16px 0 8px rgba(139,124,246,0.15)",transform:`translateY(${-R}px)`}}/></div>}
@@ -5647,11 +5666,11 @@ function LastFeedCard({entries}){
         <Icon name={isBottle?"bottle":"breast"} size={20} color={colLight}/>
       </div>
       <div style={{flex:1,minWidth:0}}>
-        <div style={{fontSize:T.fSM,color:"#7a80a8",fontWeight:600,letterSpacing:-0.05}}>{_lang==="en"?"Last feed":"Última mamada"}</div>
+        <div style={{fontSize:T.fSM,color:T.label,fontWeight:600,letterSpacing:-0.05}}>{_lang==="en"?"Last feed":"Última mamada"}</div>
         <div style={{fontSize:T.f2XL,fontWeight:800,color:colLight,letterSpacing:-0.5,fontVariantNumeric:"tabular-nums",marginTop:2}}>{detail}</div>
       </div>
       <div style={{textAlign:"right"}}>
-        <div style={{fontSize:T.fLG,fontWeight:700,color:"#f0f2ff",fontVariantNumeric:"tabular-nums",letterSpacing:-0.3}}>{feed.time}</div>
+        <div style={{fontSize:T.fLG,fontWeight:700,color:T.heading,fontVariantNumeric:"tabular-nums",letterSpacing:-0.3}}>{feed.time}</div>
         <div style={{fontSize:T.fSM,color:T.sub,marginTop:3,fontWeight:500}}>{ago}</div>
       </div>
     </div>
@@ -5728,9 +5747,9 @@ function EditStartModal({open,onClose,activeTimer,onSave}){
   const wakingsCount=(activeTimer.wakings||[]).length;
   return(<Modal open={open} onClose={onClose}>
     <div style={{width:64,height:64,margin:"0 auto 16px",borderRadius:20,background:`linear-gradient(135deg,${typeColor}38,${typeColor}10)`,border:`1px solid ${typeColor}50`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset",position:"relative"}}><Icon name={typeIcon} size={28} color={typeColorLight}/></div>
-    <div style={{textAlign:"center",fontSize:T.f2XL,fontWeight:800,letterSpacing:-0.5,color:"#f0f2ff",marginBottom:6}}>{_lang==="en"?"Edit start":"Editar início"}</div>
+    <div style={{textAlign:"center",fontSize:T.f2XL,fontWeight:800,letterSpacing:-0.5,color:T.heading,marginBottom:6}}>{_lang==="en"?"Edit start":"Editar início"}</div>
     <div style={{textAlign:"center",fontSize:T.fMD,color:"#9099c3",lineHeight:1.55,marginBottom:20}}>{_lang==="en"?`Change the start time of this ${typeLabel.toLowerCase()}. Wakings stay at their actual time.`:`Mude o horário de início deste ${typeLabel.toLowerCase()}. Despertares permanecem no horário real.`}</div>
-    <div style={{fontSize:T.fSM,color:"#7a80a8",fontWeight:600,marginBottom:10,letterSpacing:-0.05}}>{_lang==="en"?"Day":"Data"}</div>
+    <div style={{fontSize:T.fSM,color:T.label,fontWeight:600,marginBottom:10,letterSpacing:-0.05}}>{_lang==="en"?"Day":"Data"}</div>
     <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr)",gap:10,marginBottom:16}}>
       <input type="date" value={dateStr} onChange={e=>setDateStr(e.target.value)} style={{width:"100%",maxWidth:"100%",boxSizing:"border-box",WebkitAppearance:"none",appearance:"none",padding:"14px 14px",background:"rgba(20,26,60,0.55)",border:`1px solid ${T.gBSoft}`,borderRadius:14,color:T.text,fontSize:T.fLG,fontWeight:600,letterSpacing:-0.2,outline:"none",colorScheme:"dark",textAlign:"center",boxShadow:T.insetTop}}/>
       <input type="time" value={timeStr} onChange={e=>setTimeStr(e.target.value)} style={{width:"100%",maxWidth:"100%",boxSizing:"border-box",WebkitAppearance:"none",appearance:"none",padding:"14px 14px",background:"rgba(20,26,60,0.55)",border:`1px solid ${T.gBSoft}`,borderRadius:14,color:T.text,fontSize:T.fLG,fontWeight:600,letterSpacing:-0.2,outline:"none",colorScheme:"dark",textAlign:"center",fontVariantNumeric:"tabular-nums",boxShadow:T.insetTop}}/>
@@ -5739,8 +5758,8 @@ function EditStartModal({open,onClose,activeTimer,onSave}){
       <div style={{padding:"12px 14px",borderRadius:12,background:"rgba(248,113,113,0.10)",border:"1px solid rgba(248,113,113,0.28)",marginBottom:16,fontSize:T.fMD,color:"#fca5a5",textAlign:"center",lineHeight:1.5}}>{errMsg}</div>
     ):valid&&(
       <div style={{padding:"12px 14px",borderRadius:12,background:`${typeColor}10`,border:`1px solid ${typeColor}28`,marginBottom:16,fontSize:T.fMD,color:typeColorLight,textAlign:"center",lineHeight:1.6}}>
-        {_lang==="en"?"New duration: ":"Nova duração: "}<strong style={{color:"#f0f2ff",fontWeight:800}}>{fmtM(newMins)}</strong>
-        <span style={{color:"#7a80a8",fontWeight:500}}> ({_lang==="en"?"was ":"era "}{fmtM(oldMins)})</span>
+        {_lang==="en"?"New duration: ":"Nova duração: "}<strong style={{color:T.heading,fontWeight:800}}>{fmtM(newMins)}</strong>
+        <span style={{color:T.label,fontWeight:500}}> ({_lang==="en"?"was ":"era "}{fmtM(oldMins)})</span>
         {wakingsCount>0&&<div style={{fontSize:T.fSM,color:"#9099c3",marginTop:4}}>{wakingsCount} {_lang==="en"?`waking${wakingsCount>1?"s":""} preserved`:`despertar${wakingsCount>1?"es":""} preservado${wakingsCount>1?"s":""}`}</div>}
       </div>
     )}
@@ -5828,7 +5847,7 @@ const TimerBar = React.memo(function TimerBar({activeTimer,onStop,onSwitch,onPau
     <div style={{flex:1,position:"relative",minWidth:0}}>
       <div style={{fontSize:T.fSM,fontWeight:600,color:tColLightRgba,letterSpacing:-0.05,marginBottom:3,textTransform:"uppercase"}}>{tLabel}</div>
       <div style={{display:"flex",alignItems:"baseline",gap:8,flexWrap:"wrap"}}>
-        <div style={{fontSize:T.f3XL,fontWeight:800,fontVariantNumeric:"tabular-nums",color:"#f0f2ff",letterSpacing:-1}}>{timeDisplay}</div>
+        <div style={{fontSize:T.f3XL,fontWeight:800,fontVariantNumeric:"tabular-nums",color:T.heading,letterSpacing:-1}}>{timeDisplay}</div>
         <div style={{fontSize:T.fSM,color:"#9099c3",fontWeight:600,fontVariantNumeric:"tabular-nums"}}>{_lang==="en"?"since ":"desde "}{stTimeStr}</div>
       </div>
     </div>
@@ -5894,7 +5913,7 @@ const CuriosityCard = React.memo(function CuriosityCard({age,lang,tick}){
       </span>
       {daysLeft!==null&&<span style={{fontSize:T.fSM,color:T.dim,marginLeft:"auto",fontWeight:600,fontVariantNumeric:"tabular-nums"}}>{lang==="en"?`${daysLeft} days left`:`${daysLeft} dias restantes`}</span>}
     </div>
-    <div style={{position:"relative",fontSize:T.fLG,fontWeight:700,marginBottom:5,lineHeight:1.35,color:"#f0f2ff",letterSpacing:-0.25}}>{txt.t}</div>
+    <div style={{position:"relative",fontSize:T.fLG,fontWeight:700,marginBottom:5,lineHeight:1.35,color:T.heading,letterSpacing:-0.25}}>{txt.t}</div>
     <div style={{position:"relative",fontSize:T.fMD,color:"#9099c3",lineHeight:1.6,letterSpacing:0.05}}>{txt.b}</div>
   </div>);
 });
@@ -5957,7 +5976,7 @@ function Toast({message,onUndo,onRepeat,onClose}){const closeRef=useRef(onClose)
   const ttl=onRepeat?5000:4500;
   useEffect(()=>{const t=setTimeout(()=>closeRef.current(),ttl);return()=>clearTimeout(t)},[]);
   return(<div style={{position:"fixed",bottom:"calc(96px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",zIndex:300,padding:"12px 14px",borderRadius:18,background:"linear-gradient(180deg,rgba(20,26,66,0.95),rgba(14,18,52,0.95))",border:`1px solid ${T.gBSoft}`,backdropFilter:"blur(14px)",WebkitBackdropFilter:"blur(14px)",display:"flex",alignItems:"center",gap:8,boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset, 0 12px 32px -8px rgba(0,0,0,0.6)",animation:"slideUpCentered .3s ease",maxWidth:"calc(100vw - 32px)"}}>
-    <span style={{fontSize:T.fMD,color:"#f0f2ff",fontWeight:600,letterSpacing:-0.2,flex:"0 1 auto",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{message}</span>
+    <span style={{fontSize:T.fMD,color:T.heading,fontWeight:600,letterSpacing:-0.2,flex:"0 1 auto",minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{message}</span>
     {onRepeat&&<button onClick={onRepeat} aria-label={_lang==="en"?"Log another":"Logar outra"} style={{padding:"6px 11px",borderRadius:10,background:"rgba(74,222,128,0.14)",color:"#86efac",fontSize:T.fMD,fontWeight:700,letterSpacing:-0.1,border:"1px solid rgba(74,222,128,0.32)",display:"inline-flex",alignItems:"center",gap:4,flexShrink:0}}>↻ {_lang==="en"?"Again":"Repetir"}</button>}
     {onUndo&&<button onClick={onUndo} style={{padding:"6px 12px",borderRadius:10,background:`linear-gradient(180deg,#9b8df8,#7c3aed)`,color:"#fff",fontSize:T.fMD,fontWeight:700,letterSpacing:-0.1,border:"1px solid rgba(139,124,246,0.5)",boxShadow:`0 1px 0 0 rgba(255,255,255,0.18) inset, 0 4px 12px -4px ${T.accent}55`,flexShrink:0}}>{L("undo")}</button>}
   </div>)}
@@ -5977,7 +5996,7 @@ function Modal({open,onClose,children,wide}){const[vis,setVis]=useState(false),[
     </div>
   </div>)}
 
-function Fld({label,children}){return<div style={{marginBottom:18,minWidth:0}}><label style={{fontSize:T.fSM,color:"#7a80a8",fontWeight:600,marginBottom:10,display:"block",letterSpacing:-0.05}}>{label}</label>{children}</div>}
+function Fld({label,children}){return<div style={{marginBottom:18,minWidth:0}}><label style={{fontSize:T.fSM,color:T.label,fontWeight:600,marginBottom:10,display:"block",letterSpacing:-0.05}}>{label}</label>{children}</div>}
 function Seg({opts,val,set,color}){return<div style={{display:"flex",gap:6}}>{opts.map(o=><button key={o.v} onClick={()=>set(o.v)} style={{flex:1,padding:"12px 4px",borderRadius:10,fontSize:T.fMD,fontWeight:600,background:val===o.v?color:T.glass,color:val===o.v?T.bg1:T.text,border:`1px solid ${val===o.v?color:T.gB}`}}>{o.l}</button>)}</div>}
 
 // SleepBlock memoizado (v10.5.1) — entry + entries são estáveis, re-renderiza só quando muda de verdade.
@@ -6086,9 +6105,9 @@ const SleepBlock = React.memo(function SleepBlock({entry,onDelete,onEdit,entries
         {isLive&&<span style={{position:"absolute",top:-2,right:-2,width:9,height:9,borderRadius:"50%",background:"#a78bfa",boxShadow:"0 0 6px #a78bfa, 0 0 0 2px rgba(7,11,30,0.95)",animation:"liveDotPulse 1.6s ease-in-out infinite"}}/>}
       </div>
       <div style={{flex:1,minWidth:0}}>
-        <div style={{fontSize:T.f2XL,fontWeight:800,color:"#f0f2ff",letterSpacing:-0.5,fontVariantNumeric:"tabular-nums",lineHeight:1.1}}>
+        <div style={{fontSize:T.f2XL,fontWeight:800,color:T.heading,letterSpacing:-0.5,fontVariantNumeric:"tabular-nums",lineHeight:1.1}}>
           {fmtDur(totalMin)}
-          {isLive&&<span style={{fontSize:T.fSM,color:"#c4b5fd",fontWeight:600,marginLeft:6,letterSpacing:0.2,opacity:0.85}}>{_lang==="en"?"· live":"· ao vivo"}</span>}
+          {isLive&&<span style={{fontSize:T.fSM,color:T.lilac,fontWeight:600,marginLeft:6,letterSpacing:0.2,opacity:0.85}}>{_lang==="en"?"· live":"· ao vivo"}</span>}
         </div>
         <div style={{fontSize:T.fMD,color:T.sub,marginTop:3,fontVariantNumeric:"tabular-nums",fontWeight:500}}>
           {entry.time} → {endLabel}
@@ -6123,7 +6142,7 @@ const SleepBlock = React.memo(function SleepBlock({entry,onDelete,onEdit,entries
     {expanded&&wakings.length>0&&<div style={{padding:"0 18px 14px",display:"flex",gap:14}}>
       <div style={{flex:1}}>
         <div style={{color:T.dim,fontSize:T.fSM,fontWeight:600,textTransform:"uppercase",letterSpacing:0.4,marginBottom:2}}>{_lang==="en"?"Real sleep":"Sono real"}</div>
-        <div style={{color:"#c4b5fd",fontWeight:700,fontSize:T.fMD,fontVariantNumeric:"tabular-nums"}}>{fmtDur(realMin)}</div>
+        <div style={{color:T.lilac,fontWeight:700,fontSize:T.fMD,fontVariantNumeric:"tabular-nums"}}>{fmtDur(realMin)}</div>
       </div>
       {awakeMin>0&&<div style={{flex:1,borderLeft:"1px solid rgba(139,124,246,0.1)",paddingLeft:14}}>
         <div style={{color:T.dim,fontSize:T.fSM,fontWeight:600,textTransform:"uppercase",letterSpacing:0.4,marginBottom:2}}>{_lang==="en"?"Awake":"Acordada"}</div>
@@ -6171,17 +6190,17 @@ const SleepBlock = React.memo(function SleepBlock({entry,onDelete,onEdit,entries
               if(dur<0)dur+=1440;
               const valid=editStart&&editEnd&&dur>0&&dur<1440;
               return<div style={{margin:"6px 0 10px",padding:14,borderRadius:12,background:"linear-gradient(180deg,rgba(22,28,60,0.7),rgba(20,26,60,0.55))",border:"1px solid rgba(139,124,246,0.25)",boxShadow:"0 4px 16px -6px rgba(0,0,0,0.4), 0 1px 0 0 rgba(255,255,255,0.06) inset"}} onClick={e=>e.stopPropagation()}>
-                <div style={{fontSize:T.fXS,fontWeight:700,color:"#c4b5fd",textTransform:"uppercase",letterSpacing:1.1,marginBottom:10,display:"flex",justifyContent:"space-between"}}>
+                <div style={{fontSize:T.fXS,fontWeight:700,color:T.lilac,textTransform:"uppercase",letterSpacing:1.1,marginBottom:10,display:"flex",justifyContent:"space-between"}}>
                   <span>{_lang==="en"?"Edit waking":"Editar waking"}</span>
                   <span style={{color:isActive?"#fbbf24":(isLive?"#a78bfa":"#7dd3fc")}}>{isActive?(_lang==="en"?"● Live":"● Ao vivo"):(isLive?(_lang==="en"?"Current bedtime":"Bedtime atual"):(_lang==="en"?"History":"Histórico"))}</span>
                 </div>
                 <div style={{display:"flex",gap:8,marginBottom:8}}>
                   <div style={{flex:1}}>
-                    <div style={{fontSize:T.fXS,color:"#7a80a8",fontWeight:600,textTransform:"uppercase",letterSpacing:0.6,marginBottom:4,paddingLeft:2}}>{_lang==="en"?"Start":"Início"}</div>
+                    <div style={{fontSize:T.fXS,color:T.label,fontWeight:600,textTransform:"uppercase",letterSpacing:0.6,marginBottom:4,paddingLeft:2}}>{_lang==="en"?"Start":"Início"}</div>
                     <input type="time" value={editStart} onChange={e=>setEditStart(e.target.value)} style={{width:"100%",padding:"11px 8px",background:"rgba(14,18,48,0.7)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:10,color:"#e4e6f5",fontSize:T.fLG,fontWeight:700,textAlign:"center",fontVariantNumeric:"tabular-nums",outline:"none",colorScheme:"dark",boxSizing:"border-box"}}/>
                   </div>
                   <div style={{flex:1}}>
-                    <div style={{fontSize:T.fXS,color:"#7a80a8",fontWeight:600,textTransform:"uppercase",letterSpacing:0.6,marginBottom:4,paddingLeft:2}}>{_lang==="en"?"End":"Fim"}</div>
+                    <div style={{fontSize:T.fXS,color:T.label,fontWeight:600,textTransform:"uppercase",letterSpacing:0.6,marginBottom:4,paddingLeft:2}}>{_lang==="en"?"End":"Fim"}</div>
                     <input type="time" value={editEnd} onChange={e=>setEditEnd(e.target.value)} style={{width:"100%",padding:"11px 8px",background:isActive?"linear-gradient(180deg,rgba(56,189,248,0.15),rgba(56,189,248,0.05))":"rgba(14,18,48,0.7)",border:`1px solid ${isActive?"rgba(56,189,248,0.3)":"rgba(255,255,255,0.08)"}`,borderRadius:10,color:isActive?"#7dd3fc":"#e4e6f5",fontSize:T.fLG,fontWeight:700,textAlign:"center",fontVariantNumeric:"tabular-nums",outline:"none",colorScheme:"dark",boxSizing:"border-box"}}/>
                   </div>
                 </div>
@@ -6246,7 +6265,7 @@ const SleepBlock = React.memo(function SleepBlock({entry,onDelete,onEdit,entries
         {/* Orphan events: inside bedtime but outside any waking range (refinado: secao limpa) */}
         {orphanRetro.length>0&&<div style={{borderTop:"1px solid rgba(139,124,246,0.10)",padding:"10px 18px"}}>
           <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
-            <span style={{display:"inline-flex",alignItems:"center",fontSize:T.fSM,fontWeight:700,color:"#a78bfa",padding:"4px 10px",borderRadius:9,background:"rgba(167,139,250,0.13)",border:"1px solid rgba(167,139,250,0.28)"}}>
+            <span style={{display:"inline-flex",alignItems:"center",fontSize:T.fSM,fontWeight:700,color:T.purple,padding:"4px 10px",borderRadius:9,background:"rgba(167,139,250,0.13)",border:"1px solid rgba(167,139,250,0.28)"}}>
               {_lang==="en"?"Other events":"Outros eventos"}
             </span>
           </div>
@@ -6261,7 +6280,7 @@ const SleepBlock = React.memo(function SleepBlock({entry,onDelete,onEdit,entries
     </div>}
     {/* Actions (only when expanded AND not live) — refinado */}
     {expanded&&!isLive&&<div style={{padding:"10px 14px 12px",display:"flex",gap:8,borderTop:"1px solid rgba(139,124,246,0.10)"}}>
-      <button onClick={e=>{e.stopPropagation();onEdit&&onEdit(entry)}} style={{flex:1,padding:"8px 10px",borderRadius:9,background:"rgba(167,139,250,0.07)",fontSize:T.fSM,fontWeight:600,color:"#a78bfa",border:"none",cursor:"pointer",letterSpacing:0.1}}>{_lang==="en"?"Edit":"Editar"}</button>
+      <button onClick={e=>{e.stopPropagation();onEdit&&onEdit(entry)}} style={{flex:1,padding:"8px 10px",borderRadius:9,background:"rgba(167,139,250,0.07)",fontSize:T.fSM,fontWeight:600,color:T.purple,border:"none",cursor:"pointer",letterSpacing:0.1}}>{_lang==="en"?"Edit":"Editar"}</button>
       <button aria-label={_lang==="en"?"Delete bedtime":"Excluir bedtime"} onClick={e=>{e.stopPropagation();onDelete&&onDelete(entry.id)}} style={{padding:"8px 14px",borderRadius:9,background:"rgba(248,113,113,0.07)",fontSize:T.fSM,fontWeight:600,color:T.red,border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="trash" size={12} color={T.red}/></button>
     </div>}
   </div>);
@@ -6376,8 +6395,8 @@ const EntryRow = React.memo(function EntryRow({entry,onDelete,onEdit,napNum,nigh
   {/* Colored stripe (replaces borderLeft for proper rendering with overflow+transform) */}
   <div style={{position:"absolute",left:0,top:0,bottom:0,width:3,background:`linear-gradient(180deg,${cfg.color},${cfg.color}50)`,borderRadius:"0 2px 2px 0",pointerEvents:"none"}}/>
   <button onClick={()=>{if(Math.abs(dx)<5)onEdit&&onEdit(entry)}} style={{width:30,height:30,borderRadius:9,background:`linear-gradient(135deg,${cfg.color}28,${cfg.color}0a)`,border:`1px solid ${cfg.color}45`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,boxShadow:"0 1px 0 0 rgba(255,255,255,0.06) inset"}}><Icon name={cfg.icon} size={14} color={cfg.color}/></button>
-  <button onClick={()=>{if(Math.abs(dx)<5)onEdit&&onEdit(entry)}} style={{flex:1,textAlign:"left",minWidth:0,lineHeight:1.2}}><div style={{fontSize:T.fMD,fontWeight:600,letterSpacing:-0.15,color:"#f0f2ff",display:"flex",alignItems:"center",gap:5,lineHeight:1.2}}>{napLabel&&<span style={{display:"inline-block",padding:"1px 5px",borderRadius:4,background:`${cfg.color}25`,color:cfg.color,fontSize:T.fXS,fontWeight:700}}>{napLabel}</span>}<span>{cfg.label[_lang]||cfg.label.en}</span>{nightBadge&&<span title={_lang==="en"?"During bedtime":"Durante bedtime"} style={{display:"inline-flex",alignItems:"center",gap:2,padding:"0 5px 0 4px",borderRadius:5,background:"rgba(96,165,250,0.14)",border:"1px solid rgba(96,165,250,0.32)",fontSize:T.fXS,fontWeight:700,color:"#60a5fa",letterSpacing:0.2}}><Icon name="moon" size={8} color="#60a5fa"/>{_lang==="en"?"night":"noite"}</span>}</div>{detail&&<div style={{fontSize:T.fSM,color:"#9099c3",marginTop:0,fontWeight:500,lineHeight:1.15}}>{detail}</div>}</button>
-  <div style={{textAlign:"right",flexShrink:0,lineHeight:1.1}}>{(entry.type==="sleep"||entry.type==="nap")&&entry.durationMin?(()=>{const endMs=new Date(`${entry.date}T${entry.time}`).getTime()+entry.durationMin*60000;const endD=new Date(endMs);const endT=`${String(endD.getHours()).padStart(2,"0")}:${String(endD.getMinutes()).padStart(2,"0")}`;const endDt=`${endD.getFullYear()}-${String(endD.getMonth()+1).padStart(2,"0")}-${String(endD.getDate()).padStart(2,"0")}`;return<><div style={{fontSize:T.fMD,fontWeight:700,color:"#f0f2ff",fontVariantNumeric:"tabular-nums",letterSpacing:-0.3}}>{`${entry.time}\u2013${endT}`}</div><div style={{fontSize:T.fSM,color:T.sub,fontWeight:500,marginTop:1}}>{timeSince(endDt,endT)}</div></>})():<><div style={{fontSize:T.fMD,fontWeight:700,color:"#f0f2ff",fontVariantNumeric:"tabular-nums",letterSpacing:-0.3}}>{entry.time}</div><div style={{fontSize:T.fSM,color:T.sub,fontWeight:500,marginTop:1}}>{timeSince(entry.date,entry.time)}</div></>}</div>
+  <button onClick={()=>{if(Math.abs(dx)<5)onEdit&&onEdit(entry)}} style={{flex:1,textAlign:"left",minWidth:0,lineHeight:1.2}}><div style={{fontSize:T.fMD,fontWeight:600,letterSpacing:-0.15,color:T.heading,display:"flex",alignItems:"center",gap:5,lineHeight:1.2}}>{napLabel&&<span style={{display:"inline-block",padding:"1px 5px",borderRadius:4,background:`${cfg.color}25`,color:cfg.color,fontSize:T.fXS,fontWeight:700}}>{napLabel}</span>}<span>{cfg.label[_lang]||cfg.label.en}</span>{nightBadge&&<span title={_lang==="en"?"During bedtime":"Durante bedtime"} style={{display:"inline-flex",alignItems:"center",gap:2,padding:"0 5px 0 4px",borderRadius:5,background:"rgba(96,165,250,0.14)",border:"1px solid rgba(96,165,250,0.32)",fontSize:T.fXS,fontWeight:700,color:"#60a5fa",letterSpacing:0.2}}><Icon name="moon" size={8} color="#60a5fa"/>{_lang==="en"?"night":"noite"}</span>}</div>{detail&&<div style={{fontSize:T.fSM,color:"#9099c3",marginTop:0,fontWeight:500,lineHeight:1.15}}>{detail}</div>}</button>
+  <div style={{textAlign:"right",flexShrink:0,lineHeight:1.1}}>{(entry.type==="sleep"||entry.type==="nap")&&entry.durationMin?(()=>{const endMs=new Date(`${entry.date}T${entry.time}`).getTime()+entry.durationMin*60000;const endD=new Date(endMs);const endT=`${String(endD.getHours()).padStart(2,"0")}:${String(endD.getMinutes()).padStart(2,"0")}`;const endDt=`${endD.getFullYear()}-${String(endD.getMonth()+1).padStart(2,"0")}-${String(endD.getDate()).padStart(2,"0")}`;return<><div style={{fontSize:T.fMD,fontWeight:700,color:T.heading,fontVariantNumeric:"tabular-nums",letterSpacing:-0.3}}>{`${entry.time}\u2013${endT}`}</div><div style={{fontSize:T.fSM,color:T.sub,fontWeight:500,marginTop:1}}>{timeSince(endDt,endT)}</div></>})():<><div style={{fontSize:T.fMD,fontWeight:700,color:T.heading,fontVariantNumeric:"tabular-nums",letterSpacing:-0.3}}>{entry.time}</div><div style={{fontSize:T.fSM,color:T.sub,fontWeight:500,marginTop:1}}>{timeSince(entry.date,entry.time)}</div></>}</div>
 </div></div>)});
 
 function AddForm({type,onSave,onSaveBatch,savedMeds,onSaveMeds,editEntry,lastBottleMl,lastBottleEntry,feedingIntervalMin,topMl,onStartTimer}){const cfg=TYPES[type];const ed=editEntry||{};
@@ -6653,8 +6672,8 @@ function InboxPanel({inbox,onClose,onMarkRead,onMarkAllRead,lang,isRead}){
         <Icon name="bell" size={20} color="#c4b5fd"/>
       </div>
       <div style={{flex:1}}>
-        <div style={{fontSize:T.fXL,fontWeight:800,letterSpacing:-0.4,color:"#f0f2ff"}}>{lang==="en"?"Notifications":"Notificações"}</div>
-        <div style={{fontSize:T.fSM,color:"#7a80a8",marginTop:3,fontWeight:600}}>{lang==="en"?"Today · ":"Hoje · "}{todayLabel}</div>
+        <div style={{fontSize:T.fXL,fontWeight:800,letterSpacing:-0.4,color:T.heading}}>{lang==="en"?"Notifications":"Notificações"}</div>
+        <div style={{fontSize:T.fSM,color:T.label,marginTop:3,fontWeight:600}}>{lang==="en"?"Today · ":"Hoje · "}{todayLabel}</div>
       </div>
       <button onClick={onClose} style={{width:38,height:38,borderRadius:12,background:"rgba(22,28,60,0.65)",border:`1px solid ${T.gBSoft}`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:T.insetTop}}>
         <Icon name="x" size={16} color={T.sub}/>
@@ -7002,7 +7021,7 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
       <div style={{background:"rgba(22,28,60,0.4)",borderRadius:16,border:`1px solid ${T.gB}`,padding:16,marginBottom:12}}>
         <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:routineEnabled?14:0}}>
           <div style={{flex:1}}>
-            <div style={{fontSize:T.fLG,fontWeight:700,color:"#f0f2ff",letterSpacing:-0.2}}>{L("routineSection")}</div>
+            <div style={{fontSize:T.fLG,fontWeight:700,color:T.heading,letterSpacing:-0.2}}>{L("routineSection")}</div>
             <div style={{fontSize:T.fSM,color:T.sub,lineHeight:1.45,marginTop:3}}>{L("routineHelp")}</div>
           </div>
           <button aria-label={L("routineEnable")} onClick={()=>setRoutineEnabled(!routineEnabled)} style={{width:52,height:30,borderRadius:15,background:routineEnabled?T.accent:"rgba(20,26,60,0.6)",border:`1px solid ${routineEnabled?T.accent:T.gB}`,position:"relative",flexShrink:0,cursor:"pointer",transition:"all .2s"}}>
@@ -7038,8 +7057,8 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
         {/* Wake Lock toggle */}
         <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:14}}>
           <div style={{flex:1}}>
-            <div style={{fontSize:T.fLG,fontWeight:700,marginBottom:4,color:"#f0f2ff",letterSpacing:-0.2}}>{langSel==="en"?"Keep screen on":"Manter tela ligada"}</div>
-            <div style={{fontSize:T.fMD,color:"#7a80a8",lineHeight:1.5}}>{langSel==="en"?"During night wake & nursing timers":"Durante night wake e amamentação"}</div>
+            <div style={{fontSize:T.fLG,fontWeight:700,marginBottom:4,color:T.heading,letterSpacing:-0.2}}>{langSel==="en"?"Keep screen on":"Manter tela ligada"}</div>
+            <div style={{fontSize:T.fMD,color:T.label,lineHeight:1.5}}>{langSel==="en"?"During night wake & nursing timers":"Durante night wake e amamentação"}</div>
           </div>
           <button onClick={()=>{const v=!keepScreenOn;setKeepScreenOn(v);persistToggle({keepScreenOn:v})}} style={{position:"relative",width:52,height:32,borderRadius:16,background:keepScreenOn?`linear-gradient(180deg,${T.accent},#6d5cd4)`:"rgba(14,18,48,0.8)",border:`1px solid ${keepScreenOn?"rgba(139,124,246,0.5)":T.gBSoft}`,transition:"all .2s",flexShrink:0,cursor:"pointer",padding:0,boxShadow:keepScreenOn?"0 1px 0 0 rgba(255,255,255,0.18) inset, 0 4px 12px -4px rgba(139,124,246,0.4)":T.insetTop}}>
             <div style={{position:"absolute",top:3,left:keepScreenOn?25:3,width:24,height:24,borderRadius:"50%",background:"#fff",transition:"left .2s",boxShadow:"0 2px 6px rgba(0,0,0,0.4)"}}/>
@@ -7051,7 +7070,7 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
         <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:14}}>
           <div style={{flex:1}}>
             <div style={{fontSize:T.fLG,fontWeight:700,marginBottom:4,color:pushSupported?"#f0f2ff":T.dim,letterSpacing:-0.2}}>{langSel==="en"?"Notifications":"Notificações"}</div>
-            <div style={{fontSize:T.fMD,color:"#7a80a8",lineHeight:1.5}}>
+            <div style={{fontSize:T.fMD,color:T.label,lineHeight:1.5}}>
               {!pushSupported?(langSel==="en"?"Install to home screen first (iOS 16.4+)":"Instale na tela inicial primeiro (iOS 16.4+)"):
                pushPermission==="denied"?(langSel==="en"?"Permission denied — enable in iOS Settings":"Permissão negada — ative nos Ajustes do iOS"):
                pushEnabled?(langSel==="en"?"Notifications on — add reminders below":"Notificações ativas — cadastre lembretes abaixo"):
@@ -7070,9 +7089,9 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
           <div style={{width:32,height:32,borderRadius:10,background:`linear-gradient(135deg,${T.accent}38,${T.accent}10)`,border:`1px solid ${T.accent}50`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset"}}>
             <Icon name="bell" size={15} color="#c4b5fd"/>
           </div>
-          <div style={{fontSize:T.fLG,fontWeight:700,color:"#f0f2ff",letterSpacing:-0.2}}>{langSel==="en"?"Medication reminders":"Lembretes de medicamento"}</div>
+          <div style={{fontSize:T.fLG,fontWeight:700,color:T.heading,letterSpacing:-0.2}}>{langSel==="en"?"Medication reminders":"Lembretes de medicamento"}</div>
         </div>
-        <div style={{fontSize:T.fMD,color:"#7a80a8",lineHeight:1.55,marginBottom:16}}>
+        <div style={{fontSize:T.fMD,color:T.label,lineHeight:1.55,marginBottom:16}}>
           {langSel==="en"?"Push notification at the scheduled time. Both devices receive.":"Notificação push no horário marcado. Ambos os dispositivos recebem."}
         </div>
 
@@ -7085,20 +7104,20 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
               return(<div key={r._id} style={{padding:14,borderRadius:14,background:"rgba(139,124,246,0.07)",border:`1px solid rgba(139,124,246,0.28)`,boxShadow:T.insetTop}}>
                 <div style={{padding:"9px 11px",background:"rgba(139,124,246,0.12)",border:"1px solid rgba(139,124,246,0.28)",borderRadius:10,display:"flex",gap:8,alignItems:"center",marginBottom:12}}>
                   <Icon name="pencil" size={13} color="#c4b5fd"/>
-                  <div style={{fontSize:T.fSM,color:"#c4b5fd",fontWeight:600,flex:1,lineHeight:1.4}}>{langSel==="en"?<>Editing <b>{r.nome||"—"}</b></>:<>Editando <b>{r.nome||"—"}</b></>}</div>
+                  <div style={{fontSize:T.fSM,color:T.lilac,fontWeight:600,flex:1,lineHeight:1.4}}>{langSel==="en"?<>Editing <b>{r.nome||"—"}</b></>:<>Editando <b>{r.nome||"—"}</b></>}</div>
                 </div>
-                <div style={{fontSize:T.fSM,fontWeight:700,color:"#7a80a8",margin:"0 0 4px",letterSpacing:0.5,textTransform:"uppercase"}}>{langSel==="en"?"Name":"Nome"}</div>
+                <div style={{fontSize:T.fSM,fontWeight:700,color:T.label,margin:"0 0 4px",letterSpacing:0.5,textTransform:"uppercase"}}>{langSel==="en"?"Name":"Nome"}</div>
                 <input type="text" value={editNome} onChange={e=>setEditNome(e.target.value)} placeholder={langSel==="en"?"Name":"Nome"} style={{...inp,padding:"13px 16px",fontSize:T.fLG,marginBottom:8}}/>
-                <div style={{fontSize:T.fSM,fontWeight:700,color:"#7a80a8",margin:"0 0 4px",letterSpacing:0.5,textTransform:"uppercase"}}>{langSel==="en"?"Dose":"Dose"}</div>
+                <div style={{fontSize:T.fSM,fontWeight:700,color:T.label,margin:"0 0 4px",letterSpacing:0.5,textTransform:"uppercase"}}>{langSel==="en"?"Dose":"Dose"}</div>
                 <input type="text" value={editDose} onChange={e=>setEditDose(e.target.value)} placeholder={langSel==="en"?"Dose":"Dose"} style={{...inp,padding:"13px 16px",fontSize:T.fLG,marginBottom:8}}/>
-                <div style={{fontSize:T.fSM,fontWeight:700,color:"#7a80a8",margin:"0 0 4px",letterSpacing:0.5,textTransform:"uppercase"}}>{langSel==="en"?"Time":"Horário"}</div>
+                <div style={{fontSize:T.fSM,fontWeight:700,color:T.label,margin:"0 0 4px",letterSpacing:0.5,textTransform:"uppercase"}}>{langSel==="en"?"Time":"Horário"}</div>
                 <input type="time" value={editHorario} onChange={e=>setEditHorario(e.target.value)} style={{...inp,padding:"13px 16px",fontSize:T.fLG,fontWeight:700,colorScheme:"dark",textAlign:"center",marginBottom:8}}/>
-                <div style={{fontSize:T.fSM,fontWeight:700,color:"#7a80a8",margin:"6px 0 4px",letterSpacing:0.5,textTransform:"uppercase",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <div style={{fontSize:T.fSM,fontWeight:700,color:T.label,margin:"6px 0 4px",letterSpacing:0.5,textTransform:"uppercase",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                   <span>{langSel==="en"?"Notification title":"Título da notificação"}</span>
                   <span style={{fontSize:T.fXS,color:"#555580",fontWeight:500,letterSpacing:0,textTransform:"none"}}>{langSel==="en"?"optional":"opcional"}</span>
                 </div>
                 <input type="text" value={editTitulo} onChange={e=>setEditTitulo(e.target.value)} placeholder={langSel==="en"?"Default: Reminder":"Padrão: Lembrete"} style={{...inp,padding:"13px 16px",fontSize:T.fLG,marginBottom:8}}/>
-                <div style={{fontSize:T.fSM,fontWeight:700,color:"#7a80a8",margin:"0 0 4px",letterSpacing:0.5,textTransform:"uppercase",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <div style={{fontSize:T.fSM,fontWeight:700,color:T.label,margin:"0 0 4px",letterSpacing:0.5,textTransform:"uppercase",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                   <span>{langSel==="en"?"Notification body":"Corpo da notificação"}</span>
                   <span style={{fontSize:T.fXS,color:"#555580",fontWeight:500,letterSpacing:0,textTransform:"none"}}>{langSel==="en"?"optional":"opcional"}</span>
                 </div>
@@ -7112,12 +7131,12 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
             return(<div key={r._id} style={{position:"relative",display:"flex",alignItems:"center",gap:10,padding:"14px 10px 14px 18px",borderRadius:14,background:"rgba(14,18,48,0.6)",border:`1px solid ${T.gBSoft}`,boxShadow:T.insetTop,overflow:"hidden",opacity:editingRemId?0.55:1,transition:"opacity .2s"}}>
               <div style={{position:"absolute",left:0,top:0,bottom:0,width:4,background:`linear-gradient(180deg,${T.accent},${T.accent}40)`,borderRadius:"0 2px 2px 0",pointerEvents:"none"}}/>
               <div style={{minWidth:56,padding:"7px 10px",borderRadius:11,background:`linear-gradient(180deg,${T.accent}28,${T.accent}10)`,border:`1px solid ${T.accent}45`,textAlign:"center",boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset"}}>
-                <div style={{fontSize:T.fLG,fontWeight:800,color:"#c4b5fd",fontVariantNumeric:"tabular-nums",letterSpacing:-0.3}}>{r.horarios?.[0]||"--:--"}</div>
+                <div style={{fontSize:T.fLG,fontWeight:800,color:T.lilac,fontVariantNumeric:"tabular-nums",letterSpacing:-0.3}}>{r.horarios?.[0]||"--:--"}</div>
               </div>
               <div style={{flex:1,minWidth:0}}>
-                <div style={{fontSize:T.fLG,fontWeight:700,color:"#f0f2ff",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",letterSpacing:-0.2}}>{r.nome||"—"}</div>
+                <div style={{fontSize:T.fLG,fontWeight:700,color:T.heading,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",letterSpacing:-0.2}}>{r.nome||"—"}</div>
                 {r.dose&&<div style={{fontSize:T.fMD,color:"#9099c3",marginTop:2,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{r.dose}</div>}
-                {hasCustom&&<div style={{fontSize:T.fSM,color:"#a78bfa",marginTop:3,display:"flex",alignItems:"center",gap:4,fontWeight:600}}><Icon name="pencil" size={9} color="#a78bfa"/>{langSel==="en"?"custom message":"mensagem personalizada"}</div>}
+                {hasCustom&&<div style={{fontSize:T.fSM,color:T.purple,marginTop:3,display:"flex",alignItems:"center",gap:4,fontWeight:600}}><Icon name="pencil" size={9} color="#a78bfa"/>{langSel==="en"?"custom message":"mensagem personalizada"}</div>}
               </div>
               <button disabled={!!editingRemId} onClick={()=>{Haptic.medium();startRemEdit(r)}} style={{width:32,height:32,borderRadius:10,background:"rgba(139,124,246,0.1)",border:"1px solid rgba(139,124,246,0.15)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,opacity:editingRemId?0.3:1}}>
                 <Icon name="pencil" size={13} color="#a78bfa"/>
@@ -7131,20 +7150,20 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
 
         {/* New reminder form */}
         <div style={{padding:14,borderRadius:14,background:"rgba(14,18,48,0.5)",border:`1px dashed ${T.gBSoft}`,opacity:editingRemId?0.4:1,pointerEvents:editingRemId?"none":"auto",transition:"opacity .2s"}}>
-          <div style={{fontSize:T.fSM,fontWeight:600,color:"#7a80a8",marginBottom:10,letterSpacing:-0.05,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div style={{fontSize:T.fSM,fontWeight:600,color:T.label,marginBottom:10,letterSpacing:-0.05,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
             <span>{langSel==="en"?"Add new":"Adicionar novo"}</span>
-            <button onClick={()=>setRemShowCustom(!remShowCustom)} style={{background:"transparent",border:"none",fontSize:T.fSM,color:"#a78bfa",fontWeight:700,letterSpacing:0.3,padding:0,cursor:"pointer"}}>{remShowCustom?(langSel==="en"?"hide message ▲":"ocultar mensagem ▲"):(langSel==="en"?"customize message ▼":"personalizar mensagem ▼")}</button>
+            <button onClick={()=>setRemShowCustom(!remShowCustom)} style={{background:"transparent",border:"none",fontSize:T.fSM,color:T.purple,fontWeight:700,letterSpacing:0.3,padding:0,cursor:"pointer"}}>{remShowCustom?(langSel==="en"?"hide message ▲":"ocultar mensagem ▲"):(langSel==="en"?"customize message ▼":"personalizar mensagem ▼")}</button>
           </div>
           <div style={{display:"flex",flexDirection:"column",gap:8}}>
             <input type="text" placeholder={langSel==="en"?"Name (e.g. Vitamin D)":"Nome (ex: Vitamina D)"} value={remNome} onChange={e=>setRemNome(e.target.value)} style={{...inp,padding:"14px 16px",fontSize:T.fLG}}/>
             <input type="text" placeholder={langSel==="en"?"Dose (e.g. 2 drops)":"Dose (ex: 2 gotas)"} value={remDose} onChange={e=>setRemDose(e.target.value)} style={{...inp,padding:"14px 16px",fontSize:T.fLG}}/>
             {remShowCustom&&<>
-              <div style={{fontSize:T.fSM,fontWeight:700,color:"#7a80a8",margin:"4px 0 -2px",letterSpacing:0.5,textTransform:"uppercase",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <div style={{fontSize:T.fSM,fontWeight:700,color:T.label,margin:"4px 0 -2px",letterSpacing:0.5,textTransform:"uppercase",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                 <span>{langSel==="en"?"Notification title":"Título da notificação"}</span>
                 <span style={{fontSize:T.fXS,color:"#555580",fontWeight:500,letterSpacing:0,textTransform:"none"}}>{langSel==="en"?"optional":"opcional"}</span>
               </div>
               <input type="text" placeholder={langSel==="en"?"Default: Reminder":"Padrão: Lembrete"} value={remTitulo} onChange={e=>setRemTitulo(e.target.value)} style={{...inp,padding:"13px 16px",fontSize:T.fLG}}/>
-              <div style={{fontSize:T.fSM,fontWeight:700,color:"#7a80a8",margin:"4px 0 -2px",letterSpacing:0.5,textTransform:"uppercase",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <div style={{fontSize:T.fSM,fontWeight:700,color:T.label,margin:"4px 0 -2px",letterSpacing:0.5,textTransform:"uppercase",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                 <span>{langSel==="en"?"Notification body":"Corpo da notificação"}</span>
                 <span style={{fontSize:T.fXS,color:"#555580",fontWeight:500,letterSpacing:0,textTransform:"none"}}>{langSel==="en"?"optional":"opcional"}</span>
               </div>
@@ -7183,17 +7202,17 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
           <div style={{width:32,height:32,borderRadius:10,background:`linear-gradient(135deg,${T.accent}38,${T.accent}10)`,border:`1px solid ${T.accent}50`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset"}}>
             <Icon name="bottle" size={15} color="#c4b5fd"/>
           </div>
-          <div style={{fontSize:T.fLG,fontWeight:700,color:"#f0f2ff",letterSpacing:-0.2}}>{langSel==="en"?"Feeding reminder":"Lembrete de mamada"}</div>
+          <div style={{fontSize:T.fLG,fontWeight:700,color:T.heading,letterSpacing:-0.2}}>{langSel==="en"?"Feeding reminder":"Lembrete de mamada"}</div>
         </div>
-        <div style={{fontSize:T.fMD,color:"#7a80a8",lineHeight:1.55,marginBottom:16}}>
+        <div style={{fontSize:T.fMD,color:T.label,lineHeight:1.55,marginBottom:16}}>
           {langSel==="en"?"Push notification when the interval since the last bottle is exceeded. Both devices receive.":"Notificação push quando passar do intervalo desde a última mamadeira. Ambos os dispositivos recebem."}
         </div>
 
         {/* Toggle row */}
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:14,padding:14,borderRadius:14,background:"rgba(14,18,48,0.5)",border:`1px solid ${T.gBSoft}`,marginBottom:14}}>
           <div style={{flex:1,minWidth:0}}>
-            <div style={{fontSize:T.fLG,fontWeight:700,color:"#f0f2ff",letterSpacing:-0.2,marginBottom:3}}>{langSel==="en"?"Enable reminder":"Ativar lembrete"}</div>
-            <div style={{fontSize:T.fSM,color:"#7a80a8",lineHeight:1.45}}>{langSel==="en"?"Notify when it's feeding time":"Notificar quando estiver na hora"}</div>
+            <div style={{fontSize:T.fLG,fontWeight:700,color:T.heading,letterSpacing:-0.2,marginBottom:3}}>{langSel==="en"?"Enable reminder":"Ativar lembrete"}</div>
+            <div style={{fontSize:T.fSM,color:T.label,lineHeight:1.45}}>{langSel==="en"?"Notify when it's feeding time":"Notificar quando estiver na hora"}</div>
           </div>
           <button onClick={()=>{const v=!fdEnabled;setFdEnabled(v);saveFeedReminder({ativo:v})}} disabled={fdBusy} style={{position:"relative",width:52,height:32,borderRadius:16,background:fdEnabled?`linear-gradient(180deg,${T.accent},#6d5cd4)`:"rgba(14,18,48,0.8)",border:`1px solid ${fdEnabled?"rgba(139,124,246,0.5)":T.gBSoft}`,transition:"all .2s",flexShrink:0,cursor:fdBusy?"not-allowed":"pointer",padding:0,opacity:fdBusy?0.6:1,boxShadow:fdEnabled?"0 1px 0 0 rgba(255,255,255,0.18) inset, 0 4px 12px -4px rgba(139,124,246,0.4)":T.insetTop}}>
             <div style={{position:"absolute",top:3,left:fdEnabled?25:3,width:24,height:24,borderRadius:"50%",background:"#fff",transition:"left .2s",boxShadow:"0 2px 6px rgba(0,0,0,0.4)"}}/>
@@ -7204,27 +7223,27 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
         <div style={{display:"flex",flexDirection:"column",gap:10,opacity:fdEnabled?1:0.5,transition:"opacity .25s",pointerEvents:fdEnabled?"auto":"none"}}>
           {/* Intervalo da barra */}
           <div style={{padding:14,borderRadius:14,background:"rgba(14,18,48,0.5)",border:`1px dashed ${T.gBSoft}`}}>
-            <div style={{fontSize:T.fSM,fontWeight:600,color:"#7a80a8",marginBottom:10,letterSpacing:-0.05,display:"flex",alignItems:"center",gap:6}}>
+            <div style={{fontSize:T.fSM,fontWeight:600,color:T.label,marginBottom:10,letterSpacing:-0.05,display:"flex",alignItems:"center",gap:6}}>
               <Icon name="clock" size={11} color="#7a80a8"/>{langSel==="en"?"Card progress interval":"Intervalo da barra"}
             </div>
             <div style={{display:"flex",gap:8,alignItems:"stretch"}}>
               <input type="number" inputMode="numeric" min="30" max="720" value={fdMinutes} onChange={e=>{const n=parseInt(e.target.value)||0;setFdMinutes(n)}} onBlur={()=>{const clamped=Math.max(30,Math.min(720,fdMinutes||120));if(clamped!==fdMinutes)setFdMinutes(clamped)}} style={{flex:1,minWidth:0,padding:"14px 16px",background:"rgba(20,26,60,0.55)",border:`1px solid ${T.gBSoft}`,borderRadius:14,color:T.text,fontSize:T.fXL,fontWeight:700,textAlign:"center",fontVariantNumeric:"tabular-nums",letterSpacing:-0.2,outline:"none",boxShadow:T.insetTop,WebkitAppearance:"none",appearance:"none"}}/>
               <div style={{display:"flex",alignItems:"center",padding:"0 16px",background:"rgba(20,26,60,0.55)",border:`1px solid ${T.gBSoft}`,borderRadius:14,fontSize:T.fMD,color:"#8b90b8",fontWeight:600,boxShadow:T.insetTop,whiteSpace:"nowrap"}}>{langSel==="en"?"minutes":"minutos"}</div>
             </div>
-            <div style={{marginTop:8,textAlign:"center",fontSize:T.fSM,color:"#c4b5fd",fontWeight:600,letterSpacing:-0.1}}>
+            <div style={{marginTop:8,textAlign:"center",fontSize:T.fSM,color:T.lilac,fontWeight:600,letterSpacing:-0.1}}>
               <strong style={{fontVariantNumeric:"tabular-nums",color:"#e0d4ff"}}>{fdConverted}</strong> {"\u00b7"} {langSel==="en"?"bar on Home card":"barra do card Home"}
             </div>
           </div>
           {/* Intervalo do push */}
           <div style={{padding:14,borderRadius:14,background:"rgba(14,18,48,0.5)",border:`1px dashed ${T.gBSoft}`}}>
-            <div style={{fontSize:T.fSM,fontWeight:600,color:"#7a80a8",marginBottom:10,letterSpacing:-0.05,display:"flex",alignItems:"center",gap:6}}>
+            <div style={{fontSize:T.fSM,fontWeight:600,color:T.label,marginBottom:10,letterSpacing:-0.05,display:"flex",alignItems:"center",gap:6}}>
               <Icon name="bell" size={11} color="#7a80a8"/>{langSel==="en"?"Push notification interval":"Intervalo do push"}
             </div>
             <div style={{display:"flex",gap:8,alignItems:"stretch"}}>
               <input type="number" inputMode="numeric" min="30" max="720" value={fdPushMinutes} onChange={e=>{const n=parseInt(e.target.value)||0;setFdPushMinutes(n)}} onBlur={()=>{const clamped=Math.max(30,Math.min(720,fdPushMinutes||120));if(clamped!==fdPushMinutes)setFdPushMinutes(clamped)}} style={{flex:1,minWidth:0,padding:"14px 16px",background:"rgba(20,26,60,0.55)",border:`1px solid ${T.gBSoft}`,borderRadius:14,color:T.text,fontSize:T.fXL,fontWeight:700,textAlign:"center",fontVariantNumeric:"tabular-nums",letterSpacing:-0.2,outline:"none",boxShadow:T.insetTop,WebkitAppearance:"none",appearance:"none"}}/>
               <div style={{display:"flex",alignItems:"center",padding:"0 16px",background:"rgba(20,26,60,0.55)",border:`1px solid ${T.gBSoft}`,borderRadius:14,fontSize:T.fMD,color:"#8b90b8",fontWeight:600,boxShadow:T.insetTop,whiteSpace:"nowrap"}}>{langSel==="en"?"minutes":"minutos"}</div>
             </div>
-            <div style={{marginTop:8,textAlign:"center",fontSize:T.fSM,color:"#c4b5fd",fontWeight:600,letterSpacing:-0.1}}>
+            <div style={{marginTop:8,textAlign:"center",fontSize:T.fSM,color:T.lilac,fontWeight:600,letterSpacing:-0.1}}>
               <strong style={{fontVariantNumeric:"tabular-nums",color:"#e0d4ff"}}>{fdPushConverted}</strong> {"\u00b7"} {langSel==="en"?"push fires after this":"push dispara depois disso"}
             </div>
           </div>
@@ -7232,7 +7251,7 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
 
         {/* Rule explanation */}
         <div style={{marginTop:14,padding:"12px 14px",borderRadius:12,background:`linear-gradient(180deg,${T.accent}1a,${T.accent}08)`,border:`1px solid ${T.accent}33`}}>
-          <div style={{fontSize:T.fSM,fontWeight:700,color:"#c4b5fd",textTransform:"uppercase",letterSpacing:1,marginBottom:6,display:"flex",alignItems:"center",gap:6}}>
+          <div style={{fontSize:T.fSM,fontWeight:700,color:T.lilac,textTransform:"uppercase",letterSpacing:1,marginBottom:6,display:"flex",alignItems:"center",gap:6}}>
             <Icon name="clock" size={11} color="#c4b5fd"/>
             {langSel==="en"?"How it works":"Como funciona"}
           </div>
@@ -7319,7 +7338,7 @@ function ChangelogModal({onClose,lang}){
       if(boldStart>0)parts.push(<span key={key++}>{remaining.slice(0,boldStart)}</span>);
       const boldEnd=remaining.indexOf("**",boldStart+2);
       if(boldEnd===-1){parts.push(<span key={key++}>{remaining.slice(boldStart)}</span>);break}
-      parts.push(<strong key={key++} style={{color:"#c4b5fd",fontWeight:700}}>{remaining.slice(boldStart+2,boldEnd)}</strong>);
+      parts.push(<strong key={key++} style={{color:T.lilac,fontWeight:700}}>{remaining.slice(boldStart+2,boldEnd)}</strong>);
       remaining=remaining.slice(boldEnd+2);
     }
     return(<li key={idx} style={{fontSize:T.fMD,color:T.text,lineHeight:1.55,padding:"5px 0 5px 18px",position:"relative",listStyle:"none"}}>
@@ -7505,7 +7524,7 @@ const StatsPage = React.memo(function StatsPage({entries,onGrowth}){
       </div>
       <div style={{padding:"60px 24px 20px",textAlign:"center"}}>
         <div style={{width:58,height:58,borderRadius:18,background:"rgba(139,124,246,0.08)",border:"1px solid rgba(139,124,246,0.15)",display:"inline-flex",alignItems:"center",justifyContent:"center",marginBottom:16,color:"rgba(196,181,253,0.5)"}}><Icon name="chart" size={26} color="rgba(196,181,253,0.5)"/></div>
-        <div style={{fontSize:T.fLG,fontWeight:700,color:"#f0f2ff",letterSpacing:-0.2,marginBottom:6}}>{_lang==="en"?"Not enough data yet":"Sem dados suficientes"}</div>
+        <div style={{fontSize:T.fLG,fontWeight:700,color:T.heading,letterSpacing:-0.2,marginBottom:6}}>{_lang==="en"?"Not enough data yet":"Sem dados suficientes"}</div>
         <div style={{fontSize:T.fMD,color:T.sub,lineHeight:1.55,maxWidth:260,margin:"0 auto"}}>{_lang==="en"?"Log some events over a few days and patterns will appear here — averages, trends, growth curves.":"Registre alguns eventos nos próximos dias e os padrões aparecem aqui — médias, tendências, curvas de crescimento."}</div>
       </div>
     </div>);
@@ -7543,23 +7562,23 @@ const StatsPage = React.memo(function StatsPage({entries,onGrowth}){
     </div>
     <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)",gap:8,marginBottom:16}}>
       <div style={{background:"rgba(20,26,60,0.5)",borderRadius:20,border:`1px solid ${T.gBSoft}`,padding:"14px 8px 12px",textAlign:"center",boxShadow:T.insetTop}}>
-        <div style={{fontSize:T.fXS,color:"#7a80a8",letterSpacing:-0.05,marginBottom:6,fontWeight:600}}>{_lang==="en"?"Diapers/day":"Fraldas/dia"}</div>
+        <div style={{fontSize:T.fXS,color:T.label,letterSpacing:-0.05,marginBottom:6,fontWeight:600}}>{_lang==="en"?"Diapers/day":"Fraldas/dia"}</div>
         <div style={{fontSize:T.f2XL,fontWeight:800,color:T.pink,letterSpacing:-0.8,fontVariantNumeric:"tabular-nums",lineHeight:1}}>{avgDiapers}</div>
         <div style={{fontSize:T.fXS,color:T.dim,marginTop:5,fontVariantNumeric:"tabular-nums",letterSpacing:0.2}}>💧 {avgWet} · 💩 {avgPoop}</div>
       </div>
       <div style={{background:"rgba(20,26,60,0.5)",borderRadius:20,border:`1px solid ${T.gBSoft}`,padding:"14px 8px 12px",textAlign:"center",boxShadow:T.insetTop}}>
-        <div style={{fontSize:T.fXS,color:"#7a80a8",letterSpacing:-0.05,marginBottom:6,fontWeight:600}}>{_lang==="en"?"Feeds/day":"Mamadas/dia"}</div>
+        <div style={{fontSize:T.fXS,color:T.label,letterSpacing:-0.05,marginBottom:6,fontWeight:600}}>{_lang==="en"?"Feeds/day":"Mamadas/dia"}</div>
         <div style={{fontSize:T.f2XL,fontWeight:800,color:T.blue,letterSpacing:-0.8,fontVariantNumeric:"tabular-nums",lineHeight:1}}>{avgFeedings}</div>
         {/* v11.9.20: ml/feed médio + intervalo */}
         <div style={{fontSize:T.fXS,color:T.dim,marginTop:5,fontVariantNumeric:"tabular-nums",letterSpacing:0.2}}>{avgFeedings>0&&avgMl>0?`${Math.round(avgMl/avgFeedings)}ml · ~${Math.round(24/avgFeedings*10)/10}h`:(avgFeedings>0?`~${Math.round(24/avgFeedings*10)/10}h`:"")}</div>
       </div>
       <div style={{background:"rgba(20,26,60,0.5)",borderRadius:20,border:`1px solid ${T.gBSoft}`,padding:"14px 8px 12px",textAlign:"center",boxShadow:T.insetTop}}>
-        <div style={{fontSize:T.fXS,color:"#7a80a8",letterSpacing:-0.05,marginBottom:6,fontWeight:600}}>{_lang==="en"?"Naps/day":"Sonecas/dia"}</div>
+        <div style={{fontSize:T.fXS,color:T.label,letterSpacing:-0.05,marginBottom:6,fontWeight:600}}>{_lang==="en"?"Naps/day":"Sonecas/dia"}</div>
         <div style={{fontSize:T.f2XL,fontWeight:800,color:T.accent,letterSpacing:-0.8,fontVariantNumeric:"tabular-nums",lineHeight:1}}>{avgNaps}</div>
         <div style={{fontSize:T.fXS,color:T.dim,marginTop:5,fontVariantNumeric:"tabular-nums",letterSpacing:0.2}}>{avgNapDur>0?`~${fmtDur(avgNapDur)}/soneca`:""}</div>
       </div>
       <div style={{background:"rgba(20,26,60,0.5)",borderRadius:20,border:`1px solid ${T.gBSoft}`,padding:"14px 8px 12px",textAlign:"center",boxShadow:T.insetTop}}>
-        <div style={{fontSize:T.fXS,color:"#7a80a8",letterSpacing:-0.05,marginBottom:6,fontWeight:600}}>{_lang==="en"?"Tummy time":"Tummy time"}</div>
+        <div style={{fontSize:T.fXS,color:T.label,letterSpacing:-0.05,marginBottom:6,fontWeight:600}}>{_lang==="en"?"Tummy time":"Tummy time"}</div>
         {/* v11.9.20: tempo TOTAL/dia vira destaque (mais útil que count). Count fica em sub. */}
         <div style={{fontSize:T.f2XL,fontWeight:800,color:T.amber,letterSpacing:-0.8,fontVariantNumeric:"tabular-nums",lineHeight:1}}>{(()=>{const tt=avgData.reduce((s,d)=>s+d.tumMin,0)/numComplete;return tt>=1?fmtDur(Math.round(tt)):avgTum})()}</div>
         <div style={{fontSize:T.fXS,color:T.dim,marginTop:5,fontVariantNumeric:"tabular-nums",letterSpacing:0.2}}>{avgTum>0?`${avgTum}${_lang==="en"?" sessions":" sessões"}/dia`:""}</div>
@@ -7990,7 +8009,7 @@ const HistoryPage = React.memo(function HistoryPage({entries,onDelete,onEdit,act
     </div>
     {filtered.length===0?(<div style={{padding:"48px 24px 20px",textAlign:"center"}}>
       <div style={{width:58,height:58,borderRadius:18,background:"rgba(139,124,246,0.08)",border:"1px solid rgba(139,124,246,0.15)",display:"inline-flex",alignItems:"center",justifyContent:"center",marginBottom:16,color:"rgba(196,181,253,0.5)"}}><Icon name="clock" size={26} color="rgba(196,181,253,0.5)"/></div>
-      <div style={{fontSize:T.fLG,fontWeight:700,color:"#f0f2ff",letterSpacing:-0.2,marginBottom:6}}>{_lang==="en"?"No events this day":"Nenhum evento neste dia"}</div>
+      <div style={{fontSize:T.fLG,fontWeight:700,color:T.heading,letterSpacing:-0.2,marginBottom:6}}>{_lang==="en"?"No events this day":"Nenhum evento neste dia"}</div>
       <div style={{fontSize:T.fMD,color:T.sub,lineHeight:1.55,maxWidth:240,margin:"0 auto"}}>{filter!=="all"?(_lang==="en"?"Try changing the filter or switching to another day.":"Tente mudar o filtro ou ir para outro dia."):(_lang==="en"?"Tap + below to register the first.":"Toque + abaixo para registrar o primeiro.")}</div>
     </div>):listItems}
     </>)}
@@ -8187,7 +8206,7 @@ function GrowthPage({entries,birthDate,profile,onBack,onAddEntry,onDeleteEntry})
 
       {isEdit&&<div style={{padding:"10px 12px",background:"rgba(139,124,246,0.1)",border:"1px solid rgba(139,124,246,0.25)",borderRadius:10,display:"flex",gap:8,alignItems:"center",marginBottom:12}}>
         <Icon name="pencil" size={14} color="#c4b5fd"/>
-        <div style={{fontSize:T.fSM,color:"#c4b5fd",lineHeight:1.4,flex:1,fontWeight:600}}>{_lang==="en"?"Editing measurement from":"Editando medição de"} <b>{editTargetLabel}</b></div>
+        <div style={{fontSize:T.fSM,color:T.lilac,lineHeight:1.4,flex:1,fontWeight:600}}>{_lang==="en"?"Editing measurement from":"Editando medição de"} <b>{editTargetLabel}</b></div>
       </div>}
 
       <Fld label={_lang==="en"?"Date":"Data"}><input type="date" value={fDate} onChange={e=>setFDate(e.target.value)} style={dateInp}/></Fld>
@@ -8240,7 +8259,7 @@ function GrowthPage({entries,birthDate,profile,onBack,onAddEntry,onDeleteEntry})
             {p.lengthCm!==undefined&&<span style={{color:T.blue,fontWeight:600}}>{formatGrowthVal(p.lengthCm)}cm</span>}
             {p.headCm!==undefined&&<span style={{color:T.amber,fontWeight:600}}>{_lang==="en"?"Head":"Cab."} {formatGrowthVal(p.headCm)}</span>}
           </div>
-          {p.isBirth?<span style={{fontSize:T.fXS,color:"#a78bfa",background:"rgba(139,124,246,0.15)",padding:"2px 6px",borderRadius:4,fontWeight:700,letterSpacing:0.5}}>{_lang==="en"?"BIRTH":"NASC."}</span>:<div style={{width:26,height:26,borderRadius:7,background:"rgba(139,124,246,0.1)",border:"1px solid rgba(139,124,246,0.15)",display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="pencil" size={11} color="#a78bfa"/></div>}
+          {p.isBirth?<span style={{fontSize:T.fXS,color:T.purple,background:"rgba(139,124,246,0.15)",padding:"2px 6px",borderRadius:4,fontWeight:700,letterSpacing:0.5}}>{_lang==="en"?"BIRTH":"NASC."}</span>:<div style={{width:26,height:26,borderRadius:7,background:"rgba(139,124,246,0.1)",border:"1px solid rgba(139,124,246,0.15)",display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="pencil" size={11} color="#a78bfa"/></div>}
         </>;
         return clickable?<button key={i} onClick={()=>openEdit(p.entryId)} style={rowStyle}>{content}</button>:<div key={i} style={rowStyle}>{content}</div>;
       })}
@@ -8703,18 +8722,18 @@ class ErrorBoundary extends React.Component {
         }catch(_){alert("N\u00E3o consegui copiar \u2014 tira print da tela")}
       };
       const onReset=()=>{try{sessionStorage.removeItem("lp_eb_tries")}catch(_){};window.location.reload()};
-      return(<div style={{position:"fixed",inset:0,background:"linear-gradient(180deg,#070b1e 0%,#0b1130 100%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-start",padding:"calc(env(safe-area-inset-top) + 28px) 22px 28px",overflowY:"auto",WebkitOverflowScrolling:"touch",color:"#f0f2ff",fontFamily:"'Outfit',sans-serif"}}>
+      return(<div style={{position:"fixed",inset:0,background:"linear-gradient(180deg,#070b1e 0%,#0b1130 100%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-start",padding:"calc(env(safe-area-inset-top) + 28px) 22px 28px",overflowY:"auto",WebkitOverflowScrolling:"touch",color:T.heading,fontFamily:"'Outfit',sans-serif"}}>
         <div style={{width:64,height:64,borderRadius:20,background:"rgba(248,113,113,0.1)",border:"1.5px solid rgba(248,113,113,0.25)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:T.f3XL,color:"#f87171",marginBottom:14,boxShadow:"0 0 32px -8px rgba(248,113,113,0.3)"}}>{"\u26A0"}</div>
         <div style={{fontSize:T.f2XL,fontWeight:800,letterSpacing:-0.5,marginBottom:4,textAlign:"center"}}>{"Oops!"}</div>
         <div style={{fontSize:T.fMD,color:"#a3aac8",lineHeight:1.55,marginBottom:14,maxWidth:280,textAlign:"center"}}>{willReload?"Algo quebrou. Tentando recarregar\u2026":"Algo quebrou e o reload n\u00E3o resolveu."}</div>
         {willReload&&<div style={{width:24,height:24,border:"2.5px solid rgba(139,124,246,0.2)",borderTopColor:"#a78bfa",borderRadius:"50%",animation:"spin 0.9s linear infinite",marginBottom:18}}/>}
         <div style={{width:"100%",maxWidth:380,background:"rgba(20,26,60,0.55)",border:"1px solid rgba(139,124,246,0.18)",borderRadius:12,padding:"12px 14px",marginBottom:14}}>
-          <div style={{fontSize:T.fSM,color:"#a78bfa",fontWeight:700,letterSpacing:0.5,textTransform:"uppercase",marginBottom:6}}>{"Erro"}</div>
+          <div style={{fontSize:T.fSM,color:T.purple,fontWeight:700,letterSpacing:0.5,textTransform:"uppercase",marginBottom:6}}>{"Erro"}</div>
           <div style={{fontSize:T.fSM,color:"#fda4af",fontFamily:"ui-monospace,Menlo,monospace",wordBreak:"break-word",lineHeight:1.5,marginBottom:8}}>{msg}</div>
-          {stack&&<details style={{marginTop:8}}><summary style={{fontSize:T.fSM,color:"#9099c3",cursor:"pointer"}}>{"Stack trace"}</summary><pre style={{fontSize:T.fXS,color:"#7a80a8",whiteSpace:"pre-wrap",wordBreak:"break-word",margin:"6px 0 0",lineHeight:1.45,fontFamily:"ui-monospace,Menlo,monospace"}}>{stack}</pre></details>}
+          {stack&&<details style={{marginTop:8}}><summary style={{fontSize:T.fSM,color:"#9099c3",cursor:"pointer"}}>{"Stack trace"}</summary><pre style={{fontSize:T.fXS,color:T.label,whiteSpace:"pre-wrap",wordBreak:"break-word",margin:"6px 0 0",lineHeight:1.45,fontFamily:"ui-monospace,Menlo,monospace"}}>{stack}</pre></details>}
         </div>
         <div style={{display:"flex",gap:8,width:"100%",maxWidth:380}}>
-          <button onClick={onCopy} style={{flex:1,padding:"12px 0",borderRadius:11,background:"rgba(139,124,246,0.12)",border:"1px solid rgba(139,124,246,0.32)",color:"#c4b5fd",fontSize:T.fMD,fontWeight:700}}>{"Copiar erro"}</button>
+          <button onClick={onCopy} style={{flex:1,padding:"12px 0",borderRadius:11,background:"rgba(139,124,246,0.12)",border:"1px solid rgba(139,124,246,0.32)",color:T.lilac,fontSize:T.fMD,fontWeight:700}}>{"Copiar erro"}</button>
           <button onClick={onReset} style={{flex:1,padding:"12px 0",borderRadius:11,background:"linear-gradient(180deg,#9b8df8,#7c3aed)",border:"none",color:"#fff",fontSize:T.fMD,fontWeight:800,boxShadow:"0 4px 12px -4px rgba(139,124,246,0.5)"}}>{"Tentar de novo"}</button>
         </div>
         <style>{"@keyframes spin{to{transform:rotate(360deg)}}"}</style>
@@ -9704,7 +9723,7 @@ function App(){
               <div style={{display:"flex",alignItems:"center",gap:12,marginLeft:6}}>
                 <div style={{width:38,height:38,borderRadius:11,background:`${h.col}1f`,border:`1px solid ${h.col}40`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name={h.icon} size={20} color={h.col}/></div>
                 <div style={{flex:1,minWidth:0}}>
-                  <div style={{fontSize:T.fLG,fontWeight:800,color:"#f0f2ff",letterSpacing:-0.2}}>{h.lbl}{isLate&&<span style={{fontSize:T.fSM,color:accentCol,fontWeight:600,marginLeft:6,letterSpacing:0}}>· {fmtDur(lateMin)} {L("lateMin")}</span>}</div>
+                  <div style={{fontSize:T.fLG,fontWeight:800,color:T.heading,letterSpacing:-0.2}}>{h.lbl}{isLate&&<span style={{fontSize:T.fSM,color:accentCol,fontWeight:600,marginLeft:6,letterSpacing:0}}>· {fmtDur(lateMin)} {L("lateMin")}</span>}</div>
                   <div style={{fontSize:T.fSM,color:T.sub,marginTop:2,fontVariantNumeric:"tabular-nums"}}>{L("scheduledFor")} <span style={{color:accentCol,fontWeight:700}}>{h.target}</span>{!isLate&&earlyMin>0&&earlyMin<=180&&<span> · {L("earlyMin")} {fmtDur(earlyMin)}</span>}</div>
                 </div>
               </div>
@@ -9854,7 +9873,7 @@ function App(){
         que deslizava de baixo cobrindo 78% da tela. O slide-up causava jank/bug percebido no iPhone.
         O AddForm em si (Bottle/Amount/Save) continua Sheet porque tem inputs e scroll. */}
     <Modal open={showAdd&&!formType} onClose={()=>setShowAdd(false)}>
-      <div style={{fontSize:T.fSM,fontWeight:700,color:"#7a80a8",letterSpacing:0.5,textTransform:"uppercase",marginBottom:16,textAlign:"center"}}>{_lang==="en"?"Add event":"Adicionar evento"}</div>
+      <div style={{fontSize:T.fSM,fontWeight:700,color:T.label,letterSpacing:0.5,textTransform:"uppercase",marginBottom:16,textAlign:"center"}}>{_lang==="en"?"Add event":"Adicionar evento"}</div>
       <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)",gap:"10px 0"}}>{["wakeup","bottle","nursing","sleep","nap","diaper","bath","medicine","temperature","tummytime"].map((type,i)=>{const cfg=TYPES[type];const last=entries.find(e=>e.type===type);const agoRaw=last?timeSince(last.date,last.time):null;const ago=agoRaw==="now"?"Just now":agoRaw;return(<button key={type} onClick={()=>setFormType(type)} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8,padding:"8px 4px 4px",animation:`slideUp .3s ease ${i*0.025}s both`}}>
         <div style={{width:58,height:58,borderRadius:"50%",background:`radial-gradient(circle at 35% 30%, rgba(50,60,120,0.95), rgba(18,22,55,0.98))`,border:`1.5px solid ${cfg.color}25`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 4px 16px rgba(0,0,0,0.35), 0 0 20px ${cfg.color}18, inset 0 1px 0 rgba(200,210,255,0.08), inset 0 -2px 4px rgba(0,0,0,0.2)`,position:"relative",overflow:"hidden",filter:`drop-shadow(0 0 4px ${cfg.color}44)`}}>
           <div style={{position:"absolute",top:"15%",left:"25%",width:"40%",height:"30%",background:`radial-gradient(ellipse,${cfg.color}12,transparent)`,borderRadius:"50%",filter:"blur(5px)"}}/>
@@ -9883,7 +9902,7 @@ function App(){
           <Icon name="breast" size={22} color="#7dd3fc"/>
         </div>
       </div>
-      <div style={{fontSize:T.fSM,fontWeight:700,color:"#7a80a8",letterSpacing:0.5,textTransform:"uppercase",textAlign:"center",marginBottom:14}}>{_lang==="en"?"Which side?":"Qual lado?"}</div>
+      <div style={{fontSize:T.fSM,fontWeight:700,color:T.label,letterSpacing:0.5,textTransform:"uppercase",textAlign:"center",marginBottom:14}}>{_lang==="en"?"Which side?":"Qual lado?"}</div>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
         {[{k:"left",L:"L",pt:"Esquerdo",en:"Left"},{k:"right",L:"R",pt:"Direito",en:"Right"}].map(s=>(
           <button key={s.k} onClick={()=>{Haptic.medium();startTimer("nursing",s.k);setShowNursingPicker(false)}} style={{padding:"22px 0",borderRadius:14,background:`linear-gradient(180deg,${T.blue}26,${T.blue}0a)`,border:`1px solid ${T.blue}52`,display:"flex",flexDirection:"column",alignItems:"center",gap:3,cursor:"pointer",boxShadow:`0 1px 0 0 rgba(255,255,255,0.08) inset`}}>
@@ -9905,7 +9924,7 @@ function App(){
         <div style={{position:"absolute",inset:0,borderRadius:"50%",background:"conic-gradient(from 0deg, #8b7cf6 0%, #e0d4ff 15%, #ffffff 22%, #c4b5fd 35%, #8b7cf6 50%, #5b4aaf 65%, #ffffff 78%, #a78bfa 92%, #8b7cf6 100%)",animation:"mercurySpin 3s linear infinite",willChange:"transform",transformOrigin:"center center"}}/>
         <div style={{position:"absolute",inset:-4,borderRadius:"50%",boxShadow:"0 0 20px rgba(139,124,246,0.55)",pointerEvents:"none"}}/>
         <div style={{position:"absolute",inset:2.5,borderRadius:"50%",background:"linear-gradient(180deg,rgba(14,18,48,0.98),rgba(8,10,28,0.99))"}}/>
-        <button aria-label={L("home")} onClick={()=>{setShowProfile(false);setProfileIsDirty(false)}} style={{position:"relative",zIndex:2,width:55,height:55,borderRadius:"50%",background:"transparent",color:"#c4b5fd",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}>
+        <button aria-label={L("home")} onClick={()=>{setShowProfile(false);setProfileIsDirty(false)}} style={{position:"relative",zIndex:2,width:55,height:55,borderRadius:"50%",background:"transparent",color:T.lilac,border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}>
           <Icon name="home" size={20} color="#c4b5fd"/>
         </button>
       </div>
