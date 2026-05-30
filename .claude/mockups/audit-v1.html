@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Auditoria Louise Pro — mudanças propostas</title>
+<style>
+  :root{
+    --bg:#0a0e27; --bg2:#10162e; --card:rgba(22,28,60,0.55); --gB:rgba(120,130,200,0.14);
+    --text:#e4e6f5; --sub:#a3aac8; --dim:#6b7299; --accent:#8b7cf6; --purple:#a78bfa;
+    --lilac:#c4b5fd; --green:#34d399; --greenT:#6ee7b7; --amber:#fbbf24; --red:#f87171;
+    --cyan:#7dd3fc; --pink:#f472b6;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{margin:0;background:
+      radial-gradient(1200px 600px at 50% -10%, rgba(139,124,246,0.10), transparent 60%),
+      var(--bg);
+    color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
+    line-height:1.5;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);}
+  .wrap{max-width:480px;margin:0 auto;padding:22px 18px 80px;}
+  h1{font-size:24px;font-weight:800;letter-spacing:-0.4px;margin:4px 0 2px;}
+  .lead{font-size:13px;color:var(--sub);margin:0 0 18px;}
+  h2{font-size:11px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;
+    color:var(--accent);margin:30px 0 12px;display:flex;align-items:center;gap:8px;}
+  h2 .n{background:rgba(139,124,246,0.15);color:var(--lilac);border-radius:6px;
+    padding:1px 7px;font-size:11px;letter-spacing:0;}
+  .card{background:var(--card);border:1px solid var(--gB);border-radius:16px;
+    padding:14px 14px 13px;margin-bottom:12px;}
+  .ttl{font-size:15px;font-weight:700;letter-spacing:-0.2px;margin:0 0 3px;display:flex;
+    align-items:center;gap:8px;flex-wrap:wrap;}
+  .desc{font-size:12.5px;color:var(--sub);margin:6px 0 0;}
+  .desc b{color:var(--text);font-weight:700;}
+  .meta{font-size:10px;color:var(--dim);font-family:"SF Mono",ui-monospace,monospace;margin-top:8px;}
+  .sev{font-size:9px;font-weight:800;letter-spacing:0.6px;text-transform:uppercase;
+    padding:2px 7px;border-radius:5px;white-space:nowrap;}
+  .h{background:rgba(248,113,113,0.16);color:#fca5a5;}
+  .m{background:rgba(251,191,36,0.16);color:var(--amber);}
+  .l{background:rgba(125,211,252,0.14);color:var(--cyan);}
+  .ba{display:flex;gap:10px;margin-top:12px;}
+  .ba>div{flex:1;min-width:0;}
+  .lbl{font-size:9px;font-weight:800;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:6px;}
+  .lbl.before{color:var(--red);} .lbl.after{color:var(--greenT);}
+  .demo{border-radius:12px;padding:12px;min-height:74px;display:flex;flex-direction:column;
+    justify-content:center;position:relative;overflow:hidden;}
+  .demo.b{background:rgba(248,113,113,0.05);border:1px solid rgba(248,113,113,0.18);}
+  .demo.a{background:rgba(52,211,153,0.05);border:1px solid rgba(52,211,153,0.18);}
+  /* phone frame for safe-area demo */
+  .phone{position:relative;border:2px solid var(--gB);border-radius:20px;height:150px;
+    overflow:hidden;background:linear-gradient(180deg,#11162e,#0a0e27);}
+  .island{position:absolute;top:7px;left:50%;transform:translateX(-50%);width:74px;height:18px;
+    background:#000;border-radius:10px;z-index:5;}
+  .modalbar{position:absolute;left:8px;right:8px;background:var(--card);border:1px solid var(--gB);
+    border-radius:12px;padding:8px;font-size:10px;color:var(--sub);}
+  .xbtn{position:absolute;right:6px;width:22px;height:22px;border-radius:7px;
+    background:rgba(139,124,246,0.18);display:flex;align-items:center;justify-content:center;
+    font-size:13px;color:var(--lilac);}
+  /* tap target demo */
+  .row{display:flex;align-items:center;gap:8px;background:rgba(20,26,60,0.5);
+    border:1px solid var(--gB);border-radius:10px;padding:8px 10px;}
+  .row .name{flex:1;font-size:12px;color:var(--text);}
+  .hit{display:flex;align-items:center;justify-content:center;border-radius:8px;
+    background:rgba(139,124,246,0.12);color:var(--lilac);}
+  .hit.sm{width:24px;height:24px;font-size:12px;outline:1px dashed rgba(248,113,113,0.5);}
+  .hit.lg{width:44px;height:44px;font-size:15px;outline:1px dashed rgba(52,211,153,0.5);}
+  .toastdemo{position:relative;height:120px;border-radius:12px;overflow:hidden;
+    background:linear-gradient(180deg,#11162e,#0a0e27);border:1px solid var(--gB);}
+  .toast{position:absolute;left:10px;right:10px;background:rgba(30,36,70,0.96);
+    border:1px solid var(--gB);border-radius:11px;padding:7px 10px;font-size:10px;
+    display:flex;align-items:center;justify-content:space-between;gap:6px;}
+  .toast b{color:var(--lilac);}
+  .thumb{position:absolute;right:-6px;bottom:-6px;width:54px;height:54px;border-radius:50%;
+    background:radial-gradient(circle at 35% 35%,rgba(139,124,246,0.35),rgba(139,124,246,0.05));
+    border:1px dashed rgba(139,124,246,0.4);}
+  .pill2{display:inline-flex;gap:6px;align-items:center;}
+  .b2{font-size:10px;font-weight:700;padding:4px 9px;border-radius:8px;border:1px solid var(--gB);
+    background:rgba(20,26,60,0.6);color:var(--sub);}
+  .b2.danger{background:rgba(248,113,113,0.14);border-color:rgba(248,113,113,0.3);color:#fca5a5;}
+  .native{background:#2b2b30;border:1px solid #3a3a42;border-radius:10px;padding:8px;
+    font-size:10px;color:#ddd;text-align:center;}
+  .swatch{display:inline-block;width:26px;height:18px;border-radius:5px;vertical-align:middle;
+    margin-right:5px;border:1px solid rgba(255,255,255,0.08);}
+  .rad{display:inline-block;width:30px;height:24px;background:rgba(139,124,246,0.15);
+    border:1px solid var(--gB);margin-right:5px;vertical-align:middle;}
+  ul.tl{margin:6px 0 0;padding-left:18px;font-size:12.5px;color:var(--sub);}
+  ul.tl li{margin-bottom:5px;} ul.tl li b{color:var(--text);}
+  .note{font-size:11px;color:var(--dim);margin-top:6px;font-style:italic;}
+  .ok{color:var(--greenT);font-weight:700;}
+  .prio{background:linear-gradient(135deg,rgba(139,124,246,0.10),rgba(139,124,246,0.02));
+    border:1px solid rgba(139,124,246,0.25);border-radius:14px;padding:14px 16px;margin-top:8px;}
+  .prio ol{margin:8px 0 0;padding-left:20px;font-size:13px;}
+  .prio ol li{margin-bottom:7px;}
+  .tag{font-size:9px;font-weight:800;padding:1px 6px;border-radius:4px;letter-spacing:0.4px;
+    background:rgba(125,211,252,0.14);color:var(--cyan);margin-left:4px;}
+  .foot{text-align:center;font-size:10px;color:var(--dim);margin-top:34px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Auditoria Louise Pro</h1>
+  <p class="lead">Mudanças propostas · foco iPhone 16 Pro / Pro Max · 4 frentes (performance, usabilidade, design, padronização). Cada item tem severidade e fix concreto. <b style="color:var(--text)">Nada foi implementado ainda</b> — isto é pra você aprovar.</p>
+
+  <!-- ============ PERFORMANCE ============ -->
+  <h2><span class="n">1</span> Performance <span style="color:var(--dim);font-weight:600;letter-spacing:0;text-transform:none">· invisível, alto ganho</span></h2>
+
+  <div class="card">
+    <div class="ttl">Stats recalcula a cada 5s a noite toda <span class="sev h">alta</span></div>
+    <div class="desc">A página <b>Stats</b> fica sempre montada (swipe) e recebe uma função nova a cada render, o que <b>quebra o React.memo</b>. Durante um bedtime de 8h com timer ativo, ela refaz ~30 varreduras da lista de entries a cada 5 segundos — <b>de graça, fora da tela</b>. Maior dreno de bateria do app.</div>
+    <div class="meta">index.html:9727 · fix: onGrowth = useCallback(…) → memo segura</div>
+  </div>
+
+  <div class="card">
+    <div class="ttl">SleepBlock ao vivo varre entries todo tick <span class="sev m">média</span></div>
+    <div class="desc">O bloco de sono ao vivo refiltra a lista inteira de entries a cada 5s a noite inteira. Fix: <b>useMemo</b> nos eventos retroativos (janela muda devagar).</div>
+    <div class="meta">index.html:5944 · fix: useMemo([entries, início, fim])</div>
+  </div>
+
+  <div class="card">
+    <div class="ttl">Blur do nav acima do teto documentado <span class="sev l">baixa</span></div>
+    <div class="desc">O nav usa <b>blur(22px)</b>; o CLAUDE.md fixa o teto em 18px pra elementos sempre visíveis (custo é quadrático no raio). O nav compõe sobre o Ring+starfield todo frame. Voltar pra 18px = ~33% menos custo de GPU contínuo, diferença visual imperceptível.</div>
+    <div class="meta">index.html:9837 · fix: blur(22px) → blur(18px)</div>
+  </div>
+
+  <div class="card" style="border-color:rgba(52,211,153,0.2)">
+    <div class="ttl"><span class="ok">✓ Checados e OK</span></div>
+    <div class="desc">Cadência do tick (5s c/ timer), pause em background, animações por classe CSS, Firestore offline+90d, integridade de dados (todos os 12 <code>.set()</code> seguros), timezone (zero usos errados de toISOString) — <b>tudo correto</b>. O <code>edgeGlow</code> está vivo (10 usos), o CLAUDE.md está certo.</div>
+  </div>
+
+  <!-- ============ USABILIDADE ============ -->
+  <h2><span class="n">2</span> Usabilidade & alcance</h2>
+
+  <!-- Undo toast -->
+  <div class="card">
+    <div class="ttl">Undo de exclusão fica no topo, 2s, fora do alcance <span class="sev h">alta</span></div>
+    <div class="desc">Apagar uma entrada é um swipe que confirma sozinho. O <b>único undo</b> aparece num toast no <b>topo</b> da tela (a ~80pt da borda no Pro Max) e some em <b>2s</b> — impossível alcançar com uma mão segurando o bebê. Proposta: <b>ancorar embaixo</b> (acima do nav, na zona do polegar) e dar <b>4-5s</b>.</div>
+    <div class="ba">
+      <div>
+        <div class="lbl before">Antes</div>
+        <div class="toastdemo">
+          <div class="toast" style="top:8px"><span>Mamada excluída</span><b>Desfazer</b></div>
+          <div class="thumb"></div>
+        </div>
+      </div>
+      <div>
+        <div class="lbl after">Depois</div>
+        <div class="toastdemo">
+          <div class="toast" style="bottom:10px"><span>Mamada excluída</span><b>Desfazer</b></div>
+          <div class="thumb"></div>
+        </div>
+      </div>
+    </div>
+    <div class="note">Círculo tracejado = zona alcançável pelo polegar.</div>
+    <div class="meta">index.html:5889 · top → bottom:96px + safe-area · ttl 2000 → 4500</div>
+  </div>
+
+  <!-- Tap targets -->
+  <div class="card">
+    <div class="ttl">~50 alvos de toque abaixo de 44pt <span class="sev m">média-alta</span></div>
+    <div class="desc">Apple recomenda <b>44×44pt</b> mínimo. Vários botões críticos — editar/excluir eventos da madrugada dentro do bloco de sono, sininho, estrela, voltar — estão em <b>24–40pt</b>. Editar e excluir ficam a ~10pt um do outro: erro de toque quase garantido às 3h da manhã. Fix: caixa de toque transparente de 44pt mantendo o ícone visual do mesmo tamanho.</div>
+    <div class="ba">
+      <div>
+        <div class="lbl before">Antes · 24pt</div>
+        <div class="demo b">
+          <div class="row"><span class="name">Mamada 03:14</span><div class="hit sm">✎</div><div class="hit sm">🗑</div></div>
+        </div>
+      </div>
+      <div>
+        <div class="lbl after">Depois · 44pt</div>
+        <div class="demo a">
+          <div class="row"><span class="name">Mamada 03:14</span><div class="hit lg">✎</div><div class="hit lg">🗑</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="meta">index.html:5967, 5983, 9562, 9565, 8285… · alvo 44×44 (ícone visual igual)</div>
+  </div>
+
+  <!-- Safe area -->
+  <div class="card">
+    <div class="ttl">Modal e picker sem safe-area → botão some sob o Dynamic Island <span class="sev h">alta</span></div>
+    <div class="desc">No Pro Max (Island ocupa ~59pt no topo), o <b>Modal</b> central (que envolve o formulário de adicionar) e o picker de marcos não respeitam a safe-area. Um modal alto encosta o <b>X de fechar sob o Island</b>. As outras telas (Inbox, Perfil, Marcos) já tratam isso — só o Modal central ficou de fora.</div>
+    <div class="ba">
+      <div>
+        <div class="lbl before">Antes</div>
+        <div class="phone">
+          <div class="island"></div>
+          <div class="modalbar" style="top:4px">Adicionar mamada<div class="xbtn" style="top:4px">×</div></div>
+        </div>
+      </div>
+      <div>
+        <div class="lbl after">Depois</div>
+        <div class="phone">
+          <div class="island"></div>
+          <div class="modalbar" style="top:30px">Adicionar mamada<div class="xbtn" style="top:6px">×</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="meta">index.html:5901, 8381 · padding: calc(16px + env(safe-area-inset-top)) …</div>
+  </div>
+
+  <!-- Inline delete -->
+  <div class="card">
+    <div class="ttl">Excluir marco usa <code>confirm()</code> nativo <span class="sev m">média</span></div>
+    <div class="desc">A exclusão de marco (e de lembrete e de medição) ainda usa o <b>alerta cinza do Safari</b>, que quebra o tema cosmos. Já existe o padrão de <b>2 passos inline</b> (usado em med e eventos da madrugada). Reusar ele aqui + alvo de 44pt.</div>
+    <div class="ba">
+      <div>
+        <div class="lbl before">Antes</div>
+        <div class="demo b"><div class="native">⚠️ "Excluir este marco?"<br><span style="color:#9bb">Cancelar &nbsp; OK</span></div></div>
+      </div>
+      <div>
+        <div class="lbl after">Depois</div>
+        <div class="demo a"><div class="pill2"><span class="b2">Tem certeza?</span><span class="b2 danger">Excluir</span></div></div>
+      </div>
+    </div>
+    <div class="meta">index.html:8350 (+ 7055, 8033) · reusar confirmDelEventId pattern</div>
+  </div>
+
+  <!-- ============ DESIGN ============ -->
+  <h2><span class="n">3</span> Consistência visual <span style="color:var(--dim);font-weight:600;letter-spacing:0;text-transform:none">· debt, quase invisível</span></h2>
+
+  <div class="card">
+    <div class="ttl">3 cores que viraram "token de fato" mas não estão no <code>T</code> <span class="sev m">média</span></div>
+    <div class="desc">São <b>94 usos</b> de 3 cores escritas à mão que já são, na prática, a cor de título/label/destaque do app. Promover pra <code>T</code> (igual fizemos com a tipografia) = 1 lugar pra mudar, consistência garantida. Além disso, <code>#a78bfa</code> em 7 lugares é <b>idêntico</b> ao <code>T.purple</code> que já existe (trocar = zero mudança visual).</div>
+    <div style="margin-top:10px;font-size:12px;color:var(--sub)">
+      <div><span class="swatch" style="background:#f0f2ff"></span><code>#f0f2ff</code> · título (25×) → <b style="color:var(--text)">T.heading</b></div>
+      <div style="margin-top:5px"><span class="swatch" style="background:#7a80a8"></span><code>#7a80a8</code> · label de campo (31×) → <b style="color:var(--text)">T.label</b></div>
+      <div style="margin-top:5px"><span class="swatch" style="background:#c4b5fd"></span><code>#c4b5fd</code> · destaque lavanda (38×) → <b style="color:var(--text)">T.lilac</b></div>
+    </div>
+    <div class="meta">index.html:5302 (tabela T) · +3 tokens, replace 94 literais</div>
+  </div>
+
+  <div class="card">
+    <div class="ttl">Raios e tracking sem escala <span class="sev l">baixa</span></div>
+    <div class="desc"><b>20 valores</b> diferentes de borderRadius (9/10/11/12/13/14 fazem o mesmo papel de "canto de card" — ninguém distingue 9 de 11px). E a mesma label maiúscula usa <b>11 valores</b> de letterSpacing. Proposta: escala de raio (rSM/rMD/rLG/rXL) + 2 tokens de tracking, igual a escala de fonte.</div>
+    <div style="margin-top:10px">
+      <span class="rad" style="border-radius:9px"></span><span class="rad" style="border-radius:10px"></span><span class="rad" style="border-radius:11px"></span><span class="rad" style="border-radius:12px"></span><span class="rad" style="border-radius:14px"></span>
+      <span style="font-size:11px;color:var(--dim)"> → 12 / 16 / 20</span>
+    </div>
+    <div class="meta">fontSize já está 98% tokenizado (só 2 regressões: linhas 8290, 8307)</div>
+  </div>
+
+  <!-- ============ PADRONIZAÇÃO ============ -->
+  <h2><span class="n">4</span> Padronização & bugs</h2>
+
+  <div class="card">
+    <div class="ttl">"ago" não traduz — bug real de i18n <span class="sev h">alta</span></div>
+    <div class="desc">A função <code>timeSince</code> retorna sempre em inglês (<b>"2h30m ago"</b>) mesmo em PT — devia ser <b>"2h30m atrás"</b>. Aparece no card "Última mamada" e em mais 4 lugares.</div>
+    <div class="meta">index.html:5018 · branch por _lang (ago → atrás, now → agora)</div>
+  </div>
+
+  <div class="card">
+    <div class="ttl">Confetti viola Rules of Hooks <span class="sev m">média</span></div>
+    <div class="desc">O <code>useEffect</code> está <b>depois</b> de um <code>return null</code> condicional — quando o confetti dispara, a contagem de hooks muda (0→1) e o React lança erro (confetti pode estar quebrado silenciosamente). Fix: mover o hook pra antes do return.</div>
+    <div class="meta">index.html:5861 · mover useEffect acima do if(!trigger)</div>
+  </div>
+
+  <div class="card">
+    <div class="ttl">Debt menor <span class="sev l">baixa</span></div>
+    <ul class="tl">
+      <li>Função morta <code>tl()</code> (0 chamadas) → remover · linha 5437</li>
+      <li>117 comparações <code>type==="bottle"</code> soltas → constantes <code>ETYPE</code></li>
+      <li>Estilo <code>inp</code> duplicado 3× com geometria diferente → 1 constante</li>
+      <li>i18n: 298 ternários inline vs 93 <code>L()</code> — não é bug, é manutenção</li>
+    </ul>
+  </div>
+
+  <!-- ============ PRIORIDADE ============ -->
+  <h2><span class="n">★</span> Ordem que eu recomendo</h2>
+  <div class="prio">
+    <ol>
+      <li><b>Quick wins invisíveis</b> <span class="tag">1 commit</span><br>Stats useCallback + blur 18px + SleepBlock memo + bug do "ago" + Confetti hook + remover tl. Tudo seguro, alto ganho, sem mudar 1 pixel.</li>
+      <li><b>Usabilidade</b> <span class="tag">mockado acima</span><br>Undo embaixo, alvos 44pt, safe-area no modal, delete inline. É o que o usuário sente.</li>
+      <li><b>Tokens de cor + raio</b> <span class="tag">refactor</span><br>T.heading/label/lilac + escala de raio. Invisível, paga em consistência futura.</li>
+      <li><b>ETYPE + inp + i18n central</b> <span class="tag">opcional</span><br>Limpeza de longo prazo, menor urgência.</li>
+    </ol>
+  </div>
+
+  <p class="foot">Louise Pro · auditoria v1 · me diz quais blocos seguir e eu mando ver</p>
+
+</div>
+</body>
+</html>
