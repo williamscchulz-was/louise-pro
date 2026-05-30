@@ -768,8 +768,27 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.73";
+const APP_VERSION = "11.9.74";
 const CHANGELOG = [
+  {
+    v: "11.9.74", date: "2026-05-30",
+    pt: {
+      title: "Premium plus — números que sobem + confetti nos marcos",
+      bullets: [
+        '★ Os números grandes da Home (mamadas, fraldas, Simeticona) agora **sobem animados** de 0 até o valor ao abrir o app — e rolam suave a cada novo registro. Combina com a entrada escalonada dos cards.',
+        '★ **Logar um marco de desenvolvimento agora solta confetti** 🎉 — momento de conquista de verdade. Antes o confetti só aparecia nos marcos de idade (1 mês, 100 dias, 6 meses, 1 ano).',
+        'Nota honesta: o "buzz de conquista" (haptic) não entrou porque **o iOS não suporta vibração por PWA** (decisão da Apple) — então fiz a versão visível (confetti), que funciona de verdade no seu iPhone.',
+      ],
+    },
+    en: {
+      title: "Premium plus — counting-up numbers + milestone confetti",
+      bullets: [
+        '★ The big Home numbers (bottles, diapers, Simethicone) now **count up** from 0 to their value on open — and roll smoothly on each new log. Pairs with the staggered card entrance.',
+        '★ **Logging a developmental milestone now triggers confetti** 🎉 — a real achievement moment. Before, confetti only fired for age milestones (1 month, 100 days, 6 months, 1 year).',
+        'Honest note: the "achievement buzz" (haptic) was skipped because **iOS doesn\'t support PWA vibration** (Apple\'s call) — so I did the visible version (confetti), which actually works on your iPhone.',
+      ],
+    },
+  },
   {
     v: "11.9.73", date: "2026-05-30",
     pt: {
@@ -6065,6 +6084,29 @@ const CuriosityCard = React.memo(function CuriosityCard({age,lang,tick}){
 
 // v11.9.1: confetti minimalista pra marcos (1 mes, 100 dias). Trigger 1x via localStorage.
 // 28 particulas com cores variadas, drop 1.4s, fade out. Cleanup por timeout.
+// v11.9.74: count-up premium. Anima de 0 (mount) ou do valor anterior até `end`,
+// easeOutCubic via rAF. Re-anima só quando `end` muda (não no tick — end é estável).
+// Hooks ANTES de qualquer return (Rules of Hooks). Retorna o número (node de texto).
+function CountUp({end,dur=650}){
+  const[v,setV]=useState(0);
+  const ref=useRef(0);
+  useEffect(()=>{
+    const to=typeof end==="number"?end:0;
+    const from=ref.current;
+    ref.current=to;
+    if(from===to){setV(to);return}
+    let raf;const t0=performance.now();
+    const step=now=>{
+      const p=Math.min(1,(now-t0)/dur);
+      const e=1-Math.pow(1-p,3);
+      setV(Math.round(from+(to-from)*e));
+      if(p<1){raf=requestAnimationFrame(step)}else{setV(to)}
+    };
+    raf=requestAnimationFrame(step);
+    return()=>{if(raf)cancelAnimationFrame(raf)};
+  },[end,dur]);
+  return v;
+}
 function Confetti({trigger,onDone}){
   // v11.9.64: hook ANTES de qualquer return condicional (Rules of Hooks).
   // Antes o useEffect ficava após `if(!trigger)return null`, mudando a contagem
@@ -9158,6 +9200,9 @@ function App(){
   const handleRepeat=()=>{if(repeatRef.current)repeatRef.current();setToast(null)};
   const addEntry=useCallback(async e=>{
     Haptic.medium();
+    // v11.9.74: logar um MARCO de desenvolvimento dispara confetti (momento de conquista).
+    // Equivalente VISÍVEL ao "haptic de achievement" — haptics são no-op no iOS Safari.
+    if(e&&e.type==="milestone"&&!editEntry)setConfettiOn(true);
     // v11.7.3: FECHAMENTO OTIMISTA. Antes: a modal esperava a Firestore write completar
     // antes de fechar (300-1500ms), usu\u00e1rio clicava X achando que bugou ou double-tap
     // criava entry duplicada. Agora: fecha imediato + write roda em background. Firestore
@@ -9915,7 +9960,7 @@ function App(){
             </div>
           })():null}
         </div>}
-        <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr)",gap:6,padding:"0 20px",marginBottom:14}}>{[{i:"bottle",v:`${totalMl}`,u:"ml",c:T.green,t:["bottle"],tap:"bottle",l:_lang==="en"?"Bottle":"Mamad."},{i:"pill",v:`${totalSimet}`,u:"x",c:T.amber,t:["medicine"],tap:null,l:"Simeticona",filter:e=>e.type==="medicine"&&e.name&&/simet/i.test(e.name)},{i:"moon",v:fmtDur(totalSleep),c:T.purple,t:["sleep","nap"],tap:"nap",l:_lang==="en"?"Sleep":"Sono"},{i:"diaper",v:`${totalDiapers}`,c:T.pink,t:["diaper"],tap:"diaper",l:_lang==="en"?"Diaper":"Fralda"}].map((p,idx)=>{const last=entries.find(e=>p.filter?p.filter(e):p.t.includes(e.type));let ago=null;if(last){if(p.t.includes("sleep")&&last.durationMin){const endMs=new Date(`${last.date}T${last.time}`).getTime()+last.durationMin*60000;const endD=new Date(endMs);const ed=`${endD.getFullYear()}-${String(endD.getMonth()+1).padStart(2,"0")}-${String(endD.getDate()).padStart(2,"0")}`;const et=`${String(endD.getHours()).padStart(2,"0")}:${String(endD.getMinutes()).padStart(2,"0")}`;ago=timeSince(ed,et)}else{ago=timeSince(last.date,last.time)}}
+        <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr)",gap:6,padding:"0 20px",marginBottom:14}}>{[{i:"bottle",v:`${totalMl}`,u:"ml",c:T.green,t:["bottle"],tap:"bottle",l:_lang==="en"?"Bottle":"Mamad.",num:totalMl},{i:"pill",v:`${totalSimet}`,u:"x",c:T.amber,t:["medicine"],tap:null,l:"Simeticona",filter:e=>e.type==="medicine"&&e.name&&/simet/i.test(e.name),num:totalSimet},{i:"moon",v:fmtDur(totalSleep),c:T.purple,t:["sleep","nap"],tap:"nap",l:_lang==="en"?"Sleep":"Sono"},{i:"diaper",v:`${totalDiapers}`,c:T.pink,t:["diaper"],tap:"diaper",l:_lang==="en"?"Diaper":"Fralda",num:totalDiapers}].map((p,idx)=>{const last=entries.find(e=>p.filter?p.filter(e):p.t.includes(e.type));let ago=null;if(last){if(p.t.includes("sleep")&&last.durationMin){const endMs=new Date(`${last.date}T${last.time}`).getTime()+last.durationMin*60000;const endD=new Date(endMs);const ed=`${endD.getFullYear()}-${String(endD.getMonth()+1).padStart(2,"0")}-${String(endD.getDate()).padStart(2,"0")}`;const et=`${String(endD.getHours()).padStart(2,"0")}:${String(endD.getMinutes()).padStart(2,"0")}`;ago=timeSince(ed,et)}else{ago=timeSince(last.date,last.time)}}
         // Bottle-only: compute progress toward the next feeding when the feedingInterval reminder is enabled.
         let feedProg=null;
         if(p.tap==="bottle"&&feedingActive&&last&&last.date&&last.time){
@@ -9931,7 +9976,7 @@ function App(){
         }
         // Diaper breakdown wet/dirty (v10.8.0). Opção C do mockup — ícones coloridos.
         const diaperBreakdown=p.tap==="diaper"&&(wetDiapers>0||dirtyDiapers>0)?(<div style={{display:"flex",gap:8,marginTop:3,fontSize:T.fSM,fontWeight:700,fontVariantNumeric:"tabular-nums"}}>{wetDiapers>0&&<span style={{display:"inline-flex",alignItems:"center",gap:3,color:"#93c5fd"}}><Icon name="droplet" size={11} color="#93c5fd"/>{wetDiapers}</span>}{dirtyDiapers>0&&<span style={{display:"inline-flex",alignItems:"center",gap:3,color:"#a16b4a"}}><Icon name="poop" size={11} color="#a16b4a"/>{dirtyDiapers}</span>}</div>):null;
-        return<div key={idx} className="home-card home-fade-in" style={{animationDelay:`${idx*55}ms`,padding:"9px 11px",borderRadius:14,background:`${p.c}07`,border:`1px solid ${p.c}14`,textAlign:"left",cursor:"default",position:"relative",overflow:"hidden",boxShadow:"0 1px 0 0 rgba(255,255,255,0.04) inset"}}><div style={{position:"absolute",top:0,left:0,right:0,height:1,background:`linear-gradient(90deg,transparent,${p.c}66,transparent)`,opacity:0.3,pointerEvents:"none"}}/><div style={{display:"flex",alignItems:"center",gap:5,marginBottom:2}}><Icon name={p.i} size={11} color={p.c}/><span style={{fontSize:T.fXS,color:T.dim,fontWeight:600,letterSpacing:0.3,textTransform:"uppercase"}}>{p.l}</span></div><div style={{fontSize:T.fLG,fontWeight:800,color:p.c,lineHeight:1,letterSpacing:-0.2,fontVariantNumeric:"tabular-nums"}}><span key={p.v} className="val-pulse">{p.v}</span>{p.u?<span style={{fontSize:T.fSM,opacity:0.5,fontWeight:700,marginLeft:1}}>{p.u}</span>:null}{p.tap==="bottle"&&profile.mlGoal>0&&totalMl>0?<span style={{fontSize:T.fXS,opacity:0.55,fontWeight:700,marginLeft:5}}>· {Math.round((totalMl/profile.mlGoal)*100)}%</span>:null}</div>{diaperBreakdown}{feedProg?<><div style={{height:3,borderRadius:2,background:`${p.c}1a`,marginTop:6,overflow:"hidden"}}><div style={{height:"100%",width:`${Math.min(100,feedProg.prog*100)}%`,background:feedProg.prog>=0.8?feedProg.barColor:`linear-gradient(90deg,${p.c},${p.c}cc)`,borderRadius:2,transition:"width .4s ease, background .3s ease"}}/></div><div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginTop:3,fontSize:T.fXS,fontWeight:600,fontVariantNumeric:"tabular-nums"}}><span style={{color:`${p.c}88`}}>{ago}</span><span style={{color:feedProg.barColor,fontWeight:700}}>{feedProg.prog>=1?`+${feedProg.lateMin}m late`:`→ ${feedProg.nextStr}`}</span></div></>:(ago&&<div style={{fontSize:T.fSM,color:`${p.c}88`,fontWeight:600,marginTop:1,fontVariantNumeric:"tabular-nums"}}>{ago}</div>)}</div>})}</div>
+        return<div key={idx} className="home-card home-fade-in" style={{animationDelay:`${idx*55}ms`,padding:"9px 11px",borderRadius:14,background:`${p.c}07`,border:`1px solid ${p.c}14`,textAlign:"left",cursor:"default",position:"relative",overflow:"hidden",boxShadow:"0 1px 0 0 rgba(255,255,255,0.04) inset"}}><div style={{position:"absolute",top:0,left:0,right:0,height:1,background:`linear-gradient(90deg,transparent,${p.c}66,transparent)`,opacity:0.3,pointerEvents:"none"}}/><div style={{display:"flex",alignItems:"center",gap:5,marginBottom:2}}><Icon name={p.i} size={11} color={p.c}/><span style={{fontSize:T.fXS,color:T.dim,fontWeight:600,letterSpacing:0.3,textTransform:"uppercase"}}>{p.l}</span></div><div style={{fontSize:T.fLG,fontWeight:800,color:p.c,lineHeight:1,letterSpacing:-0.2,fontVariantNumeric:"tabular-nums"}}>{p.num!=null?<CountUp end={p.num}/>:<span key={p.v} className="val-pulse">{p.v}</span>}{p.u?<span style={{fontSize:T.fSM,opacity:0.5,fontWeight:700,marginLeft:1}}>{p.u}</span>:null}{p.tap==="bottle"&&profile.mlGoal>0&&totalMl>0?<span style={{fontSize:T.fXS,opacity:0.55,fontWeight:700,marginLeft:5}}>· {Math.round((totalMl/profile.mlGoal)*100)}%</span>:null}</div>{diaperBreakdown}{feedProg?<><div style={{height:3,borderRadius:2,background:`${p.c}1a`,marginTop:6,overflow:"hidden"}}><div style={{height:"100%",width:`${Math.min(100,feedProg.prog*100)}%`,background:feedProg.prog>=0.8?feedProg.barColor:`linear-gradient(90deg,${p.c},${p.c}cc)`,borderRadius:2,transition:"width .4s ease, background .3s ease"}}/></div><div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginTop:3,fontSize:T.fXS,fontWeight:600,fontVariantNumeric:"tabular-nums"}}><span style={{color:`${p.c}88`}}>{ago}</span><span style={{color:feedProg.barColor,fontWeight:700}}>{feedProg.prog>=1?`+${feedProg.lateMin}m late`:`→ ${feedProg.nextStr}`}</span></div></>:(ago&&<div style={{fontSize:T.fSM,color:`${p.c}88`,fontWeight:600,marginTop:1,fontVariantNumeric:"tabular-nums"}}>{ago}</div>)}</div>})}</div>
         {/* v11.9.62: "Próximo marco" — linha minimalista única (antes era card com 3 itens).
             User pediu pra não ser fixo/pesado na Home; detalhes completos vivem na página
             de Conquistas (acessível pelo ★ no header). Mostra só o próximo marco esperado. */}
