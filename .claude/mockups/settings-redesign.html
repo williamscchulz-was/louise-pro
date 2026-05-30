@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ajustes — redesign</title>
+<style>
+  :root{
+    --bg1:#070b1e; --text:#e4e6f5; --heading:#f0f2ff; --sub:#a3aac8; --label:#7a80a8;
+    --dim:#555a80; --accent:#8b7cf6; --purple:#a78bfa; --lilac:#c4b5fd; --green:#34d399;
+    --greenT:#6ee7b7; --amber:#fbbf24; --cyan:#7dd3fc; --pink:#f472b6; --gB:rgba(90,100,180,0.12);
+    --gBSoft:rgba(255,255,255,0.06);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
+  body{background:#05071400;color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
+    line-height:1.5;display:flex;flex-direction:column;align-items:center;gap:26px;padding:24px 0 80px;
+    background:#04060f;}
+  .intro{max-width:460px;padding:0 20px;}
+  .intro h1{font-size:23px;font-weight:800;letter-spacing:-0.4px;margin-bottom:6px}
+  .intro p{font-size:13px;color:var(--sub);margin-bottom:10px}
+  .chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:4px}
+  .chip{font-size:11px;font-weight:600;padding:5px 10px;border-radius:9px;background:rgba(139,124,246,0.1);
+    border:1px solid rgba(139,124,246,0.22);color:var(--lilac)}
+  .chip.bad{background:rgba(248,113,113,0.1);border-color:rgba(248,113,113,0.22);color:#fca5a5}
+  .lbl{font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--dim);
+    margin:0 0 8px 4px;text-align:center}
+
+  /* ===== phone frame ===== */
+  .phone{position:relative;width:390px;max-width:92vw;height:760px;border-radius:42px;overflow:hidden;
+    border:10px solid #1a1c2e;box-shadow:0 30px 80px -20px rgba(0,0,0,0.8), 0 0 0 2px #2a2d44;
+    background:
+      radial-gradient(ellipse 140% 55% at 50% 100%, #1a1f52 0%, transparent 70%),
+      radial-gradient(ellipse at 50% 0%, #10153d 0%, #070b1e 65%), #070b1e;}
+  .island{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:86px;height:24px;background:#000;
+    border-radius:13px;z-index:50}
+  .stars{position:absolute;inset:0;pointer-events:none;z-index:0}
+  .stars i{position:absolute;background:#aab0ff;border-radius:50%;opacity:.5}
+  .scroll{position:absolute;inset:0;overflow-y:auto;z-index:1;padding:54px 0 30px;-webkit-overflow-scrolling:touch}
+  .scroll::-webkit-scrollbar{display:none}
+
+  /* ===== header (consistente com o app) ===== */
+  .hdr{display:flex;align-items:center;gap:12px;padding:6px 16px 0 16px}
+  .back{width:40px;height:40px;border-radius:13px;background:rgba(22,28,60,0.6);border:1px solid var(--gB);
+    display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .back .chev{width:9px;height:9px;border-left:2px solid var(--sub);border-bottom:2px solid var(--sub);
+    transform:rotate(45deg);margin-left:3px}
+  .htitle{flex:1;font-size:17px;font-weight:800;letter-spacing:-0.3px;
+    background:linear-gradient(180deg,#ffffff,#c4b5fd);-webkit-background-clip:text;background-clip:text;
+    -webkit-text-fill-color:transparent}
+  .savepill{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--greenT);
+    background:rgba(16,30,24,0.92);border:1px solid rgba(52,211,153,0.35);padding:6px 11px;border-radius:20px}
+  .savepill .dot{width:6px;height:6px;border-radius:50%;background:var(--greenT)}
+
+  /* hero */
+  .hero{display:flex;flex-direction:column;align-items:center;margin:18px 0 22px}
+  .avatar{width:84px;height:84px;border-radius:50%;background:
+      radial-gradient(circle at 35% 30%, #2a2f66, #10143a);border:2px solid rgba(139,124,246,0.3);
+    display:flex;align-items:center;justify-content:center;font-size:34px;box-shadow:0 6px 24px -6px rgba(139,124,246,0.4)}
+  .hero .nm{font-size:20px;font-weight:800;letter-spacing:-0.4px;margin-top:11px;
+    background:linear-gradient(180deg,#fff,#c4b5fd);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .hero .age{font-size:12px;color:var(--accent);font-weight:600;margin-top:3px}
+
+  /* ===== section cards (a chave: AIRY + eyebrow + tint, igual a Home) ===== */
+  .sec{margin:0 16px 13px;border-radius:18px;padding:15px 16px;
+    background:linear-gradient(180deg,rgba(22,28,60,0.55),rgba(20,26,60,0.32));
+    border:1px solid var(--gBSoft);box-shadow:0 1px 0 0 rgba(255,255,255,0.05) inset}
+  .eyebrow{display:flex;align-items:center;gap:7px;font-size:10px;font-weight:800;letter-spacing:1px;
+    text-transform:uppercase;margin-bottom:13px}
+  .eyebrow .ic{width:16px;height:16px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px}
+  .field{margin-bottom:11px}
+  .field:last-child{margin-bottom:0}
+  .field .fl{font-size:11px;color:var(--label);font-weight:600;margin-bottom:6px;letter-spacing:.2px}
+  .inp{width:100%;padding:14px 15px;background:rgba(20,26,60,0.55);border:1px solid var(--gBSoft);
+    border-radius:14px;color:var(--text);font-size:15px;font-weight:600;font-family:inherit}
+  .inp.center{text-align:center}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .row{display:flex;align-items:center;gap:12px}
+  .row .gr{flex:1}
+  .row .t1{font-size:14px;font-weight:700;color:var(--heading);letter-spacing:-0.2px}
+  .row .t2{font-size:12px;color:var(--sub);margin-top:2px;line-height:1.4}
+  .toggle{width:50px;height:30px;border-radius:15px;flex-shrink:0;position:relative;
+    background:linear-gradient(180deg,var(--accent),#6d5cd4);border:1px solid rgba(139,124,246,0.5)}
+  .toggle.off{background:rgba(14,18,48,0.8);border-color:var(--gBSoft)}
+  .knob{position:absolute;top:3px;left:23px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.4)}
+  .toggle.off .knob{left:3px}
+  .seg{display:flex;gap:4px;background:rgba(14,18,48,0.6);border-radius:11px;padding:3px;border:1px solid var(--gB)}
+  .seg button{flex:1;padding:10px 0;border:none;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;color:var(--sub);background:transparent}
+  .seg button.on{background:var(--accent);color:#fff}
+  .divider{height:1px;background:var(--gB);margin:13px 0}
+  .linkrow{display:flex;align-items:center;gap:11px;padding:11px 2px;cursor:pointer}
+  .linkrow .ic{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+  .linkrow .lk{flex:1;font-size:14px;font-weight:600;color:var(--text)}
+  .linkrow .ar{width:7px;height:7px;border-right:2px solid var(--dim);border-bottom:2px solid var(--dim);transform:rotate(-45deg)}
+  .badge{font-size:9px;font-weight:800;padding:2px 7px;border-radius:6px;background:rgba(52,211,153,0.16);color:var(--greenT)}
+  .secfoot{text-align:center;font-size:11px;color:var(--dim);margin:18px 16px 0;line-height:1.5}
+  .ver{font-size:11px;color:rgba(139,124,246,0.5);letter-spacing:1.5px;text-align:center;margin-top:8px}
+  .napgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:11px;padding-top:13px;border-top:1px solid var(--gB)}
+  .caption{font-size:10px;color:var(--label);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-bottom:9px}
+</style>
+</head>
+<body>
+
+  <div class="intro">
+    <h1>Ajustes — redesign</h1>
+    <p>O problema: hoje a tela de Configurações <b>"parece outro app"</b>. Tem o starfield, mas o resto quebra a linguagem — header simples demais, cards quadradões e opacos, entrada seca, e a nav some.</p>
+    <div class="chips">
+      <span class="chip bad">antes: header plano "Profile"</span>
+      <span class="chip bad">cards opacos boxy</span>
+      <span class="chip bad">pop seco</span>
+      <span class="chip">→ depois: header com identidade</span>
+      <span class="chip">cards airy + eyebrow</span>
+      <span class="chip">entrada deslizando</span>
+      <span class="chip">cosmos consistente</span>
+    </div>
+  </div>
+
+  <div>
+    <div class="lbl">depois · mesma família visual da Home</div>
+    <div class="phone">
+      <div class="island"></div>
+      <div class="stars" id="stars"></div>
+      <div class="scroll">
+
+        <!-- HEADER consistente -->
+        <div class="hdr">
+          <div class="back"><span class="chev"></span></div>
+          <span class="htitle">Ajustes</span>
+          <span class="savepill"><span class="dot"></span>Salvo</span>
+        </div>
+
+        <!-- HERO: identidade da Louise -->
+        <div class="hero">
+          <div class="avatar">👶</div>
+          <div class="nm">Louise</div>
+          <div class="age">2 meses 22 dias</div>
+        </div>
+
+        <!-- PERFIL -->
+        <div class="sec">
+          <div class="eyebrow" style="color:var(--lilac)"><span class="ic" style="background:rgba(167,139,250,0.16);color:var(--lilac)">★</span>Perfil</div>
+          <div class="field"><div class="fl">Nome</div><div class="inp">Louise</div></div>
+          <div class="grid2">
+            <div class="field"><div class="fl">Nascimento</div><div class="inp center">08/03/2026</div></div>
+            <div class="field"><div class="fl">Meta de leite</div><div class="inp center">600 ml</div></div>
+          </div>
+        </div>
+
+        <!-- ROTINA -->
+        <div class="sec">
+          <div class="eyebrow" style="color:var(--accent)"><span class="ic" style="background:rgba(139,124,246,0.16);color:var(--accent)">◷</span>Rotina diária</div>
+          <div class="row">
+            <div class="gr">
+              <div class="t1">Seguir rotina da pediatra</div>
+              <div class="t2">Marca cada passo automático conforme você registra</div>
+            </div>
+            <div class="toggle"><div class="knob"></div></div>
+          </div>
+          <div class="napgrid">
+            <div class="field"><div class="fl">Acordar</div><div class="inp center">07:00</div></div>
+            <div class="field"><div class="fl">Banho</div><div class="inp center">18:00</div></div>
+            <div class="field"><div class="fl">Dormir</div><div class="inp center">19:30</div></div>
+            <div class="field"><div class="fl">Mamadas/dia</div><div class="inp center">7</div></div>
+          </div>
+          <div style="margin-top:13px;padding-top:13px;border-top:1px solid var(--gB)">
+            <div class="caption">Sonecas · 4 por dia</div>
+            <div class="grid2">
+              <div class="inp center" style="padding:11px">08:15</div>
+              <div class="inp center" style="padding:11px">10:45</div>
+              <div class="inp center" style="padding:11px">13:30</div>
+              <div class="inp center" style="padding:11px">16:00</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PREFERÊNCIAS -->
+        <div class="sec">
+          <div class="eyebrow" style="color:var(--cyan)"><span class="ic" style="background:rgba(125,211,252,0.16);color:var(--cyan)">⚙</span>Preferências</div>
+          <div class="field"><div class="fl">Idioma</div>
+            <div class="seg"><button class="on">English</button><button>Português</button></div>
+          </div>
+          <div class="divider"></div>
+          <div class="row">
+            <div class="gr"><div class="t1">Manter tela ligada</div><div class="t2">Durante night wake e amamentação</div></div>
+            <div class="toggle"><div class="knob"></div></div>
+          </div>
+        </div>
+
+        <!-- NOTIFICAÇÕES -->
+        <div class="sec">
+          <div class="eyebrow" style="color:var(--amber)"><span class="ic" style="background:rgba(251,191,36,0.16);color:var(--amber)">◔</span>Notificações</div>
+          <div class="row">
+            <div class="gr"><div class="t1">Push neste aparelho</div><div class="t2">Lembretes de mamada e remédios</div></div>
+            <div class="toggle off"><div class="knob"></div></div>
+          </div>
+          <div class="divider"></div>
+          <div class="linkrow"><span class="ic" style="background:rgba(251,191,36,0.14);color:var(--amber)">◷</span><span class="lk">Lembretes salvos</span><span class="badge">2</span><span class="ar"></span></div>
+        </div>
+
+        <!-- DADOS -->
+        <div class="sec">
+          <div class="eyebrow" style="color:var(--green)"><span class="ic" style="background:rgba(52,211,153,0.16);color:var(--green)">☁</span>Dados</div>
+          <div class="linkrow"><span class="ic" style="background:rgba(52,211,153,0.14);color:var(--green)">↑</span><span class="lk">Backup na nuvem</span><span style="font-size:11px;color:var(--dim)">há 3h</span><span class="ar"></span></div>
+          <div class="divider"></div>
+          <div class="linkrow"><span class="ic" style="background:rgba(125,211,252,0.14);color:var(--cyan)">↓</span><span class="lk">Restaurar</span><span class="ar"></span></div>
+        </div>
+
+        <!-- SOBRE -->
+        <div class="sec">
+          <div class="eyebrow" style="color:var(--pink)"><span class="ic" style="background:rgba(244,114,182,0.16);color:var(--pink)">♥</span>Sobre</div>
+          <div class="linkrow"><span class="ic" style="background:rgba(139,124,246,0.14);color:var(--lilac)">✶</span><span class="lk">Ler novidades</span><span class="badge">novo</span><span class="ar"></span></div>
+        </div>
+
+        <div class="ver">LOUISE PRO · v11.9.74</div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="intro" style="margin-top:8px">
+    <div class="lbl" style="text-align:left;margin-left:0">o que muda na prática</div>
+    <p style="font-size:12.5px;line-height:1.6">
+      <b>1. Header com identidade</b> — chevron + "Ajustes" em gradiente (mesmo da Home) + pill "Salvo" flutuante.<br>
+      <b>2. Hero da Louise</b> — avatar + nome + idade no topo: você lembra de quem é o app.<br>
+      <b>3. Cards "airy"</b> — gradiente sutil + sombra inset + <b>eyebrow colorido com ícone</b> por seção (Perfil, Rotina, Preferências, Notificações, Dados, Sobre) — exatamente a linguagem dos cards da Home, em vez de caixas opacas chapadas.<br>
+      <b>4. Linhas de ação</b> — lembretes/backup/novidades viram linhas limpas com ícone + seta, não botões soltos.<br>
+      <b>5. Entra deslizando</b> de baixo (não dá o "pop seco") e o starfield aparece de verdade atrás — continuidade total com o cosmos.<br>
+      <b>6. Tipografia e cores</b> 100% nos tokens do app (heading/sub/label/accent) — zero "cara de outro app".
+    </p>
+  </div>
+
+<script>
+  // starfield
+  var s=document.getElementById('stars'),h='';
+  for(var i=0;i<40;i++){var sz=(Math.random()*2+0.5).toFixed(1);
+    h+='<i style="width:'+sz+'px;height:'+sz+'px;top:'+(Math.random()*100)+'%;left:'+(Math.random()*100)+'%;opacity:'+(Math.random()*0.4+0.1).toFixed(2)+'"></i>';}
+  s.innerHTML=h;
+</script>
+</body>
+</html>
