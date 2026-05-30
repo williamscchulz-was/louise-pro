@@ -14,7 +14,7 @@ Este `CLAUDE.md` é lido automaticamente pelo Claude Code no início de toda ses
 - **Localização**: Blumenau, SC, Brasil (BRT, UTC-3)
 - **Repositório**: https://github.com/williamscchulz-was/louise-pro
 - **Live**: https://williamscchulz-was.github.io/louise-pro/
-- **Versão atual**: v11.9.74 (app) / routine-engine v2.2.4
+- **Versão atual**: v11.9.75 (app) / routine-engine v2.2.4
 - **⚠️ Haptics são NO-OP no iOS:** `Haptic.*` (light/medium/heavy/success/warning em `js/device-features.js`) usa `navigator.vibrate()`, que o **iOS Safari/PWA NÃO implementa** (decisão da Apple). As chamadas ficam no código (funcionam no Android) mas **não fazem nada no iPhone** — o device alvo do William. Logo: NUNCA propor "feedback tátil/haptic" como recurso premium pra ele. Pra "feedback de ação/conquista", usar equivalente VISUAL (confetti, count-up, spring, flash). O toggle de vibração foi removido na v11.x exatamente por isso.
 - **Bilíngue**: Português e Inglês (toda a interface, insights, curiosidades e changelog)
 
