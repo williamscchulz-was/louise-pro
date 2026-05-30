@@ -292,6 +292,8 @@
        (não inline: a rotina re-renderiza a cada tick e inline resetaria a animação). */
     @keyframes rtSegPulse{0%,100%{opacity:1}50%{opacity:0.45}}
     .rt-seg-next{animation:rtSegPulse 1.8s ease-in-out infinite}
+    @keyframes rtExpandIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+    .rt-expand{animation:rtExpandIn .25s ease}
     @keyframes mercurySpin{to{transform:rotate(360deg)}}
     @keyframes slideDown{from{transform:translateX(-50%) translateY(-20px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
     @keyframes toastSlideDown{from{transform:translateY(-20px);opacity:0}to{transform:translateY(0);opacity:1}}
@@ -759,8 +761,27 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.70";
+const APP_VERSION = "11.9.71";
 const CHANGELOG = [
+  {
+    v: "11.9.71", date: "2026-05-30",
+    pt: {
+      title: "Rotina: toque pra expandir os detalhes",
+      bullets: [
+        '★ O card de rotina enxuto agora **expande**: toque nele pra abrir a lista completa dos passos — cada um com horário (o real, se já foi feito), ✓ pra concluído e ! pra atrasado — mais as mamadas em detalhe. Toque de novo pra recolher.',
+        'A preferência (aberto/fechado) **fica salva no aparelho** — cada celular lembra do seu jeito.',
+        '**Micro-interação:** chevron que gira + abertura com fade suave.',
+      ],
+    },
+    en: {
+      title: "Routine: tap to expand the details",
+      bullets: [
+        '★ The lean routine card now **expands**: tap it to open the full step list — each with its time (the actual one, if already done), ✓ for done and ! for late — plus bottles in detail. Tap again to collapse.',
+        'The preference (open/closed) is **saved per device** — each phone remembers its own choice.',
+        '**Micro-interaction:** a rotating chevron + a smooth fade-open.',
+      ],
+    },
+  },
   {
     v: "11.9.70", date: "2026-05-30",
     pt: {
@@ -9363,6 +9384,10 @@ function App(){
   },[cycleE,sleepRec,activeTimer,tick,profile?.routine]);
   // v11.9.40: rotina do dia (pediatra) — matching slot ↔ entry com tolerância ±20-30min.
   // Dependências em `tick` pra status (next/late) atualizar conforme o tempo passa.
+  // v11.9.71: rotina expansível (opt-in). Preferência por-device em localStorage.
+  // Hook DEFINIDO AQUI (topo do App, antes do early-return de splash) — Rules of Hooks.
+  const[routineExpanded,setRoutineExpanded]=useState(()=>{try{return localStorage.getItem("lp_routine_expanded")==="1"}catch(e){return false}});
+  const toggleRoutineExpanded=useCallback(()=>setRoutineExpanded(v=>{const nv=!v;try{localStorage.setItem("lp_routine_expanded",nv?"1":"0")}catch(e){}if(window.Haptic&&Haptic.light)Haptic.light();return nv}),[]);
   const routineState=useMemo(()=>{
     const r=profile?.routine;
     if(!r||r.enabled!==true)return null;
@@ -9805,7 +9830,7 @@ function App(){
             // v11.9.70: card minimalista — uma linha de info + barra de progresso fina
             // segmentada. Detalhes (chips, labels) saíram; a página/rotina é o lugar deles.
             return<div style={{padding:"11px 14px 12px",borderRadius:13,background:`${accentCol}0d`,border:`1px solid ${accentCol}26`}}>
-              <div style={{display:"flex",alignItems:"center",gap:9}}>
+              <div onClick={toggleRoutineExpanded} style={{display:"flex",alignItems:"center",gap:9,cursor:"pointer"}}>
                 <Icon name={h.icon} size={16} color={h.col}/>
                 <div style={{flex:1,minWidth:0,display:"flex",alignItems:"baseline",gap:6,flexWrap:"wrap"}}>
                   <span style={{fontSize:T.fXS,fontWeight:800,color:accentCol,textTransform:"uppercase",letterSpacing:0.8}}>{L("nextEvent")}</span>
@@ -9814,6 +9839,7 @@ function App(){
                   {isLate?<span style={{fontSize:T.fXS,color:accentCol,fontWeight:600}}>· +{fmtDur(lateMin)}</span>:(earlyMin>0&&earlyMin<=180?<span style={{fontSize:T.fXS,color:T.dim,fontWeight:600}}>· {L("earlyMin")} {fmtDur(earlyMin)}</span>:null)}
                 </div>
                 <span style={{fontSize:T.fSM,color:T.green,fontWeight:800,fontVariantNumeric:"tabular-nums",display:"inline-flex",alignItems:"center",gap:3,flexShrink:0}}><Icon name="bottle" size={12} color={T.green}/>{routineState.bottlesDone}<span style={{color:T.dim,fontWeight:600,fontSize:T.fXS}}>/{routineState.bottlesTarget}</span></span>
+                <span aria-hidden="true" style={{width:7,height:7,borderRight:`2px solid ${T.dim}`,borderBottom:`2px solid ${T.dim}`,transform:routineExpanded?"rotate(-135deg)":"rotate(45deg)",transition:"transform .25s ease",display:"inline-block",flexShrink:0,marginLeft:2,marginBottom:routineExpanded?-2:2}}/>
               </div>
               <div style={{display:"flex",gap:5,marginTop:11}}>
                 {routineState.slots.map(s=>{
@@ -9824,6 +9850,23 @@ function App(){
                   return<div key={s.key} title={s.lbl} className={isNextSeg?"rt-seg-next":""} style={{flex:1,height:5,borderRadius:3,background:segBg,transition:"background .4s ease"}}/>
                 })}
               </div>
+              {routineExpanded&&<div className="rt-expand" style={{marginTop:11,paddingTop:11,borderTop:`1px solid ${accentCol}1f`,display:"flex",flexDirection:"column",gap:8}}>
+                {routineState.slots.map(s=>{
+                  const sd=s.status==="done",sl=s.status==="late"||s.status==="next-late",sn=s.status==="next";
+                  const sc=sd?T.green:sl?"#fb923c":sn?T.accent:T.dim;
+                  return<div key={s.key} style={{display:"flex",alignItems:"center",gap:9}}>
+                    <div style={{width:16,height:16,borderRadius:"50%",border:`1.5px solid ${sc}`,background:sd?T.green:"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{sd?<Icon name="check" size={9} color="#04061a"/>:sl?<span style={{color:sc,fontSize:9,fontWeight:800}}>!</span>:null}</div>
+                    <Icon name={s.icon} size={13} color={s.col}/>
+                    <span style={{flex:1,minWidth:0,fontSize:T.fSM,color:sd?T.sub:T.text,fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.lbl}</span>
+                    <span style={{fontSize:T.fSM,color:sc,fontWeight:700,fontVariantNumeric:"tabular-nums",flexShrink:0}}>{s.match&&s.match.time?s.match.time:s.target}</span>
+                  </div>
+                })}
+                <div style={{display:"flex",alignItems:"center",gap:9,marginTop:1}}>
+                  <div style={{width:16,display:"flex",justifyContent:"center",flexShrink:0}}><Icon name="bottle" size={13} color={T.green}/></div>
+                  <span style={{flex:1,fontSize:T.fSM,color:T.sub,fontWeight:600}}>{_lang==="en"?"Bottles":"Mamadas"}</span>
+                  <div style={{display:"flex",gap:3,flexShrink:0}}>{Array.from({length:routineState.bottlesTarget}).map((_,i)=><div key={i} style={{width:7,height:7,borderRadius:2,background:i<routineState.bottlesDone?T.green:`${T.green}1f`,border:`1px solid ${i<routineState.bottlesDone?T.green:T.green+"32"}`}}/>)}</div>
+                </div>
+              </div>}
             </div>
           })():null}
         </div>}
