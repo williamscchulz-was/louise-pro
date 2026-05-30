@@ -768,8 +768,27 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.76";
+const APP_VERSION = "11.9.77";
 const CHANGELOG = [
+  {
+    v: "11.9.77", date: "2026-05-30",
+    pt: {
+      title: "Idioma 100% — fim do inglês/português misturado",
+      bullets: [
+        '★ **Resolvido o bug do idioma misturado.** Causa raiz: várias telas pesadas (lista de hoje, bloco de sono, Stats, Histórico, timer, insights) eram "memoizadas" pra performance e **não re-renderizavam ao trocar o idioma** — ficavam congeladas no idioma de antes. Agora todas recebem o idioma e mudam juntas, na hora.',
+        'Corrigidas também strings que estavam fixas num idioma só: "~30min/soneca" e "X sessões/dia" no Stats, o placeholder de dose, a tela de erro e as mensagens de backup.',
+        'Pendente menor: as telas que aparecem **antes do app carregar** (girar o celular, "carregando", "atualizando") ainda são fixas — precisam de um mecanismo à parte e são raríssimas de ver. Fica pra um próximo passe.',
+      ],
+    },
+    en: {
+      title: "Language 100% — no more mixed English/Portuguese",
+      bullets: [
+        '★ **Fixed the mixed-language bug.** Root cause: several heavy screens (today list, sleep block, Stats, History, timer, insights) were "memoized" for performance and **did not re-render when you switched language** — they froze in the previous language. Now they all receive the language and update together, instantly.',
+        'Also fixed strings stuck in one language: "~30min/nap" and "X sessions/day" in Stats, the dose placeholder, the error screen, and backup messages.',
+        'Minor pending: the screens shown **before the app loads** (rotate phone, "loading", "updating") are still fixed — they need a separate mechanism and are very rarely seen. Left for a next pass.',
+      ],
+    },
+  },
   {
     v: "11.9.76", date: "2026-05-30",
     pt: {
@@ -6771,7 +6790,7 @@ function AddForm({type,onSave,onSaveBatch,savedMeds,onSaveMeds,editEntry,lastBot
           </button>
         </div>
         {showML&&<><Fld label={L("name")}><input type="text" placeholder={L("name")} value={medN} onChange={e=>setMedN(e.target.value)} style={inp}/></Fld>
-        <Fld label={L("dose")}><input type="text" placeholder="Ex: 3 gotas" value={medD} onChange={e=>setMedD(e.target.value)} style={inp}/></Fld></>}
+        <Fld label={L("dose")}><input type="text" placeholder={_lang==="en"?"e.g. 3 drops":"Ex: 3 gotas"} value={medD} onChange={e=>setMedD(e.target.value)} style={inp}/></Fld></>}
       </>}
       {type==="medicine"&&!isEdit&&<>
         {/* v11.8.0: multi-select chips. Meds sem dose mostram gota e abrem picker no save. */}
@@ -7828,13 +7847,13 @@ const StatsPage = React.memo(function StatsPage({entries,onGrowth}){
       <div style={{background:"rgba(20,26,60,0.5)",borderRadius:20,border:`1px solid ${T.gBSoft}`,padding:"14px 8px 12px",textAlign:"center",boxShadow:T.insetTop}}>
         <div style={{fontSize:T.fXS,color:T.label,letterSpacing:-0.05,marginBottom:6,fontWeight:600}}>{_lang==="en"?"Naps/day":"Sonecas/dia"}</div>
         <div style={{fontSize:T.f2XL,fontWeight:800,color:T.accent,letterSpacing:-0.8,fontVariantNumeric:"tabular-nums",lineHeight:1}}>{avgNaps}</div>
-        <div style={{fontSize:T.fXS,color:T.dim,marginTop:5,fontVariantNumeric:"tabular-nums",letterSpacing:0.2}}>{avgNapDur>0?`~${fmtDur(avgNapDur)}/soneca`:""}</div>
+        <div style={{fontSize:T.fXS,color:T.dim,marginTop:5,fontVariantNumeric:"tabular-nums",letterSpacing:0.2}}>{avgNapDur>0?`~${fmtDur(avgNapDur)}${_lang==="en"?"/nap":"/soneca"}`:""}</div>
       </div>
       <div style={{background:"rgba(20,26,60,0.5)",borderRadius:20,border:`1px solid ${T.gBSoft}`,padding:"14px 8px 12px",textAlign:"center",boxShadow:T.insetTop}}>
         <div style={{fontSize:T.fXS,color:T.label,letterSpacing:-0.05,marginBottom:6,fontWeight:600}}>{_lang==="en"?"Tummy time":"Tummy time"}</div>
         {/* v11.9.20: tempo TOTAL/dia vira destaque (mais útil que count). Count fica em sub. */}
         <div style={{fontSize:T.f2XL,fontWeight:800,color:T.amber,letterSpacing:-0.8,fontVariantNumeric:"tabular-nums",lineHeight:1}}>{(()=>{const tt=avgData.reduce((s,d)=>s+d.tumMin,0)/numComplete;return tt>=1?fmtDur(Math.round(tt)):avgTum})()}</div>
-        <div style={{fontSize:T.fXS,color:T.dim,marginTop:5,fontVariantNumeric:"tabular-nums",letterSpacing:0.2}}>{avgTum>0?`${avgTum}${_lang==="en"?" sessions":" sessões"}/dia`:""}</div>
+        <div style={{fontSize:T.fXS,color:T.dim,marginTop:5,fontVariantNumeric:"tabular-nums",letterSpacing:0.2}}>{avgTum>0?`${avgTum}${_lang==="en"?" sessions/day":" sessões/dia"}`:""}</div>
       </div>
     </div>
     {[{t:_lang==="en"?"Milk (ml)":"Leite (ml)",f:"ml",max:mxMl,c:T.green,stacked:false},{t:_lang==="en"?"Sleep · real + awake":"Sono · real + acordada",f:"sl",max:mxSl,c:T.purple,stacked:true},{t:_lang==="en"?"Naps duration":"Sonecas — duração",f:"napTotalMin",max:Math.max(...data.map(d=>d.napTotalMin),1),c:T.accent,stacked:false,fmt:"dur"},{t:_lang==="en"?"Poop/day":"Cocô/dia",f:"poopCount",max:mxPoop,c:"#a16b4a",stacked:false}].map(ch=>(
@@ -8135,7 +8154,7 @@ const StatsPage = React.memo(function StatsPage({entries,onGrowth}){
 });
 
 // HistoryPage memoizado (v11.2) — mesmo motivo do StatsPage.
-const HistoryPage = React.memo(function HistoryPage({entries,onDelete,onEdit,activeTimer}){
+const HistoryPage = React.memo(function HistoryPage({entries,onDelete,onEdit,activeTimer,lang}){
   const[dateIdx,setDateIdx]=useState(0);
   const[filter,setFilter]=useState("all");
   // v11.9.19: search no historico. searchOpen toggla a barra; query string filtra entries.
@@ -8170,7 +8189,7 @@ const HistoryPage = React.memo(function HistoryPage({entries,onDelete,onEdit,act
   const listItems=isSpecificFilter
     ?filtered.map(e=>{
       const bedtime=findContainingBedtime(e,entries);
-      return<EntryRow key={e.id} entry={e} onDelete={onDelete} onEdit={onEdit} nightBadge={!!bedtime}/>;
+      return<EntryRow key={e.id} entry={e} lang={lang} onDelete={onDelete} onEdit={onEdit} nightBadge={!!bedtime}/>;
     })
     :filtered.filter(e=>{
       if(e.nightWake)return false;
@@ -8183,7 +8202,7 @@ const HistoryPage = React.memo(function HistoryPage({entries,onDelete,onEdit,act
         if(renderedHere)return false;
       }
       return true;
-    }).map(e=>(e.type==="sleep"&&e.wakings&&e.wakings.length>0)?<SleepBlock key={e.id} entry={e} onDelete={onDelete} onEdit={onEdit} entries={entries} activeTimer={activeTimer} onSaveTimer={FB.saveTimer} onSaveEntry={FB.addEntry}/>:<EntryRow key={e.id} entry={e} onDelete={onDelete} onEdit={onEdit}/>);
+    }).map(e=>(e.type==="sleep"&&e.wakings&&e.wakings.length>0)?<SleepBlock key={e.id} entry={e} lang={lang} onDelete={onDelete} onEdit={onEdit} entries={entries} activeTimer={activeTimer} onSaveTimer={FB.saveTimer} onSaveEntry={FB.addEntry}/>:<EntryRow key={e.id} entry={e} lang={lang} onDelete={onDelete} onEdit={onEdit}/>);
   // v11.9.19: search results agregados por dia, ordenados desc.
   const searchResults=searchActive?(()=>{
     const q=searchQuery.trim().toLowerCase();
@@ -8224,7 +8243,7 @@ const HistoryPage = React.memo(function HistoryPage({entries,onDelete,onEdit,act
         <div style={{fontSize:T.fSM,color:T.dim,marginTop:4}}>{_lang==="en"?"Try a different term":"Tente um termo diferente"}</div>
       </div>:searchResults.map(g=>(<div key={g.date} style={{marginBottom:18}}>
         <div style={{fontSize:T.fSM,fontWeight:700,color:T.dim,letterSpacing:0.6,textTransform:"uppercase",marginBottom:8,padding:"0 4px"}}>{fmtRelDate(g.date)} <span style={{color:T.sub,fontWeight:500,letterSpacing:0,textTransform:"none",marginLeft:4}}>· {g.items.length} {_lang==="en"?(g.items.length===1?"item":"items"):(g.items.length===1?"item":"itens")}</span></div>
-        {g.items.map(e=>(e.type==="sleep"&&e.wakings&&e.wakings.length>0)?<SleepBlock key={e.id} entry={e} onDelete={onDelete} onEdit={onEdit} entries={entries} activeTimer={activeTimer} onSaveTimer={FB.saveTimer} onSaveEntry={FB.addEntry}/>:<EntryRow key={e.id} entry={e} onDelete={onDelete} onEdit={onEdit}/>)}
+        {g.items.map(e=>(e.type==="sleep"&&e.wakings&&e.wakings.length>0)?<SleepBlock key={e.id} entry={e} lang={lang} onDelete={onDelete} onEdit={onEdit} entries={entries} activeTimer={activeTimer} onSaveTimer={FB.saveTimer} onSaveEntry={FB.addEntry}/>:<EntryRow key={e.id} entry={e} lang={lang} onDelete={onDelete} onEdit={onEdit}/>)}
       </div>))}
     </div>):(<>
     {/* Date navigator card */}
@@ -8848,7 +8867,7 @@ function BackupSection(){
       setMsg(_lang==="en"?"Backup saved to cloud":"Backup salvo na nuvem");
       Haptic.success();
       setTimeout(()=>setMsg(""),3000);
-    }catch(e){setMsg("Erro: "+e.message);Haptic.warning();setTimeout(()=>setMsg(""),5000)}
+    }catch(e){setMsg((_lang==="en"?"Error: ":"Erro: ")+e.message);Haptic.warning();setTimeout(()=>setMsg(""),5000)}
     setBusy(false);
   };
   // "Restaurar último backup" — pega do Firestore.
@@ -8877,7 +8896,7 @@ function BackupSection(){
       setMsg(_lang==="en"?"Local copy downloaded":"Cópia local baixada");
       Haptic.light();
       setTimeout(()=>setMsg(""),3000);
-    }catch(e){setMsg("Erro: "+e.message);Haptic.warning();setTimeout(()=>setMsg(""),4000)}
+    }catch(e){setMsg((_lang==="en"?"Error: ":"Erro: ")+e.message);Haptic.warning();setTimeout(()=>setMsg(""),4000)}
     setBusy(false);
   };
   const onImportClick=()=>{fileRef.current?.click()};
@@ -8968,26 +8987,27 @@ class ErrorBoundary extends React.Component {
       let triesShown=0;
       try{triesShown=parseInt(sessionStorage.getItem("lp_eb_tries")||"0",10)}catch(_){}
       const willReload=triesShown<=1;
+      const en=(typeof _lang!=="undefined"&&_lang==="en");
       const onCopy=()=>{
         try{
           navigator.clipboard.writeText("Louise Pro error\n\n"+msg+"\n\n"+stack);
-          alert("Erro copiado pra \u00E1rea de transfer\u00EAncia");
-        }catch(_){alert("N\u00E3o consegui copiar \u2014 tira print da tela")}
+          alert(en?"Error copied to clipboard":"Erro copiado pra \u00E1rea de transfer\u00EAncia");
+        }catch(_){alert(en?"Couldn't copy \u2014 take a screenshot":"N\u00E3o consegui copiar \u2014 tira print da tela")}
       };
       const onReset=()=>{try{sessionStorage.removeItem("lp_eb_tries")}catch(_){};window.location.reload()};
       return(<div style={{position:"fixed",inset:0,background:"linear-gradient(180deg,#070b1e 0%,#0b1130 100%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-start",padding:"calc(env(safe-area-inset-top) + 28px) 22px 28px",overflowY:"auto",WebkitOverflowScrolling:"touch",color:T.heading,fontFamily:"'Outfit',sans-serif"}}>
         <div style={{width:64,height:64,borderRadius:20,background:"rgba(248,113,113,0.1)",border:"1.5px solid rgba(248,113,113,0.25)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:T.f3XL,color:"#f87171",marginBottom:14,boxShadow:"0 0 32px -8px rgba(248,113,113,0.3)"}}>{"\u26A0"}</div>
         <div style={{fontSize:T.f2XL,fontWeight:800,letterSpacing:-0.5,marginBottom:4,textAlign:"center"}}>{"Oops!"}</div>
-        <div style={{fontSize:T.fMD,color:"#a3aac8",lineHeight:1.55,marginBottom:14,maxWidth:280,textAlign:"center"}}>{willReload?"Algo quebrou. Tentando recarregar\u2026":"Algo quebrou e o reload n\u00E3o resolveu."}</div>
+        <div style={{fontSize:T.fMD,color:"#a3aac8",lineHeight:1.55,marginBottom:14,maxWidth:280,textAlign:"center"}}>{willReload?(en?"Something broke. Reloading\u2026":"Algo quebrou. Tentando recarregar\u2026"):(en?"Something broke and reloading didn't fix it.":"Algo quebrou e o reload n\u00E3o resolveu.")}</div>
         {willReload&&<div style={{width:24,height:24,border:"2.5px solid rgba(139,124,246,0.2)",borderTopColor:"#a78bfa",borderRadius:"50%",animation:"spin 0.9s linear infinite",marginBottom:18}}/>}
         <div style={{width:"100%",maxWidth:380,background:"rgba(20,26,60,0.55)",border:"1px solid rgba(139,124,246,0.18)",borderRadius:12,padding:"12px 14px",marginBottom:14}}>
-          <div style={{fontSize:T.fSM,color:T.purple,fontWeight:700,letterSpacing:0.5,textTransform:"uppercase",marginBottom:6}}>{"Erro"}</div>
+          <div style={{fontSize:T.fSM,color:T.purple,fontWeight:700,letterSpacing:0.5,textTransform:"uppercase",marginBottom:6}}>{en?"Error":"Erro"}</div>
           <div style={{fontSize:T.fSM,color:"#fda4af",fontFamily:"ui-monospace,Menlo,monospace",wordBreak:"break-word",lineHeight:1.5,marginBottom:8}}>{msg}</div>
           {stack&&<details style={{marginTop:8}}><summary style={{fontSize:T.fSM,color:"#9099c3",cursor:"pointer"}}>{"Stack trace"}</summary><pre style={{fontSize:T.fXS,color:T.label,whiteSpace:"pre-wrap",wordBreak:"break-word",margin:"6px 0 0",lineHeight:1.45,fontFamily:"ui-monospace,Menlo,monospace"}}>{stack}</pre></details>}
         </div>
         <div style={{display:"flex",gap:8,width:"100%",maxWidth:380}}>
-          <button onClick={onCopy} style={{flex:1,padding:"12px 0",borderRadius:11,background:"rgba(139,124,246,0.12)",border:"1px solid rgba(139,124,246,0.32)",color:T.lilac,fontSize:T.fMD,fontWeight:700}}>{"Copiar erro"}</button>
-          <button onClick={onReset} style={{flex:1,padding:"12px 0",borderRadius:11,background:"linear-gradient(180deg,#9b8df8,#7c3aed)",border:"none",color:"#fff",fontSize:T.fMD,fontWeight:800,boxShadow:"0 4px 12px -4px rgba(139,124,246,0.5)"}}>{"Tentar de novo"}</button>
+          <button onClick={onCopy} style={{flex:1,padding:"12px 0",borderRadius:11,background:"rgba(139,124,246,0.12)",border:"1px solid rgba(139,124,246,0.32)",color:T.lilac,fontSize:T.fMD,fontWeight:700}}>{en?"Copy error":"Copiar erro"}</button>
+          <button onClick={onReset} style={{flex:1,padding:"12px 0",borderRadius:11,background:"linear-gradient(180deg,#9b8df8,#7c3aed)",border:"none",color:"#fff",fontSize:T.fMD,fontWeight:800,boxShadow:"0 4px 12px -4px rgba(139,124,246,0.5)"}}>{en?"Try again":"Tentar de novo"}</button>
         </div>
         <style>{"@keyframes spin{to{transform:rotate(360deg)}}"}</style>
       </div>);
@@ -9967,7 +9987,7 @@ function App(){
         {napSug&&(napSug.state==="stretching"||napSug.state==="overdue")&&<div className="pulse-fast" style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:T.orangeS,border:`1px solid ${T.orange}22`,display:"flex",alignItems:"center",gap:10}}><Icon name="zap" size={18} color={napSug.state==="overdue"?"#f87171":T.orange}/><div><div style={{fontSize:T.fMD,fontWeight:700,color:napSug.state==="overdue"?"#f87171":T.orange}}>{napSug.state==="overdue"?(_lang==="en"?"Past max window":"Passou do maximo"):(_lang==="en"?"Stretching":"Esticando")}</div><div style={{fontSize:T.fSM,color:T.sub}}>{napSug.state==="overdue"?(_lang==="en"?`${fmtDur(napSug.el)} awake — risk of overtired`:`${fmtDur(napSug.el)} acordada — risco de overtired`):(_lang==="en"?"Past average, still within range":"Passou da media, ainda dentro do range")}</div></div></div>}
         {/* v11.9.41: predição "Próx. soneca ~XX:XX" só aparece se a rotina (pediatra) NÃO estiver ativa. Com rotina on, o card "Próximo na rotina" assume — engine-prediction vira redundante. */}
         {!routineState&&!activeTimer&&sleepRec?.phase===2&&daySchedule.length>0&&daySchedule.filter(s=>s.status==="next").map((s,i)=><div key={"ns"+i} style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:`${T.accent}10`,border:`1px solid ${T.accent}18`,display:"flex",alignItems:"center",gap:10}}><Icon name="star" size={18} color={T.accent} fill={T.accent}/><div><div style={{fontSize:T.fMD,fontWeight:700,color:T.accent}}>{s.bed?(_lang==="en"?"Bedtime ~":"Sono ~"):(_lang==="en"?"Next nap ~":"Prox. soneca ~")}{minToTime(s.startMin)}</div><div style={{fontSize:T.fSM,color:T.sub}}>{s.bed?"":`${s.pos}${_lang==="en"?["","st","nd","rd"][s.pos]||"th":"a"} · `}WW {fmtDur(s.ww)}{s.durRange?" · "+s.durRange:""}</div></div></div>)}
-        <InsightCards insights={dayInsights} phase={sleepRec?.phase}/>
+        <InsightCards insights={dayInsights} phase={sleepRec?.phase} lang={lang}/>
         {/* v11.9.40: Card de rotina diária — só renderiza se profile.routine.enabled === true */}
         {routineState&&<div style={{margin:"0 20px 14px"}}>
           {routineState.allDone?<div style={{padding:"6px 4px",display:"flex",alignItems:"center",justifyContent:"center",gap:10}}>
@@ -10065,7 +10085,7 @@ function App(){
             <span style={{fontSize:T.fSM,color:T.dim,fontWeight:600,flexShrink:0}}>→</span>
           </button>
         })()}
-        <div style={{padding:"0 20px"}}><div style={{display:"flex",alignItems:"baseline",justifyContent:"space-between",marginBottom:10,padding:"0 4px"}}><span style={{fontSize:T.fSM,fontWeight:700,color:T.accent,textTransform:"uppercase",letterSpacing:1}}>{L("today")}</span><span style={{fontSize:T.fSM,color:T.dim,fontWeight:500,letterSpacing:0.4,textTransform:"uppercase",fontVariantNumeric:"tabular-nums"}}>{new Date().toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{weekday:"short",day:"numeric"}).replace(".","").toUpperCase()}</span></div>{todayE.length===0&&!liveBedtime&&<div style={{textAlign:"center",padding:"32px 20px",color:T.dim}}><Icon name="star" size={32} color={T.dim} fill={T.dim}/><div style={{fontSize:T.fMD,marginTop:8}}>{(()=>{const h=new Date().getHours();if(_lang==="en"){if(h<7)return"Quiet morning — first feed soon?";if(h<11)return"Good morning! Log the first bottle";if(h<14)return"Tap + to add";if(h<19)return"Afternoon — track naps and feeds";if(h<22)return"Evening — wind-down soon";return"Night — bedtime starting?"}if(h<7)return"Manhã tranquila — primeira mamada?";if(h<11)return"Bom dia! Registre a primeira mamada";if(h<14)return"Toque + para registrar";if(h<19)return"Tarde — acompanhe sonecas e mamadas";if(h<22)return"Noite chegando — wind-down em breve";return"Noite — hora de dormir?"})()}</div></div>}{liveBedtime&&<SleepBlock entry={liveBedtime} entries={entries} isLive={true} activeTimer={activeTimer} onSaveTimer={FB.saveTimer} onSaveEntry={FB.addEntry} onDelete={deleteEntry} onEdit={startEdit}/>}{todayE.filter(e=>{
+        <div style={{padding:"0 20px"}}><div style={{display:"flex",alignItems:"baseline",justifyContent:"space-between",marginBottom:10,padding:"0 4px"}}><span style={{fontSize:T.fSM,fontWeight:700,color:T.accent,textTransform:"uppercase",letterSpacing:1}}>{L("today")}</span><span style={{fontSize:T.fSM,color:T.dim,fontWeight:500,letterSpacing:0.4,textTransform:"uppercase",fontVariantNumeric:"tabular-nums"}}>{new Date().toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{weekday:"short",day:"numeric"}).replace(".","").toUpperCase()}</span></div>{todayE.length===0&&!liveBedtime&&<div style={{textAlign:"center",padding:"32px 20px",color:T.dim}}><Icon name="star" size={32} color={T.dim} fill={T.dim}/><div style={{fontSize:T.fMD,marginTop:8}}>{(()=>{const h=new Date().getHours();if(_lang==="en"){if(h<7)return"Quiet morning — first feed soon?";if(h<11)return"Good morning! Log the first bottle";if(h<14)return"Tap + to add";if(h<19)return"Afternoon — track naps and feeds";if(h<22)return"Evening — wind-down soon";return"Night — bedtime starting?"}if(h<7)return"Manhã tranquila — primeira mamada?";if(h<11)return"Bom dia! Registre a primeira mamada";if(h<14)return"Toque + para registrar";if(h<19)return"Tarde — acompanhe sonecas e mamadas";if(h<22)return"Noite chegando — wind-down em breve";return"Noite — hora de dormir?"})()}</div></div>}{liveBedtime&&<SleepBlock entry={liveBedtime} lang={lang} entries={entries} isLive={true} activeTimer={activeTimer} onSaveTimer={FB.saveTimer} onSaveEntry={FB.addEntry} onDelete={deleteEntry} onEdit={startEdit}/>}{todayE.filter(e=>{
           // Only hide events linked to the live bedtime if their time actually falls within it.
           // Protects against legacy data where retroactive events got wrongly linked (pre v9.8.1).
           if(e.nightWake&&liveBedtime){
@@ -10084,14 +10104,14 @@ function App(){
             if(isLive||willRenderAsBlock)return false;
           }
           return true;
-        }).map((e,i,arr)=>{const prev=arr[i-1];let gap=null;if(prev){const t1=new Date(`${e.date}T${e.time}`).getTime();let t2=new Date(`${prev.date}T${prev.time}`).getTime();if(prev.durationMin)t2+=prev.durationMin*60000;const diffMin=Math.abs(Math.round((t1-t2)/60000));if(diffMin>=30){const isSleep=(e.type==="nap"||e.type==="sleep")&&e.durationMin;gap=<div style={{display:"flex",alignItems:"center",gap:10,padding:"4px 16px",margin:"2px 0"}}><div style={{flex:1,height:1,background:`linear-gradient(90deg,transparent,${isSleep?T.accent:T.accent}0a,transparent)`}}/><span style={{fontSize:T.fXS,color:isSleep?T.accent:T.dim,letterSpacing:0.5}}>{isSleep?"WW ":""}{fmtDur(diffMin)}</span><div style={{flex:1,height:1,background:`linear-gradient(90deg,transparent,${isSleep?T.accent:T.accent}0a,transparent)`}}/></div>}}const useBlock=e.type==="sleep"&&e.wakings&&e.wakings.length>0;return<div key={e.id} className="home-rise-in" style={{animationDelay:`${Math.min(i,10)*45}ms`}}>{gap}{useBlock?<SleepBlock entry={e} onDelete={deleteEntry} onEdit={startEdit} entries={entries} activeTimer={activeTimer} onSaveTimer={FB.saveTimer} onSaveEntry={FB.addEntry}/>:<EntryRow entry={e} onDelete={deleteEntry} onEdit={startEdit} napNum={napNums[e.id]||null}/>}</div>})}</div>
+        }).map((e,i,arr)=>{const prev=arr[i-1];let gap=null;if(prev){const t1=new Date(`${e.date}T${e.time}`).getTime();let t2=new Date(`${prev.date}T${prev.time}`).getTime();if(prev.durationMin)t2+=prev.durationMin*60000;const diffMin=Math.abs(Math.round((t1-t2)/60000));if(diffMin>=30){const isSleep=(e.type==="nap"||e.type==="sleep")&&e.durationMin;gap=<div style={{display:"flex",alignItems:"center",gap:10,padding:"4px 16px",margin:"2px 0"}}><div style={{flex:1,height:1,background:`linear-gradient(90deg,transparent,${isSleep?T.accent:T.accent}0a,transparent)`}}/><span style={{fontSize:T.fXS,color:isSleep?T.accent:T.dim,letterSpacing:0.5}}>{isSleep?"WW ":""}{fmtDur(diffMin)}</span><div style={{flex:1,height:1,background:`linear-gradient(90deg,transparent,${isSleep?T.accent:T.accent}0a,transparent)`}}/></div>}}const useBlock=e.type==="sleep"&&e.wakings&&e.wakings.length>0;return<div key={e.id} className="home-rise-in" style={{animationDelay:`${Math.min(i,10)*45}ms`}}>{gap}{useBlock?<SleepBlock entry={e} lang={lang} onDelete={deleteEntry} onEdit={startEdit} entries={entries} activeTimer={activeTimer} onSaveTimer={FB.saveTimer} onSaveEntry={FB.addEntry}/>:<EntryRow entry={e} lang={lang} onDelete={deleteEntry} onEdit={startEdit} napNum={napNums[e.id]||null}/>}</div>})}</div>
       </div>
           </div>
           <div style={{width:`${100/3}%`,flexShrink:0,minWidth:0,contentVisibility:"auto",containIntrinsicSize:"auto 100vh"}}>
-            <StatsPage entries={entries} onGrowth={goGrowth}/>
+            <StatsPage entries={entries} onGrowth={goGrowth} lang={lang}/>
           </div>
           <div style={{width:`${100/3}%`,flexShrink:0,minWidth:0,contentVisibility:"auto",containIntrinsicSize:"auto 100vh"}}>
-            <HistoryPage entries={entries} onDelete={deleteEntry} onEdit={startEdit} activeTimer={activeTimer}/>
+            <HistoryPage entries={entries} onDelete={deleteEntry} onEdit={startEdit} activeTimer={activeTimer} lang={lang}/>
           </div>
         </div>
       </div>:null}
@@ -10186,7 +10206,7 @@ function App(){
     {/* TimerBar + Nav via React Portal — vivem fora do scroll container (App root com overflow:auto)
         e fora do #root (com overflow:hidden) para que position:fixed funcione corretamente
         em iOS Safari PWA standalone. Veja #nav-host no <body>. */}
-    {ReactDOM.createPortal(<><TimerBar activeTimer={activeTimer} onStop={stopTimer} onSwitch={switchSide} onPause={pauseNursing} onEditStart={()=>setShowEditStart(true)} hidden={showAdd||!!formType||showProfile||showInbox||showChangelog||showEditStart||showNursingPicker||showSleepInfo}/>
+    {ReactDOM.createPortal(<><TimerBar activeTimer={activeTimer} lang={lang} onStop={stopTimer} onSwitch={switchSide} onPause={pauseNursing} onEditStart={()=>setShowEditStart(true)} hidden={showAdd||!!formType||showProfile||showInbox||showChangelog||showEditStart||showNursingPicker||showSleepInfo}/>
     {/* Profile: bottom nav agora \u00e9 s\u00f3 o Home circle (v11.7). Cancelar/Salvar migraram pro
         header top do ProfilePage pra n\u00e3o ficar atr\u00e1s do teclado. */}
     {showProfile?<nav style={{position:"fixed",bottom:"calc(8px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",width:"auto",maxWidth:"none",opacity:1,display:"flex",alignItems:"center",gap:8,padding:"0",pointerEvents:"auto",background:"transparent",border:"none",boxShadow:"none",zIndex:250}}>
