@@ -14,7 +14,7 @@ Este `CLAUDE.md` é lido automaticamente pelo Claude Code no início de toda ses
 - **Localização**: Blumenau, SC, Brasil (BRT, UTC-3)
 - **Repositório**: https://github.com/williamscchulz-was/louise-pro
 - **Live**: https://williamscchulz-was.github.io/louise-pro/
-- **Versão atual**: v11.9.62 (app) / routine-engine v2.2.4
+- **Versão atual**: v11.9.63 (app) / routine-engine v2.2.4
 - **Bilíngue**: Português e Inglês (toda a interface, insights, curiosidades e changelog)
 
 ## Stack
@@ -86,7 +86,7 @@ louise-pro/
 ### Firestore Collections
 
 - `entries/` — todos os eventos registrados (mamadas, sono, fraldas, banho, medicina, temperatura, crescimento, **`milestone`** v11.9.56)
-  - `milestone` entries têm: `type:"milestone"`, `key` (chave de `window.DEV_MILESTONES`), `category` (motor_gross/motor_fine/language/social_emotional/cognitive), `date`, `note` opcional. Lista pre-definida em `js/milestones.js` (~44 marcos 0-24m, CDC 2022 + WHO MGRS + SBP) + `window.CONCERNING_SIGNS` (~17 sinais "Act Early").
+  - `milestone` entries têm: `type:"milestone"`, `key` (chave de `window.DEV_MILESTONES`), `category` (motor_gross/motor_fine/language/social_emotional/cognitive), `date`, `note` opcional. Lista pre-definida em `js/milestones.js` (85 marcos 0-24m, CDC 2022 + WHO MGRS + Denver II + AAP, ordenados por `checkupAge`) + `window.CONCERNING_SIGNS` (17 sinais "Act Early"). A engine ordena `window.DEV_MILESTONES` por `checkupAge` ao carregar — a Home usa `upcoming[0]` (ordem do array), então a ordenação importa.
   - **Namespace note:** `window.DEV_MILESTONES` é diferente de `window.MILESTONES` (`curiosities.js` — curiosidades mensais 2-12m, schema `{m,pt,en}`). Os 2 coexistem sem colidir, mas atenção pra não confundir.
 - `config/profile` — perfil da Louise (nome, foto, data nascimento, meta ml, idioma, lastSeenVersion, keepScreenOn, **`routine`** v11.9.40)
   - `routine.enabled` (bool) · `routine.wakeTime` · `routine.bathTime` · `routine.bedtime` · `routine.bottlesPerDay` (int) · `routine.naps` (array de `{time}`). Opt-in: feature inativa se `routine.enabled !== true`. Default no Profile UI: wake 07:00, banho 18:00, bedtime 19:30, 4 sonecas 08:15/10:45/13:30/16:00, 7 mamadas/dia.

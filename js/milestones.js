@@ -1,6 +1,6 @@
 // ╔══════════════════════════════════════════════════════╗
 // ║  LOUISE PRO · DEVELOPMENTAL MILESTONES               ║
-// ║  ~41 milestones bilingual PT/EN covering 0-24 months ║
+// ║  85 milestones bilingual PT/EN covering 0-24 months  ║
 // ║                                                      ║
 // ║  Primary source:                                     ║
 // ║    CDC "Learn the Signs. Act Early." (Feb 2022)      ║
@@ -16,10 +16,10 @@
 // ║    Se nao atingiu = sinal pra conversar com pediatra.║
 // ║                                                      ║
 // ║  Exposes:                                            ║
-// ║    window.DEV_MILESTONES (41 items, by checkupAge)       ║
-// ║    window.CONCERNING_SIGNS (15 items)                ║
+// ║    window.DEV_MILESTONES (85 items, sorted by age)   ║
+// ║    window.CONCERNING_SIGNS (17 items)                ║
 // ║                                                      ║
-// ║  Ultima verificacao: 2026-05-24                      ║
+// ║  Ultima verificacao: 2026-05-29                      ║
 // ╚══════════════════════════════════════════════════════╝
 
 // ──────────────────────────────────────────────────────
@@ -922,8 +922,322 @@ window.DEV_MILESTONES = [
       en: "Eats with a spoon (some spills are okay)."
     },
     source: "CDC 2022"
+  },
+
+  // ════════════════════════════════════════════════════
+  //   v11.9.63 — EXPANSÃO (31 marcos net-new)
+  //   Mais granularidade 0-6m (Louise avançou rápido) +
+  //   preenchimento de lacunas 9-24m.
+  //   Fontes: CDC 2022, WHO MGRS, Denver II, AAP/Bright Futures.
+  // ════════════════════════════════════════════════════
+
+  // ---- 2 meses (granularidade) ----
+  {
+    key: "tracks_object_midline",
+    category: "cognitive",
+    checkupAge: 2,
+    ageRange: { minWeeks: 4, maxWeeks: 12, typicalWeeks: 8 },
+    label: { pt: "Segue objeto até a linha do meio", en: "Tracks an object to midline" },
+    description: { pt: "Acompanha com os olhos um objeto que se move até a linha central do rosto.", en: "Follows a moving object with her eyes up to the center of her face." },
+    tip: { pt: "Mova um brinquedo de contraste devagar de um lado pro centro, a uns 25cm dos olhos.", en: "Move a high-contrast toy slowly from the side toward center, about 25cm from her eyes." },
+    source: "Denver II"
+  },
+  {
+    key: "opens_closes_hands",
+    category: "motor_fine",
+    checkupAge: 2,
+    ageRange: { minWeeks: 6, maxWeeks: 14, typicalWeeks: 10 },
+    label: { pt: "Abre e fecha as mãos", en: "Opens and closes hands" },
+    description: { pt: "As mãos passam a ficar mais abertas e relaxadas, não mais sempre em punho fechado.", en: "Hands begin to open and relax instead of staying tightly fisted." },
+    source: "Denver II"
+  },
+  {
+    key: "lifts_chest_tummy",
+    category: "motor_gross",
+    checkupAge: 2,
+    ageRange: { minWeeks: 6, maxWeeks: 16, typicalWeeks: 10 },
+    label: { pt: "Levanta o peito de bruço", en: "Lifts chest during tummy time" },
+    description: { pt: "De barriga pra baixo, apoia nos antebraços e levanta a cabeça e o peito.", en: "On her tummy, props on forearms and lifts head and chest." },
+    tip: { pt: "Ponha um espelho ou brinquedo na frente dela durante o tummy time pra ela querer olhar pra cima.", en: "Place a mirror or toy in front during tummy time so she lifts up to look." },
+    source: "Denver II"
+  },
+  {
+    key: "quiets_to_voice",
+    category: "language",
+    checkupAge: 2,
+    ageRange: { minWeeks: 2, maxWeeks: 10, typicalWeeks: 6 },
+    label: { pt: "Fica quietinha pra escutar voz", en: "Quiets to listen to a voice" },
+    description: { pt: "Para de se mexer ou de chorar por um instante quando ouve alguém falando.", en: "Briefly stops moving or fussing when she hears someone speak." },
+    source: "AAP"
+  },
+  {
+    key: "startles_to_loud_sound",
+    category: "cognitive",
+    checkupAge: 2,
+    ageRange: { minWeeks: 0, maxWeeks: 8, typicalWeeks: 2 },
+    label: { pt: "Se assusta com som alto", en: "Startles at loud sounds" },
+    description: { pt: "Reage a um barulho súbito abrindo os braços, piscando ou se sobressaltando.", en: "Reacts to a sudden noise by flinging arms, blinking, or startling." },
+    source: "AAP"
+  },
+
+  // ---- 4 meses (granularidade) ----
+  {
+    key: "rolls_back_to_side",
+    category: "motor_gross",
+    checkupAge: 4,
+    ageRange: { minWeeks: 12, maxWeeks: 22, typicalWeeks: 16 },
+    label: { pt: "Rola das costas pro lado", en: "Rolls from back to side" },
+    description: { pt: "Deitada de barriga pra cima, gira o corpo até ficar de lado.", en: "Lying on her back, turns her body onto her side." },
+    source: "Denver II"
+  },
+  {
+    key: "pushes_up_forearms",
+    category: "motor_gross",
+    checkupAge: 4,
+    ageRange: { minWeeks: 12, maxWeeks: 22, typicalWeeks: 16 },
+    label: { pt: "Apoia nos antebraços de bruço", en: "Pushes up on forearms" },
+    description: { pt: "De bruço, sustenta o tronco apoiada nos antebraços com a cabeça erguida.", en: "On her tummy, holds her upper body up on her forearms with head raised." },
+    source: "AAP"
+  },
+  {
+    key: "reaches_one_hand",
+    category: "motor_fine",
+    checkupAge: 4,
+    ageRange: { minWeeks: 12, maxWeeks: 24, typicalWeeks: 18 },
+    label: { pt: "Estica o braço pra alcançar", en: "Swipes and reaches for things" },
+    description: { pt: "Tenta alcançar um brinquedo esticando o braço, mesmo sem acertar sempre.", en: "Reaches toward a toy by extending an arm, even if she misses." },
+    source: "CDC 2022"
+  },
+  {
+    key: "holds_toy_briefly",
+    category: "motor_fine",
+    checkupAge: 4,
+    ageRange: { minWeeks: 10, maxWeeks: 22, typicalWeeks: 16 },
+    label: { pt: "Segura um brinquedo colocado na mão", en: "Holds a toy placed in her hand" },
+    description: { pt: "Agarra e segura por alguns segundos um chocalho ou brinquedo posto na mãozinha.", en: "Grasps and holds a rattle or toy for a few seconds when placed in her hand." },
+    source: "CDC 2022"
+  },
+  {
+    key: "looks_at_own_hands",
+    category: "cognitive",
+    checkupAge: 4,
+    ageRange: { minWeeks: 8, maxWeeks: 20, typicalWeeks: 14 },
+    label: { pt: "Descobre as próprias mãos", en: "Discovers her own hands" },
+    description: { pt: "Olha pras próprias mãos com curiosidade e brinca de abri-las e fechá-las.", en: "Looks at her own hands with interest and plays with opening and closing them." },
+    source: "AAP"
+  },
+  {
+    key: "anticipates_feeding",
+    category: "social_emotional",
+    checkupAge: 4,
+    ageRange: { minWeeks: 10, maxWeeks: 22, typicalWeeks: 16 },
+    label: { pt: "Fica animada na hora da mamada", en: "Gets excited at feeding time" },
+    description: { pt: "Demonstra antecipação (se agita, abre a boca) ao ver o seio ou a mamadeira.", en: "Shows anticipation, getting excited or opening her mouth, at the sight of breast or bottle." },
+    source: "Denver II"
+  },
+
+  // ---- 6 meses (granularidade) ----
+  {
+    key: "blows_raspberries",
+    category: "language",
+    checkupAge: 6,
+    ageRange: { minWeeks: 16, maxWeeks: 30, typicalWeeks: 24 },
+    label: { pt: "Faz 'pfff' com a boca", en: "Blows raspberries" },
+    description: { pt: "Coloca a língua entre os lábios e sopra, fazendo aquele barulho de 'pfff'.", en: "Sticks her tongue out and blows, making a bubbly 'pfff' sound." },
+    tip: { pt: "Faça o som de volta pra ela — vira uma brincadeira de imitação muito divertida.", en: "Blow a raspberry back at her — it turns into a fun copying game." },
+    source: "CDC 2022"
+  },
+  {
+    key: "leans_on_hands_sitting",
+    category: "motor_gross",
+    checkupAge: 6,
+    ageRange: { minWeeks: 18, maxWeeks: 32, typicalWeeks: 26 },
+    label: { pt: "Senta apoiada nas próprias mãos", en: "Leans on hands to sit" },
+    description: { pt: "Senta inclinada pra frente usando as mãos como apoio (tripé), antes de sentar sozinha.", en: "Sits leaning forward, propped on her hands, before sitting unsupported." },
+    source: "CDC 2022"
+  },
+  {
+    key: "rolls_back_to_tummy",
+    category: "motor_gross",
+    checkupAge: 6,
+    ageRange: { minWeeks: 18, maxWeeks: 32, typicalWeeks: 26 },
+    label: { pt: "Rola das costas pra bruço", en: "Rolls from back to tummy" },
+    description: { pt: "Gira de barriga pra cima pra barriga pra baixo (geralmente vem depois de rolar pro outro lado).", en: "Rolls from her back onto her tummy (usually after rolling the other way)." },
+    source: "Denver II"
+  },
+  {
+    key: "raking_grasp",
+    category: "motor_fine",
+    checkupAge: 6,
+    ageRange: { minWeeks: 18, maxWeeks: 32, typicalWeeks: 26 },
+    label: { pt: "Junta objetos com a mão em concha", en: "Rakes objects with whole hand" },
+    description: { pt: "Puxa objetos pequenos em sua direção com a mão toda em concha (ainda sem pinça).", en: "Rakes small objects toward herself with her whole hand (not yet a pincer grasp)." },
+    source: "Denver II"
+  },
+  {
+    key: "enjoys_mirror_6m",
+    category: "social_emotional",
+    checkupAge: 6,
+    ageRange: { minWeeks: 16, maxWeeks: 30, typicalWeeks: 24 },
+    label: { pt: "Gosta de se olhar no espelho", en: "Enjoys looking in a mirror" },
+    description: { pt: "Demonstra interesse e prazer ao ver o próprio reflexo no espelho.", en: "Shows interest and delight when she sees her reflection in a mirror." },
+    source: "AAP"
+  },
+  {
+    key: "reaches_with_both_hands",
+    category: "cognitive",
+    checkupAge: 6,
+    ageRange: { minWeeks: 18, maxWeeks: 30, typicalWeeks: 26 },
+    label: { pt: "Explora brinquedos com as duas mãos", en: "Explores toys with both hands" },
+    description: { pt: "Pega, vira e examina um brinquedo usando as duas mãos pra investigar.", en: "Grabs, turns, and examines a toy using both hands to investigate it." },
+    source: "Denver II"
+  },
+
+  // ---- 9 meses (granularidade) ----
+  {
+    key: "bangs_two_things",
+    category: "cognitive",
+    checkupAge: 9,
+    ageRange: { minWeeks: 30, maxWeeks: 45, typicalWeeks: 39 },
+    label: { pt: "Bate dois objetos um no outro", en: "Bangs two things together" },
+    description: { pt: "Segura um objeto em cada mão e bate um no outro pra fazer barulho.", en: "Holds an object in each hand and bangs them together to make noise." },
+    source: "CDC 2022"
+  },
+  {
+    key: "gets_to_sitting",
+    category: "motor_gross",
+    checkupAge: 9,
+    ageRange: { minWeeks: 28, maxWeeks: 45, typicalWeeks: 39 },
+    label: { pt: "Senta sozinha a partir de deitada", en: "Gets to a sitting position" },
+    description: { pt: "Sai sozinha da posição deitada ou de quatro pra ficar sentada.", en: "Moves herself into a sitting position on her own." },
+    source: "CDC 2022"
+  },
+  {
+    key: "crawls_hands_knees",
+    category: "motor_gross",
+    checkupAge: 9,
+    ageRange: { minWeeks: 23, maxWeeks: 59, typicalWeeks: 39 },
+    label: { pt: "Engatinha de quatro", en: "Crawls on hands and knees" },
+    description: { pt: "Se desloca sobre as mãos e os joelhos (algumas bebês pulam essa fase, e tudo bem).", en: "Moves on hands and knees (some babies skip crawling, and that's fine)." },
+    tip: { pt: "Ponha um brinquedo um pouco fora do alcance pra incentivar a se deslocar até ele.", en: "Place a toy just out of reach to encourage her to move toward it." },
+    source: "WHO MGRS"
+  },
+  {
+    key: "lifts_arms_to_be_held",
+    category: "language",
+    checkupAge: 9,
+    ageRange: { minWeeks: 30, maxWeeks: 45, typicalWeeks: 39 },
+    label: { pt: "Levanta os braços pra ir no colo", en: "Lifts arms to be picked up" },
+    description: { pt: "Ergue os bracinhos pra avisar que quer ser pega no colo.", en: "Raises her arms to let you know she wants to be picked up." },
+    source: "CDC 2022"
+  },
+  {
+    key: "shows_facial_expressions",
+    category: "social_emotional",
+    checkupAge: 9,
+    ageRange: { minWeeks: 28, maxWeeks: 45, typicalWeeks: 39 },
+    label: { pt: "Mostra várias expressões no rosto", en: "Shows several facial expressions" },
+    description: { pt: "Demonstra emoções diferentes no rosto: feliz, triste, brava, surpresa.", en: "Shows different feelings on her face, like happy, sad, angry, and surprised." },
+    source: "CDC 2022"
+  },
+
+  // ---- 12 meses (granularidade) ----
+  {
+    key: "stands_with_support",
+    category: "motor_gross",
+    checkupAge: 12,
+    ageRange: { minWeeks: 21, maxWeeks: 50, typicalWeeks: 35 },
+    label: { pt: "Fica em pé segurando em algo", en: "Stands holding on" },
+    description: { pt: "Fica em pé apoiada em um móvel ou na sua mão, sustentando o próprio peso.", en: "Stands while holding on to furniture or your hand, bearing her own weight." },
+    source: "WHO MGRS"
+  },
+  {
+    key: "cruises_furniture",
+    category: "motor_gross",
+    checkupAge: 12,
+    ageRange: { minWeeks: 32, maxWeeks: 56, typicalWeeks: 44 },
+    label: { pt: "Anda de lado segurando nos móveis", en: "Cruises along furniture" },
+    description: { pt: "Dá passos de lado segurando no sofá ou na mesa pra se locomover.", en: "Takes side steps holding on to furniture to move around." },
+    source: "Denver II"
+  },
+  {
+    key: "feeds_self_finger_foods",
+    category: "motor_fine",
+    checkupAge: 12,
+    ageRange: { minWeeks: 36, maxWeeks: 56, typicalWeeks: 48 },
+    label: { pt: "Come sozinha com as mãos", en: "Feeds herself finger foods" },
+    description: { pt: "Leva pedacinhos de comida à boca sozinha usando os dedos.", en: "Picks up pieces of food and brings them to her mouth by herself." },
+    source: "CDC 2022"
+  },
+  {
+    key: "imitates_gestures",
+    category: "language",
+    checkupAge: 12,
+    ageRange: { minWeeks: 36, maxWeeks: 56, typicalWeeks: 48 },
+    label: { pt: "Imita gestos simples", en: "Copies simple gestures" },
+    description: { pt: "Imita gestos que você faz, como bater palmas, mandar beijo ou balançar a cabeça.", en: "Copies gestures you make, like clapping, blowing a kiss, or shaking her head." },
+    source: "Denver II"
+  },
+
+  // ---- 15 meses (granularidade) ----
+  {
+    key: "stands_alone_steady",
+    category: "motor_gross",
+    checkupAge: 15,
+    ageRange: { minWeeks: 30, maxWeeks: 73, typicalWeeks: 52 },
+    label: { pt: "Fica em pé sozinha sem apoio", en: "Stands alone steadily" },
+    description: { pt: "Fica em pé equilibrada por alguns segundos sem se segurar em nada.", en: "Stands balanced for a few seconds without holding on to anything." },
+    source: "WHO MGRS"
+  },
+
+  // ---- 18 meses (granularidade) ----
+  {
+    key: "scribbles",
+    category: "motor_fine",
+    checkupAge: 18,
+    ageRange: { minWeeks: 60, maxWeeks: 85, typicalWeeks: 78 },
+    label: { pt: "Faz rabiscos", en: "Scribbles" },
+    description: { pt: "Segura um giz ou lápis e faz rabiscos no papel.", en: "Holds a crayon and scribbles on paper." },
+    tip: { pt: "Ofereça giz de cera grosso e uma folha grande — deixe ela explorar sem regras.", en: "Offer a chunky crayon and a big sheet of paper, and let her explore freely." },
+    source: "CDC 2022"
+  },
+  {
+    key: "climbs_on_furniture",
+    category: "motor_gross",
+    checkupAge: 18,
+    ageRange: { minWeeks: 60, maxWeeks: 85, typicalWeeks: 78 },
+    label: { pt: "Sobe e desce do sofá sozinha", en: "Climbs on and off furniture" },
+    description: { pt: "Sobe e desce de um sofá ou cadeira sem precisar de ajuda.", en: "Climbs on and off a couch or chair without help." },
+    source: "CDC 2022"
+  },
+
+  // ---- 24 meses (granularidade) ----
+  {
+    key: "runs",
+    category: "motor_gross",
+    checkupAge: 24,
+    ageRange: { minWeeks: 78, maxWeeks: 110, typicalWeeks: 96 },
+    label: { pt: "Corre", en: "Runs" },
+    description: { pt: "Corre com mais firmeza, conseguindo parar e mudar de direção.", en: "Runs with more control, able to stop and change direction." },
+    source: "CDC 2022"
+  },
+  {
+    key: "vocab_explosion",
+    category: "language",
+    checkupAge: 24,
+    ageRange: { minWeeks: 85, maxWeeks: 110, typicalWeeks: 104 },
+    label: { pt: "Fala muitas palavras", en: "Says many words" },
+    description: { pt: "Tem um vocabulário de 50 ou mais palavras e aprende novas rapidinho.", en: "Has a vocabulary of 50 or more words and picks up new ones quickly." },
+    tip: { pt: "Nomeie tudo no dia a dia e dê tempo pra ela tentar repetir — a explosão de vocabulário começa agora.", en: "Name everything during the day and give her time to try repeating — the word explosion starts now." },
+    source: "AAP"
   }
 ];
+
+// v11.9.63: ordena por checkupAge pra garantir que a Home ("próximo marco" usa
+// upcoming[0] = ordem do array) e a página de Marcos sempre mostrem o marco de
+// menor idade primeiro, independente da posição em que novos marcos foram inseridos.
+// Sort é estável (ES2019+) — preserva a ordem dentro de cada bucket de idade.
+window.DEV_MILESTONES.sort((a, b) => a.checkupAge - b.checkupAge);
 
 // ──────────────────────────────────────────────────────
 //   CONCERNING SIGNS (CDC "Act Early" 75th percentile)
