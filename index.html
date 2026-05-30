@@ -768,8 +768,27 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.75";
+const APP_VERSION = "11.9.76";
 const CHANGELOG = [
+  {
+    v: "11.9.76", date: "2026-05-30",
+    pt: {
+      title: "Ajustes reorganizado — 6 seções, fim do \"remendado\"",
+      bullets: [
+        '★ A tela de Ajustes foi **reagrupada em 6 seções claras**, cada uma com cabeçalho colorido e ícone, na mesma linguagem dos cards da Home: **Perfil · Rotina · Preferências · Notificações · Dados · Sobre**.',
+        '**Arrumações:** os dados de nascimento (peso/comp./perímetro) voltaram pro **Perfil** (estavam perdidos lá no fim). "Manter tela ligada" saiu de cima das notificações e foi pra **Preferências**. Push + lembretes de remédio + lembrete de mamada agora ficam juntos em **Notificações**. Streak 🔥 foi pra **Sobre**.',
+        'Cards padronizados (gradiente sutil + sombra inset) no lugar das caixas chapadas. **Toda a lógica intacta** — reminders, backup, push: nada mudou de comportamento, só de lugar.',
+      ],
+    },
+    en: {
+      title: "Settings reorganized — 6 sections, no more patchwork",
+      bullets: [
+        '★ The Settings screen is now **regrouped into 6 clear sections**, each with a colored icon header in the Home cards\' language: **Profile · Routine · Preferences · Notifications · Data · About**.',
+        '**Tidy-ups:** birth data (weight/length/head) returned to **Profile** (it was stranded at the bottom). "Keep screen on" moved out of the notifications card into **Preferences**. Push + medication reminders + feeding reminder now live together under **Notifications**. Streak 🔥 moved to **About**.',
+        'Standardized cards (subtle gradient + inset shadow) replace the flat boxes. **All logic intact** — reminders, backup, push: nothing changed behavior, only place.',
+      ],
+    },
+  },
   {
     v: "11.9.75", date: "2026-05-30",
     pt: {
@@ -7219,13 +7238,31 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
     <div style={{padding:"0 20px"}}>
       {/* v11.9.75: hero — avatar + nome (gradiente) + idade. Ancora a identidade da Louise. */}
       <div style={{display:"flex",flexDirection:"column",alignItems:"center",marginBottom:22}}><button onClick={()=>fr.current?.click()} style={{width:88,height:88,borderRadius:"50%",overflow:"hidden",background:T.glass,border:`2px solid ${T.accent}33`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 4px 20px rgba(0,0,0,0.3)"}}>{photo?<img src={photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<Icon name="sun" size={32} color={T.sub}/>}</button><input ref={fr} type="file" accept="image/*" style={{display:"none"}} onChange={handlePhoto}/>{name&&<div style={{fontSize:T.f2XL,fontWeight:800,letterSpacing:-0.4,marginTop:11,background:"linear-gradient(180deg,#ffffff,#c4b5fd)",WebkitBackgroundClip:"text",backgroundClip:"text",WebkitTextFillColor:"transparent",color:"transparent"}}>{name}</div>}{(()=>{const a=calcAge(birth);return a?<div style={{fontSize:T.fSM,color:T.accent,fontWeight:600,marginTop:3,fontVariantNumeric:"tabular-nums"}}>{a.totalDays} {_lang==="en"?"days":"dias"}{a.months>0?` · ${a.months} ${_lang==="en"?"mo":"m"}`:""}</div>:null})()}<span style={{fontSize:T.fXS,color:T.dim,marginTop:6}}>{_lang==="en"?"Tap photo to change":"Toque na foto para trocar"}</span></div>
-      <div style={{background:"rgba(22,28,60,0.4)",borderRadius:16,border:`1px solid ${T.gB}`,padding:16,marginBottom:12}}>
+      {/* ── GROUP: PERFIL ── name/birth/mlGoal + birth data + view growth */}
+      <div style={{background:"linear-gradient(180deg,rgba(22,28,60,0.55),rgba(20,26,60,0.32))",border:`1px solid ${T.gBSoft}`,borderRadius:18,padding:"15px 16px",marginBottom:13,boxShadow:T.insetTop}}>
+        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:13}}>
+          <div style={{width:20,height:20,borderRadius:7,background:`${T.purple}1f`,border:`1px solid ${T.purple}40`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name="star" size={11} color={T.purple}/></div>
+          <span style={{fontSize:T.fXS,fontWeight:800,letterSpacing:1,textTransform:"uppercase",color:T.purple}}>{_lang==="en"?"Profile":"Perfil"}</span>
+        </div>
         <Fld label={L("name")}><input type="text" placeholder={_lang==="en"?"e.g. Louise":"Ex: Louise"} value={name} onChange={e=>setName(e.target.value)} style={inp}/></Fld>
         <Fld label={L("birthDate")}><input type="date" value={birth} onChange={e=>setBirth(e.target.value)} style={{...inp,colorScheme:"dark",maxWidth:"100%",WebkitAppearance:"none",textAlign:"center"}}/></Fld>
         <Fld label={L("dailyMilkGoal")}><input type="number" inputMode="numeric" placeholder={_lang==="en"?"e.g. 600":"Ex: 600"} value={mlGoal} onChange={e=>setMlGoal(e.target.value)} style={inp}/></Fld>
+        <div style={{fontSize:T.fSM,fontWeight:700,color:T.dim,margin:"4px 0 10px",textTransform:"uppercase",letterSpacing:1.2}}>{L("birthData")}</div>
+        <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)",gap:8}}>
+          <Fld label={`${L("weight")} (kg)`}><input type="text" inputMode="decimal" placeholder={_lang==="pt"?"3,2":"3.2"} value={birthWeight} onChange={e=>setBirthWeight(e.target.value)} style={{...inp,textAlign:"center",padding:"12px 8px"}}/></Fld>
+          <Fld label={`${_lang==="en"?"Length":"Comp."} (cm)`}><input type="text" inputMode="decimal" placeholder="49" value={birthLength} onChange={e=>setBirthLength(e.target.value)} style={{...inp,textAlign:"center",padding:"12px 8px"}}/></Fld>
+          <Fld label={`${L("head")} (cm)`}><input type="text" inputMode="decimal" placeholder="34" value={birthHead} onChange={e=>setBirthHead(e.target.value)} style={{...inp,textAlign:"center",padding:"12px 8px"}}/></Fld>
+        </div>
+        <button onClick={()=>{if(isDirty)doSave();onGrowth()}} style={{width:"100%",padding:14,borderRadius:12,marginTop:12,background:"rgba(163,230,53,0.08)",border:"1px solid rgba(163,230,53,0.15)",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+          <Icon name="ruler" size={16} color="#a3e635"/><span style={{fontSize:T.fLG,fontWeight:700,color:"#a3e635"}}>{L("viewGrowth")}</span>
+        </button>
       </div>
-      {/* v11.9.40: Rotina diária (pediatra) — toggle + hora alvo de cada evento + count de mamadas */}
-      <div style={{background:"rgba(22,28,60,0.4)",borderRadius:16,border:`1px solid ${T.gB}`,padding:16,marginBottom:12}}>
+      {/* ── GROUP: ROTINA ── toggle + hora alvo de cada evento + count de mamadas */}
+      <div style={{background:"linear-gradient(180deg,rgba(22,28,60,0.55),rgba(20,26,60,0.32))",border:`1px solid ${T.gBSoft}`,borderRadius:18,padding:"15px 16px",marginBottom:13,boxShadow:T.insetTop}}>
+        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:13}}>
+          <div style={{width:20,height:20,borderRadius:7,background:`${T.accent}1f`,border:`1px solid ${T.accent}40`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name="clock" size={11} color={T.accent}/></div>
+          <span style={{fontSize:T.fXS,fontWeight:800,letterSpacing:1,textTransform:"uppercase",color:T.accent}}>{_lang==="en"?"Routine":"Rotina"}</span>
+        </div>
         <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:routineEnabled?14:0}}>
           <div style={{flex:1}}>
             <div style={{fontSize:T.fLG,fontWeight:700,color:T.heading,letterSpacing:-0.2}}>{L("routineSection")}</div>
@@ -7252,15 +7289,18 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
           </div>
         </>}
       </div>
-      <div style={{background:"rgba(22,28,60,0.4)",borderRadius:16,border:`1px solid ${T.gB}`,padding:16,marginBottom:12}}>
+      {/* ── GROUP: PREFERÊNCIAS ── language + keep screen on */}
+      <div style={{background:"linear-gradient(180deg,rgba(22,28,60,0.55),rgba(20,26,60,0.32))",border:`1px solid ${T.gBSoft}`,borderRadius:18,padding:"15px 16px",marginBottom:13,boxShadow:T.insetTop}}>
+        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:13}}>
+          <div style={{width:20,height:20,borderRadius:7,background:`${T.cyan}1f`,border:`1px solid ${T.cyan}40`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name="gear" size={11} color={T.cyan}/></div>
+          <span style={{fontSize:T.fXS,fontWeight:800,letterSpacing:1,textTransform:"uppercase",color:T.cyan}}>{_lang==="en"?"Preferences":"Preferências"}</span>
+        </div>
         <Fld label={langSel==="en"?"Language":"Idioma"}>
           <div style={{display:"flex",gap:4,background:"rgba(14,18,48,0.6)",borderRadius:10,padding:3,border:`1px solid ${T.gB}`}}>
             <button onClick={()=>setLangSel("en")} style={{flex:1,padding:"10px 0",borderRadius:8,fontSize:T.fMD,fontWeight:700,background:langSel==="en"?T.accent:"transparent",color:langSel==="en"?"#fff":T.sub}}>English</button>
             <button onClick={()=>setLangSel("pt")} style={{flex:1,padding:"10px 0",borderRadius:8,fontSize:T.fMD,fontWeight:700,background:langSel==="pt"?T.accent:"transparent",color:langSel==="pt"?"#fff":T.sub}}>Português</button>
           </div>
         </Fld>
-      </div>
-      <div style={{background:"linear-gradient(180deg,rgba(22,28,60,0.55),rgba(20,26,60,0.4))",borderRadius:18,border:`1px solid ${T.gBSoft}`,padding:18,marginBottom:14,boxShadow:T.insetTop}}>
         {/* Wake Lock toggle */}
         <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:14}}>
           <div style={{flex:1}}>
@@ -7271,8 +7311,13 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
             <div style={{position:"absolute",top:3,left:keepScreenOn?25:3,width:24,height:24,borderRadius:"50%",background:"#fff",transition:"left .2s",boxShadow:"0 2px 6px rgba(0,0,0,0.4)"}}/>
           </button>
         </div>
-        {/* Separator */}
-        <div style={{height:1,background:T.gBSoft,margin:"16px 0"}}/>
+      </div>
+      {/* ── GROUP: NOTIFICAÇÕES ── push toggle + medication reminders + feeding reminder */}
+      <div style={{background:"linear-gradient(180deg,rgba(22,28,60,0.55),rgba(20,26,60,0.32))",border:`1px solid ${T.gBSoft}`,borderRadius:18,padding:"15px 16px",marginBottom:13,boxShadow:T.insetTop}}>
+        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:13}}>
+          <div style={{width:20,height:20,borderRadius:7,background:`${T.amber}1f`,border:`1px solid ${T.amber}40`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name="bell" size={11} color={T.amber}/></div>
+          <span style={{fontSize:T.fXS,fontWeight:800,letterSpacing:1,textTransform:"uppercase",color:T.amber}}>{_lang==="en"?"Notifications":"Notificações"}</span>
+        </div>
         {/* Push notifications toggle */}
         <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:14}}>
           <div style={{flex:1}}>
@@ -7288,10 +7333,11 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
             <div style={{position:"absolute",top:3,left:pushEnabled&&pushSupported?25:3,width:24,height:24,borderRadius:"50%",background:"#fff",transition:"left .2s",boxShadow:"0 2px 6px rgba(0,0,0,0.4)"}}/>
           </button>
         </div>
-      </div>
 
-      {/* ── REMINDERS CARD ── medication push reminders */}
-      <div style={{background:"linear-gradient(180deg,rgba(22,28,60,0.55),rgba(20,26,60,0.4))",borderRadius:18,border:`1px solid ${T.gBSoft}`,padding:18,marginBottom:14,boxShadow:T.insetTop}}>
+        {/* Separator */}
+        <div style={{height:1,background:T.gBSoft,margin:"16px 0"}}/>
+
+        {/* ── REMINDERS sub-card ── medication push reminders */}
         <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
           <div style={{width:32,height:32,borderRadius:10,background:`linear-gradient(135deg,${T.accent}38,${T.accent}10)`,border:`1px solid ${T.accent}50`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset"}}>
             <Icon name="bell" size={15} color="#c4b5fd"/>
@@ -7401,10 +7447,11 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
         {(!pushEnabled||!pushSupported||pushPermission==="denied")&&<div style={{marginTop:12,padding:"8px 12px",borderRadius:9,background:"rgba(251,191,36,0.08)",border:"1px solid rgba(251,191,36,0.2)",fontSize:T.fSM,color:"#fbbf24",lineHeight:1.45}}>
           {langSel==="en"?"Enable Notifications above to receive reminders.":"Ative Notificações acima para receber os lembretes."}
         </div>}
-      </div>
 
-      {/* ── FEEDING REMINDER CARD ── single global push reminder based on interval since last bottle */}
-      <div style={{background:"linear-gradient(180deg,rgba(22,28,60,0.55),rgba(20,26,60,0.4))",borderRadius:18,border:`1px solid ${T.gBSoft}`,padding:18,marginBottom:14,boxShadow:T.insetTop}}>
+        {/* Separator */}
+        <div style={{height:1,background:T.gBSoft,margin:"16px 0"}}/>
+
+        {/* ── FEEDING REMINDER sub-card ── single global push reminder based on interval since last bottle */}
         <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
           <div style={{width:32,height:32,borderRadius:10,background:`linear-gradient(135deg,${T.accent}38,${T.accent}10)`,border:`1px solid ${T.accent}50`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset"}}>
             <Icon name="bottle" size={15} color="#c4b5fd"/>
@@ -7471,42 +7518,18 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
           {langSel==="en"?"Enable Notifications above to receive reminders.":"Ative Notificações acima para receber os lembretes."}
         </div>}
       </div>
-      <div style={{background:"rgba(22,28,60,0.4)",borderRadius:16,border:`1px solid ${T.gB}`,padding:16,marginBottom:16}}>
-        <div style={{fontSize:T.fSM,fontWeight:700,color:T.dim,marginBottom:10,textTransform:"uppercase",letterSpacing:1.2}}>{L("birthData")}</div>
-        <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)",gap:8}}>
-          <Fld label={`${L("weight")} (kg)`}><input type="text" inputMode="decimal" placeholder={_lang==="pt"?"3,2":"3.2"} value={birthWeight} onChange={e=>setBirthWeight(e.target.value)} style={{...inp,textAlign:"center",padding:"12px 8px"}}/></Fld>
-          <Fld label={`${_lang==="en"?"Length":"Comp."} (cm)`}><input type="text" inputMode="decimal" placeholder="49" value={birthLength} onChange={e=>setBirthLength(e.target.value)} style={{...inp,textAlign:"center",padding:"12px 8px"}}/></Fld>
-          <Fld label={`${L("head")} (cm)`}><input type="text" inputMode="decimal" placeholder="34" value={birthHead} onChange={e=>setBirthHead(e.target.value)} style={{...inp,textAlign:"center",padding:"12px 8px"}}/></Fld>
-        </div>
+      {/* ── GROUP: DADOS ── backup (eyebrow sibling above BackupSection, which brings its own card) */}
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:13,marginTop:2}}>
+        <div style={{width:20,height:20,borderRadius:7,background:`${T.green}1f`,border:`1px solid ${T.green}40`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name="cloud" size={11} color={T.green}/></div>
+        <span style={{fontSize:T.fXS,fontWeight:800,letterSpacing:1,textTransform:"uppercase",color:T.green}}>{_lang==="en"?"Data":"Dados"}</span>
       </div>
-      <button onClick={()=>{if(isDirty)doSave();onGrowth()}} style={{width:"100%",padding:14,borderRadius:12,marginBottom:10,background:"rgba(163,230,53,0.08)",border:"1px solid rgba(163,230,53,0.15)",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
-        <Icon name="ruler" size={16} color="#a3e635"/><span style={{fontSize:T.fLG,fontWeight:700,color:"#a3e635"}}>{L("viewGrowth")}</span>
-      </button>
-      {/* v11.9.6: streak indicator — dias consecutivos terminando em hoje (ou ontem se hoje
-          ainda nao tem entry). Conta dias com pelo menos 1 entry. Cap visual em 99 pra UX. */}
-      {(()=>{try{
-        if(!entries||entries.length===0)return null;
-        const datesWithData=new Set(entries.map(e=>e.date));
-        const today=todayStr();
-        let streak=0;
-        let cursor=today;
-        // Se hoje nao tem entry mas ontem tem, comeca do ontem
-        if(!datesWithData.has(today))cursor=dateOffset(today,-1);
-        while(datesWithData.has(cursor)&&streak<999){
-          streak++;
-          cursor=dateOffset(cursor,-1);
-        }
-        if(streak<2)return null;
-        return(<div style={{marginBottom:14,padding:"12px 14px",borderRadius:14,background:"linear-gradient(180deg,rgba(251,146,60,0.10),rgba(251,191,36,0.04))",border:"1px solid rgba(251,146,60,0.25)",display:"flex",alignItems:"center",gap:12,boxShadow:T.insetTop}}>
-          <div style={{width:36,height:36,borderRadius:11,background:"rgba(251,146,60,0.18)",border:"1px solid rgba(251,146,60,0.35)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:T.fXL,flexShrink:0}}>{"🔥"}</div>
-          <div style={{flex:1,minWidth:0}}>
-            <div style={{fontSize:T.fLG,fontWeight:800,color:"#fdba74",letterSpacing:-0.2,fontVariantNumeric:"tabular-nums"}}>{streak} {_lang==="en"?(streak===1?"day":"days"):"dias"} {_lang==="en"?"in a row":"seguidos"}</div>
-            <div style={{fontSize:T.fSM,color:T.sub,marginTop:1}}>{_lang==="en"?"tracking Louise consistently":"acompanhando a Louise sem pular dia"}</div>
-          </div>
-        </div>);
-      }catch(e){console.warn("[Streak] render error",e);return null}})()}
       <BackupSection/>
-      <div style={{marginTop:20}}>
+      {/* ── GROUP: SOBRE ── version/changelog + streak */}
+      <div style={{background:"linear-gradient(180deg,rgba(22,28,60,0.55),rgba(20,26,60,0.32))",border:`1px solid ${T.gBSoft}`,borderRadius:18,padding:"15px 16px",marginBottom:13,marginTop:14,boxShadow:T.insetTop}}>
+        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:13}}>
+          <div style={{width:20,height:20,borderRadius:7,background:`${T.pink}1f`,border:`1px solid ${T.pink}40`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name="star" size={11} color={T.pink}/></div>
+          <span style={{fontSize:T.fXS,fontWeight:800,letterSpacing:1,textTransform:"uppercase",color:T.pink}}>{_lang==="en"?"About":"Sobre"}</span>
+        </div>
         <button onClick={onShowChangelog} style={{width:"100%",padding:"14px 16px",borderRadius:14,background:"rgba(22,28,60,0.4)",border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",gap:12,textAlign:"left",cursor:"pointer"}}>
           <div style={{width:36,height:36,borderRadius:10,background:"linear-gradient(135deg,rgba(139,124,246,0.18),rgba(124,58,237,0.10))",border:"1px solid rgba(139,124,246,0.22)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c4b5fd" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
@@ -7525,6 +7548,29 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
           </div>
         </button>
+        {/* v11.9.6: streak indicator — dias consecutivos terminando em hoje (ou ontem se hoje
+            ainda nao tem entry). Conta dias com pelo menos 1 entry. Cap visual em 99 pra UX. */}
+        {(()=>{try{
+          if(!entries||entries.length===0)return null;
+          const datesWithData=new Set(entries.map(e=>e.date));
+          const today=todayStr();
+          let streak=0;
+          let cursor=today;
+          // Se hoje nao tem entry mas ontem tem, comeca do ontem
+          if(!datesWithData.has(today))cursor=dateOffset(today,-1);
+          while(datesWithData.has(cursor)&&streak<999){
+            streak++;
+            cursor=dateOffset(cursor,-1);
+          }
+          if(streak<2)return null;
+          return(<div style={{marginTop:12,padding:"12px 14px",borderRadius:14,background:"linear-gradient(180deg,rgba(251,146,60,0.10),rgba(251,191,36,0.04))",border:"1px solid rgba(251,146,60,0.25)",display:"flex",alignItems:"center",gap:12,boxShadow:T.insetTop}}>
+            <div style={{width:36,height:36,borderRadius:11,background:"rgba(251,146,60,0.18)",border:"1px solid rgba(251,146,60,0.35)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:T.fXL,flexShrink:0}}>{"🔥"}</div>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontSize:T.fLG,fontWeight:800,color:"#fdba74",letterSpacing:-0.2,fontVariantNumeric:"tabular-nums"}}>{streak} {_lang==="en"?(streak===1?"day":"days"):"dias"} {_lang==="en"?"in a row":"seguidos"}</div>
+              <div style={{fontSize:T.fSM,color:T.sub,marginTop:1}}>{_lang==="en"?"tracking Louise consistently":"acompanhando a Louise sem pular dia"}</div>
+            </div>
+          </div>);
+        }catch(e){console.warn("[Streak] render error",e);return null}})()}
       </div>
     </div>
   </div>);

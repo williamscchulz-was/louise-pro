@@ -14,7 +14,8 @@ Este `CLAUDE.md` é lido automaticamente pelo Claude Code no início de toda ses
 - **Localização**: Blumenau, SC, Brasil (BRT, UTC-3)
 - **Repositório**: https://github.com/williamscchulz-was/louise-pro
 - **Live**: https://williamscchulz-was.github.io/louise-pro/
-- **Versão atual**: v11.9.75 (app) / routine-engine v2.2.4
+- **Versão atual**: v11.9.76 (app) / routine-engine v2.2.4
+- **ProfilePage / Ajustes (v11.9.75-76):** redesenhada pra ser coesa com o cosmos. Header com título gradiente + hero (avatar/nome/idade). Render organizado em **6 grupos** com card consistente (`linear-gradient(180deg,rgba(22,28,60,0.55),rgba(20,26,60,0.32))` + `T.gBSoft` + radius 18 + `T.insetTop`) e eyebrow colorido com ícone: **Perfil** (purple/star: nome/nascimento/meta + dados de nascimento + ver-crescimento), **Rotina** (accent/clock), **Preferências** (cyan/gear: idioma + manter-tela-ligada), **Notificações** (amber/bell: push + lembretes remédio + lembrete mamada como sub-cards com divider), **Dados** (green/cloud: eyebrow + `<BackupSection/>`), **Sobre** (pink/star: versão/changelog + streak). Toda a lógica/handlers/state ficam ACIMA do `return` e não foram tocados na reorg.
 - **⚠️ Haptics são NO-OP no iOS:** `Haptic.*` (light/medium/heavy/success/warning em `js/device-features.js`) usa `navigator.vibrate()`, que o **iOS Safari/PWA NÃO implementa** (decisão da Apple). As chamadas ficam no código (funcionam no Android) mas **não fazem nada no iPhone** — o device alvo do William. Logo: NUNCA propor "feedback tátil/haptic" como recurso premium pra ele. Pra "feedback de ação/conquista", usar equivalente VISUAL (confetti, count-up, spring, flash). O toggle de vibração foi removido na v11.x exatamente por isso.
 - **Bilíngue**: Português e Inglês (toda a interface, insights, curiosidades e changelog)
 
