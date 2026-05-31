@@ -94,6 +94,7 @@ louise-pro/
   - **Namespace note:** `window.DEV_MILESTONES` é diferente de `window.MILESTONES` (`curiosities.js` — curiosidades mensais 2-12m, schema `{m,pt,en}`). Os 2 coexistem sem colidir, mas atenção pra não confundir.
 - `config/profile` — perfil da Louise (nome, foto, data nascimento, meta ml, idioma, lastSeenVersion, keepScreenOn, **`routine`** v11.9.40)
   - `routine.enabled` (bool) · `routine.wakeTime` · `routine.bathTime` · `routine.bedtime` · `routine.bottlesPerDay` (int) · `routine.naps` (array de `{time}`). Opt-in: feature inativa se `routine.enabled !== true`. Default no Profile UI: wake 07:00, banho 18:00, bedtime 19:30, 4 sonecas 08:15/10:45/13:30/16:00, 7 mamadas/dia.
+  - **Matching de slot (v11.9.80):** `findMatch` em `routineState` (App) marca um slot como "feito" por **sobreposição de intervalo**, não só hora de início. Cada evento vira `[início, início+durationMin]` e conta se intersecta a janela `[alvo-earlyTol, alvo+lateTol]` (helper `overlaps()`). Resolve soneca que começa cedo mas cobre o horário-alvo. Eventos sem duração (wake/bath) viram ponto → cai no "início na janela". Tolerâncias: wake assimétrico early 150/late 90; naps/banho/bed ±60. Timer ativo usa a mesma regra (intervalo `[início, agora]`).
 - `config/meds` — medicamentos salvos pra quick-select
 - `config/active` — timer ativo (sync em tempo real entre dispositivos)
 - `config/inbox` — estado da caixa de notificações
