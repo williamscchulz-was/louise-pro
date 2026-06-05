@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Stats — tocar pra ver o valor</title>
+<style>
+  :root{--accent:#8b7cf6;--purple:#a78bfa;--lilac:#c4b5fd;--sub:#a3aac8;--dim:#6b7299;--bg3:#141a42;--gB:rgba(90,100,180,0.12)}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{background:#070b1e;color:#e4e6f5;font-family:-apple-system,BlinkMacSystemFont,system-ui,sans-serif;line-height:1.5;padding:22px 0 80px}
+  .wrap{max-width:460px;margin:0 auto;padding:0 18px}
+  h1{font-size:21px;font-weight:800;letter-spacing:-0.3px;margin-bottom:6px}
+  .lead{font-size:13px;color:var(--sub);margin-bottom:14px}
+  .lead b{color:#fff}
+  .seg{display:flex;gap:4px;background:rgba(14,18,48,0.6);border-radius:11px;padding:3px;border:1px solid var(--gB);margin-bottom:16px}
+  .seg button{flex:1;padding:9px 0;border:none;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;color:var(--sub);background:transparent;cursor:pointer}
+  .seg button.on{background:var(--accent);color:#fff}
+  .card{background:rgba(22,28,60,0.45);border:1px solid var(--gB);border-radius:16px;padding:14px;margin-bottom:14px}
+  .ctitle{font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--purple);margin-bottom:4px;display:flex;align-items:center;gap:6px}
+  .csub{font-size:12px;color:var(--dim);margin-bottom:12px}
+  .chart{position:relative;display:flex;gap:2px;align-items:flex-end;height:120px;background:rgba(22,28,60,0.4);border-radius:12px;padding:14px 6px 8px;border:1px solid var(--gB);overflow:visible}
+  .bar{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;cursor:pointer;height:100%;position:relative}
+  .bar .fillbar{width:78%;max-width:9px;border-radius:2px;background:linear-gradient(180deg,var(--purple),#7c3aed);opacity:.62;transition:opacity .2s, transform .2s, box-shadow .2s}
+  .bar.sel .fillbar{opacity:1;transform:scaleX(1.6);box-shadow:0 0 10px rgba(167,139,250,0.7)}
+  .bar:active .fillbar{opacity:.85}
+  .axis{display:flex;justify-content:space-between;padding:6px 6px 0;font-size:9px;color:var(--dim)}
+  /* tooltip */
+  .tip{position:absolute;transform:translateX(-50%);bottom:100%;margin-bottom:8px;background:linear-gradient(180deg,rgba(30,36,72,0.98),rgba(20,26,58,0.98));
+    border:1px solid rgba(139,124,246,0.4);border-radius:11px;padding:7px 11px;white-space:nowrap;pointer-events:none;z-index:5;
+    box-shadow:0 8px 24px -6px rgba(0,0,0,0.6);opacity:0;transition:opacity .15s}
+  .tip.show{opacity:1}
+  .tip .d{font-size:10px;color:var(--lilac);font-weight:700;letter-spacing:.3px;text-transform:uppercase}
+  .tip .v{font-size:16px;color:#fff;font-weight:800;letter-spacing:-0.3px;font-variant-numeric:tabular-nums;margin-top:1px}
+  .tip::after{content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:rgba(139,124,246,0.4)}
+  .hint{font-size:11px;color:var(--accent);text-align:center;margin-top:8px;font-weight:600;opacity:.9}
+  .note{font-size:12.5px;color:var(--sub);line-height:1.6;margin-top:22px}
+  .note b{color:#fff}
+  .lbl{font-size:10px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--dim);margin:22px 0 6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Stats: tocar na barra → mostra o valor</h1>
+  <p class="lead">Em <b>30 dias</b> as barras ficam finas e o número some (vira poluição se mostrar todos). Solução: <b>toca numa barra</b> e aparece a data + valor daquele dia, sem entulhar o gráfico.</p>
+
+  <div class="seg">
+    <button>7d</button><button>14d</button><button class="on">30d</button><button>Tudo</button>
+  </div>
+
+  <div class="card">
+    <div class="ctitle">🌙 Sono por dia</div>
+    <div class="csub">Toque numa barra pra ver o valor</div>
+    <div class="chart" id="chart1"></div>
+    <div class="axis" id="axis1"></div>
+    <div class="hint" id="hint1">👆 toque numa barra</div>
+  </div>
+
+  <div class="lbl">como funciona</div>
+  <p class="note">
+    <b>O que muda:</b> hoje em 30d/Tudo as barras não têm número (pra não virar uma zona). Com isso, cada barra fica <b>tocável</b> — ao tocar, um balãozinho mostra <b>data + valor exato</b> daquele dia, e a barra acende. Toca em outra pra mover, toca de novo (ou fora) pra fechar.<br><br>
+    <b>Vale pra todos os gráficos</b> do Stats (sono, soneca, mamada, fralda, simeticona, tummy) e <b>pra qualquer período</b> — em 7d/14d os números continuam aparecendo em cima como hoje, e o toque vira um bônus pra confirmar o valor exato.<br><br>
+    Tô pensando também em deixar a barra com <b>área de toque maior</b> que o tracinho visual (pra acertar fácil no dedo, já que são finas). Faz sentido?
+  </p>
+</div>
+<script>
+  // build a 30-day sleep chart, no labels (the >14d state)
+  function fmtDur(min){var h=Math.floor(min/60),m=min%60;return h>0?(m>0?h+"h"+m+"m":h+"h"):m+"m";}
+  var chart=document.getElementById('chart1'), axis=document.getElementById('axis1'), hint=document.getElementById('hint1');
+  var N=30, today=new Date(2026,4,30), bars=[], data=[];
+  var MONTHS=["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+  var WD=["dom","seg","ter","qua","qui","sex","sáb"];
+  for(var i=0;i<N;i++){
+    var dt=new Date(today); dt.setDate(today.getDate()-(N-1-i));
+    var val=Math.round((11*60 + (Math.sin(i*0.7)*120) + (Math.random()*120-60))); // ~minutes of sleep
+    val=Math.max(360,Math.min(900,val));
+    data.push({dt:dt,val:val,isToday:i===N-1});
+    var bar=document.createElement('div'); bar.className='bar'+(i===N-1?' istoday':'');
+    var pct=Math.round((val/900)*100);
+    var fill=document.createElement('div'); fill.className='fillbar'; fill.style.height=pct+'%';
+    if(i===N-1){fill.style.opacity='1';}
+    bar.appendChild(fill);
+    bar.dataset.i=i;
+    bar.addEventListener('click',function(){select(parseInt(this.dataset.i),this);});
+    chart.appendChild(bar); bars.push(bar);
+  }
+  // 3-point axis (current >14d behavior)
+  function lab(dt){return dt.getDate()+"/"+(dt.getMonth()+1);}
+  axis.innerHTML='<span>'+lab(data[0].dt)+'</span><span>'+lab(data[15].dt)+'</span><span>'+lab(data[N-1].dt)+'</span>';
+  var tip=null, selIdx=-1;
+  function select(i,bar){
+    if(selIdx===i){ // tap same -> close
+      clear(); return;
+    }
+    clear(); selIdx=i; bar.classList.add('sel');
+    var d=data[i];
+    tip=document.createElement('div'); tip.className='tip';
+    var ds=WD[d.dt.getDay()]+", "+d.dt.getDate()+" "+MONTHS[d.dt.getMonth()];
+    tip.innerHTML='<div class="d">'+ds+'</div><div class="v">'+fmtDur(d.val)+'</div>';
+    bar.appendChild(tip);
+    // keep tooltip on screen (clamp near edges)
+    requestAnimationFrame(function(){ tip.classList.add('show');
+      var r=tip.getBoundingClientRect(), cr=chart.getBoundingClientRect();
+      if(r.left<cr.left+4) tip.style.transform='translateX(calc(-50% + '+((cr.left+4)-r.left)+'px))';
+      else if(r.right>cr.right-4) tip.style.transform='translateX(calc(-50% - '+(r.right-(cr.right-4))+'px))';
+    });
+    hint.style.opacity='0';
+  }
+  function clear(){ if(tip){tip.remove();tip=null;} bars.forEach(function(b){b.classList.remove('sel');}); selIdx=-1; }
+  document.body.addEventListener('click',function(e){ if(!e.target.closest('.bar')) clear(); });
+</script>
+</body>
+</html>
