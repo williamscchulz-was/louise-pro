@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ring center — nebulosa + micro-interações</title>
+<style>
+  :root{--purple:#a78bfa;--lilac:#c4b5fd;--sub:#a3aac8;--dim:#6b7299}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#070b1e;color:#e4e6f5;font-family:-apple-system,BlinkMacSystemFont,system-ui,sans-serif;padding:22px 0 80px;line-height:1.5}
+  .wrap{max-width:480px;margin:0 auto;padding:0 18px}
+  h1{font-size:21px;font-weight:800;letter-spacing:-0.3px;margin-bottom:6px}
+  .lead{font-size:13px;color:var(--sub);margin-bottom:16px}
+  .lead b{color:#fff}
+  .lbl{font-size:10px;font-weight:800;letter-spacing:.9px;text-transform:uppercase;color:var(--dim);text-align:center;margin:18px 0 8px}
+  .stage{position:relative;width:340px;height:340px;margin:0 auto;border-radius:24px;overflow:hidden;
+    background:radial-gradient(ellipse 140% 60% at 50% 100%,#15124a 0%,transparent 70%),radial-gradient(ellipse at 50% 0%,#0a0a26,#040616 65%),#040616}
+  .stars{position:absolute;inset:0}
+  .stars i{position:absolute;background:#aab0ff;border-radius:50%}
+  /* faint ring + smoke blobs (contexto) */
+  .ring{position:absolute;top:50%;left:50%;width:268px;height:268px;border-radius:50%;transform:translate(-50%,-50%);
+    border:1px solid rgba(120,110,200,0.14)}
+  .smoke{position:absolute;border-radius:50%;filter:blur(20px);pointer-events:none}
+  .arcicon{position:absolute;width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    border:1.5px solid;font-size:18px}
+  /* CENTER */
+  .center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  /* >>> A CORREÇÃO: nebulosa suave atrás do tempo (preenche o vazio) <<< */
+  .neb{position:absolute;top:50%;left:50%;width:240px;height:150px;transform:translate(-50%,-50%);pointer-events:none;border-radius:50%;
+    background:radial-gradient(ellipse 60% 60% at 50% 50%,rgba(139,124,246,0.28),rgba(124,58,237,0.12) 45%,transparent 72%);
+    filter:blur(14px);animation:nebBreathe 6s ease-in-out infinite}
+  .neb2{position:absolute;top:50%;left:50%;width:180px;height:110px;transform:translate(-50%,-50%);pointer-events:none;border-radius:50%;
+    background:radial-gradient(ellipse at 50% 50%,rgba(196,181,253,0.18),transparent 70%);filter:blur(10px);animation:nebBreathe 5s ease-in-out 0.6s infinite reverse}
+  @keyframes nebBreathe{0%,100%{opacity:.7;transform:translate(-50%,-50%) scale(0.92)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.06)}}
+  /* pulse halo (micro-interação) */
+  .pulse{position:absolute;top:50%;left:50%;width:120px;height:120px;border-radius:50%;transform:translate(-50%,-50%);
+    border:1px solid rgba(167,139,250,0.4);animation:pulseRing 4s ease-out infinite;pointer-events:none}
+  @keyframes pulseRing{0%{opacity:.5;transform:translate(-50%,-50%) scale(0.7)}70%{opacity:0}100%{opacity:0;transform:translate(-50%,-50%) scale(1.7)}}
+  /* dust particles drifting (micro-interação) */
+  .dust{position:absolute;width:2px;height:2px;border-radius:50%;background:rgba(196,181,253,0.7);pointer-events:none}
+  .label{position:relative;z-index:2;font-size:13px;color:#c084fc;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;display:flex;align-items:center;gap:6px;animation:labelBreath 5s ease-in-out infinite}
+  @keyframes labelBreath{0%,100%{opacity:.85}50%{opacity:1}}
+  .time{position:relative;z-index:2;font-size:52px;font-weight:800;letter-spacing:-1.8px;margin-top:4px;font-variant-numeric:tabular-nums;
+    background:linear-gradient(110deg,#7c3aed 0%,#8b5cf6 25%,#e9d5ff 48%,#fff 50%,#e9d5ff 52%,#8b5cf6 75%,#7c3aed 100%);
+    background-size:300% 100%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    filter:drop-shadow(0 0 18px rgba(167,139,250,0.55));animation:shimmer 10s linear infinite}
+  @keyframes shimmer{0%{background-position:0% 50%}100%{background-position:300% 50%}}
+  .note{font-size:12.5px;color:var(--sub);line-height:1.6;margin-top:22px}
+  .note b{color:#fff}
+  .toggle{display:flex;gap:8px;justify-content:center;margin-top:12px}
+  .toggle button{font-size:12px;font-weight:700;padding:7px 14px;border-radius:9px;border:1px solid rgba(139,124,246,0.28);background:rgba(139,124,246,0.12);color:var(--lilac);cursor:pointer}
+  .stage.plain .neb,.stage.plain .neb2,.stage.plain .pulse,.stage.plain .dust{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Centro do Ring: nebulosa + micro-interações</h1>
+  <p class="lead">O problema: o miolo atrás do tempo fica <b>vazio e chapado</b> enquanto o resto do anel tem fumaça. A correção: uma <b>nebulosa suave que respira</b> atrás do número + poeira estelar + halo pulsando. Use o botão pra comparar <b>antes/depois</b>.</p>
+
+  <div class="lbl" id="modeLbl">depois — com nebulosa + micro-interações</div>
+  <div class="stage" id="stage">
+    <div class="stars" id="stars"></div>
+    <!-- smoke do anel (contexto) -->
+    <div class="smoke" style="width:120px;height:120px;top:-10px;left:60px;background:radial-gradient(circle,rgba(167,139,250,0.22),transparent 70%)"></div>
+    <div class="smoke" style="width:130px;height:130px;bottom:0px;right:30px;background:radial-gradient(circle,rgba(244,114,182,0.16),transparent 70%)"></div>
+    <div class="smoke" style="width:120px;height:120px;bottom:20px;left:0px;background:radial-gradient(circle,rgba(139,124,246,0.18),transparent 70%)"></div>
+    <div class="ring"></div>
+    <!-- alguns ícones em órbita pro contexto -->
+    <div class="arcicon" style="top:18px;right:46px;border-color:rgba(244,114,182,0.5);color:#f472b6;background:radial-gradient(circle at 40% 30%,rgba(244,114,182,0.15),rgba(20,16,40,0.6))">🛁</div>
+    <div class="arcicon" style="bottom:60px;right:6px;border-color:rgba(110,231,183,0.5);color:#6ee7b7;background:radial-gradient(circle at 40% 30%,rgba(110,231,183,0.15),rgba(20,16,40,0.6))">🍼</div>
+    <div class="arcicon" style="top:54px;left:30px;border-color:rgba(167,139,250,0.45);color:#a78bfa;background:radial-gradient(circle at 40% 30%,rgba(167,139,250,0.15),rgba(20,16,40,0.6))">☁</div>
+
+    <!-- CENTRO -->
+    <div class="center">
+      <div class="neb"></div>
+      <div class="neb2"></div>
+      <div class="pulse"></div>
+      <div class="label"><span>🛏</span> BEDTIME</div>
+      <div class="time">11h 29m</div>
+    </div>
+  </div>
+
+  <div class="toggle">
+    <button id="btnBefore">ver ANTES (vazio)</button>
+    <button id="btnAfter">ver DEPOIS</button>
+  </div>
+
+  <p class="note">
+    <b>A correção (o "fundo do tempo"):</b> uma nebulosa roxa bem suave, desfocada, que <b>respira</b> (escala + brilho) atrás do número — o miolo deixa de ser um buraco liso e passa a ter a mesma fumaça do anel. Tudo via CSS, GPU-leve.<br><br>
+    <b>Micro-interações "nobre" que adicionei:</b><br>
+    • <b>Nebulosa respirando</b> (2 camadas, ritmos diferentes) — profundidade viva atrás do tempo.<br>
+    • <b>Poeira estelar</b> — partículas minúsculas flutuando devagar no centro.<br>
+    • <b>Halo pulsando</b> — um anel sutil que emana de tempos em tempos (batida calma, combina com bedtime).<br>
+    • Mantém o <b>shimmer</b> no número e o respiro do label que já existem.<br><br>
+    Posso aplicar isso <b>só no bedtime</b> (mais intenso/roxo) e uma versão <b>mais discreta</b> nas sonecas/dia. Me diz se a intensidade tá boa ou quer mais sutil.
+  </p>
+</div>
+<script>
+  var stars=document.getElementById('stars'),h='';
+  for(var i=0;i<30;i++){var z=(Math.random()*2+0.5).toFixed(1);h+='<i style="width:'+z+'px;height:'+z+'px;top:'+(Math.random()*100)+'%;left:'+(Math.random()*100)+'%;opacity:'+(Math.random()*0.4+0.1).toFixed(2)+'"></i>';}
+  stars.innerHTML=h;
+  // dust particles drifting in center
+  var center=document.querySelector('.center');
+  for(var d=0;d<10;d++){
+    var p=document.createElement('div');p.className='dust';
+    var x=42+Math.random()*16, y=40+Math.random()*20, dur=(6+Math.random()*6).toFixed(1), del=(Math.random()*6).toFixed(1);
+    p.style.left=x+'%';p.style.top=y+'%';p.style.opacity=(Math.random()*0.5+0.2).toFixed(2);
+    p.style.animation='dustFloat'+(d%3)+' '+dur+'s ease-in-out '+del+'s infinite';
+    center.appendChild(p);
+  }
+  var st=document.createElement('style');
+  st.textContent='@keyframes dustFloat0{0%,100%{transform:translate(0,0)}50%{transform:translate(8px,-12px)}}@keyframes dustFloat1{0%,100%{transform:translate(0,0)}50%{transform:translate(-10px,-8px)}}@keyframes dustFloat2{0%,100%{transform:translate(0,0)}50%{transform:translate(6px,10px)}}';
+  document.head.appendChild(st);
+  var stage=document.getElementById('stage'),ml=document.getElementById('modeLbl');
+  document.getElementById('btnBefore').onclick=function(){stage.classList.add('plain');ml.textContent='antes — miolo vazio/chapado';};
+  document.getElementById('btnAfter').onclick=function(){stage.classList.remove('plain');ml.textContent='depois — com nebulosa + micro-interações';};
+</script>
+</body>
+</html>
