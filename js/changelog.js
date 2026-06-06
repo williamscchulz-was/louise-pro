@@ -4,6 +4,21 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.85", date: "2026-06-06",
+    pt: {
+      title: "App reorganizado em módulos (src/)",
+      bullets: [
+        'Continuação da faxina: o app inteiro saiu de um `index.html` gigante pra **16 arquivos organizados em `src/`** (um por componente/página). O build junta tudo na ordem e gera exatamente o mesmo app — **provado byte-a-byte**. Pra você não muda nada; pra evoluir o app, ficou bem mais fácil e seguro.',
+      ],
+    },
+    en: {
+      title: "App reorganized into modules (src/)",
+      bullets: [
+        'Cleanup continued: the whole app moved out of one giant `index.html` into **16 organized files under `src/`** (one per component/page). The build stitches them in order and produces exactly the same app — **proven byte-for-byte**. Nothing changes for you; evolving the app is now much easier and safer.',
+      ],
+    },
+  },
+  {
     v: "11.9.84", date: "2026-06-06",
     pt: {
       title: "Faxina nos bastidores",

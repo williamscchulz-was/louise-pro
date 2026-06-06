@@ -14,7 +14,7 @@ Este `CLAUDE.md` é lido automaticamente pelo Claude Code no início de toda ses
 - **Localização**: Blumenau, SC, Brasil (BRT, UTC-3)
 - **Repositório**: https://github.com/williamscchulz-was/louise-pro
 - **Live**: https://williamscchulz-was.github.io/louise-pro/
-- **Versão atual**: v11.9.84 (app) / routine-engine v2.2.4
+- **Versão atual**: v11.9.85 (app) / routine-engine v2.2.4
 - **Splash (v11.9.78):** a logo de abertura virou a silhueta mãe+bebê **vetorizada** que se desenha (efeito traço→preenche). O path está em `const LOUISE_SIL` no topo do index.html (traçado via potrace de `assets/icons/icon-512.png` — fiel à logo original). Anima por classes CSS `.spl-draw` (stroke-dashoffset) + `.spl-fill` (~linha 325). Splash timer subiu 1800→2200ms pra animação completar (continua rápido). **`window.LOUISE_ICON`** (base64 PNG em `js/splash-icon.js`) ficou sem uso e foi **removido do bundle na v11.9.79** (tirado de `build.mjs` JS_BUNDLE_FILES + `<script>` tag do index.html + `sw.js` precache → app-libs.js ~12KB menor, cold start mais leve). O arquivo `js/splash-icon.js` foi **deletado de vez na v11.9.84** (estava morto desde a v11.9.79). Ferramenta de vetorização fica em `.claude/vectorize/` (gitignored: potrace+resvg).
 - **⚠️ INVARIANTE i18n + React.memo (v11.9.77):** `_lang` é um global de módulo (`let _lang`), NÃO state do React — App o sincroniza com `profile.lang` no render (linha ~9108: `_lang=lang`). Consequência: componentes `React.memo` que renderizam texto **NÃO re-renderizam ao trocar o idioma** (props não mudam) e congelam no idioma anterior → bug "metade EN, metade PT". **Regra: todo `React.memo` que mostra texto DEVE receber `lang={lang}` em TODOS os call sites** (mesmo que internamente leia `_lang`) — o prop muda no switch e força o re-render. Já cobertos: Ring, CuriosityCard, TimerBar, InsightCards, SleepBlock, EntryRow, StatsPage, HistoryPage. Ao criar novo componente memoizado com texto, passar `lang`. (Pendente: overlays pré-React — girar/carregando/atualizando — são fixos pois rodam antes de `_lang` existir; exigem ler localStorage/navigator.language.)
 - **ProfilePage / Ajustes (v11.9.75-76):** redesenhada pra ser coesa com o cosmos. Header com título gradiente + hero (avatar/nome/idade). Render organizado em **6 grupos** com card consistente (`linear-gradient(180deg,rgba(22,28,60,0.55),rgba(20,26,60,0.32))` + `T.gBSoft` + radius 18 + `T.insetTop`) e eyebrow colorido com ícone: **Perfil** (purple/star: nome/nascimento/meta + dados de nascimento + ver-crescimento), **Rotina** (accent/clock), **Preferências** (cyan/gear: idioma + manter-tela-ligada), **Notificações** (amber/bell: push + lembretes remédio + lembrete mamada como sub-cards com divider), **Dados** (green/cloud: eyebrow + `<BackupSection/>`), **Sobre** (pink/star: versão/changelog + streak). Toda a lógica/handlers/state ficam ACIMA do `return` e não foram tocados na reorg.
@@ -25,7 +25,7 @@ Este `CLAUDE.md` é lido automaticamente pelo Claude Code no início de toda ses
 
 - **HTML + React CDN** (ainda sem bundler, sem TypeScript, sem npm em produção)
 - **React 18** via CDN (unpkg)
-- **JSX pré-compilado em build-time** via `@babel/core` + `@babel/preset-react` — o navegador NÃO carrega mais `@babel/standalone`. Esse é o único passo de build.
+- **JSX pré-compilado em build-time** via `@babel/core` + `@babel/preset-react` — o navegador NÃO carrega mais `@babel/standalone`. Esse é o único passo de build. **O código do app vive em `src/*.jsx` (v11.9.85)** — o build concatena os arquivos na ordem do nome (prefixo `NN-`) e transpila como UM bloco só (escopo único compartilhado, SEM bundler/módulos/imports). O `index.html` virou só um shell com `<script type="text/babel"></script>` vazio que o build preenche. Como é concat→transpile, o compilado é idêntico ao do antigo arquivo único (provado por diff na migração).
 - **Firebase 10.x compat** via CDN — Firestore para persistência
 - **PWA** com manifest.json, ícones e splash screen
 - **GitHub Pages + Actions** para deploy (a partir de v10.0.0)
@@ -38,7 +38,24 @@ O princípio "sem build" foi relaxado *com justificativa de performance*: a tran
 
 ```
 louise-pro/
-├── index.html               ← SOURCE (com <script type="text/babel">). NUNCA servido diretamente em prod.
+├── index.html               ← SHELL: <head>, CSS, <script src> das libs e um <script type="text/babel"></script> VAZIO que o build preenche. NUNCA servido direto em prod. (v11.9.85: o app saiu daqui pra src/.)
+├── src/                     ← CÓDIGO DO APP (JSX). Build concatena na ordem do nome (NN-) + transpila como 1 bloco. EDITE AQUI, não no index.html.
+│   ├── 00-core.jsx          ← APP_VERSION, CHANGELOG ref, constantes/dados, helpers (todayStr, suggestQuickActions…)
+│   ├── 10-ui-base.jsx       ← Icon, T (tokens), INP_BASE, TYPES, I (i18n), L/TL
+│   ├── 20-ring.jsx          ← Ring
+│   ├── 22-timer-cards.jsx   ← LastFeedCard, EditStartModal, NursingSidePicker, TimerBar
+│   ├── 24-widgets.jsx       ← CuriosityCard, CountUp, Confetti, InsightCards, Toast, Modal, Fld, Seg
+│   ├── 30-sleepblock.jsx    ← SleepBlock
+│   ├── 32-addform.jsx       ← AddForm
+│   ├── 34-inbox.jsx         ← InboxPanel
+│   ├── 40-profile.jsx       ← ProfilePage
+│   ├── 42-changelog-update.jsx ← ChangelogModal, UpdateToast
+│   ├── 50-stats.jsx         ← StatsPage
+│   ├── 52-history.jsx       ← HistoryPage
+│   ├── 54-growth.jsx        ← GrowthPage
+│   ├── 56-milestones.jsx    ← MILESTONE_BADGES, MilestonesPage
+│   ├── 60-starfield-backup.jsx ← STARFIELD_DATA, Starfield, BACKUP_KEY, BackupSection
+│   └── 90-app.jsx           ← App (componente raiz, ~1.260 linhas) + ReactDOM mount
 ├── manifest.json            ← config PWA (fica no root por convencao)
 ├── sw.js                    ← service worker do PWA (DEVE ficar no root — scope)
 ├── firebase-messaging-sw.js ← service worker do FCM (DEVE ficar no root — Firebase espera path fixo)
@@ -68,7 +85,7 @@ louise-pro/
 **Regra:** NÃO mover `sw.js`, `firebase-messaging-sw.js`, ou `manifest.json` pra subpastas. Service workers têm scope baseado no path do arquivo; moveu, quebrou notificações. Firebase Messaging procura por `firebase-messaging-sw.js` no root do scope do app.
 
 **Build step (resumo):**
-- Edita: `index.html` na raiz (source, com `<script type="text/babel">`)
+- Edita: **`src/*.jsx`** (o código do app, split por componente/página) — NÃO o `index.html` (shell). Dados/changelog/curiosidades/marcos continuam em `js/`. (Refs de "linha ~N" espalhadas neste doc são do monolito pré-v11.9.85; agora ache o componente pelo nome no `src/` correspondente.)
 - Build: `cd build && npm install && cd .. && node build/build.mjs` — gera `dist/`
 - Deploy: push na `main` → GitHub Action roda o build e publica `dist/` via `actions/deploy-pages`
 - Pre-requisito **uma vez só no repo**: Settings → Pages → Source = "GitHub Actions"
@@ -244,7 +261,7 @@ Filtro complexo que já gerou vários bugs. Estado atual (v10.4.6+):
 - Variáveis usadas dentro de callbacks devem estar definidas no escopo correto
 - Verificar shadowing entre helpers globais e variáveis locais (já aconteceu com `realSleepMin`)
 - Usar `e.stopPropagation()` em botões dentro de elementos clickable pra evitar bubbling
-- **⚠️ LANDMINE de Rules of Hooks (v11.9.68):** o componente `App` tem um early-return de splash/loading (`if(splash||loading)return(...)`, ~linha 9536). **TODO hook (`useState/useEffect/useMemo/useCallback/useRef`) tem que ficar ACIMA desse return.** Adicionar um hook depois dele = o hook é pulado no render de splash e roda no render normal → contagem de hooks muda → **React #310 (crash "Oops! Algo quebrou")**. Foi exatamente isso que a v11.9.64 quebrou (um `useCallback` colocado logo antes do `goTo`, que vive *depois* do gate). `goTo`/`goGrowth` e afins: a função pode ficar onde quiser, mas se for `useCallback`, sobe pra cima do early-return. Mesma regra vale pra `Confetti` e qualquer componente com `return null` condicional: hook antes do return, sempre. **Validação:** `node build/build.mjs` NÃO pega isso (é erro de runtime, não de sintaxe) — só um smoke test no app pega. Cuidado redobrado ao mexer em hooks.
+- **⚠️ LANDMINE de Rules of Hooks (v11.9.68):** o componente `App` (em **`src/90-app.jsx`**) tem um early-return de splash/loading (`if(splash||loading)return(...)`). **TODO hook (`useState/useEffect/useMemo/useCallback/useRef`) tem que ficar ACIMA desse return.** Adicionar um hook depois dele = o hook é pulado no render de splash e roda no render normal → contagem de hooks muda → **React #310 (crash "Oops! Algo quebrou")**. Foi exatamente isso que a v11.9.64 quebrou (um `useCallback` colocado logo antes do `goTo`, que vive *depois* do gate). `goTo`/`goGrowth` e afins: a função pode ficar onde quiser, mas se for `useCallback`, sobe pra cima do early-return. Mesma regra vale pra `Confetti` e qualquer componente com `return null` condicional: hook antes do return, sempre. **Validação:** `node build/build.mjs` NÃO pega isso (é erro de runtime, não de sintaxe) — só um smoke test no app pega. Cuidado redobrado ao mexer em hooks.
 
 ### Comunicação
 

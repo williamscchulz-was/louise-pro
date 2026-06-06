@@ -9,7 +9,7 @@
 // and Chromium target directly. Only @babel/preset-react is needed to
 // transform JSX into React.createElement calls.
 
-import { readFileSync, writeFileSync, mkdirSync, cpSync, rmSync, existsSync } from "fs";
+import { readFileSync, writeFileSync, mkdirSync, cpSync, rmSync, existsSync, readdirSync } from "fs";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 import babel from "@babel/core";
@@ -25,17 +25,26 @@ mkdirSync(DIST, { recursive: true });
 const SRC = join(ROOT, "index.html");
 let html = readFileSync(SRC, "utf8");
 
-// Extract the JSX script block. There's exactly one in Louise Pro's index.html.
-const BABEL_SCRIPT_RE = /<script type="text\/babel">([\s\S]*?)<\/script>/;
-const match = html.match(BABEL_SCRIPT_RE);
-if (!match) {
-  console.error("[build] ERROR: could not find <script type=\"text/babel\"> in index.html");
+// v11.9.85: the app source lives in src/*.jsx (split out of the old inline block).
+// Concatenate them in filename order (NN- prefixes) and transpile as ONE unit, so the
+// compiled output is byte-identical to the pre-split single-file build. index.html keeps
+// an empty <script type="text/babel"></script> placeholder that we fill below.
+const BABEL_SCRIPT_RE = /<script type="text\/babel">[\s\S]*?<\/script>/;
+if (!BABEL_SCRIPT_RE.test(html)) {
+  console.error("[build] ERROR: could not find <script type=\"text/babel\"> placeholder in index.html");
   process.exit(1);
 }
+const SRC_DIR = join(ROOT, "src");
+const srcFiles = readdirSync(SRC_DIR).filter(f => f.endsWith(".jsx")).sort();
+if (srcFiles.length === 0) {
+  console.error("[build] ERROR: no .jsx files found in src/");
+  process.exit(1);
+}
+let appSource = "";
+for (const f of srcFiles) appSource += readFileSync(join(SRC_DIR, f), "utf8");
+console.log("[build] JSX source: " + appSource.length + " chars from " + srcFiles.length + " src/ files");
 
-console.log("[build] JSX source: " + match[1].length + " chars");
-
-const result = babel.transformSync(match[1], {
+const result = babel.transformSync(appSource, {
   presets: [["@babel/preset-react", { runtime: "classic" }]],
   // No preset-env on purpose: Safari 17+ / Chrome 120+ handle all our syntax natively.
   // Keeping native syntax means smaller output and faster parse.
