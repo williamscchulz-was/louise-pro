@@ -14,8 +14,8 @@ Este `CLAUDE.md` é lido automaticamente pelo Claude Code no início de toda ses
 - **Localização**: Blumenau, SC, Brasil (BRT, UTC-3)
 - **Repositório**: https://github.com/williamscchulz-was/louise-pro
 - **Live**: https://williamscchulz-was.github.io/louise-pro/
-- **Versão atual**: v11.9.83 (app) / routine-engine v2.2.4
-- **Splash (v11.9.78):** a logo de abertura virou a silhueta mãe+bebê **vetorizada** que se desenha (efeito traço→preenche). O path está em `const LOUISE_SIL` no topo do index.html (traçado via potrace de `assets/icons/icon-512.png` — fiel à logo original). Anima por classes CSS `.spl-draw` (stroke-dashoffset) + `.spl-fill` (~linha 325). Splash timer subiu 1800→2200ms pra animação completar (continua rápido). **`window.LOUISE_ICON`** (base64 PNG em `js/splash-icon.js`) ficou sem uso e foi **removido do bundle na v11.9.79** (tirado de `build.mjs` JS_BUNDLE_FILES + `<script>` tag do index.html + `sw.js` precache → app-libs.js ~12KB menor, cold start mais leve). O arquivo `js/splash-icon.js` continua no repo mas **não é mais carregado** — pode deletar quando quiser. Ferramenta de vetorização fica em `.claude/vectorize/` (gitignored: potrace+resvg).
+- **Versão atual**: v11.9.84 (app) / routine-engine v2.2.4
+- **Splash (v11.9.78):** a logo de abertura virou a silhueta mãe+bebê **vetorizada** que se desenha (efeito traço→preenche). O path está em `const LOUISE_SIL` no topo do index.html (traçado via potrace de `assets/icons/icon-512.png` — fiel à logo original). Anima por classes CSS `.spl-draw` (stroke-dashoffset) + `.spl-fill` (~linha 325). Splash timer subiu 1800→2200ms pra animação completar (continua rápido). **`window.LOUISE_ICON`** (base64 PNG em `js/splash-icon.js`) ficou sem uso e foi **removido do bundle na v11.9.79** (tirado de `build.mjs` JS_BUNDLE_FILES + `<script>` tag do index.html + `sw.js` precache → app-libs.js ~12KB menor, cold start mais leve). O arquivo `js/splash-icon.js` foi **deletado de vez na v11.9.84** (estava morto desde a v11.9.79). Ferramenta de vetorização fica em `.claude/vectorize/` (gitignored: potrace+resvg).
 - **⚠️ INVARIANTE i18n + React.memo (v11.9.77):** `_lang` é um global de módulo (`let _lang`), NÃO state do React — App o sincroniza com `profile.lang` no render (linha ~9108: `_lang=lang`). Consequência: componentes `React.memo` que renderizam texto **NÃO re-renderizam ao trocar o idioma** (props não mudam) e congelam no idioma anterior → bug "metade EN, metade PT". **Regra: todo `React.memo` que mostra texto DEVE receber `lang={lang}` em TODOS os call sites** (mesmo que internamente leia `_lang`) — o prop muda no switch e força o re-render. Já cobertos: Ring, CuriosityCard, TimerBar, InsightCards, SleepBlock, EntryRow, StatsPage, HistoryPage. Ao criar novo componente memoizado com texto, passar `lang`. (Pendente: overlays pré-React — girar/carregando/atualizando — são fixos pois rodam antes de `_lang` existir; exigem ler localStorage/navigator.language.)
 - **ProfilePage / Ajustes (v11.9.75-76):** redesenhada pra ser coesa com o cosmos. Header com título gradiente + hero (avatar/nome/idade). Render organizado em **6 grupos** com card consistente (`linear-gradient(180deg,rgba(22,28,60,0.55),rgba(20,26,60,0.32))` + `T.gBSoft` + radius 18 + `T.insetTop`) e eyebrow colorido com ícone: **Perfil** (purple/star: nome/nascimento/meta + dados de nascimento + ver-crescimento), **Rotina** (accent/clock), **Preferências** (cyan/gear: idioma + manter-tela-ligada), **Notificações** (amber/bell: push + lembretes remédio + lembrete mamada como sub-cards com divider), **Dados** (green/cloud: eyebrow + `<BackupSection/>`), **Sobre** (pink/star: versão/changelog + streak). Toda a lógica/handlers/state ficam ACIMA do `return` e não foram tocados na reorg.
 - **⚠️ Haptics são NO-OP no iOS:** `Haptic.*` (light/medium/heavy/success/warning em `js/device-features.js`) usa `navigator.vibrate()`, que o **iOS Safari/PWA NÃO implementa** (decisão da Apple). As chamadas ficam no código (funcionam no Android) mas **não fazem nada no iPhone** — o device alvo do William. Logo: NUNCA propor "feedback tátil/haptic" como recurso premium pra ele. Pra "feedback de ação/conquista", usar equivalente VISUAL (confetti, count-up, spring, flash). O toggle de vibração foi removido na v11.x exatamente por isso.
@@ -46,11 +46,11 @@ louise-pro/
 ├── CLAUDE.md
 ├── .gitignore
 ├── js/                      ← libs auxiliares (plano JS, não passam pelo build)
+│   ├── changelog.js         ← histórico de versões bilíngue (window.CHANGELOG) — v11.9.84
 │   ├── curiosities.js       ← curiosidades bilíngues (dia 1 → mês 12)
 │   ├── milestones.js        ← marcos do desenvolvimento (CDC 2022 + WHO MGRS + SBP, 0-24m)
 │   ├── routine-engine.js    ← engine de análise de padrões (sleep + feed)
 │   ├── who-growth.js        ← tabelas LMS OMS + funções de percentil
-│   ├── splash-icon.js       ← base64 do ícone da splash screen
 │   ├── wake-lock.js         ← helper de Wake Lock API
 │   └── device-features.js   ← helpers de device (haptics etc.)
 ├── assets/
@@ -277,7 +277,7 @@ Cada entrada é `{v, date, pt:{title, bullets}, en:{title, bullets}}`. Bullets s
 - `★ ` no início → highlight verde
 - `**texto**` → destaque lavanda
 
-O header do `index.html` mantém a lista curta das últimas versões; o histórico completo vive no modal "Ler novidades" dentro do app.
+**v11.9.84:** o array `CHANGELOG` (211+ entradas, ~4.600 linhas de dado puro) saiu do `index.html` pra **`js/changelog.js`** (`window.CHANGELOG`, bundlado em `app-libs.js` igual curiosities/milestones). Isso derrubou o `index.html` de ~10.5k → ~5.9k linhas. **Regra nova: nova versão = adicionar a entrada no TOPO do array em `js/changelog.js`** (não mais no index.html). O `index.html` só faz `const CHANGELOG = window.CHANGELOG || [];`. O histórico completo aparece no modal "Ler novidades".
 
 ## Ambiente de validação (local)
 

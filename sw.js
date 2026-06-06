@@ -28,6 +28,7 @@ const PRECACHE_LOCAL = [
   "./manifest.json",
   "./firebase-messaging-sw.js",
   "./js/who-growth.js",
+  "./js/changelog.js",
   "./js/curiosities.js",
   "./js/milestones.js",
   "./js/wake-lock.js",

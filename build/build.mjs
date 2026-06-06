@@ -71,11 +71,12 @@ if (!BABEL_CDN_RE.test(html)) {
 }
 
 // ─── JS BUNDLE (v10.1.0) ─────────────────────────────────────────
-// Concatenate the 6 libs in js/ into a single app-libs.js so the browser
-// makes 1 HTTP request instead of 6 on cold load. Order matters — match
+// Concatenate the 7 libs in js/ into a single app-libs.js so the browser
+// makes 1 HTTP request instead of 7 on cold load. Order matters — match
 // the load order from the source index.html's <script src="js/..."> tags.
 const JS_BUNDLE_FILES = [
   "who-growth.js",
+  "changelog.js",
   "curiosities.js",
   "milestones.js",
   "wake-lock.js",
@@ -97,7 +98,7 @@ console.log("[build] bundled js/ into app-libs.js (" + bundle.length + " chars)"
 const BUNDLE_SCRIPT_RE = /<script src="js\/who-growth\.js"><\/script>[\s\S]*?<script src="js\/routine-engine\.js"><\/script>/;
 if (BUNDLE_SCRIPT_RE.test(html)) {
   html = html.replace(BUNDLE_SCRIPT_RE, '<script src="js/app-libs.js"></script>');
-  console.log("[build] collapsed 6 <script> tags into 1 bundle reference");
+  console.log("[build] collapsed 7 <script> tags into 1 bundle reference");
 } else {
   console.warn("[build] WARN: could not find 7-script block to bundle, HTML unchanged");
 }
@@ -120,7 +121,7 @@ swOut = swOut.replace(/__APP_VERSION__/g, appVersion);
 const SW_PRECACHE_RE = /"\.\/js\/who-growth\.js",[\s\S]*?"\.\/js\/routine-engine\.js",/;
 if (SW_PRECACHE_RE.test(swOut)) {
   swOut = swOut.replace(SW_PRECACHE_RE, '"./js/app-libs.js",');
-  console.log("[build] collapsed 5 SW precache URLs into 1 bundle URL");
+  console.log("[build] collapsed 7 SW precache URLs into 1 bundle URL");
 }
 writeFileSync(join(DIST, "sw.js"), swOut);
 console.log("[build] wrote dist/sw.js with version " + appVersion);

@@ -75,7 +75,7 @@ louise-pro/
 ├── curiosities.js      ← 89 bilingual baby curiosities
 ├── routine-engine.js   ← sleep/feed pattern analysis engine
 ├── who-growth.js       ← WHO LMS growth tables + percentile functions
-├── splash-icon.js      ← base64 splash screen icon
+├── changelog.js        ← bilingual version history (data)
 ├── wake-lock.js        ← screen wake lock helper
 ├── manifest.json       ← PWA manifest
 └── icon-*.png          ← PWA icons
