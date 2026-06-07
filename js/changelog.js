@@ -4,6 +4,21 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.86", date: "2026-06-06",
+    pt: {
+      title: "CSS separado em styles.css",
+      bullets: [
+        'Última faxina da estrutura: os ~200 estilos saíram do `index.html` pra um `styles.css` próprio (o build re-injeta na hora, então o carregamento continua igualzinho de rápido). O `index.html` agora é um shell minúsculo. **Nada muda pra você.**',
+      ],
+    },
+    en: {
+      title: "CSS split into styles.css",
+      bullets: [
+        'Final structure cleanup: the ~200 lines of styles moved out of `index.html` into their own `styles.css` (the build re-inlines them, so loading stays exactly as fast). `index.html` is now a tiny shell. **Nothing changes for you.**',
+      ],
+    },
+  },
+  {
     v: "11.9.85", date: "2026-06-06",
     pt: {
       title: "App reorganizado em módulos (src/)",

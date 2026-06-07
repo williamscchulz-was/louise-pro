@@ -25,6 +25,13 @@ mkdirSync(DIST, { recursive: true });
 const SRC = join(ROOT, "index.html");
 let html = readFileSync(SRC, "utf8");
 
+// v11.9.86: CSS lives in styles.css — inline it into the empty <style> at build time
+// (keeps cold start fast: no extra render-blocking request; byte-identical to inline).
+// Anchored on the indented tag so the "<style>" inside the boot-script comment isn't matched.
+const cssSource = readFileSync(join(ROOT, "styles.css"), "utf8");
+html = html.replace(/(\n[ \t]*<style>)[\s\S]*?(<\/style>)/, (mm, p1, p2) => p1 + cssSource + p2);
+console.log("[build] inlined styles.css (" + cssSource.length + " chars)");
+
 // v11.9.85: the app source lives in src/*.jsx (split out of the old inline block).
 // Concatenate them in filename order (NN- prefixes) and transpile as ONE unit, so the
 // compiled output is byte-identical to the pre-split single-file build. index.html keeps
