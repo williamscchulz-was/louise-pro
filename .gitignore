@@ -7,3 +7,6 @@ node_modules/
 dist/
 .DS_Store
 Thumbs.db
+# Artefato do Firebase CLI (regras do Realtime DB, deny-all). O app usa Firestore
+# via CDN e faz deploy via GitHub Pages — esse arquivo não entra no build/deploy.
+database.rules.json
