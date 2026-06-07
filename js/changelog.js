@@ -4,6 +4,23 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.87", date: "2026-06-07",
+    pt: {
+      title: "Fix: uma soneca longa marcava duas sonecas como feitas",
+      bullets: [
+        '★ Corrigido um bug da rotina: quando a Louise fazia **uma soneca longa** (ou acordava mais cedo, deslocando os horários), a rotina às vezes marcava **duas sonecas como feitas** de uma vez. Agora **cada soneca conta pra um horário só** — a próxima continua pendente, como deveria.',
+        'Vale também pro **timer ao vivo**: uma soneca em andamento marca só o horário mais próximo, não dois.',
+      ],
+    },
+    en: {
+      title: "Fix: one long nap marked two naps as done",
+      bullets: [
+        '★ Fixed a routine bug: when Louise took **one long nap** (or woke earlier, shifting the schedule), the routine sometimes marked **two naps as done** at once. Now **each nap counts toward a single slot** — the next one stays pending, as it should.',
+        'Also applies to the **live timer**: an in-progress nap marks only its nearest slot, not two.',
+      ],
+    },
+  },
+  {
     v: "11.9.86", date: "2026-06-06",
     pt: {
       title: "CSS separado em styles.css",

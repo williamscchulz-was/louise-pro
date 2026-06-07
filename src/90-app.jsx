@@ -601,11 +601,31 @@ function App(){
     (r.naps||[]).forEach((nap,i)=>{
       if(!nap?.time)return;
       const tMin=adj(toMinutes(nap.time),"nap");
-      slots.push({key:"nap"+i,type:"nap",icon:"cloud",col:T.accent,target:minToTime(tMin),targetMin:tMin,tolMin:60,num:i+1,match:findMatch(["nap"],tMin,60),lbl:`${i+1}${_lang==="en"?["st","nd","rd","th"][i]||"th":"ª"} ${_lang==="en"?"Nap":"Soneca"}`,chip:`${i+1}${_lang==="en"?"a":"ª"} S`})
+      slots.push({key:"nap"+i,type:"nap",icon:"cloud",col:T.accent,target:minToTime(tMin),targetMin:tMin,tolMin:60,num:i+1,match:null,lbl:`${i+1}${_lang==="en"?["st","nd","rd","th"][i]||"th":"ª"} ${_lang==="en"?"Nap":"Soneca"}`,chip:`${i+1}${_lang==="en"?"a":"ª"} S`})
     });
     if(r.bathTime){const tMin=adj(toMinutes(r.bathTime),"bath");slots.push({key:"bath",type:"bath",icon:"bath",col:T.cyan,target:minToTime(tMin),targetMin:tMin,tolMin:60,match:findMatch(["bath"],tMin,60),lbl:_lang==="en"?"Bath":"Banho",chip:_lang==="en"?"Bath":"Banho"})}
     if(r.bedtime){const tMin=adj(toMinutes(r.bedtime),"bed");slots.push({key:"bedtime",type:"bedtime",icon:"bed",col:T.purple,target:minToTime(tMin),targetMin:tMin,tolMin:60,match:findMatch(["sleep"],tMin,60),lbl:_lang==="en"?"Bedtime":"Bedtime",chip:_lang==="en"?"Bed":"Bed"})}
     slots.sort((a,b)=>a.targetMin-b.targetMin);
+    // v11.9.87: matching de SONECA por CONSUMO — cada evento (ou o timer ativo) satisfaz no
+    // MÁXIMO 1 slot. Bug: uma soneca longa (ou com alvos deslocados pelo acordar) intersectava
+    // a janela de DOIS slots e o findMatch (stateless) marcava ambos como "done". Agora monta um
+    // pool de candidatos "nap" (entries de hoje + o timer ativo como 1 token só) e cada slot de
+    // soneca, em ordem cronológica, pega o candidato NÃO-consumido mais PRÓXIMO do seu alvo.
+    const napPool=[];
+    todayE.forEach((e,idx)=>{if(e.type==="nap"){const st=toMinutes(e.time);napPool.push({idx,start:st,end:st+(e.durationMin>0?e.durationMin:0),ev:e})}});
+    if(activeTimer&&activeTimer.type==="nap"){const t=new Date(activeTimer.startTime);const ts=t.getHours()*60+t.getMinutes();napPool.push({idx:"__active__",start:ts,end:Math.max(ts,nowMin),_active:true,time:`${String(t.getHours()).padStart(2,"0")}:${String(t.getMinutes()).padStart(2,"0")}`})}
+    const napConsumed=new Set();
+    for(const s of slots){
+      if(s.type!=="nap")continue;
+      let best=null,bestDist=Infinity;
+      for(const c of napPool){
+        if(napConsumed.has(c.idx))continue;
+        if(!overlaps(c.start,c.end,s.targetMin,60,60))continue;
+        const d=Math.abs(c.start-s.targetMin);
+        if(d<bestDist||(d===bestDist&&best&&c.start<best.start)){bestDist=d;best=c}
+      }
+      if(best){napConsumed.add(best.idx);s.match=best._active?{type:"nap",time:best.time,_active:true}:best.ev}
+    }
     // Atribui status: done | late | next | pending
     let nextAssigned=false;
     for(const s of slots){
@@ -614,14 +634,10 @@ function App(){
       else if(!nextAssigned){s.status="next";nextAssigned=true}
       else{s.status="pending"}
     }
-    // First "late" sem next ainda → vira o "next" prioritário
-    if(!nextAssigned){
-      const firstLate=slots.find(s=>s.status==="late");
-      if(firstLate)firstLate.status="next-late";
-    }else{
-      const firstLate=slots.find(s=>s.status==="late");
-      if(firstLate)firstLate.status="next-late";
-    }
+    // A 1ª pendente "late" vira "next-late" (prioridade no headline). v11.9.87: era um
+    // if/else com os DOIS ramos idênticos (dead code) — colapsado, mesmo comportamento.
+    const firstLate=slots.find(s=>s.status==="late");
+    if(firstLate)firstLate.status="next-late";
     const headline=slots.find(s=>s.status==="next-late")||slots.find(s=>s.status==="next");
     const bottlesDone=todayE.filter(e=>e.type==="bottle"||e.type==="nursing").length;
     // v11.9.83: contagem ADAPTATIVA — mediana de mamadas/dia das últimas ~21 datas com dado
