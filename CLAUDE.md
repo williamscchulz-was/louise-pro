@@ -91,12 +91,30 @@ louise-pro/
 - Deploy: push na `main` → GitHub Action roda o build e publica `dist/` via `actions/deploy-pages`
 - Pre-requisito **uma vez só no repo**: Settings → Pages → Source = "GitHub Actions"
 
-## Ambiente local (Windows)
+## Ambiente local (multi-máquina)
 
-- **Máquina**: Windows 11, shell bash (Git Bash / MSYS) — use sintaxe Unix (`/dev/null`, forward slashes)
-- **Raiz do repo**: `C:\Users\willi\Documents\projects\louise-pro`
-- **Worktrees**: `C:\Users\willi\Documents\projects\louise-pro\.claude\worktrees\<nome>` (quando aplicável)
-- Claude Code tem acesso direto ao filesystem e ao git — edita os arquivos no lugar, sem etapa de upload manual.
+O William trabalha neste repo a partir de **várias máquinas** via Claude Code (PC de casa, PC do trabalho, MacBook). Todas compartilham o mesmo remote (`origin/main`) como fonte da verdade.
+
+- **Windows** (casa/trabalho): Windows 11, shell bash (Git Bash / MSYS) — sintaxe Unix (`/dev/null`, forward slashes). Raiz: `C:\Users\willi\Documents\projects\louise-pro`. Worktrees em `...\.claude\worktrees\<nome>`.
+- **MacBook**: raiz `/Users/williamschulz/louise-pro`. `node`+`npm` e `gh` (autenticado) instalados em `/usr/local/bin`.
+- Claude Code tem acesso direto ao filesystem e ao git em qualquer uma — edita no lugar, sem upload manual.
+
+## Workflow multi-máquina — sync automático (NÃO QUEBRAR)
+
+**Problema que isso resolve:** como o William alterna entre máquinas, um clone pode ficar muito atrás do remote. Já aconteceu de uma sessão refazer do zero uma tarefa que já estava feita e deployada (clone preso 55 commits atrás). A regra abaixo torna isso impossível de repetir.
+
+**A fonte da verdade compartilhada é o REPO (este CLAUDE.md + código versionado), nunca a memória local do Claude Code.** A memória `~/.claude/.../memory/` é por-máquina e NÃO sincroniza entre os PCs. Logo: **todo conhecimento novo do projeto (decisão arquitetural, bug latente, invariante) vai pra ESTE arquivo e é commitado** — assim viaja pra todas as máquinas. A memória local só guarda ponteiro ("ler o CLAUDE.md do repo").
+
+**Hooks de sync automático** (em `.claude/hooks/`, versionados, ativos em todas as máquinas):
+- `sync-pull.sh` (SessionStart): no início de toda sessão, `git fetch` + `git pull --ff-only` se o clone estiver atrás e limpo. Se estiver atrás **e** sujo, avisa pra resolver antes de trabalhar. **Consequência prática: toda sessão começa atualizada.** Mesmo assim, antes de assumir que uma tarefa "não foi feita", checar `git log --oneline -20` — pode ter vindo de outra máquina.
+- `sync-push.sh` (Stop): ao fim de cada turno, se houver commit local à frente de `origin/main` e a working tree estiver limpa, faz `git push origin HEAD:main`. **Não commita nada** (só empurra o que o Claude já decidiu commitar) e **nunca força** — push divergente falha limpo e avisa.
+
+**Disciplina que o Claude deve manter** (os hooks são a rede de segurança, não substituem isto):
+1. Começar lendo o estado: o auto-pull já rodou, mas confirmar com `git log` se a tarefa pedida não foi resolvida em outra máquina.
+2. Toda entrega funcional = commit focado (com bump de versão + changelog + este CLAUDE.md no mesmo commit, quando aplicável). O auto-push leva pro remote ao fim do turno.
+3. Nunca deixar trabalho só local "pra depois" — se está pronto, commita (o push é automático).
+
+**Setup dos hooks numa máquina nova:** eles vêm versionados, então um `git clone`/`git pull` já os traz. O Claude Code os ativa a partir da sessão seguinte (precisa que `.claude/settings.json` os referencie — também versionado). Em máquina realmente nova, abrir `/hooks` uma vez (ou reabrir o Claude Code) garante que o watcher carregue.
 
 ## Firebase
 

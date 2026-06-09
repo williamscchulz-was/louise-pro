@@ -2,6 +2,10 @@
 # v11.9.61: mockups precisam ser commitados pra build CI ver e publicar em /preview/
 # (parent eh `.claude/*` em vez de `.claude/` pra permitir negation funcionar)
 !.claude/mockups/
+# settings.json + hooks/ versionados: sync automatico (auto-pull/auto-push) + permissoes
+# viajam pra TODAS as maquinas (casa/trabalho/etc). Ver "Workflow multi-maquina" no CLAUDE.md.
+!.claude/settings.json
+!.claude/hooks/
 .validate/
 node_modules/
 dist/
