@@ -15,11 +15,12 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
   const[nap2,setNap2]=useState(_naps0[1]?.time||"10:45");
   const[nap3,setNap3]=useState(_naps0[2]?.time||"13:30");
   const[nap4,setNap4]=useState(_naps0[3]?.time||"16:00");
-  // v11.9.88: estágios pós-banho na rotina (mamadeira + Floripa + vit. D). Default = banho+15min.
+  // v11.9.88-90: estágios pós-banho na rotina. Default = banho+15min (aplicado em RUNTIME
+  // no routineState — estes campos só sobrescrevem). Floripa NÃO tem campo: é calculado
+  // (mamadeira pós-banho + 5min, ver routineState no 90-app).
   const _addMin=(t,m)=>{const p=String(t||"18:00").split(":");const v=(((+p[0]||0)*60+(+p[1]||0))+m)%1440;return `${String(Math.floor(v/60)).padStart(2,"0")}:${String(v%60).padStart(2,"0")}`};
   const _pbDef=_addMin(_r0.bathTime||"18:00",15);
   const[postBathBottleTime,setPostBathBottleTime]=useState(_r0.postBathBottleTime||_pbDef);
-  const[floripaTime,setFloripaTime]=useState(_r0.floripaTime||_pbDef);
   const[vitdTime,setVitdTime]=useState(_r0.vitdTime||_pbDef);
   const[birthWeight,setBirthWeight]=useState(String(profile.birthWeight||""));
   const[birthLength,setBirthLength]=useState(String(profile.birthLength||""));
@@ -156,7 +157,6 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
     nap3!==(_naps0[2]?.time||"13:30")||
     nap4!==(_naps0[3]?.time||"16:00")||
     postBathBottleTime!==(_r0.postBathBottleTime||_pbDef)||
-    floripaTime!==(_r0.floripaTime||_pbDef)||
     vitdTime!==(_r0.vitdTime||_pbDef)
   );
   useEffect(()=>{if(onDirtyChange)onDirtyChange(isDirty)},[isDirty]);
@@ -182,7 +182,6 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
     setNap3(_naps0[2]?.time||"13:30");
     setNap4(_naps0[3]?.time||"16:00");
     setPostBathBottleTime(_r0.postBathBottleTime||_pbDef);
-    setFloripaTime(_r0.floripaTime||_pbDef);
     setVitdTime(_r0.vitdTime||_pbDef);
     Haptic.medium();
   };
@@ -236,7 +235,6 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
       bottlesPerDay:Math.max(1,Math.min(20,parseInt(bottlesPerDay)||7)),
       naps:[{time:nap1},{time:nap2},{time:nap3},{time:nap4}],
       postBathBottleTime,
-      floripaTime,
       vitdTime,
     };
     await onSave({name:name.trim(),birthDate:birth,photo,mlGoal:parseInt(mlGoal)||0,birthWeight:pFloat(birthWeight),birthLength:pFloat(birthLength),birthHead:pFloat(birthHead),lang:langSel,keepScreenOn,hapticEnabled,pushEnabled,routine});
@@ -276,7 +274,7 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
       }catch(e){setAutoState("idle")}
     },delay);
     return()=>{if(saveTimerRef.current)clearTimeout(saveTimerRef.current)};
-  },[isDirty,name,birth,photo,mlGoal,birthWeight,birthLength,birthHead,fdMinutes,fdPushMinutes,routineEnabled,wakeTime,bathTime,bedtime,bottlesPerDay,nap1,nap2,nap3,nap4,postBathBottleTime,floripaTime,vitdTime]);
+  },[isDirty,name,birth,photo,mlGoal,birthWeight,birthLength,birthHead,fdMinutes,fdPushMinutes,routineEnabled,wakeTime,bathTime,bedtime,bottlesPerDay,nap1,nap2,nap3,nap4,postBathBottleTime,vitdTime]);
   useEffect(()=>()=>{if(saveTimerRef.current)clearTimeout(saveTimerRef.current);if(savedFlashRef.current)clearTimeout(savedFlashRef.current)},[]);
   const inp=INP_BASE;
   // v11.7.1: Profile usa o MESMO gradient do body + Starfield interno pra compartilhar
@@ -352,14 +350,16 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
               )}
             </div>
           </div>
-          {/* v11.9.88: estágios pós-banho (mamadeira + Floripa + vit. D) — default banho+15min */}
+          {/* v11.9.88-90: estágios pós-banho (default banho+15min, aplicado sozinho em runtime).
+              Floripa não tem campo — é calculado: mamadeira pós-banho + 5min. */}
           <div style={{borderTop:`1px solid ${T.gB}`,paddingTop:14}}>
             <div style={{fontSize:T.fSM,fontWeight:700,color:T.sub,textTransform:"uppercase",letterSpacing:0.5,marginBottom:10}}>{_lang==="en"?"Post-bath":"Pós-banho"}</div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
-              {[{v:postBathBottleTime,s:setPostBathBottleTime,l:_lang==="en"?"Bottle":"Mamadeira"},{v:floripaTime,s:setFloripaTime,l:"Floripa"},{v:vitdTime,s:setVitdTime,l:_lang==="en"?"Vit. D":"Vit. D"}].map((f,fi)=>
-                <Fld key={fi} label={f.l}><input type="time" value={f.v} onChange={e=>f.s(e.target.value)} style={{...inp,padding:"14px 8px",fontSize:T.fLG,textAlign:"center",colorScheme:"dark",fontVariantNumeric:"tabular-nums"}}/></Fld>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+              {[{v:postBathBottleTime,s:setPostBathBottleTime,l:_lang==="en"?"Bottle":"Mamadeira"},{v:vitdTime,s:setVitdTime,l:"Vit. D"}].map((f,fi)=>
+                <Fld key={fi} label={f.l}><input type="time" value={f.v} onChange={e=>f.s(e.target.value)} style={{...inp,padding:"14px 12px",fontSize:T.fLG,textAlign:"center",colorScheme:"dark",fontVariantNumeric:"tabular-nums"}}/></Fld>
               )}
             </div>
+            <div style={{fontSize:T.fXS,color:T.dim,marginTop:2}}>{_lang==="en"?"Floripa is automatic: 5min after the post-bath bottle.":"Floripa entra sozinho: 5min depois da mamadeira pós-banho."}</div>
           </div>
         </>}
       </div>

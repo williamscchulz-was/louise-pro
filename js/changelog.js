@@ -4,6 +4,25 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.90", date: "2026-06-12",
+    pt: {
+      title: "Fix: estágios pós-banho agora aparecem de verdade",
+      bullets: [
+        '★ Bug da v11.9.88: mamadeira pós-banho, Floripa e vit. D **só apareciam depois de salvar os Ajustes** — e o Salvar nem liberava sem mudança. Agora eles **aparecem sozinhos** (default: 15min depois do banho), sem precisar configurar nada.',
+        '★ O **Floripa virou calculado**: o horário dele é **5min depois da mamadeira pós-banho** — quando a mamadeira é registrada, ele usa o horário real (mamou 18:28 → Floripa 18:33). Por isso o campo dele saiu dos Ajustes.',
+        'Nos Ajustes → Rotina ficam só **Mamadeira pós-banho** e **Vit. D** (pra quem quiser mudar o horário).',
+      ],
+    },
+    en: {
+      title: "Fix: post-bath stages now actually show up",
+      bullets: [
+        '★ v11.9.88 bug: post-bath bottle, Floripa and vit. D **only appeared after saving Settings** — and Save wouldn\'t even enable without a change. Now they **show up on their own** (default: 15min after bath), no setup needed.',
+        '★ **Floripa became computed**: its time is **5min after the post-bath bottle** — once the bottle is logged, it uses the real time (fed 18:28 → Floripa 18:33). That\'s why its field left Settings.',
+        'Settings → Routine keeps only **Post-bath bottle** and **Vit. D** (for changing the time).',
+      ],
+    },
+  },
+  {
     v: "11.9.89", date: "2026-06-12",
     pt: {
       title: "Simeticona e Tylenol no mesmo card",
