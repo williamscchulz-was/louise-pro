@@ -4,6 +4,25 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.88", date: "2026-06-12",
+    pt: {
+      title: "Card do Tylenol + rotina pós-banho",
+      bullets: [
+        '★ O card de remédios da Home **dividiu em dois: Simeticona e Tylenol** — cada um com sua contagem do dia e "há quanto tempo".',
+        '★ A rotina ganhou **3 estágios pós-banho**: **mamadeira pós-banho**, **Floripa** e **vitamina D**. Aparecem na lista com ✓ quando feitos, igual sonecas/banho. Horários configuráveis nos **Ajustes → Rotina** (default: 15min depois do banho).',
+        'Floripa e vitamina D contam como feitos se foram dados **em qualquer hora do dia** (remédio diário é remédio diário). A mamadeira pós-banho casa pela janela perto do horário, pra não confundir com as outras mamadas.',
+      ],
+    },
+    en: {
+      title: "Tylenol card + post-bath routine",
+      bullets: [
+        '★ The Home medicine card **split in two: Simethicone and Tylenol** — each with its own daily count and "time ago".',
+        '★ The routine gained **3 post-bath stages**: **post-bath bottle**, **Floripa** and **vitamin D**. They show in the list with ✓ when done, just like naps/bath. Times configurable in **Settings → Routine** (default: 15min after bath).',
+        'Floripa and vitamin D count as done if given **any time of day** (a daily med is a daily med). The post-bath bottle matches by a window near its time, so it won\'t be confused with other feeds.',
+      ],
+    },
+  },
+  {
     v: "11.9.87", date: "2026-06-07",
     pt: {
       title: "Fix: uma soneca longa marcava duas sonecas como feitas",
