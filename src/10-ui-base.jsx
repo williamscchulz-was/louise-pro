@@ -135,7 +135,7 @@ const I={
   reg:{pt:"reg.",en:"entries"},
   // v11.9.40: rotina diária
   routineSection:{pt:"Rotina diária",en:"Daily routine"},
-  routineHelp:{pt:"Horários alvo recomendados pela pediatra. App mostra check ✓ quando você loga dentro de ±20min do alvo.",en:"Target times recommended by the pediatrician. App shows ✓ when you log within ±20min of target."},
+  routineHelp:{pt:"Horários alvo recomendados pela pediatra. O app marca ✓ quando o evento acontece perto do horário — e a rotina inteira se ajusta ao horário real de acordar.",en:"Target times recommended by the pediatrician. The app marks ✓ when the event happens near its time — and the whole routine adjusts to the real wake-up time."},
   routineEnable:{pt:"Ativar rotina",en:"Enable routine"},
   bath:{pt:"Banho",en:"Bath"},
   bedtime:{pt:"Bedtime",en:"Bedtime"},
@@ -181,6 +181,10 @@ function typeLabel(type,lang){const t=TYPES[type];return t?.label?.[lang]||t?.la
 let _lang="en";
 function L(key){return I[key]?.[_lang]||I[key]?.en||key}
 function TL(type){return typeLabel(type,_lang)}
+// v11.9.94: flexão de gênero PT pros toasts — "Mamadeira atualizadA", "Sono atualizadO".
+// FEM_TYPES = tipos com label feminino; flexed troca o "-o" final por "-a" quando preciso.
+const FEM_TYPES=["bottle","nursing","diaper","nap","temperature"];
+function flexed(type,key){const w=I[key]?.[_lang]||I[key]?.en||key;if(_lang!=="pt")return w;return FEM_TYPES.includes(type)?w.replace(/o$/,"a"):w}
 
 // ── UI COMPONENTS ──
 // Ring é memoizado (v10.5.1) — props são estáveis na maior parte do tempo, só `tick` e `activeTimer` mudam.

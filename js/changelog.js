@@ -4,6 +4,25 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.94", date: "2026-06-12",
+    pt: {
+      title: "Passe de português",
+      bullets: [
+        '★ Acabou o "Mamadeira atualizad**o**": os avisos agora **concordam em gênero** ("Fralda removida", "Sono atualizado").',
+        'Amamentação em PT usa **E:/D:** (esquerda/direita) em vez de L:/R:. Botão "Save" dos marcos virou "Salvar". Jargões traduzidos ("risco de ficar cansada demais", "hora de desacelerar", "despertar noturno").',
+        'Botões rápidos com palavra inteira ("Mamadeira", "Remédio") e texto de ajuda da rotina atualizado pro matching real.',
+      ],
+    },
+    en: {
+      title: "Portuguese copy pass",
+      bullets: [
+        '★ Toasts now **agree in gender** in PT ("Fralda removida", "Sono atualizado").',
+        'Nursing uses **E:/D:** in PT instead of L:/R:. The milestones "Save" button is now translated. Dev jargon localized.',
+        'Quick buttons use full words and the routine help text matches the real matching behavior.',
+      ],
+    },
+  },
+  {
     v: "11.9.93", date: "2026-06-12",
     pt: {
       title: "Pacote 3h da manhã",

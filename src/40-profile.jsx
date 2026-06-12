@@ -375,7 +375,7 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
         <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:14}}>
           <div style={{flex:1}}>
             <div style={{fontSize:T.fLG,fontWeight:700,marginBottom:4,color:T.heading,letterSpacing:-0.2}}>{langSel==="en"?"Keep screen on":"Manter tela ligada"}</div>
-            <div style={{fontSize:T.fMD,color:T.label,lineHeight:1.5}}>{langSel==="en"?"During night wake & nursing timers":"Durante night wake e amamentação"}</div>
+            <div style={{fontSize:T.fMD,color:T.label,lineHeight:1.5}}>{langSel==="en"?"During night wake & nursing timers":"Durante despertar noturno e amamentação"}</div>
           </div>
           <button onClick={()=>{const v=!keepScreenOn;setKeepScreenOn(v);persistToggle({keepScreenOn:v})}} style={{position:"relative",width:52,height:32,borderRadius:16,background:keepScreenOn?`linear-gradient(180deg,${T.accent},#6d5cd4)`:"rgba(14,18,48,0.8)",border:`1px solid ${keepScreenOn?"rgba(139,124,246,0.5)":T.gBSoft}`,transition:"all .2s",flexShrink:0,cursor:"pointer",padding:0,boxShadow:keepScreenOn?"0 1px 0 0 rgba(255,255,255,0.18) inset, 0 4px 12px -4px rgba(139,124,246,0.4)":T.insetTop}}>
             <div style={{position:"absolute",top:3,left:keepScreenOn?25:3,width:24,height:24,borderRadius:"50%",background:"#fff",transition:"left .2s",boxShadow:"0 2px 6px rgba(0,0,0,0.4)"}}/>

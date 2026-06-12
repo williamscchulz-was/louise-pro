@@ -233,7 +233,7 @@ function MilestonesPage({entries,birthDate,profile,onBack,onAddEntry,onDeleteEnt
           </Fld>
           <div style={{display:"flex",gap:8}}>
             <button onClick={()=>setPickedKey(null)} style={{flex:1,padding:"12px 0",borderRadius:11,background:T.glass,border:`1px solid ${T.gBSoft}`,color:T.sub,fontSize:T.fMD,fontWeight:700,cursor:"pointer"}}>{_lang==="en"?"Back":"Voltar"}</button>
-            <button disabled={busy} onClick={saveMilestone} style={{flex:2,padding:"12px 0",borderRadius:11,background:"linear-gradient(135deg,#facc15,#f59e0b)",border:"none",color:"#1a1f2e",fontSize:T.fMD,fontWeight:800,letterSpacing:0.3,boxShadow:"0 4px 14px -4px rgba(250,204,21,0.5)",opacity:busy?0.6:1,cursor:busy?"not-allowed":"pointer"}}>{_lang==="en"?"Save":"Save"}</button>
+            <button disabled={busy} onClick={saveMilestone} style={{flex:2,padding:"12px 0",borderRadius:11,background:"linear-gradient(135deg,#facc15,#f59e0b)",border:"none",color:"#1a1f2e",fontSize:T.fMD,fontWeight:800,letterSpacing:0.3,boxShadow:"0 4px 14px -4px rgba(250,204,21,0.5)",opacity:busy?0.6:1,cursor:busy?"not-allowed":"pointer"}}>{_lang==="en"?"Save":"Salvar"}</button>
           </div>
         </>}
       </div>
