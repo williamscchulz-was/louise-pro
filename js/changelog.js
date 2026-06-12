@@ -4,6 +4,21 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.91", date: "2026-06-12",
+    pt: {
+      title: "Vit. D também segue a mamadeira pós-banho",
+      bullets: [
+        '★ Igual ao Floripa: o horário da **Vit. D agora é calculado — 5min depois da mamadeira pós-banho** (registrou a mamadeira 18:28 → Floripa e Vit. D às 18:33). O campo dela saiu dos Ajustes; na seção Pós-banho fica só o horário da mamadeira.',
+      ],
+    },
+    en: {
+      title: "Vit. D also follows the post-bath bottle",
+      bullets: [
+        '★ Same as Floripa: **Vit. D\'s time is now computed — 5min after the post-bath bottle** (bottle logged 18:28 → Floripa and Vit. D at 18:33). Its field left Settings; the Post-bath section keeps only the bottle time.',
+      ],
+    },
+  },
+  {
     v: "11.9.90", date: "2026-06-12",
     pt: {
       title: "Fix: estágios pós-banho agora aparecem de verdade",

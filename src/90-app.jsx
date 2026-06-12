@@ -606,22 +606,25 @@ function App(){
       slots.push({key:"nap"+i,type:"nap",icon:"cloud",col:T.accent,target:minToTime(tMin),targetMin:tMin,tolMin:60,num:i+1,match:null,lbl:`${i+1}${_lang==="en"?["st","nd","rd","th"][i]||"th":"ª"} ${_lang==="en"?"Nap":"Soneca"}`,chip:`${i+1}${_lang==="en"?"a":"ª"} S`})
     });
     if(r.bathTime){const tMin=adj(toMinutes(r.bathTime),"bath");slots.push({key:"bath",type:"bath",icon:"bath",col:T.cyan,target:minToTime(tMin),targetMin:tMin,tolMin:60,match:findMatch(["bath"],tMin,60),lbl:_lang==="en"?"Bath":"Banho",chip:_lang==="en"?"Bath":"Banho"})}
-    // v11.9.88-90: estágios pós-banho — mamadeira pós-banho + Floripa + vitamina D.
+    // v11.9.88-91: estágios pós-banho — mamadeira pós-banho + Floripa + vitamina D.
     // v11.9.90: aparecem por DEFAULT (banho+15min) SEM precisar salvar Ajustes — o Salvar
     // nem liberava sem mudança, então os estágios nunca apareciam (bug da v11.9.88).
-    // r.postBathBottleTime / r.vitdTime, se salvos, sobrescrevem o default.
-    // FLORIPA é CALCULADO (sem campo nos Ajustes): alvo = mamadeira pós-banho + 5min —
-    // usa o horário REGISTRADO quando a mamadeira já aconteceu, senão o alvo dela.
+    // r.postBathBottleTime, se salvo, sobrescreve o default.
+    // v11.9.91: FLORIPA *E* VIT. D são CALCULADOS (sem campo nos Ajustes): alvo = mamadeira
+    // pós-banho + 5min — usa o horário REGISTRADO quando a mamadeira já aconteceu (mamou
+    // 18:28 → 18:33), senão o alvo dela. r.floripaTime/r.vitdTime legados são IGNORADOS.
     // Remédios DIÁRIOS casam por NOME em qualquer hora do dia (deu hoje = feito; o horário
     // do slot só ordena o "próximo"). A mamadeira pós-banho casa por JANELA assimétrica
     // (45 antes / 90 depois) — mamadeira acontece ~7x/dia, não dá pra casar qualquer uma.
     const medToday=re=>todayE.find(e=>e.type==="medicine"&&e.name&&re.test(e.name));
     const pbTimeStr=r.postBathBottleTime||(r.bathTime?minToTime(toMinutes(r.bathTime)+15):null);
-    const vitdTimeStr=r.vitdTime||pbTimeStr;
     let pbTMin=null,pbHit=null;
     if(pbTimeStr){pbTMin=adj(toMinutes(pbTimeStr),"pb");pbHit=findMatch(["bottle"],pbTMin,45,90);slots.push({key:"pbbottle",type:"pbbottle",icon:"bottle",col:T.green,target:minToTime(pbTMin),targetMin:pbTMin,tolMin:60,match:pbHit,lbl:_lang==="en"?"Post-bath bottle":"Mamad. pós-banho",chip:_lang==="en"?"Bottle":"Mamad."})}
-    if(pbTMin!=null){const fMin=(pbHit&&pbHit.time?toMinutes(pbHit.time):pbTMin)+5;slots.push({key:"floripa",type:"floripa",icon:"pill",col:T.amber,target:minToTime(fMin),targetMin:fMin,tolMin:60,match:medToday(/florip/i),lbl:"Floripa",chip:"Floripa"})}
-    if(vitdTimeStr){const tMin=adj(toMinutes(vitdTimeStr),"pb");slots.push({key:"vitd",type:"vitd",icon:"droplet",col:T.amber,target:minToTime(tMin),targetMin:tMin,tolMin:60,match:medToday(/vit(amina)?\s*\.?\s*d/i),lbl:_lang==="en"?"Vitamin D":"Vitamina D",chip:"Vit D"})}
+    if(pbTMin!=null){
+      const fMin=(pbHit&&pbHit.time?toMinutes(pbHit.time):pbTMin)+5;
+      slots.push({key:"floripa",type:"floripa",icon:"pill",col:T.amber,target:minToTime(fMin),targetMin:fMin,tolMin:60,match:medToday(/florip/i),lbl:"Floripa",chip:"Floripa"});
+      slots.push({key:"vitd",type:"vitd",icon:"droplet",col:T.amber,target:minToTime(fMin),targetMin:fMin,tolMin:60,match:medToday(/vit(amina)?\s*\.?\s*d/i),lbl:_lang==="en"?"Vitamin D":"Vitamina D",chip:"Vit D"});
+    }
     if(r.bedtime){const tMin=adj(toMinutes(r.bedtime),"bed");slots.push({key:"bedtime",type:"bedtime",icon:"bed",col:T.purple,target:minToTime(tMin),targetMin:tMin,tolMin:60,match:findMatch(["sleep"],tMin,60),lbl:_lang==="en"?"Bedtime":"Bedtime",chip:_lang==="en"?"Bed":"Bed"})}
     slots.sort((a,b)=>a.targetMin-b.targetMin);
     // v11.9.87: matching de SONECA por CONSUMO — cada evento (ou o timer ativo) satisfaz no
