@@ -874,7 +874,10 @@ function App(){
   // v11.9.68 HOTFIX: goGrowth (useCallback) DEVE ficar ANTES deste early-return de
   // splash/loading. Senão o hook é pulado no render de splash e roda no render normal
   // -> contagem de hooks muda -> React #310 (crash). Hooks sempre antes de qualquer return.
-  const goGrowth=useCallback(()=>{setPage("growth");setShowAdd(false);setFormType(null)},[]);
+  // v11.9.99: o Crescimento lembra DE ONDE foi aberto (Stats ou Ajustes) — o voltar
+  // restaura a origem em vez de despejar sempre no Stats.
+  const growthFromRef=useRef({page:"stats"});
+  const goGrowth=useCallback(()=>{growthFromRef.current={page:"stats"};setPage("growth");setShowAdd(false);setFormType(null)},[]);
   if(splash||loading)return(
     <div style={{background:"linear-gradient(180deg,#0e0825,#070b1e 70%,#070b1e)",minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",fontFamily:"'Outfit',sans-serif",overflow:"hidden",opacity:splash?1:0,transition:"opacity .4s",position:"relative"}}>
       <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
@@ -1231,7 +1234,7 @@ function App(){
           </div>
         </div>
       </div>:null}
-      {page==="growth"&&<GrowthPage entries={entries} birthDate={profile.birthDate} profile={profile} onBack={()=>goTo("stats")} onAddEntry={addEntry} onDeleteEntry={deleteEntry}/>}
+      {page==="growth"&&<GrowthPage entries={entries} birthDate={profile.birthDate} profile={profile} onBack={()=>{const f=growthFromRef.current||{page:"stats"};goTo(f.page||"stats");if(f.profile)setShowProfile(true)}} onAddEntry={addEntry} onDeleteEntry={deleteEntry}/>}
       {page==="milestones"&&<MilestonesPage entries={entries} birthDate={profile.birthDate} profile={profile} onBack={()=>goTo("home")} onAddEntry={addEntry} onDeleteEntry={deleteEntry}/>}
       {/* Bottom spacer so content clears nav bar + timer (dynamic w/ safe-area) */}
       {/* Sem bottom spacer (v10.2.9) — queremos conteúdo passando ATRÁS da nav
@@ -1296,7 +1299,7 @@ function App(){
       {formType&&<AddForm type={formType} onSave={addEntry} onSaveBatch={addMedicineBatch} savedMeds={savedMeds} onSaveMeds={async m=>await FB.saveMeds(m)} editEntry={editEntry} lastBottleMl={lastBottleMl} lastBottleEntry={lastBottleEntry} feedingIntervalMin={feedingIntervalMin} topMl={topMl} suggestedMl={routineState?.nextBottleMl} onStartTimer={type=>{startTimer(type);setFormType(null);setShowAdd(false)}}/>}
     </Modal>
 
-    {showProfile&&<ProfilePage profile={profile} entries={entries} onSave={async p=>await FB.saveProfile(p)} onBack={()=>{setShowProfile(false);setProfileIsDirty(false)}} onGrowth={()=>{setShowProfile(false);setProfileIsDirty(false);goTo("growth")}} onShowChangelog={()=>setShowChangelog(true)} hasUnreadChangelog={hasUnreadChangelog} reminders={reminders} onAddReminder={async r=>await FB.addReminder(r)} onDelReminder={async id=>await FB.delReminder(id)} onDirtyChange={setProfileIsDirty} cancelSignal={profileCancelSignal} saveSignal={profileSaveSignal}/>}
+    {showProfile&&<ProfilePage profile={profile} entries={entries} onSave={async p=>await FB.saveProfile(p)} onBack={()=>{setShowProfile(false);setProfileIsDirty(false)}} onGrowth={()=>{growthFromRef.current={page,profile:true};setShowProfile(false);setProfileIsDirty(false);goTo("growth")}} onShowChangelog={()=>setShowChangelog(true)} hasUnreadChangelog={hasUnreadChangelog} reminders={reminders} onAddReminder={async r=>await FB.addReminder(r)} onDelReminder={async id=>await FB.delReminder(id)} onDirtyChange={setProfileIsDirty} cancelSignal={profileCancelSignal} saveSignal={profileSaveSignal}/>}
     {showInbox&&<InboxPanel inbox={inbox} onClose={()=>setShowInbox(false)} onMarkRead={markInboxRead} onMarkAllRead={markAllInboxRead} lang={lang} isRead={isRead}/>}
     {showChangelog&&<ChangelogModal onClose={closeChangelog} lang={lang}/>}
     {showUpdateToast&&!showChangelog&&<UpdateToast fromVersion={profile.lastSeenVersion} toVersion={APP_VERSION} onView={openChangelog} onDismiss={dismissUpdateToast} lang={lang}/>}

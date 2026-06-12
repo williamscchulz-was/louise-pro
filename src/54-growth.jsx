@@ -6,6 +6,9 @@ function GrowthPage({entries,birthDate,profile,onBack,onAddEntry,onDeleteEntry})
   const[editingId,setEditingId]=useState(null);
   const[fDate,setFDate]=useState(todayStr());
   const[wK,setWK]=useState("");const[lC,setLC]=useState("");const[hC,setHC]=useState("");
+  // v11.9.99: tap-to-inspect nos pontos do gráfico (mesmo padrão do dayPill do Stats).
+  // selPt = {field, i} do ponto tocado; tocar de novo fecha, tocar outro move.
+  const[selPt,setSelPt]=useState(null);
 
   // Find existing growth entry on a date (excluding current edit target)
   const findByDate=(date,excludeId)=>growthEntries.find(e=>e.date===date&&e.id!==excludeId);
@@ -90,8 +93,9 @@ function GrowthPage({entries,birthDate,profile,onBack,onAddEntry,onDeleteEntry})
     resetForm();
   };
 
-  // Mini chart for a metric
-  function GrowthChart({label,field,table,color}){
+  // Mini chart for a metric — v11.9.99: re-housed num eyebrow card (padrão Profile),
+  // + labels de mês no eixo X + tap-to-inspect (pill estilo Stats dayPill).
+  function GrowthChart({label,emoji,unit,field,table,color}){
     const pts=allPoints.filter(p=>p[field]);
     if(pts.length<1)return null;
     // WHO P3, P50, P97 curves
@@ -108,35 +112,68 @@ function GrowthPage({entries,birthDate,profile,onBack,onAddEntry,onDeleteEntry})
     const x=m=>10+(m/maxAge)*(W-20);
     const y=v=>H-10-((v-minV)/(maxV-minV))*(H-20);
     const pathStr=(arr,key)=>arr.map((p,i)=>`${i===0?"M":"L"}${x(p.m).toFixed(1)},${y(p[key]).toFixed(1)}`).join(" ");
-    return(<div style={{marginBottom:16}}>
-      <div style={{fontSize:T.fMD,fontWeight:700,color,marginBottom:6}}>{label}</div>
-      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{width:"100%",height:"auto",background:T.glass,borderRadius:12,border:`1px solid ${T.gB}`}}>
-        <path d={pathStr(whoSteps,"p3")+" L"+x(maxAge)+","+y(whoSteps[whoSteps.length-1].p97)+" "+pathStr([...whoSteps].reverse(),"p97")} fill={`${color}08`} stroke="none"/>
-        <path d={pathStr(whoSteps,"p50")} fill="none" stroke={`${color}44`} strokeWidth="1" strokeDasharray="4,3"/>
-        <path d={pathStr(whoSteps,"p3")} fill="none" stroke={`${color}22`} strokeWidth="0.5"/>
-        <path d={pathStr(whoSteps,"p97")} fill="none" stroke={`${color}22`} strokeWidth="0.5"/>
-        {pts.map((p,i)=><circle key={i} cx={x(p.ageM)} cy={y(p[field])} r={4} fill={color} stroke={T.bg1} strokeWidth={2}/>)}
-        {pts.length>1&&<path d={pts.map((p,i)=>`${i===0?"M":"L"}${x(p.ageM).toFixed(1)},${y(p[field]).toFixed(1)}`).join(" ")} fill="none" stroke={color} strokeWidth="2"/>}
-        <text x={W-4} y={y(whoSteps[whoSteps.length-1].p50)+4} textAnchor="end" fill={`${color}66`} fontSize="8">P50</text>
-        <text x={W-4} y={y(whoSteps[whoSteps.length-1].p97)+4} textAnchor="end" fill={`${color}44`} fontSize="7">P97</text>
-        <text x={W-4} y={y(whoSteps[whoSteps.length-1].p3)+4} textAnchor="end" fill={`${color}44`} fontSize="7">P3</text>
-      </svg>
+    // Month labels do eixo X — meses-calendário desde o nascimento (mar/abr/mai...),
+    // posicionados em HTML (fora do viewBox) pra fonte ficar em px reais (T.fXS).
+    const monthTicks=[];
+    const bd=birthDate?new Date(birthDate+"T12:00"):null;
+    if(bd&&!isNaN(bd.getTime())){
+      const step=maxAge<=8?1:Math.ceil(maxAge/8);
+      for(let m=0;m<=maxAge;m+=step){
+        const d=new Date(bd.getFullYear(),bd.getMonth()+m,bd.getDate(),12);
+        monthTicks.push({m,label:d.toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{month:"short"}).replace(".","")});
+      }
+    }
+    // Ponto selecionado (tap-to-inspect)
+    const selIdx=selPt&&selPt.field===field?selPt.i:null;
+    const sel=selIdx!=null&&pts[selIdx]?pts[selIdx]:null;
+    const selRes=sel?getPercentile(sel[field],table,sel.ageM):null;
+    const selLeft=sel?Math.max(16,Math.min(84,(x(sel.ageM)/W)*100)):0;
+    const selTop=sel?(y(sel[field])/H)*100:0;
+    const selBelow=sel?selTop<32:false;
+    return(<div style={{background:"linear-gradient(180deg,rgba(22,28,60,0.55),rgba(20,26,60,0.32))",border:`1px solid ${T.gBSoft}`,borderRadius:18,padding:"15px 16px",marginBottom:13,boxShadow:T.insetTop}}>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:11}}>
+        <div style={{width:20,height:20,borderRadius:7,background:`${color}1f`,border:`1px solid ${color}40`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><span style={{fontSize:10,lineHeight:1}}>{emoji}</span></div>
+        <span style={{fontSize:T.fXS,fontWeight:800,letterSpacing:1,textTransform:"uppercase",color}}>{label}</span>
+        <span style={{marginLeft:"auto",fontSize:T.fXS,color:T.dim,fontWeight:700,letterSpacing:0.5}}>{unit}</span>
+      </div>
+      <div style={{position:"relative"}}>
+        <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{width:"100%",height:"auto",display:"block",background:"rgba(10,14,38,0.45)",borderRadius:12,border:`1px solid ${T.gBSoft}`}}>
+          <path d={pathStr(whoSteps,"p3")+" L"+x(maxAge)+","+y(whoSteps[whoSteps.length-1].p97)+" "+pathStr([...whoSteps].reverse(),"p97")} fill={`${color}08`} stroke="none"/>
+          <path d={pathStr(whoSteps,"p50")} fill="none" stroke={`${color}44`} strokeWidth="1" strokeDasharray="4,3"/>
+          <path d={pathStr(whoSteps,"p3")} fill="none" stroke={`${color}22`} strokeWidth="0.5"/>
+          <path d={pathStr(whoSteps,"p97")} fill="none" stroke={`${color}22`} strokeWidth="0.5"/>
+          {pts.map((p,i)=><circle key={i} cx={x(p.ageM)} cy={y(p[field])} r={selIdx===i?5.5:4} fill={color} stroke={T.bg1} strokeWidth={2}/>)}
+          {pts.length>1&&<path d={pts.map((p,i)=>`${i===0?"M":"L"}${x(p.ageM).toFixed(1)},${y(p[field]).toFixed(1)}`).join(" ")} fill="none" stroke={color} strokeWidth="2"/>}
+          <text x={W-4} y={y(whoSteps[whoSteps.length-1].p50)+4} textAnchor="end" fill={`${color}66`} fontSize="8">P50</text>
+          <text x={W-4} y={y(whoSteps[whoSteps.length-1].p97)+4} textAnchor="end" fill={`${color}44`} fontSize="7">P97</text>
+          <text x={W-4} y={y(whoSteps[whoSteps.length-1].p3)+4} textAnchor="end" fill={`${color}44`} fontSize="7">P3</text>
+          {/* Hit areas (r=13, transparentes) por cima de tudo — alvo de toque decente no iPhone */}
+          {pts.map((p,i)=><circle key={`hit${i}`} cx={x(p.ageM)} cy={y(p[field])} r={13} fill="transparent" style={{cursor:"pointer"}} onClick={()=>setSelPt(s=>s&&s.field===field&&s.i===i?null:{field,i})}/>)}
+        </svg>
+        {sel&&<div style={{position:"absolute",left:`${selLeft}%`,top:`${selTop}%`,transform:selBelow?"translate(-50%,12px)":"translate(-50%,calc(-100% - 12px))",zIndex:6,whiteSpace:"nowrap",background:"linear-gradient(180deg,rgba(32,38,76,0.98),rgba(20,26,58,0.97))",border:`1px solid ${color}66`,borderRadius:9,padding:"4px 9px",boxShadow:"0 6px 18px -6px rgba(0,0,0,0.6)",pointerEvents:"none",textAlign:"center"}}>
+          <div style={{fontSize:T.fXS,color:T.lilac,fontWeight:700,letterSpacing:0.2}}>{sel.label}</div>
+          <div style={{fontSize:T.fSM,color:"#fff",fontWeight:800,fontVariantNumeric:"tabular-nums",marginTop:1}}>{formatGrowthVal(sel[field])} {unit}{selRes&&selRes.percentile!=null?` · P${selRes.percentile}`:""}</div>
+        </div>}
+      </div>
+      {monthTicks.length>0&&<div style={{position:"relative",height:13,marginTop:4}}>
+        {monthTicks.map(t=><span key={t.m} style={{position:"absolute",left:`${(x(t.m)/W)*100}%`,transform:"translateX(-50%)",fontSize:T.fXS,color:T.dim,fontWeight:600,letterSpacing:0.3}}>{t.label}</span>)}
+      </div>}
     </div>);
   }
 
   // PercentileCard: read-only display now (no quick-add — use the unified form instead)
   function PercentileCard({label,value,unit,table,icon}){
-    if(!value)return(<div style={{background:T.glass,borderRadius:14,padding:14,marginBottom:8,border:`1px solid ${T.gB}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+    if(!value)return(<div style={{background:"linear-gradient(180deg,rgba(22,28,60,0.55),rgba(20,26,60,0.32))",borderRadius:14,padding:14,marginBottom:8,border:`1px solid ${T.gBSoft}`,boxShadow:T.insetTop,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
       <div style={{display:"flex",alignItems:"center",gap:8}}><Icon name={icon} size={14} color={T.dim}/><span style={{fontSize:T.fMD,fontWeight:600,color:T.dim}}>{label}</span></div>
       <span style={{fontSize:T.fSM,color:T.dim,fontStyle:"italic"}}>{_lang==="en"?"no data yet":"sem dados ainda"}</span>
     </div>);
     const result=getPercentile(value,table,ageMonths);
     const p=result?.percentile;
     const pColor=!p?T.dim:p<3||p>97?T.red:p<15||p>85?T.orange:T.green;
-    return(<div style={{background:T.glass,borderRadius:14,padding:14,marginBottom:8,border:`1px solid ${T.gB}`}}>
+    return(<div style={{background:"linear-gradient(180deg,rgba(22,28,60,0.55),rgba(20,26,60,0.32))",borderRadius:14,padding:14,marginBottom:8,border:`1px solid ${T.gBSoft}`,boxShadow:T.insetTop}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
-        <div style={{display:"flex",alignItems:"center",gap:8}}><Icon name={icon} size={14} color={pColor}/><span style={{fontSize:T.fMD,fontWeight:700}}>{label}</span></div>
-        <span style={{fontSize:T.fXL,fontWeight:800}}>{formatGrowthVal(value)} {unit}</span>
+        <div style={{display:"flex",alignItems:"center",gap:8}}><Icon name={icon} size={14} color={pColor}/><span style={{fontSize:T.fMD,fontWeight:700,color:T.heading}}>{label}</span></div>
+        <span style={{fontSize:T.fXL,fontWeight:800,color:T.heading,fontVariantNumeric:"tabular-nums"}}>{formatGrowthVal(value)} {unit}</span>
       </div>
       <div style={{display:"flex",alignItems:"center",gap:10}}>
         <div style={{flex:1,height:6,borderRadius:3,background:T.bg3,overflow:"hidden",position:"relative"}}>
@@ -161,14 +198,26 @@ function GrowthPage({entries,birthDate,profile,onBack,onAddEntry,onDeleteEntry})
     return e?new Date(e.date+"T12:00").toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{day:"numeric",month:"long"}):"";
   })():"";
 
-  return(<div style={{padding:"calc(16px + env(safe-area-inset-top)) 20px 0"}}>
-    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
-      <div style={{display:"flex",alignItems:"center",gap:10}}><button onClick={onBack} style={{width:32,height:32,borderRadius:10,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="back" size={16} color={T.sub}/></button><h2 style={{fontSize:T.fXL,fontWeight:700,margin:0}}>{L("growth")}</h2></div>
-      <button onClick={()=>showForm?resetForm():openNew()} style={{padding:"6px 12px",borderRadius:10,background:"rgba(163,230,53,0.1)",border:"1px solid rgba(163,230,53,0.2)",fontSize:T.fMD,fontWeight:700,color:"#a3e635"}}>{showForm?L("cancel"):(_lang==="en"?"+ Measure":"+ Medição")}</button>
+  // v11.9.99: página virou overlay (padrão MilestonesPage/ProfilePage) — fixed, Starfield,
+  // header com título gradiente + back 40pt, conteúdo em eyebrow cards (padrão Profile).
+  return(<div className="page-switch" style={{position:"fixed",inset:0,zIndex:200,maxWidth:480,margin:"0 auto",background:"radial-gradient(ellipse 140% 55% at 50% 100%, #1a1f52 0%, transparent 70%), radial-gradient(ellipse at 50% 0%, #10153d 0%, #070b1e 65%), #070b1e",overflowY:"auto",overflowX:"hidden",overscrollBehavior:"contain",WebkitOverflowScrolling:"touch",paddingTop:"env(safe-area-inset-top)",paddingBottom:"calc(100px + env(safe-area-inset-bottom))"}}>
+    <Starfield/>
+    {/* Header */}
+    <div style={{display:"flex",alignItems:"center",gap:12,padding:"16px 14px 14px 20px"}}>
+      <button aria-label={_lang==="en"?"Back":"Voltar"} onClick={onBack} style={{width:40,height:40,borderRadius:13,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name="back" size={18} color={T.sub}/></button>
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{fontSize:T.fXL,fontWeight:800,letterSpacing:-0.3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",background:"linear-gradient(180deg,#ffffff,#c4b5fd)",WebkitBackgroundClip:"text",backgroundClip:"text",WebkitTextFillColor:"transparent",color:"transparent"}}>{L("growth")}</div>
+        <div style={{fontSize:T.fSM,color:T.sub,marginTop:1,fontVariantNumeric:"tabular-nums"}}>{growthEntries.length} {_lang==="en"?(growthEntries.length===1?"measurement":"measurements"):(growthEntries.length===1?"medição":"medições")} · {ageMonths.toFixed(1)}m</div>
+      </div>
+      <button onClick={()=>showForm?resetForm():openNew()} aria-label={showForm?L("cancel"):(_lang==="en"?"Add measurement":"Adicionar medição")} style={{width:40,height:40,borderRadius:12,background:showForm?T.glass:"linear-gradient(135deg,#a3e635,#65a30d)",border:showForm?`1px solid ${T.gBSoft}`:"none",display:"flex",alignItems:"center",justifyContent:"center",color:showForm?T.sub:"#101604",fontSize:24,fontWeight:800,boxShadow:showForm?"none":"0 4px 14px -4px rgba(163,230,53,0.5)",cursor:"pointer",flexShrink:0}}>{showForm?"×":"+"}</button>
     </div>
+    <div style={{padding:"0 20px"}}>
 
-    {showForm&&<div style={{background:T.glass,borderRadius:14,padding:16,marginBottom:16,border:`1px solid ${T.gB}`}}>
-      <div style={{fontSize:T.fMD,fontWeight:700,color:T.sub,marginBottom:12}}>{isEdit?(_lang==="en"?"Edit measurement":"Editar medição"):(_lang==="en"?"New measurement":"Nova medição")}</div>
+    {showForm&&<div style={{background:"linear-gradient(180deg,rgba(22,28,60,0.55),rgba(20,26,60,0.32))",border:`1px solid ${T.gBSoft}`,borderRadius:18,padding:"15px 16px",marginBottom:13,boxShadow:T.insetTop}}>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:13}}>
+        <div style={{width:20,height:20,borderRadius:7,background:"rgba(163,230,53,0.12)",border:"1px solid rgba(163,230,53,0.25)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name="ruler" size={11} color="#a3e635"/></div>
+        <span style={{fontSize:T.fXS,fontWeight:800,letterSpacing:1,textTransform:"uppercase",color:"#a3e635"}}>{isEdit?(_lang==="en"?"Edit measurement":"Editar medição"):(_lang==="en"?"New measurement":"Nova medição")}</span>
+      </div>
 
       {isEdit&&<div style={{padding:"10px 12px",background:"rgba(139,124,246,0.1)",border:"1px solid rgba(139,124,246,0.25)",borderRadius:10,display:"flex",gap:8,alignItems:"center",marginBottom:12}}>
         <Icon name="pencil" size={14} color="#c4b5fd"/>
@@ -192,46 +241,51 @@ function GrowthPage({entries,birthDate,profile,onBack,onAddEntry,onDeleteEntry})
         {_lang==="en"?"Leave blank what wasn't measured · comma or dot":"Deixe em branco os que não foram medidos · vírgula ou ponto"}
       </div>
 
-      <button onClick={doSave} disabled={!hasAnyValue()} style={{width:"100%",padding:12,borderRadius:10,background:hasAnyValue()?"#a3e635":"rgba(139,124,246,0.1)",color:hasAnyValue()?T.bg1:T.dim,fontSize:T.fLG,fontWeight:700,opacity:hasAnyValue()?1:0.6}}>{isEdit?(_lang==="en"?"Update measurement":"Atualizar medição"):(mergeTarget?(_lang==="en"?"Update measurement":"Atualizar medição"):(_lang==="en"?"Save measurement":"Salvar medição"))}</button>
+      <button onClick={doSave} disabled={!hasAnyValue()} style={{width:"100%",padding:13,borderRadius:12,background:hasAnyValue()?"linear-gradient(135deg,#a3e635,#65a30d)":"rgba(139,124,246,0.1)",color:hasAnyValue()?"#101604":T.dim,fontSize:T.fLG,fontWeight:800,letterSpacing:0.2,boxShadow:hasAnyValue()?"0 4px 14px -4px rgba(163,230,53,0.4)":"none",opacity:hasAnyValue()?1:0.6}}>{isEdit?(_lang==="en"?"Update measurement":"Atualizar medição"):(mergeTarget?(_lang==="en"?"Update measurement":"Atualizar medição"):(_lang==="en"?"Save measurement":"Salvar medição"))}</button>
 
       {isEdit&&<button onClick={doDelete} style={{background:"transparent",border:"none",color:T.red,fontSize:T.fMD,fontWeight:600,padding:10,marginTop:8,width:"100%"}}>{_lang==="en"?"Delete this measurement":"Excluir esta medição"}</button>}
     </div>}
 
     {/* Percentile cards */}
-    {latest&&<div style={{fontSize:T.fSM,color:T.sub,marginBottom:10}}>
-      {latest.isBirth?(_lang==="en"?"Birth data":L("birthData")):`${_lang==="en"?"Last":"Últ."}: ${latest.label}`} · {ageMonths.toFixed(1)} {_lang==="en"?"mo":"meses"}
-    </div>}
+    <div style={{display:"flex",alignItems:"baseline",justifyContent:"space-between",marginBottom:10}}>
+      <span style={{fontSize:T.fSM,fontWeight:800,color:T.accent,textTransform:"uppercase",letterSpacing:1}}>{_lang==="en"?"Current percentiles":"Percentis atuais"}</span>
+      {latest&&<span style={{fontSize:T.fXS,color:T.dim,fontWeight:700,fontVariantNumeric:"tabular-nums"}}>
+        {latest.isBirth?(_lang==="en"?"Birth data":L("birthData")):`${_lang==="en"?"Last":"Últ."}: ${latest.label}`} · {ageMonths.toFixed(1)} {_lang==="en"?"mo":"meses"}
+      </span>}
+    </div>
     <PercentileCard label={L("weight")} value={latest?.weightKg} unit="kg" table={WHO_GIRLS.weight} icon="target"/>
     <PercentileCard label={L("length")} value={latest?.lengthCm} unit="cm" table={WHO_GIRLS.length} icon="ruler"/>
     <PercentileCard label={L("head")} value={latest?.headCm} unit="cm" table={WHO_GIRLS.head} icon="target"/>
 
     {/* Growth charts */}
     {allPoints.length>0&&<>
-      <div style={{fontSize:T.fMD,fontWeight:600,color:T.dim,marginTop:16,marginBottom:10,textTransform:"uppercase",letterSpacing:0.8}}>{_lang==="en"?"Growth curves":"Curvas de crescimento"}</div>
-      <GrowthChart label={`${L("weight")} (kg)`} field="weightKg" table={WHO_GIRLS.weight} color={T.green}/>
-      <GrowthChart label={`${L("length")} (cm)`} field="lengthCm" table={WHO_GIRLS.length} color={T.blue}/>
-      <GrowthChart label={`${L("head")} (cm)`} field="headCm" table={WHO_GIRLS.head} color={T.amber}/>
+      <div style={{fontSize:T.fSM,fontWeight:800,color:T.accent,textTransform:"uppercase",letterSpacing:1,margin:"18px 0 10px"}}>{_lang==="en"?"Growth curves":"Curvas de crescimento"}</div>
+      <GrowthChart label={L("weight")} emoji={"⚖️"} unit="kg" field="weightKg" table={WHO_GIRLS.weight} color="#a3e635"/>
+      <GrowthChart label={L("length")} emoji={"\u{1F4CF}"} unit="cm" field="lengthCm" table={WHO_GIRLS.length} color={T.cyan}/>
+      <GrowthChart label={L("head")} emoji={"\u{1F476}"} unit="cm" field="headCm" table={WHO_GIRLS.head} color={T.purple}/>
     </>}
 
     {/* History table (clickable rows, except Birth) */}
-    {allPoints.length>0&&<><div style={{fontSize:T.fMD,fontWeight:600,color:T.dim,marginTop:8,marginBottom:10,textTransform:"uppercase",letterSpacing:0.8}}>{_lang==="en"?"History":"Histórico"}</div>
+    {allPoints.length>0&&<><div style={{fontSize:T.fSM,fontWeight:800,color:T.accent,textTransform:"uppercase",letterSpacing:1,margin:"18px 0 10px"}}>{_lang==="en"?"History":"Histórico"}</div>
       {[...allPoints].reverse().map((p,i)=>{
         const clickable=!p.isBirth&&p.entryId;
-        const rowStyle={display:"flex",alignItems:"center",gap:12,padding:"10px 12px",marginBottom:4,background:T.glass,borderRadius:10,border:`1px solid ${T.gB}`,width:"100%",textAlign:"left",cursor:clickable?"pointer":"default",opacity:p.isBirth?0.75:1};
+        const rowStyle={display:"flex",alignItems:"center",gap:12,padding:"11px 12px",marginBottom:6,background:"rgba(20,26,60,0.42)",borderRadius:12,border:`1px solid ${T.gBSoft}`,boxShadow:T.insetTop,width:"100%",textAlign:"left",cursor:clickable?"pointer":"default",opacity:p.isBirth?0.75:1};
         const content=<>
           <span style={{fontSize:T.fSM,color:T.sub,minWidth:50,fontWeight:600}}>{p.label}</span>
           <div style={{flex:1,display:"flex",gap:10,fontSize:T.fMD,flexWrap:"wrap"}}>
-            {p.weightKg!==undefined&&<span style={{color:T.green,fontWeight:600}}>{formatGrowthVal(p.weightKg)}kg</span>}
-            {p.lengthCm!==undefined&&<span style={{color:T.blue,fontWeight:600}}>{formatGrowthVal(p.lengthCm)}cm</span>}
-            {p.headCm!==undefined&&<span style={{color:T.amber,fontWeight:600}}>{_lang==="en"?"Head":"Cab."} {formatGrowthVal(p.headCm)}</span>}
+            {p.weightKg!==undefined&&<span style={{color:"#a3e635",fontWeight:600}}>{formatGrowthVal(p.weightKg)}kg</span>}
+            {p.lengthCm!==undefined&&<span style={{color:T.cyan,fontWeight:600}}>{formatGrowthVal(p.lengthCm)}cm</span>}
+            {p.headCm!==undefined&&<span style={{color:T.purple,fontWeight:600}}>{_lang==="en"?"Head":"Cab."} {formatGrowthVal(p.headCm)}</span>}
           </div>
           {p.isBirth?<span style={{fontSize:T.fXS,color:T.purple,background:"rgba(139,124,246,0.15)",padding:"2px 6px",borderRadius:4,fontWeight:700,letterSpacing:0.5}}>{_lang==="en"?"BIRTH":"NASC."}</span>:<div style={{width:26,height:26,borderRadius:7,background:"rgba(139,124,246,0.1)",border:"1px solid rgba(139,124,246,0.15)",display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="pencil" size={11} color="#a78bfa"/></div>}
         </>;
         return clickable?<button key={i} onClick={()=>openEdit(p.entryId)} style={rowStyle}>{content}</button>:<div key={i} style={rowStyle}>{content}</div>;
       })}
     </>}
-    <div style={{marginTop:16,padding:12,background:T.glass,borderRadius:12,border:`1px solid ${T.gB}`,fontSize:T.fSM,color:T.dim,lineHeight:1.6}}>
+    {/* Source footer */}
+    <div style={{padding:"14px 0 20px",fontSize:T.fXS,color:T.dim,textAlign:"center",lineHeight:1.6}}>
       {_lang==="en"?"WHO curves for girls 0-24mo. Dashed line = P50 (median). Band = P3-P97.":"Curvas OMS para meninas 0-24m. Linha tracejada = P50 (mediana). Faixa = P3-P97."}
+    </div>
     </div>
   </div>);
 }

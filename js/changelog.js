@@ -4,6 +4,25 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.99", date: "2026-06-12",
+    pt: {
+      title: "Crescimento repaginado",
+      bullets: [
+        '★ A página de **Crescimento entrou na linguagem visual atual** (era a única da geração antiga): fundo cósmico, cards com etiqueta colorida por medida (peso/comprimento/cabeça) e formulário no padrão dos Ajustes.',
+        '★ Os gráficos ganharam **meses no eixo** (mar/abr/mai…) e **toque no ponto mostra data + valor + percentil** — igual ao Resumo.',
+        'O **voltar respeita de onde você veio**: abriu pelos Ajustes? volta pros Ajustes (antes despejava sempre no Resumo).',
+      ],
+    },
+    en: {
+      title: "Growth page refreshed",
+      bullets: [
+        '★ The **Growth page joined the current visual language** (it was the last old-generation one): cosmic background, color-tagged cards per metric and the Settings-style form.',
+        '★ Charts gained **month labels on the axis** and **tap a point for date + value + percentile** — just like Stats.',
+        'The **back button respects where you came from**: opened from Settings? It returns to Settings.',
+      ],
+    },
+  },
+  {
     v: "11.9.98", date: "2026-06-12",
     pt: {
       title: "Splash completo só na 1ª abertura do dia",
