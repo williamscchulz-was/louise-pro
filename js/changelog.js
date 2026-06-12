@@ -4,6 +4,21 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.89", date: "2026-06-12",
+    pt: {
+      title: "Simeticona e Tylenol no mesmo card",
+      bullets: [
+        '★ Ajuste fino da v11.9.88: **Simeticona e Tylenol dividem o MESMO card** (metade/metade, com divisória) em vez de dois cards separados — o resumo da Home volta ao layout 2×2 de sempre.',
+      ],
+    },
+    en: {
+      title: "Simethicone and Tylenol share one card",
+      bullets: [
+        '★ Fine-tune of v11.9.88: **Simethicone and Tylenol now split the SAME card** (half/half, with a divider) instead of two separate cards — the Home summary returns to its usual 2×2 layout.',
+      ],
+    },
+  },
+  {
     v: "11.9.88", date: "2026-06-12",
     pt: {
       title: "Card do Tylenol + rotina pós-banho",
