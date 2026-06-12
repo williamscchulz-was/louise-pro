@@ -109,7 +109,11 @@ function App(){
   const lang=profile.lang||"en";_lang=lang;
   const[toast,setToast]=useState(null);const[tick,setTick]=useState(0);const undoRef=useRef(null);const repeatRef=useRef(null);
   const[splash,setSplash]=useState(true);
-  useEffect(()=>{const t=setTimeout(()=>setSplash(false),3000);return()=>clearTimeout(t)},[]);
+  // v11.9.98: splash COMPLETO (traço que se desenha, 3s) só na 1ª abertura do dia — nas
+  // outras ~20 aberturas/dia, versão curta (~900ms, logo preenchida + fade). Raridade
+  // preserva o ritual. Flag per-device em localStorage (lp_splash_date).
+  const[splashFull]=useState(()=>{try{return localStorage.getItem("lp_splash_date")!==todayStr()}catch(e){return true}});
+  useEffect(()=>{try{localStorage.setItem("lp_splash_date",todayStr())}catch(e){}const t=setTimeout(()=>setSplash(false),splashFull?3000:900);return()=>clearTimeout(t)},[]);
 
   // lastSeenVersion per-device via localStorage (v11.1). Firestore profile é compartilhado
   // entre os 2 dispositivos (William + esposa). Antes, marcar update como visto num device
@@ -888,8 +892,8 @@ function App(){
               <linearGradient id="splDrawG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#e7deff"/><stop offset="0.55" stopColor="#b9a6f7"/><stop offset="1" stopColor="#8b7cf6"/></linearGradient>
               <linearGradient id="splFillG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#ffffff"/><stop offset="1" stopColor="#e3dcff"/></linearGradient>
             </defs>
-            <path d={LOUISE_SIL} fillRule="evenodd" fill="url(#splFillG)" className="spl-fill"/>
-            <path d={LOUISE_SIL} pathLength="1" fill="none" stroke="url(#splDrawG)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="spl-draw"/>
+            <path d={LOUISE_SIL} fillRule="evenodd" fill="url(#splFillG)" className={splashFull?"spl-fill":"spl-fill-quick"}/>
+            {splashFull&&<path d={LOUISE_SIL} pathLength="1" fill="none" stroke="url(#splDrawG)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="spl-draw"/>}
           </svg>
         </div>
         <div style={{animation:"splashText 1.2s ease both",display:"flex",flexDirection:"column",alignItems:"center"}}>

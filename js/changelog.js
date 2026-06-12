@@ -4,6 +4,21 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.98", date: "2026-06-12",
+    pt: {
+      title: "Splash completo só na 1ª abertura do dia",
+      bullets: [
+        '★ A animação da **logo que se desenha (3s) virou momento da primeira abertura do dia** — nas outras 20+ aberturas, uma versão curta (~1s) te deixa entrar logo. Raridade preserva o ritual; bebê no colo agradece.',
+      ],
+    },
+    en: {
+      title: "Full splash only on the day's first open",
+      bullets: [
+        '★ The **self-drawing logo animation (3s) is now a first-open-of-the-day moment** — every other open gets a short version (~1s) so you get in fast. Rarity keeps the ritual special.',
+      ],
+    },
+  },
+  {
     v: "11.9.97", date: "2026-06-12",
     pt: {
       title: "Dieta de movimento",
