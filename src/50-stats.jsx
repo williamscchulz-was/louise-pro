@@ -224,7 +224,7 @@ const StatsPage = React.memo(function StatsPage({entries,onGrowth}){
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
         <div style={{display:"flex",alignItems:"center",gap:8}}>
           <div style={{width:28,height:28,borderRadius:9,background:`${T.amber}1a`,border:`1px solid ${T.amber}33`,display:"flex",alignItems:"center",justifyContent:"center"}}>
-            <Icon name="medicine" size={14} color={T.amber}/>
+            <Icon name="pill" size={14} color={T.amber}/>
           </div>
           <div>
             <div style={{fontSize:T.fMD,fontWeight:700,color:T.text}}>Simeticona</div>
@@ -470,9 +470,9 @@ const StatsPage = React.memo(function StatsPage({entries,onGrowth}){
         </div>
 
         {cur.totalSimet>0&&<>
-          {sectionH({icon:"medicine",label:_lang==="en"?"Medicines":"Medicamentos",col:T.amber})}
+          {sectionH({icon:"pill",label:_lang==="en"?"Medicines":"Medicamentos",col:T.amber})}
           <div style={cardStyle}>
-            {topRow("medicine",T.amber,_lang==="en"?"Simethicone/week":"Simeticona/semana",cur.totalSimet+"x",<Trend val={pctDiff(cur.totalSimet,prev.totalSimet)} inverse={true}/>)}
+            {topRow("pill",T.amber,_lang==="en"?"Simethicone/week":"Simeticona/semana",cur.totalSimet+"x",<Trend val={pctDiff(cur.totalSimet,prev.totalSimet)} inverse={true}/>)}
             {miniBar(validBuckets.map(b=>b.totalSimet),T.amber)}
           </div>
         </>}

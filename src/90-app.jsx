@@ -939,7 +939,7 @@ function App(){
   return(<div style={{background:"transparent",height:"var(--phys-h, 100dvh)",overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch",overscrollBehavior:"none",color:T.text,maxWidth:480,margin:"0 auto",position:"relative"}}>
     {/* Starfield: componente memoizado, renderiza 1x por sessão (v10.5.3). */}
     <Starfield/>
-    {toast&&<Toast message={toast} onUndo={undoRef.current?handleUndo:null} onRepeat={repeatRef.current?handleRepeat:null} onClose={()=>setToast(null)}/>}
+    {toast&&<Toast message={toast} lift={!!activeTimer} onUndo={undoRef.current?handleUndo:null} onRepeat={repeatRef.current?handleRepeat:null} onClose={()=>setToast(null)}/>}
     <Confetti trigger={confettiOn} onDone={()=>setConfettiOn(false)}/>
     {/* v11.9.9: Ring long-press detail modal. v11.9.13: IIFE só executa quando modal aberto
         (antes evaluava em todo render do App, podia crashar com edge-case data). */}

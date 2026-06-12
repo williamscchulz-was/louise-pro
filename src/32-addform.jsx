@@ -99,8 +99,10 @@ function AddForm({type,onSave,onSaveBatch,savedMeds,onSaveMeds,editEntry,lastBot
         return;
       }
     }
-    else if(type==="temperature"){if(!tempV){invalid();return}payload={...b,value:parseFloat(tempV)}}
-    else if(type==="growth"){payload={...b,weightKg:weightKg?parseFloat(weightKg):undefined,lengthCm:lengthCm?parseFloat(lengthCm):undefined,headCm:headCm?parseFloat(headCm):undefined}}
+    // v11.9.92: vírgula decimal — teclado pt-BR digita "4,5"; parseFloat puro truncava pra 4
+    // silenciosamente (corrupção de dado de crescimento). Mesmo parse do Profile/History.
+    else if(type==="temperature"){if(!tempV){invalid();return}payload={...b,value:parseFloat(String(tempV).replace(",","."))}}
+    else if(type==="growth"){const pF=v=>parseFloat(String(v).replace(",","."));payload={...b,weightKg:weightKg?pF(weightKg):undefined,lengthCm:lengthCm?pF(lengthCm):undefined,headCm:headCm?pF(headCm):undefined}}
     if(!payload)return;
     savingRef.current=true;setSaving(true);
     try{await onSave(payload)}catch(e){}

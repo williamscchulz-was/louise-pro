@@ -4,6 +4,27 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.92", date: "2026-06-12",
+    pt: {
+      title: "4 bugs corrigidos (da revisão completa)",
+      bullets: [
+        '★ O **Desfazer não fica mais escondido**: com timer rodando, o aviso de "removido/salvo" sobe pra cima da barra do timer.',
+        '★ **Trocar o idioma agora salva na hora** — antes o botão só mudava a tela atual e o app ficava metade EN, metade PT.',
+        '★ **Vírgula decimal**: digitar "4,5" no peso/temperatura agora salva 4,5 (antes virava 4 silenciosamente).',
+        'Ícone de remédio quebrado em 3 lugares do Resumo — consertado.',
+      ],
+    },
+    en: {
+      title: "4 bugs fixed (from the full review)",
+      bullets: [
+        '★ **Undo no longer hides**: with a timer running, the "removed/saved" toast rises above the timer bar.',
+        '★ **Switching language now saves instantly** — before, the button only changed the current screen, leaving the app half EN, half PT.',
+        '★ **Decimal comma**: typing "4,5" for weight/temperature now saves 4.5 (it silently became 4 before).',
+        'Broken medicine icon in 3 places of Stats — fixed.',
+      ],
+    },
+  },
+  {
     v: "11.9.91", date: "2026-06-12",
     pt: {
       title: "Vit. D também segue a mamadeira pós-banho",

@@ -365,8 +365,10 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
         </div>
         <Fld label={langSel==="en"?"Language":"Idioma"}>
           <div style={{display:"flex",gap:4,background:"rgba(14,18,48,0.6)",borderRadius:10,padding:3,border:`1px solid ${T.gB}`}}>
-            <button onClick={()=>setLangSel("en")} style={{flex:1,padding:"10px 0",borderRadius:8,fontSize:T.fMD,fontWeight:700,background:langSel==="en"?T.accent:"transparent",color:langSel==="en"?"#fff":T.sub}}>English</button>
-            <button onClick={()=>setLangSel("pt")} style={{flex:1,padding:"10px 0",borderRadius:8,fontSize:T.fMD,fontWeight:700,background:langSel==="pt"?T.accent:"transparent",color:langSel==="pt"?"#fff":T.sub}}>Português</button>
+            {/* v11.9.92: persistToggle delta-only — o toggle sozinho NUNCA gravava no Firestore
+                (langSel é state local), deixando o app meio EN, meio PT até salvar o form. */}
+            <button onClick={()=>{setLangSel("en");persistToggle({lang:"en"})}} style={{flex:1,padding:"10px 0",borderRadius:8,fontSize:T.fMD,fontWeight:700,background:langSel==="en"?T.accent:"transparent",color:langSel==="en"?"#fff":T.sub}}>English</button>
+            <button onClick={()=>{setLangSel("pt");persistToggle({lang:"pt"})}} style={{flex:1,padding:"10px 0",borderRadius:8,fontSize:T.fMD,fontWeight:700,background:langSel==="pt"?T.accent:"transparent",color:langSel==="pt"?"#fff":T.sub}}>Português</button>
           </div>
         </Fld>
         {/* Wake Lock toggle */}
