@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rotina — estágios pós-banho (mamadeira + Floripa + Vit D)</title>
+<style>
+  :root{--accent:#8b7cf6;--green:#34d399;--amber:#fbbf24;--cyan:#22d3ee;--purple:#a78bfa;--orange:#fb923c;--pink:#f472b6;--sub:#a3aac8;--dim:#555a80;--text:#e4e6f5;--heading:#f0f2ff}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{background:#070b1e;color:var(--text);font-family:-apple-system,BlinkMacSystemFont,system-ui,sans-serif;line-height:1.5;padding:20px 0 80px}
+  .wrap{max-width:420px;margin:0 auto;padding:0 16px}
+  h1{font-size:19px;font-weight:800;letter-spacing:-0.3px;margin-bottom:4px}
+  .lead{font-size:12.5px;color:var(--sub);margin-bottom:14px}
+  .lead b{color:#fff}
+  .chips{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+  .chip{font-size:11.5px;font-weight:700;padding:7px 11px;border-radius:9px;border:1px solid rgba(90,100,180,0.14);background:rgba(14,18,48,0.6);color:var(--sub);cursor:pointer;font-family:inherit}
+  .chip.on{background:var(--accent);color:#fff;border-color:transparent}
+  /* card da rotina (fiel ao app) */
+  .rcard{padding:11px 14px 12px;border-radius:13px;background:rgba(139,124,246,0.05);border:1px solid rgba(139,124,246,0.15)}
+  .rhead{display:flex;align-items:center;gap:9px}
+  .rhead .ic{font-size:15px}
+  .rhead .eyebrow{font-size:9px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:0.8px}
+  .rhead .nm{font-size:13px;font-weight:700;color:var(--heading)}
+  .rhead .tm{font-size:11px;color:var(--accent);font-weight:700;font-variant-numeric:tabular-nums}
+  .rhead .bt{margin-left:auto;font-size:11px;color:var(--green);font-weight:800;display:flex;align-items:center;gap:3}
+  .rhead .bt .den{color:var(--dim);font-weight:600;font-size:9px}
+  .segs{display:flex;gap:4px;margin-top:11px}
+  .segs i{flex:1;height:5px;border-radius:3px;background:rgba(139,124,246,0.13)}
+  .segs i.d{background:var(--green)}
+  .segs i.n{background:var(--accent);animation:segPulse 2s ease-in-out infinite}
+  .segs i.l{background:var(--orange)}
+  @keyframes segPulse{0%,100%{opacity:1}50%{opacity:.45}}
+  .exp{margin-top:11px;padding-top:11px;border-top:1px solid rgba(139,124,246,0.12);display:flex;flex-direction:column;gap:8px}
+  .slot{display:flex;align-items:center;gap:9px}
+  .slot .ck{width:16px;height:16px;border-radius:50%;border:1.5px solid;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:9px;font-weight:800}
+  .slot .si{width:16px;text-align:center;font-size:12px;flex-shrink:0}
+  .slot .lb{flex:1;min-width:0;font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .slot .tm{font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;flex-shrink:0}
+  .slot .new{font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--green);background:rgba(52,211,153,0.13);border:1px solid rgba(52,211,153,0.3);border-radius:5px;padding:1px 5px;margin-left:5px;flex-shrink:0}
+  .bots{display:flex;align-items:center;gap:9px;margin-top:1px}
+  .bots .si{width:16px;text-align:center;font-size:12px}
+  .bots .lb{flex:1;font-size:11px;color:var(--sub);font-weight:600}
+  .bots .lb b{color:var(--green);font-weight:700}
+  .bots .dots{display:flex;gap:3px}
+  .bots .dots i{width:7px;height:7px;border-radius:2px;background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.2)}
+  .bots .dots i.f{background:var(--green);border-color:var(--green)}
+  .note{font-size:12px;color:var(--sub);line-height:1.6;margin-top:18px}
+  .note b{color:#fff}
+  .note code{background:rgba(139,124,246,0.14);color:#c4b5fd;padding:1px 5px;border-radius:5px;font-size:11px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Rotina com os estágios pós-banho</h1>
+  <p class="lead">Por que não apareceu: os 3 horários novos só existiam <b>depois de salvar os Ajustes</b> — e o botão Salvar nem libera se você não mudar nada. <b>O fix:</b> eles passam a aparecer <b>sozinhos</b> (default = banho + 15min), sem salvar nada. Os Ajustes seguem lá só pra quem quiser mudar o horário. Toque nos cenários:</p>
+
+  <div class="chips" id="chips"></div>
+  <div class="rcard">
+    <div class="rhead" id="rhead"></div>
+    <div class="segs" id="segs"></div>
+    <div class="exp" id="exp"></div>
+  </div>
+
+  <p class="note">
+    <b>Como marcam ✓:</b><br>
+    • <b>Mamad. pós-banho</b> — qualquer mamadeira perto das 18:15 (janela 45min antes → 1h30 depois). Continua contando no total de mamadas.<br>
+    • <b>Floripa</b> e <b>Vit D</b> — dados <b>em qualquer hora do dia</b> (remédio diário); o horário só ordena o "próximo na rotina". Casam pelo nome: <code>floripa</code>, <code>vit d</code>/<code>vitamina d</code>.<br>
+    • Os 3 deslocam junto com o horário real de acordar, igual sonecas/banho.<br><br>
+    Aprovou? Eu implemento o default automático e some o problema do "não apareceu".
+  </p>
+</div>
+<script>
+  var STAGES=[
+    {k:"wake",i:"☀️",c:"var(--amber)",l:"Acordar",t:"07:00"},
+    {k:"n1",i:"☁️",c:"var(--accent)",l:"1ª Soneca",t:"08:15"},
+    {k:"n2",i:"☁️",c:"var(--accent)",l:"2ª Soneca",t:"10:45"},
+    {k:"n3",i:"☁️",c:"var(--accent)",l:"3ª Soneca",t:"13:30"},
+    {k:"n4",i:"☁️",c:"var(--accent)",l:"4ª Soneca",t:"16:00"},
+    {k:"bath",i:"🛁",c:"var(--cyan)",l:"Banho",t:"18:00"},
+    {k:"pb",i:"🍼",c:"var(--green)",l:"Mamad. pós-banho",t:"18:15",nw:1},
+    {k:"flo",i:"💊",c:"var(--amber)",l:"Floripa",t:"18:15",nw:1},
+    {k:"vitd",i:"💧",c:"var(--amber)",l:"Vitamina D",t:"18:15",nw:1},
+    {k:"bed",i:"🛏️",c:"var(--purple)",l:"Dormir",t:"19:30"}
+  ];
+  var SCEN=[
+    {id:"17:50 · antes do banho",done:["wake","n1","n2","n3","n4"],times:{wake:"06:52"},next:"bath",head:["🛁","Banho","18:00"],bots:5},
+    {id:"18:35 · banho + mamadeira feitos",done:["wake","n1","n2","n3","n4","bath","pb"],times:{wake:"06:52",bath:"18:10",pb:"18:28"},next:"flo",head:["💊","Floripa","18:15"],late:["flo"],bots:6},
+    {id:"19:10 · só falta dormir",done:["wake","n1","n2","n3","n4","bath","pb","flo","vitd"],times:{wake:"06:52",bath:"18:10",pb:"18:28",flo:"18:40",vitd:"18:42"},next:"bed",head:["🛏️","Dormir","19:30"],bots:6}
+  ];
+  var chips=document.getElementById('chips');
+  SCEN.forEach(function(s,i){var c=document.createElement('button');c.className='chip'+(i===1?' on':'');c.textContent=s.id;c.onclick=function(){render(i)};chips.appendChild(c);});
+  function render(idx){
+    [].forEach.call(chips.children,function(c,i){c.classList.toggle('on',i===idx);});
+    var s=SCEN[idx];
+    document.getElementById('rhead').innerHTML='<span class="ic">'+s.head[0]+'</span><span class="eyebrow">Próximo</span><span class="nm">'+s.head[1]+'</span><span class="tm">'+s.head[2]+'</span><span class="bt">🍼 '+s.bots+'<span class="den">/6 · próx ~120ml</span></span>';
+    var segs='',exp='';
+    STAGES.forEach(function(st){
+      var isD=s.done.indexOf(st.k)>=0,isN=s.next===st.k,isL=(s.late||[]).indexOf(st.k)>=0;
+      segs+='<i class="'+(isD?'d':isL?'l':isN?'n':'')+'"></i>';
+      var col=isD?'var(--green)':isL?'var(--orange)':isN?'var(--accent)':'var(--dim)';
+      var ck=isD?'<span class="ck" style="border-color:var(--green);background:var(--green);color:#04061a">✓</span>':isL?'<span class="ck" style="border-color:var(--orange);color:var(--orange)">!</span>':'<span class="ck" style="border-color:'+col+'"></span>';
+      var time=(s.times&&s.times[st.k])||st.t;
+      exp+='<div class="slot">'+ck+'<span class="si">'+st.i+'</span><span class="lb" style="color:'+(isD?'var(--sub)':'var(--text)')+'">'+st.l+(st.nw?'<span class="new">novo</span>':'')+'</span><span class="tm" style="color:'+col+'">'+time+'</span></div>';
+    });
+    document.getElementById('segs').innerHTML=segs;
+    var dots='';for(var i=0;i<6;i++)dots+='<i class="'+(i<s.bots?'f':'')+'"></i>';
+    exp+='<div class="bots"><span class="si">🍼</span><span class="lb">Mamadas · <b>próx. ~120ml</b></span><span class="dots">'+dots+'</span></div>';
+    document.getElementById('exp').innerHTML=exp;
+  }
+  render(1);
+</script>
+</body>
+</html>
