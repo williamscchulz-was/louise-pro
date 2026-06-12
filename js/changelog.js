@@ -4,6 +4,25 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.96", date: "2026-06-12",
+    pt: {
+      title: "Timer com arrependimento: descartar e desfazer",
+      bullets: [
+        '★ **Iniciou soneca/sono sem querer?** Nos 3 primeiros minutos o botão de parar vira um **✕ cinza de descartar** — não cria registro nenhum.',
+        '★ **Parar o timer agora tem Desfazer**: o aviso de "salvo" traz o botão que apaga o registro e **restaura o timer rodando** como estava.',
+        'O "acordou" automático do fim do sono só é criado pra noites de verdade (**≥30min**) — sem acordar fantasma deslocando a rotina.',
+      ],
+    },
+    en: {
+      title: "Timer with regret: discard and undo",
+      bullets: [
+        '★ **Started a nap/sleep by accident?** In the first 3 minutes the stop button becomes a **gray ✕ discard** — creates no record at all.',
+        '★ **Stopping the timer now has Undo**: the "saved" toast brings a button that deletes the record and **restores the running timer**.',
+        'The automatic "woke up" at sleep end is only created for real nights (**≥30min**) — no phantom wake-up shifting the routine.',
+      ],
+    },
+  },
+  {
     v: "11.9.95", date: "2026-06-12",
     pt: {
       title: "Home estável — nada mais pula sozinho",

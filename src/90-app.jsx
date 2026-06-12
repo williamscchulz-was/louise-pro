@@ -413,7 +413,20 @@ function App(){
       Haptic.warning();
     }
   },[activeTimer]);
-  const stopTimer=useCallback(async()=>{if(!activeTimer)return;Haptic.heavy();const s=new Date(activeTimer.startTime);if(activeTimer.type==="nursing"){const now=Date.now();const elapsed=activeTimer.paused?0:(now-new Date(activeTimer.sideStart).getTime());let lMs=(activeTimer.leftMs||0),rMs=(activeTimer.rightMs||0);if(!activeTimer.paused){if(activeTimer.side==="left")lMs+=elapsed;else rMs+=elapsed}const totalMin=Math.max(1,Math.round((lMs+rMs)/60000));const lMin=Math.round(lMs/60000),rMin=Math.round(rMs/60000);const side=lMs>0&&rMs>0?"both":(lMs>0?"left":"right");const entry={type:"nursing",date:`${s.getFullYear()}-${String(s.getMonth()+1).padStart(2,"0")}-${String(s.getDate()).padStart(2,"0")}`,time:`${String(s.getHours()).padStart(2,"0")}:${String(s.getMinutes()).padStart(2,"0")}`,durationMin:totalMin,side,leftMin:lMin,rightMin:rMin,id:uid()};await FB.addEntry(entry);await FB.saveTimer(null);showToast(_lang==="en"?`Nursing ${totalMin}min (L:${lMin} R:${rMin})`:`Amamentação ${totalMin}min (E:${lMin} D:${rMin})`,null)}else{
+  const stopTimer=useCallback(async()=>{if(!activeTimer)return;Haptic.heavy();const s=new Date(activeTimer.startTime);
+    // v11.9.96: timer CANCELÁVEL — sono/soneca com <3min é mis-tap, não registro: descarta
+    // sem criar entry nem wakeup fantasma (que podia virar âncora do wakeDelta e deslocar
+    // a rotina inteira em até ±2h). O botão do TimerBar fica cinza (✕) nesse estado.
+    if((activeTimer.type==="sleep"||activeTimer.type==="nap")&&Date.now()-s.getTime()<180000){
+      await FB.saveTimer(null);
+      showToast(_lang==="en"?"Timer discarded":"Timer descartado",null);
+      return;
+    }
+    // v11.9.96: snapshot do timer pro DESFAZER do stop (era a única escrita do app sem undo).
+    // Desfazer = apaga as entries criadas + restaura o timer como estava.
+    const prevTimer={...activeTimer};
+    const undoStop=ids=>async()=>{for(const id of ids)await FB.delEntry(id);await FB.saveTimer(prevTimer)};
+    if(activeTimer.type==="nursing"){const now=Date.now();const elapsed=activeTimer.paused?0:(now-new Date(activeTimer.sideStart).getTime());let lMs=(activeTimer.leftMs||0),rMs=(activeTimer.rightMs||0);if(!activeTimer.paused){if(activeTimer.side==="left")lMs+=elapsed;else rMs+=elapsed}const totalMin=Math.max(1,Math.round((lMs+rMs)/60000));const lMin=Math.round(lMs/60000),rMin=Math.round(rMs/60000);const side=lMs>0&&rMs>0?"both":(lMs>0?"left":"right");const entry={type:"nursing",date:`${s.getFullYear()}-${String(s.getMonth()+1).padStart(2,"0")}-${String(s.getDate()).padStart(2,"0")}`,time:`${String(s.getHours()).padStart(2,"0")}:${String(s.getMinutes()).padStart(2,"0")}`,durationMin:totalMin,side,leftMin:lMin,rightMin:rMin,id:uid()};await FB.addEntry(entry);await FB.saveTimer(null);showToast(_lang==="en"?`Nursing ${totalMin}min (L:${lMin} R:${rMin})`:`Amamentação ${totalMin}min (E:${lMin} D:${rMin})`,undoStop([entry.id]))}else{
     // Sleep/nap stop — if sleep has wakings, persist them on the entry
     let wakings=activeTimer.wakings||[];
     // If there's an unclosed nightWake, close it now
@@ -432,21 +445,24 @@ function App(){
     const entry={type:activeTimer.type,date:`${s.getFullYear()}-${String(s.getMonth()+1).padStart(2,"0")}-${String(s.getDate()).padStart(2,"0")}`,time:`${String(s.getHours()).padStart(2,"0")}:${String(s.getMinutes()).padStart(2,"0")}`,durationMin:activeTimer.type==="tummytime"?Math.round(mins*60)/60:mins,id:uid()};
     if(activeTimer.type==="sleep"&&wakings.length>0)entry.wakings=wakings;
     const parts=splitMidnight(entry);for(const p of parts) await FB.addEntry(p);await FB.saveTimer(null);
+    const createdIds=parts.map(p=>p.id);
     // Auto-create wakeup event when bedtime ends (not for naps, not for tummytime).
-    // Includes total night sleep so the timeline shows it as "9h57m de sono".
-    if(activeTimer.type==="sleep"){
+    // v11.9.96: só pra noite DE VERDADE (>=30min) — sleep curto é mis-start e o wakeup
+    // fantasma virava âncora do ajuste da rotina.
+    if(activeTimer.type==="sleep"&&mins>=30){
       const totalAwake=wakings.reduce((s,w)=>s+(w.durationMin||0),0);
       const realSleep=Math.max(0,mins-totalAwake);
       const wakeup={type:"wakeup",date:todayStr(),time:nowTime(),id:uid(),nightSleepMin:realSleep,_autoFromBedtime:true};
       await FB.addEntry(wakeup);
+      createdIds.push(wakeup.id);
     }
-    // Toast: tummytime uses mm:ss format, sleep/nap uses min
+    // Toast: tummytime uses mm:ss format, sleep/nap uses min — todos com Desfazer (v11.9.96)
     if(activeTimer.type==="tummytime"){
       const m=Math.floor(mins);const sec=Math.round((mins-m)*60);
-      showToast(`Tummy time · ${m}min${sec>0?` ${sec}s`:""}`,null);
+      showToast(`Tummy time · ${m}min${sec>0?` ${sec}s`:""}`,undoStop(createdIds));
     }else{
       const wakingNote=wakings.length>0?` (${wakings.length} ${_lang==="en"?"wake"+(wakings.length>1?"s":""):"despertar"+(wakings.length>1?"es":"")})`:"";
-      showToast(`${mins}min ${_lang==="en"?"logged":"registrado"}${wakingNote}`,null)
+      showToast(`${mins}min ${_lang==="en"?"logged":"registrado"}${wakingNote}`,undoStop(createdIds))
     }
   }},[activeTimer]);
 
