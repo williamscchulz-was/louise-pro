@@ -4,6 +4,25 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.95", date: "2026-06-12",
+    pt: {
+      title: "Home estável — nada mais pula sozinho",
+      bullets: [
+        '★ A **Curiosidade do dia desceu pra baixo do resumo** e agora **fica até você dispensar (✕)** — antes ela aparecia ACIMA do anel e sumia sozinha em 13s, empurrando a tela toda no meio do uso.',
+        '★ O **card da rotina subiu** pra cima dos avisos passageiros (janela de soneca, insights) — ação estável em cima, informação transitória embaixo.',
+        'Insights mostram **1 por vez** (sem sumiço automático), a linha "Próximo marco" só aparece a **≤14 dias da consulta**, e a ★ do topo perdeu o destaque âmbar permanente.',
+      ],
+    },
+    en: {
+      title: "Stable Home — nothing jumps on its own",
+      bullets: [
+        '★ The **daily Curiosity moved below the summary** and now **stays until you dismiss it (✕)** — it used to appear ABOVE the ring and vanish after 13s, pushing the whole screen mid-use.',
+        '★ The **routine card moved up** above transient banners (nap window, insights) — stable actions on top, passing info below.',
+        'Insights show **1 at a time** (no auto-hide), the "Next milestone" line only appears **≤14 days before a checkup**, and the header ★ lost its permanent amber tint.',
+      ],
+    },
+  },
+  {
     v: "11.9.94", date: "2026-06-12",
     pt: {
       title: "Passe de português",

@@ -1,19 +1,14 @@
 const CuriosityCard = React.memo(function CuriosityCard({age,lang,tick}){
-  const[vis,setVis]=useState(false);const[fading,setFading]=useState(false);const shownRef=useRef(null);
+  // v11.9.95: fim do auto-sumiço de 13,5s (montava/desmontava sozinho empurrando a Home).
+  // Agora aparece a partir das 9h e FICA até o ✕ — dispensa é por dia (localStorage, per-device).
+  const[vis,setVis]=useState(false);
   useEffect(()=>{
-    if(!age)return;
+    if(!age){setVis(false);return}
     const h=new Date().getHours();
-    if(h<9||h>=10){setVis(false);return}
-    const key=`${age.totalDays}-${h}`;
-    if(shownRef.current===key)return;
-    shownRef.current=key;setVis(true);setFading(false);
+    let dis=null;try{dis=localStorage.getItem("lp_curiosity_dismissed")}catch(e){}
+    setVis(h>=9&&dis!==todayStr());
   },[age,tick]);
-  useEffect(()=>{
-    if(!vis)return;
-    const t1=setTimeout(()=>setFading(true),13500);
-    const t2=setTimeout(()=>setVis(false),15000);
-    return()=>{clearTimeout(t1);clearTimeout(t2)};
-  },[vis]);
+  const dismiss=()=>{try{localStorage.setItem("lp_curiosity_dismissed",todayStr())}catch(e){}setVis(false)};
   if(!vis||!age)return null;
   const dayNum=age.totalDays;const monthNum=age.months;const weekNum=age.totalWeeks;
   const colors=["#fbbf24","#34d399","#38bdf8","#a78bfa","#f472b6","#fb923c"];
@@ -44,7 +39,7 @@ const CuriosityCard = React.memo(function CuriosityCard({age,lang,tick}){
   }
   if(!txt)return null;
   // v11.9.24: refinarias — gradient bg mais sutil, border mais leve, shadow lavanda outer.
-  return(<div style={{position:"relative",margin:"0 20px 14px",padding:"16px 20px",borderRadius:20,background:`linear-gradient(180deg,${col}14,${col}03)`,border:`1px solid ${col}28`,overflow:"hidden",boxShadow:`0 1px 0 0 rgba(255,255,255,0.05) inset, 0 8px 28px -16px ${col}55`,animation:fading?"curiosityOut .5s ease forwards":"curiosityIn .5s ease"}}>
+  return(<div style={{position:"relative",margin:"0 20px 14px",padding:"16px 20px",borderRadius:20,background:`linear-gradient(180deg,${col}14,${col}03)`,border:`1px solid ${col}28`,overflow:"hidden",boxShadow:`0 1px 0 0 rgba(255,255,255,0.05) inset, 0 8px 28px -16px ${col}55`,animation:"curiosityIn .5s ease"}}>
     <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse at 50% 0%,rgba(255,255,255,0.05),transparent 60%)",pointerEvents:"none"}}/>
     <div style={{position:"relative",display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
       {/* v11.9.24: tag virou pill com bg sutil + ícone integrado */}
@@ -53,6 +48,7 @@ const CuriosityCard = React.memo(function CuriosityCard({age,lang,tick}){
         {tagLabel}
       </span>
       {daysLeft!==null&&<span style={{fontSize:T.fSM,color:T.dim,marginLeft:"auto",fontWeight:600,fontVariantNumeric:"tabular-nums"}}>{lang==="en"?`${daysLeft} days left`:`${daysLeft} dias restantes`}</span>}
+      <button aria-label={lang==="en"?"Dismiss":"Dispensar"} onClick={dismiss} className="hit44" style={{marginLeft:daysLeft!==null?6:"auto",width:24,height:24,borderRadius:8,background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.08)",color:T.dim,fontSize:12,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,cursor:"pointer",lineHeight:1}}>✕</button>
     </div>
     <div style={{position:"relative",fontSize:T.fLG,fontWeight:700,marginBottom:5,lineHeight:1.35,color:T.heading,letterSpacing:-0.25}}>{txt.t}</div>
     <div style={{position:"relative",fontSize:T.fMD,color:"#9099c3",lineHeight:1.6,letterSpacing:0.05}}>{txt.b}</div>
@@ -111,21 +107,10 @@ function Confetti({trigger,onDone}){
 }
 
 const InsightCards = React.memo(function InsightCards({insights,phase}){
-  const[vis,setVis]=useState(false);const[fading,setFading]=useState(false);const shownRef=useRef(null);
-  useEffect(()=>{
-    if(!insights||insights.length===0||phase!==2){setVis(false);return}
-    const key=insights.map(h=>h.title).join("|");
-    if(shownRef.current===key)return;
-    shownRef.current=key;setVis(true);setFading(false);
-  },[insights,phase]);
-  useEffect(()=>{
-    if(!vis)return;
-    const t1=setTimeout(()=>setFading(true),13500);
-    const t2=setTimeout(()=>setVis(false),15000);
-    return()=>{clearTimeout(t1);clearTimeout(t2)};
-  },[vis]);
-  if(!vis||!insights||insights.length===0)return null;
-  return(<>{insights.map((h,i)=>{const col=h.type==="good"?T.green:h.type==="warn"?T.orange:T.blue;const colLight=h.type==="good"?"#6ee7b7":h.type==="warn"?"#fdba74":"#7dd3fc";return<div key={"hi"+i} style={{position:"relative",margin:"0 20px 12px",padding:"18px 20px",borderRadius:20,background:`linear-gradient(180deg,${col}1f,${col}08)`,border:`1px solid ${col}45`,display:"flex",alignItems:"flex-start",gap:14,boxShadow:`0 1px 0 0 rgba(255,255,255,0.08) inset, 0 0 0 1px ${col}10, 0 8px 24px -8px ${col}25`,overflow:"hidden",animation:fading?"curiosityOut .5s ease forwards":"curiosityIn .5s ease"}}>
+  // v11.9.95: fim do auto-sumiço (13,5s) + capado em 1 — os 2 cards montando/desmontando
+  // sozinhos empurravam a Home no pico de registro. O card fica; muda quando o dado muda.
+  if(!insights||insights.length===0||phase!==2)return null;
+  return(<>{insights.slice(0,1).map((h,i)=>{const col=h.type==="good"?T.green:h.type==="warn"?T.orange:T.blue;const colLight=h.type==="good"?"#6ee7b7":h.type==="warn"?"#fdba74":"#7dd3fc";return<div key={"hi"+i} style={{position:"relative",margin:"0 20px 12px",padding:"18px 20px",borderRadius:20,background:`linear-gradient(180deg,${col}1f,${col}08)`,border:`1px solid ${col}45`,display:"flex",alignItems:"flex-start",gap:14,boxShadow:`0 1px 0 0 rgba(255,255,255,0.08) inset, 0 0 0 1px ${col}10, 0 8px 24px -8px ${col}25`,overflow:"hidden",animation:"curiosityIn .5s ease"}}>
     <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse at 50% 0%,rgba(255,255,255,0.05),transparent 60%)",pointerEvents:"none"}}/>
     <div style={{width:42,height:42,borderRadius:13,background:`linear-gradient(135deg,${col}45,${col}15)`,border:`1px solid ${col}55`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,boxShadow:"0 1px 0 0 rgba(255,255,255,0.1) inset",position:"relative"}}><Icon name={h.type==="good"?"check":h.type==="warn"?"zap":"star"} size={20} color={colLight}/></div>
     <div style={{flex:1,minWidth:0,position:"relative"}}>
