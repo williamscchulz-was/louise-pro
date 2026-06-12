@@ -4,6 +4,25 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.97", date: "2026-06-12",
+    pt: {
+      title: "Dieta de movimento",
+      bullets: [
+        '★ Menos coisas piscando ao mesmo tempo: o último sono no anel tinha **3 animações simultâneas** (tracinhos correndo + faísca + brilho) — ficou **só o brilho respirando**. Os tracinhos voltam quando tem timer ativo.',
+        'O **sino parou de balançar pra sempre**: agora balança 2x quando chega notificação nova e sossega.',
+        'A faísca remota era a única animação que ignorava o app em segundo plano e o "reduzir movimento" do iPhone — saiu de cena. A nebulosa do anel fica intacta.',
+      ],
+    },
+    en: {
+      title: "Motion diet",
+      bullets: [
+        '★ Less blinking at once: the last sleep on the ring had **3 simultaneous animations** (running dashes + sparkle + glow) — now it\'s **just the breathing glow**. Dashes return with an active timer.',
+        'The **bell stopped wiggling forever**: it now wiggles twice when a new notification arrives and settles.',
+        'The sparkle was the only animation ignoring background pause and iOS "reduce motion" — gone. The ring\'s nebula stays intact.',
+      ],
+    },
+  },
+  {
     v: "11.9.96", date: "2026-06-12",
     pt: {
       title: "Timer com arrependimento: descartar e desfazer",

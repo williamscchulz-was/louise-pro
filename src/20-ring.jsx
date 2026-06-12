@@ -103,10 +103,10 @@ const Ring = React.memo(function Ring({activeTimer,napSug,tick,recentEvents,lang
         {sleepArcs.map((sa,i)=><path key={"sg"+i} d={sa.path} fill="none" stroke={sa.col} strokeWidth={arcStrokeIconBlur} strokeLinecap="round" opacity={0.08} filter="url(#slpG)"/>)}
         {sleepArcs.map((sa,i)=><path key={"sb"+i} d={sa.path} fill="none" stroke={sa.col} strokeWidth={arcStrokeFill} strokeLinecap="round" opacity={0.4}/>)}
         {sleepArcs.map((sa,i)=><path key={"sf"+i} d={sa.path} fill="none" stroke="rgba(16,12,40,0.85)" strokeWidth={arcStrokeInset} strokeLinecap="round"/>)}
-        {/* Dashed flow on last sleep arc */}
-        {lastSleepArcIdx>=0&&!activeTimer&&sleepArcs[lastSleepArcIdx]&&<path d={sleepArcs[lastSleepArcIdx].path} fill="none" stroke={sleepArcs[lastSleepArcIdx].col} strokeWidth={arcStrokeDashed} strokeLinecap="round" strokeDasharray="6 9" opacity={0.35} style={{animation:"dashFlow 2s linear infinite"}}/>}
-        {/* Sparkle na ponta do arco de sono mais recente (v10.7.1) — indica "isso foi há pouco". */}
-        {lastSleepArcIdx>=0&&!activeTimer&&sleepEvs[lastSleepArcIdx]&&(()=>{const ev=sleepEvs[lastSleepArcIdx];const endMin=Math.min(toMin(ev.time)+ev.durationMin,dayStart+daySpan);const endRad=toAng(endMin)*Math.PI/180;const tx=cx+R*Math.cos(endRad),ty=cy+R*Math.sin(endRad);const col=sleepArcs[lastSleepArcIdx].col;return(<g><circle cx={tx} cy={ty} r={4} fill={col} opacity={0.9}><animate attributeName="r" values="3;6;3" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite"/></circle><circle cx={tx} cy={ty} r={8} fill="none" stroke={col} strokeWidth={1.5} opacity={0.4}><animate attributeName="r" values="5;14;5" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.4;0;0.4" dur="2s" repeatCount="indefinite"/></circle></g>)})()}
+        {/* v11.9.97 (dieta de movimento): o dash idle + sparkle SMIL do último arco SAÍRAM —
+            eram 3 animações marcando o MESMO evento (junto do glowBreathe do ícone, que fica).
+            O sparkle era SMIL <animate>, o único loop que ignorava body.app-hidden e o
+            "reduzir movimento" do iOS. Dash agora só existe no arco do timer ATIVO (abaixo). */}
         {/* Live timer arc (growing) */}
         {timerArc&&<g><path d={timerArc.path} fill="none" stroke={timerArc.col} strokeWidth={arcStrokeIconBlur} strokeLinecap="round" opacity={0.08} filter="url(#slpG)"/><path d={timerArc.path} fill="none" stroke={timerArc.col} strokeWidth={arcStrokeFill} strokeLinecap="round" opacity={0.5}/><path d={timerArc.path} fill="none" stroke="rgba(16,12,40,0.85)" strokeWidth={arcStrokeInset} strokeLinecap="round"/>{/* Dashed flow on active timer arc */}<path d={timerArc.path} fill="none" stroke={timerArc.col} strokeWidth={arcStrokeDashed} strokeLinecap="round" strokeDasharray="6 9" opacity={0.35} style={{animation:"dashFlow 2s linear infinite"}}/></g>}
       </svg>
