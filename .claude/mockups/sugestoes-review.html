@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Review completo — 14 sugestões pra avaliar</title>
+<style>
+  :root{--accent:#8b7cf6;--green:#34d399;--amber:#fbbf24;--cyan:#22d3ee;--purple:#a78bfa;--orange:#fb923c;--pink:#f472b6;--red:#f87171;--sub:#a3aac8;--dim:#555a80;--text:#e4e6f5;--heading:#f0f2ff;--gB:rgba(90,100,180,0.14)}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{background:#070b1e;color:var(--text);font-family:-apple-system,BlinkMacSystemFont,system-ui,sans-serif;line-height:1.5;padding:20px 0 90px}
+  .wrap{max-width:440px;margin:0 auto;padding:0 16px}
+  h1{font-size:20px;font-weight:800;letter-spacing:-0.3px}
+  .lead{font-size:12.5px;color:var(--sub);margin:4px 0 18px}
+  .lead b{color:#fff}
+  .sec{background:rgba(22,28,60,0.4);border:1px solid var(--gB);border-radius:16px;padding:14px;margin-bottom:14px}
+  .sec h2{font-size:14px;font-weight:800;color:var(--heading);display:flex;align-items:center;gap:8px;margin-bottom:4px}
+  .num{width:22px;height:22px;border-radius:7px;background:var(--accent);color:#fff;font-size:11px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+  .num.bug{background:var(--red)}
+  .num.big{background:var(--amber);color:#1a1505}
+  .why{font-size:11.5px;color:var(--sub);margin-bottom:10px}
+  .why b{color:#fff}
+  .tg{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+  .tg button{font-size:10.5px;font-weight:700;padding:6px 10px;border-radius:8px;border:1px solid var(--gB);background:rgba(14,18,48,0.6);color:var(--sub);cursor:pointer;font-family:inherit}
+  .tg button.on{background:var(--accent);color:#fff;border-color:transparent}
+  .stage{background:#0a0e26;border:1px solid rgba(90,100,180,0.1);border-radius:12px;padding:12px;position:relative;overflow:hidden}
+  .cap{font-size:10px;color:var(--dim);margin-top:8px;line-height:1.5}
+  .cap b{color:var(--sub)}
+  /* shared mini components */
+  .qgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+  .qb{min-height:54px;border-radius:12px;border:1px solid;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:10px;font-weight:700;background:rgba(255,255,255,0.02)}
+  .qb .e{font-size:17px}
+  .tbar{display:flex;align-items:center;gap:9px;background:linear-gradient(135deg,rgba(40,32,90,0.95),rgba(24,20,60,0.95));border:1px solid rgba(167,139,250,0.35);border-radius:14px;padding:9px 12px;font-size:12px;font-weight:700;color:#e9d5ff}
+  .tbar .stop{margin-left:auto;background:rgba(248,113,113,0.16);border:1px solid rgba(248,113,113,0.4);color:#fca5a5;border-radius:9px;padding:5px 10px;font-size:10.5px;font-weight:800}
+  .toast{display:flex;align-items:center;gap:8px;background:rgba(10,14,38,0.97);border:1px solid rgba(52,211,153,0.35);border-radius:12px;padding:9px 12px;font-size:11.5px;font-weight:600}
+  .toast .undo{margin-left:auto;color:var(--green);font-weight:800;font-size:11px}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+  table{width:100%;border-collapse:collapse;font-size:11px}
+  td{padding:5px 6px;border-bottom:1px solid rgba(90,100,180,0.1);vertical-align:top}
+  td.b4{color:#fca5a5}td.aft{color:#86efac}
+  .pillbtn{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:16px;font-size:10px;font-weight:700;border:1px solid rgba(251,191,36,0.5);color:var(--amber);background:rgba(251,191,36,0.12);position:relative}
+  /* sec 12 anims */
+  @keyframes gb{0%,100%{filter:drop-shadow(0 0 4px rgba(167,139,250,0.5))}50%{filter:drop-shadow(0 0 11px rgba(167,139,250,0.95))}}
+  @keyframes spk{0%,100%{opacity:.2;transform:scale(.6)}50%{opacity:1;transform:scale(1.3)}}
+  @keyframes dsh{to{stroke-dashoffset:-30}}
+  @keyframes wig{0%,100%{transform:rotate(0)}25%{transform:rotate(-14deg)}75%{transform:rotate(14deg)}}
+  /* sec 13 splash */
+  .spl{height:130px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+  .spl svg circle.draw{stroke-dasharray:220;stroke-dashoffset:220}
+  .spl.full svg circle.draw{animation:drw 2.2s cubic-bezier(0.4,0,0.2,1) forwards}
+  .spl.quick svg{opacity:0;animation:fin .7s ease forwards}
+  @keyframes drw{to{stroke-dashoffset:0}}
+  @keyframes fin{to{opacity:1}}
+  .spl .nm{font-size:13px;font-weight:800;letter-spacing:3px;color:#c4b5fd;opacity:0}
+  .spl.full .nm{animation:fin .6s ease 1.9s forwards}
+  .spl.quick .nm{animation:fin .5s ease .1s forwards}
+  /* sec 10 home blocks */
+  .hb{border-radius:9px;padding:7px 10px;font-size:10.5px;font-weight:700;margin-bottom:6px;border:1px solid}
+  .footer{font-size:12px;color:var(--sub);text-align:center;margin-top:6px;line-height:1.7}
+  .footer b{color:#fff}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>14 sugestões — avalia por número</h1>
+  <p class="lead">Da revisão de 6 lentes. <b style="color:#fca5a5">Vermelho = bug</b>, roxo = melhoria, <b style="color:var(--amber)">âmbar = mudança grande</b> (decisão tua). Cada uma tem demo antes/depois. Me responde tipo: <b>"aprova 1-9, 10 variante B, pula 13"</b>.</p>
+
+  <!-- 1 -->
+  <div class="sec"><h2><span class="num bug">1</span> Undo acima do TimerBar</h2>
+    <p class="why">Apagou algo com timer de sono rodando? O toast de Desfazer fica <b>atrás</b> da barra do timer — a única rede de segurança, coberta justo às 3h.</p>
+    <div class="tg" data-tg="s1"><button class="on">antes</button><button>depois</button></div>
+    <div class="stage" style="height:108px">
+      <div id="s1toast" style="position:absolute;left:12px;right:12px;bottom:14px;z-index:1"><div class="toast">🧷 Fralda removida<span class="undo">DESFAZER</span></div></div>
+      <div style="position:absolute;left:12px;right:12px;bottom:10px;z-index:2"><div class="tbar">🛏️ Sono · 03:12:44<span class="stop">Parar</span></div></div>
+    </div>
+    <div class="cap" id="s1cap"><b>ANTES:</b> o toast nasce embaixo da barra — o "Desfazer" morre sem ser visto.</div>
+  </div>
+
+  <!-- 2 -->
+  <div class="sec"><h2><span class="num bug">2</span> Idioma que não salva</h2>
+    <p class="why">O botão de idioma nos Ajustes muda só o estado local — <b>nunca grava no Firestore</b>. Resultado: app meio EN, meio PT.</p>
+    <div class="tg" data-tg="s2"><button class="on">antes</button><button>depois</button></div>
+    <div class="stage">
+      <div style="display:flex;gap:7px;margin-bottom:9px">
+        <button id="s2pt" style="flex:1;padding:8px;border-radius:9px;border:1px solid var(--accent);background:var(--accent);color:#fff;font-size:11px;font-weight:700;font-family:inherit">Português</button>
+        <button id="s2en" style="flex:1;padding:8px;border-radius:9px;border:1px solid var(--gB);background:transparent;color:var(--sub);font-size:11px;font-weight:700;font-family:inherit;cursor:pointer">English</button>
+      </div>
+      <div style="font-size:11px;color:var(--sub)">Header da página: <b id="s2hdr" style="color:#fff">Ajustes</b></div>
+      <div style="font-size:11px;color:var(--sub)">Firestore: <b id="s2fb" style="color:var(--amber)">lang = "pt"</b></div>
+    </div>
+    <div class="cap" id="s2cap">Toca em <b>English</b> e vê: no ANTES o header e o Firestore não mudam (mistura); no DEPOIS salva e flipa tudo.</div>
+  </div>
+
+  <!-- 3 -->
+  <div class="sec"><h2><span class="num">3</span> "Acordou" em 1 toque</h2>
+    <p class="why">O acordar é o evento-âncora (desloca a rotina toda) e hoje custa 3 toques. Existe uma função pronta <b>morta no código</b>. De manhã, sem acordar registrado, ele vira o 1º botão.</p>
+    <div class="tg" data-tg="s3"><button class="on">antes (07:05)</button><button>depois (07:05)</button></div>
+    <div class="stage"><div class="qgrid" id="s3grid"></div></div>
+    <div class="cap">No DEPOIS, toca no ☀️ — registra na hora com a duração da noite. Some assim que registrado (volta o 3º normal).</div>
+  </div>
+
+  <!-- 4 -->
+  <div class="sec"><h2><span class="num">4</span> Botões rápidos durante soneca/amamentação</h2>
+    <p class="why">Com timer rodando, os botões rápidos <b>somem</b>. Mas trocar fralda no meio da soneca é comum — hoje custa 3 toques com uma mão ocupada. O padrão de 2 botões já existe (despertar noturno).</p>
+    <div class="tg" data-tg="s4"><button class="on">antes</button><button>depois</button></div>
+    <div class="stage">
+      <div class="tbar" style="margin-bottom:8px">☁️ Soneca · 23:14<span class="stop">Parar</span></div>
+      <div class="row2" id="s4row" style="display:none">
+        <div class="qb" style="border-color:rgba(244,114,182,0.4);color:var(--pink)"><span class="e">🧷</span>Fralda</div>
+        <div class="qb" style="border-color:rgba(52,211,153,0.4);color:var(--green)"><span class="e">🍼</span>Mamad.</div>
+      </div>
+      <div id="s4nada" style="font-size:10.5px;color:var(--dim);text-align:center;padding:14px 0">(nada — precisa do FAB → grid → form)</div>
+    </div>
+  </div>
+
+  <!-- 5 -->
+  <div class="sec"><h2><span class="num">5</span> Passe de português</h2>
+    <p class="why">Erros visíveis todo dia:</p>
+    <div class="stage"><table>
+      <tr><td class="b4">"Mamadeira atualizado"</td><td class="aft">"Mamadeira atualizada"</td></tr>
+      <tr><td class="b4">"Fralda removido"</td><td class="aft">"Fralda removida"</td></tr>
+      <tr><td class="b4">botão "Save" (nos marcos)</td><td class="aft">"Salvar"</td></tr>
+      <tr><td class="b4">"overtired", "wind-down", "WW"</td><td class="aft">"cansada demais", "preparando pro sono", "janela"</td></tr>
+      <tr><td class="b4">"L: 12m · R: 8m" (amamentação)</td><td class="aft">"E: 12m · D: 8m"</td></tr>
+      <tr><td class="b4">ajuda da rotina cita "±20min" (não existe mais)</td><td class="aft">texto atualizado pro matching real</td></tr>
+    </table></div>
+  </div>
+
+  <!-- 6 -->
+  <div class="sec"><h2><span class="num bug">6</span> Vírgula decimal no peso</h2>
+    <p class="why">Teclado do iPhone em pt-BR usa <b>vírgula</b>. O form de crescimento usa parse puro → "4,5" vira <b>4kg silenciosamente</b>. (O fix já existe em 2 outros lugares do app.)</p>
+    <div class="tg" data-tg="s6"><button class="on">antes</button><button>depois</button></div>
+    <div class="stage" style="display:flex;align-items:center;gap:12px">
+      <div style="flex:1;background:rgba(20,26,60,0.55);border:1px solid var(--gB);border-radius:11px;padding:10px;text-align:center;font-size:20px;font-weight:800">4,5</div>
+      <div style="font-size:13px;color:var(--dim)">→</div>
+      <div id="s6out" style="flex:1;text-align:center;font-size:15px;font-weight:800;color:var(--red)">salva 4 kg ✗</div>
+    </div>
+  </div>
+
+  <!-- 7 -->
+  <div class="sec"><h2><span class="num bug">7</span> Ícone quebrado no Stats</h2>
+    <p class="why">3 lugares do Stats pedem o ícone "medicine", que <b>não existe</b> no set — renderiza um círculo genérico. Na Home o mesmo conceito usa "pill" certinho.</p>
+    <div class="stage" style="display:flex;gap:10px;justify-content:center">
+      <div style="text-align:center"><div style="width:38px;height:38px;border-radius:50%;border:2px solid var(--amber);margin:0 auto 4px"></div><span style="font-size:9.5px;color:var(--red)">antes (fallback)</span></div>
+      <div style="text-align:center"><div style="width:38px;height:38px;border-radius:50%;border:2px solid var(--amber);margin:0 auto 4px;display:flex;align-items:center;justify-content:center;font-size:17px">💊</div><span style="font-size:9.5px;color:var(--green)">depois</span></div>
+    </div>
+  </div>
+
+  <!-- 8 -->
+  <div class="sec"><h2><span class="num">8</span> Alvos de toque 44px na madrugada</h2>
+    <p class="why">Pills de Acordar/Dormir e wakings têm 26–34px — uma mão segura o bebê, a outra mira no escuro. Hit-area invisível de 44px, <b>visual idêntico</b>.</p>
+    <div class="tg" data-tg="s8"><button class="on">antes</button><button>depois (zona visível só aqui)</button></div>
+    <div class="stage" style="display:flex;justify-content:center;padding:20px 12px">
+      <div style="position:relative"><span class="pillbtn">☀️ Acordar</span><div id="s8zone" style="display:none;position:absolute;left:-9px;right:-9px;top:-10px;bottom:-10px;border:1.5px dashed rgba(52,211,153,0.6);border-radius:22px"></div></div>
+    </div>
+    <div class="cap">A zona tracejada é só ilustração — no app ela é invisível. Inclui tirar o pause da amamentação de dentro do botão de lado (toque acidental troca o lado e suja o tempo E/D).</div>
+  </div>
+
+  <!-- 9 -->
+  <div class="sec"><h2><span class="num">9</span> Botões rápidos: posição fixa por tipo</h2>
+    <p class="why">O cérebro opera por memória muscular. O score continua escolhendo <b>quais</b> 3 — mas alimentação sempre à esquerda, sono no centro, cuidado à direita.</p>
+    <div class="tg" data-tg="s9"><button class="on">antes (posição varia)</button><button>depois (posição fixa)</button></div>
+    <div class="stage">
+      <div style="font-size:9.5px;color:var(--dim);margin-bottom:5px">09:40</div>
+      <div class="qgrid" id="s9a" style="margin-bottom:9px"></div>
+      <div style="font-size:9.5px;color:var(--dim);margin-bottom:5px">13:20</div>
+      <div class="qgrid" id="s9b"></div>
+    </div>
+    <div class="cap">No ANTES a mamadeira muda de coluna entre as horas; no DEPOIS ela mora sempre à esquerda — mis-tap em Soneca (que inicia timer!) despenca.</div>
+  </div>
+
+  <!-- 10 -->
+  <div class="sec"><h2><span class="num big">10</span> Home estável (nada empurra o Ring)</h2>
+    <p class="why">A Curiosidade aparece/some sozinha (13,5s) <b>acima do Ring</b> — a tela inteira pula ~120px no pico de registro. Duas variantes:</p>
+    <div class="tg" data-tg="s10"><button class="on">antes</button><button>depois A · embaixo + ✕</button><button>depois B · só no sino</button></div>
+    <div class="stage" id="s10stage"></div>
+    <div class="cap" id="s10cap"></div>
+  </div>
+
+  <!-- 11 -->
+  <div class="sec"><h2><span class="num big">11</span> Timer cancelável + Desfazer no parar</h2>
+    <p class="why">Mis-tap inicia timer na hora; parar é a <b>única</b> escrita sem Desfazer — e ainda cria "acordou" fantasma que pode deslocar a rotina em 2h.</p>
+    <div class="tg" data-tg="s11"><button class="on">timer de 1min</button><button>timer de 45min</button><button>depois do parar</button></div>
+    <div class="stage" id="s11stage"></div>
+    <div class="cap" id="s11cap"></div>
+  </div>
+
+  <!-- 12 -->
+  <div class="sec"><h2><span class="num big">12</span> Dieta de movimento (sem tocar na nebulosa)</h2>
+    <p class="why">~15 loops dessincronizados na Home parada — 3 deles marcando o <b>mesmo</b> último evento. Corta redundância, mantém a nebulosa/poeira do Ring e o respiro.</p>
+    <div class="stage" style="display:flex;gap:10px">
+      <div style="flex:1;text-align:center">
+        <svg width="86" height="86" viewBox="0 0 86 86" style="display:block;margin:0 auto">
+          <circle cx="43" cy="43" r="34" fill="none" stroke="rgba(139,124,246,0.2)" stroke-width="2"/>
+          <circle cx="43" cy="43" r="34" fill="none" stroke="#8b7cf6" stroke-width="3" stroke-dasharray="8 7" stroke-linecap="round" style="animation:dsh 1.5s linear infinite" opacity="0.6"/>
+          <circle cx="68" cy="22" r="5" fill="#a78bfa" style="animation:spk 1.6s ease-in-out infinite;transform-origin:68px 22px"/>
+          <circle cx="68" cy="22" r="9" fill="none" stroke="#a78bfa" opacity="0.4" style="animation:spk 1.6s ease-in-out .3s infinite;transform-origin:68px 22px"/>
+          <text x="64" y="27" font-size="11" style="animation:gb 2s ease-in-out infinite">☁️</text>
+        </svg>
+        <div style="font-size:12px;margin-top:2px"><span style="display:inline-block;animation:wig 1s ease-in-out infinite">🔔</span></div>
+        <span style="font-size:9.5px;color:var(--red)">antes: dash + sparkle + glow no MESMO evento, sino eterno</span>
+      </div>
+      <div style="flex:1;text-align:center">
+        <svg width="86" height="86" viewBox="0 0 86 86" style="display:block;margin:0 auto">
+          <circle cx="43" cy="43" r="34" fill="none" stroke="rgba(139,124,246,0.2)" stroke-width="2"/>
+          <text x="62" y="27" font-size="11" style="animation:gb 3.6s ease-in-out infinite">☁️</text>
+        </svg>
+        <div style="font-size:12px;margin-top:2px">🔔</div>
+        <span style="font-size:9.5px;color:var(--green)">depois: só o glow respira; dash volta com timer ATIVO; sino balança 1x quando chega algo</span>
+      </div>
+    </div>
+    <div class="cap">Bônus técnico: o sparkle atual ignora o pause de background e o "reduzir movimento" do iOS — sai de cena. ~15 loops → ~6, em 3 ritmos harmônicos.</div>
+  </div>
+
+  <!-- 13 -->
+  <div class="sec"><h2><span class="num big">13</span> Splash completo só na 1ª abertura do dia</h2>
+    <p class="why">3s de espera × 20+ aberturas/dia desgasta o ritual. Completo de manhã, ~0,8s nas demais.</p>
+    <div class="tg"><button onclick="splay('full')">▶ 1ª do dia (completo)</button><button onclick="splay('quick')">▶ demais (curto)</button></div>
+    <div class="stage spl" id="s13">
+      <svg width="64" height="64" viewBox="0 0 80 80"><circle class="draw" cx="40" cy="40" r="34" fill="none" stroke="#c4b5fd" stroke-width="2.5" stroke-linecap="round"/></svg>
+      <div class="nm">LOUISE</div>
+    </div>
+    <div class="cap">(círculo representando a silhueta — no app é a logo vetorizada de verdade, intacta)</div>
+  </div>
+
+  <!-- 14 -->
+  <div class="sec"><h2><span class="num big">14</span> Crescimento na linguagem atual</h2>
+    <p class="why">Única página da geração visual antiga. Header padrão + cards com eyebrow + <b>eixo de meses</b> + tocar no ponto mostra valor (igual Stats) + voltar respeita de onde você veio.</p>
+    <div class="stage">
+      <div style="font-size:15px;font-weight:800;background:linear-gradient(90deg,#a3e635,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px">Crescimento</div>
+      <div style="background:linear-gradient(180deg,rgba(22,28,60,0.55),rgba(20,26,60,0.32));border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:10px">
+        <div style="font-size:9px;font-weight:800;letter-spacing:1px;color:#a3e635;margin-bottom:6px">⚖️ PESO</div>
+        <svg width="100%" height="92" viewBox="0 0 300 92">
+          <polyline points="20,75 80,62 150,48 220,36 280,25" fill="none" stroke="#a3e635" stroke-width="2.5" stroke-linecap="round"/>
+          <circle cx="20" cy="75" r="4" fill="#a3e635"/><circle cx="80" cy="62" r="4" fill="#a3e635"/><circle cx="150" cy="48" r="4" fill="#a3e635"/><circle id="s14pt" cx="220" cy="36" r="6" fill="#a3e635" style="cursor:pointer"/><circle cx="280" cy="25" r="4" fill="#a3e635"/>
+          <g id="s14tip" style="display:none"><rect x="172" y="2" width="98" height="26" rx="7" fill="rgba(10,14,38,0.97)" stroke="rgba(163,230,53,0.4)"/><text x="221" y="13" text-anchor="middle" font-size="8" fill="#c4d8a0">qui, 28 mai</text><text x="221" y="24" text-anchor="middle" font-size="10" font-weight="800" fill="#fff">5,82 kg · P61</text></g>
+          <text x="20" y="90" font-size="8" fill="#555a80" text-anchor="middle">mar</text><text x="105" y="90" font-size="8" fill="#555a80" text-anchor="middle">abr</text><text x="200" y="90" font-size="8" fill="#555a80" text-anchor="middle">mai</text><text x="280" y="90" font-size="8" fill="#555a80" text-anchor="middle">jun</text>
+        </svg>
+        <div style="font-size:9.5px;color:var(--dim);text-align:center">👆 toca no ponto grande</div>
+      </div>
+    </div>
+  </div>
+
+  <p class="footer">É isso. <b>Me responde por número</b> — ex: "aprova 1-9 e 12, 10 na variante B, 13 não".<br>1-9 são cirúrgicos (vão rápido); 10-14 implemento um por vez.</p>
+</div>
+
+<script>
+  // generic toggle wiring
+  function wire(id,fn){var tg=document.querySelector('[data-tg="'+id+'"]');if(!tg)return;[].forEach.call(tg.children,function(b,i){b.onclick=function(){[].forEach.call(tg.children,function(x,j){x.classList.toggle('on',j===i)});fn(i)};});}
+  // 1
+  wire('s1',function(i){document.getElementById('s1toast').style.bottom=i===0?'14px':'66px';document.getElementById('s1cap').innerHTML=i===0?'<b>ANTES:</b> o toast nasce embaixo da barra — o "Desfazer" morre sem ser visto.':'<b>DEPOIS:</b> o toast sobe pra cima do timer — Desfazer sempre alcançável.';});
+  // 2
+  var s2mode=0;wire('s2',function(i){s2mode=i;s2reset();});
+  function s2reset(){s2set(true);}
+  function s2set(pt){document.getElementById('s2pt').style.background=pt?'var(--accent)':'transparent';document.getElementById('s2pt').style.color=pt?'#fff':'var(--sub)';document.getElementById('s2en').style.background=pt?'transparent':'var(--accent)';document.getElementById('s2en').style.color=pt?'var(--sub)':'#fff';}
+  document.getElementById('s2en').onclick=function(){s2set(false);if(s2mode===1){document.getElementById('s2hdr').textContent='Settings';document.getElementById('s2fb').innerHTML='lang = "en" <span style="color:var(--green)">✓ salvo</span>';}else{document.getElementById('s2cap').innerHTML='<b style="color:var(--red)">Viu?</b> O botão acendeu mas header continua "Ajustes" e o Firestore continua "pt" — nada foi salvo. Fecha e abre: voltou tudo.';}};
+  document.getElementById('s2pt').onclick=function(){s2set(true);document.getElementById('s2hdr').textContent='Ajustes';document.getElementById('s2fb').innerHTML='lang = "pt"'+(s2mode===1?' <span style="color:var(--green)">✓ salvo</span>':'');};
+  // 3
+  function qb(e,l,c,extra){return '<div class="qb" style="border-color:'+c+'66;color:'+c+'">'+(extra||'')+'<span class="e">'+e+'</span>'+l+'</div>';}
+  wire('s3',function(i){render3(i);});
+  function render3(i){var g=document.getElementById('s3grid');
+    if(i===0){g.innerHTML=qb('🍼','Mamad.','var(--green)')+qb('🧷','Fralda','var(--pink)')+qb('☁️','Soneca','var(--accent)');}
+    else{g.innerHTML='<div class="qb" id="s3wake" style="border-color:var(--amber);color:var(--amber);cursor:pointer;box-shadow:0 0 14px rgba(251,191,36,0.18)"><span class="e">☀️</span>Acordou</div>'+qb('🍼','Mamad.','var(--green)')+qb('🧷','Fralda','var(--pink)');
+      document.getElementById('s3wake').onclick=function(){g.innerHTML='<div class="qb" style="border-color:var(--green);color:var(--green)"><span class="e">✓</span>Acordou 07:05 · noite 10h12m</div>'+qb('🍼','Mamad.','var(--green)')+qb('🧷','Fralda','var(--pink)');};}
+  }
+  render3(0);
+  // 4
+  wire('s4',function(i){document.getElementById('s4row').style.display=i===1?'grid':'none';document.getElementById('s4nada').style.display=i===1?'none':'block';});
+  // 6
+  wire('s6',function(i){var o=document.getElementById('s6out');if(i===0){o.style.color='var(--red)';o.textContent='salva 4 kg ✗';}else{o.style.color='var(--green)';o.textContent='salva 4,5 kg ✓';}});
+  // 8
+  wire('s8',function(i){document.getElementById('s8zone').style.display=i===1?'block':'none';});
+  // 9
+  wire('s9',function(i){render9(i);});
+  function render9(i){
+    var a=document.getElementById('s9a'),b=document.getElementById('s9b');
+    if(i===0){a.innerHTML=qb('☁️','Soneca','var(--accent)')+qb('🍼','Mamad.','var(--green)')+qb('🧷','Fralda','var(--pink)');
+      b.innerHTML=qb('🍼','Mamad.','var(--green)')+qb('🧷','Fralda','var(--pink)')+qb('☁️','Soneca','var(--accent)');}
+    else{a.innerHTML=qb('🍼','Mamad.','var(--green)')+qb('☁️','Soneca','var(--accent)')+qb('🧷','Fralda','var(--pink)');
+      b.innerHTML=qb('🍼','Mamad.','var(--green)')+qb('☁️','Soneca','var(--accent)')+qb('🧷','Fralda','var(--pink)');}
+  }
+  render9(0);
+  // 10
+  function hb(t,c,extra){return '<div class="hb" style="border-color:'+c+'33;background:'+c+'0d;color:'+c+'">'+t+(extra||'')+'</div>';}
+  wire('s10',function(i){render10(i);});
+  function render10(i){
+    var s=document.getElementById('s10stage'),cap=document.getElementById('s10cap');
+    if(i===0){s.innerHTML='<div id="s10cur">'+hb('💡 Curiosidade do dia (some sozinha em 13,5s…)','var(--amber)')+'</div>'+hb('⭕ RING (pula quando o de cima some)','var(--purple)')+hb('🍼 ☁️ 🧷 botões rápidos (pulam junto)','var(--accent)')+hb('💡 Insights ×2 (somem em 15s…)','var(--cyan)')+hb('📋 Rotina (abaixo dos efêmeros)','var(--green)');
+      cap.innerHTML='<b>ANTES:</b> assiste — a curiosidade vai sumir e TUDO pula pra cima.';
+      setTimeout(function(){var c=document.getElementById('s10cur');if(c){c.style.transition='all .4s';c.style.opacity='0';c.style.height='0';c.style.overflow='hidden';setTimeout(function(){var c2=document.getElementById('s10cur');if(c2){c2.style.height='';c2.style.opacity='';}},2200);}},1800);
+      setInterval(function(){},1);}
+    else if(i===1){s.innerHTML=hb('⭕ RING (nunca mais se move)','var(--purple)')+hb('🍼 ☁️ 🧷 botões rápidos','var(--accent)')+hb('📋 Rotina (ação estável sobe)','var(--green)')+hb('📊 Resumo 2×2','var(--sub)')+hb('💡 Curiosidade — fica até você dar ✕','var(--amber)',' <span style="float:right;font-weight:800">✕</span>')+hb('💡 1 insight (não 2)','var(--cyan)');
+      cap.innerHTML='<b>DEPOIS A:</b> efêmeros pro fim, com dismiss manual — nada some sozinho.';}
+    else{s.innerHTML=hb('⭕ RING','var(--purple)')+hb('🍼 ☁️ 🧷 botões rápidos','var(--accent)')+hb('📋 Rotina','var(--green)')+hb('📊 Resumo 2×2','var(--sub)')+hb('🔔 Curiosidade/insights só na caixinha do sino (já vão pra lá hoje)','var(--dim)');
+      cap.innerHTML='<b>DEPOIS B:</b> Home 100% estável; curiosidades viraram exclusivas do sino — que já captura tudo hoje.';}
+  }
+  render10(0);
+  // 11
+  wire('s11',function(i){render11(i);});
+  function render11(i){
+    var s=document.getElementById('s11stage'),cap=document.getElementById('s11cap');
+    if(i===0){s.innerHTML='<div class="tbar">☁️ Soneca · 01:07<span class="stop" style="background:rgba(85,90,128,0.2);border-color:rgba(85,90,128,0.5);color:#a3aac8">Descartar</span></div>';
+      cap.innerHTML='Com <b>menos de ~3min</b>, o botão vira <b>Descartar</b> — mis-tap morre sem virar entry nem "acordou" fantasma.';}
+    else if(i===1){s.innerHTML='<div class="tbar">☁️ Soneca · 45:22<span class="stop">Parar</span></div>';
+      cap.innerHTML='Timer de verdade: botão normal de Parar, salva como sempre.';}
+    else{s.innerHTML='<div class="toast">☁️ Soneca salva · 45min<span class="undo">DESFAZER</span></div>';
+      cap.innerHTML='Depois do Parar: toast <b>com Desfazer</b> (hoje é a única escrita do app sem undo). Desfazer apaga a entry e restaura o timer.';}
+  }
+  render11(0);
+  // 13
+  function splay(mode){var el=document.getElementById('s13');el.classList.remove('full','quick');void el.offsetWidth;el.classList.add(mode);}
+  // 14
+  document.getElementById('s14pt').onclick=function(){var t=document.getElementById('s14tip');t.style.display=t.style.display==='none'?'block':'none';};
+</script>
+</body>
+</html>
