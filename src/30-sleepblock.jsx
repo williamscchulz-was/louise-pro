@@ -51,7 +51,7 @@ const SleepBlock = React.memo(function SleepBlock({entry,onDelete,onEdit,entries
     else if(le.type==="bath")txt=_lang==="en"?"Bath":"Banho";
     else txt=TL(le.type);
     return(<div style={{display:"flex",alignItems:"center",gap:10,padding:"5px 0"}}>
-      <button aria-label={_lang==="en"?"Edit":"Editar"} onClick={ev=>{ev.stopPropagation();onEdit&&onEdit(le)}} style={{width:34,height:34,borderRadius:9,background:cfg.bg,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,cursor:"pointer",border:"none",padding:0}}>
+      <button aria-label={_lang==="en"?"Edit":"Editar"} onClick={ev=>{ev.stopPropagation();onEdit&&onEdit(le)}} className="hit44" style={{width:34,height:34,borderRadius:9,background:cfg.bg,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,cursor:"pointer",border:"none",padding:0}}>
         <Icon name={cfg.icon} size={13} color={cfg.color}/>
       </button>
       <button onClick={ev=>{ev.stopPropagation();onEdit&&onEdit(le)}} style={{flex:1,fontSize:T.fMD,color:T.text,fontWeight:500,letterSpacing:-0.1,cursor:"pointer",textAlign:"left",background:"transparent",border:"none",padding:0}}>{txt}</button>
@@ -67,7 +67,7 @@ const SleepBlock = React.memo(function SleepBlock({entry,onDelete,onEdit,entries
         }
         setConfirmDelEventId(null);
         onDelete&&onDelete(le.id);
-      }} style={{width:confirmDelEventId===le.id?64:34,height:34,borderRadius:9,background:confirmDelEventId===le.id?"rgba(248,113,113,0.30)":"transparent",border:confirmDelEventId===le.id?"1px solid rgba(248,113,113,0.6)":"none",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,opacity:confirmDelEventId===le.id?1:0.55,cursor:"pointer",padding:0,fontSize:T.fSM,fontWeight:700,color:"#fca5a5",letterSpacing:0.2,transition:"all .2s"}}>
+      }} className="hit44" style={{width:confirmDelEventId===le.id?64:34,height:34,borderRadius:9,background:confirmDelEventId===le.id?"rgba(248,113,113,0.30)":"transparent",border:confirmDelEventId===le.id?"1px solid rgba(248,113,113,0.6)":"none",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,opacity:confirmDelEventId===le.id?1:0.55,cursor:"pointer",padding:0,fontSize:T.fSM,fontWeight:700,color:"#fca5a5",letterSpacing:0.2,transition:"all .2s"}}>
         {confirmDelEventId===le.id?(_lang==="en"?"Sure?":"Certo?"):<Icon name="trash" size={11} color={T.dim}/>}
       </button>
     </div>);
@@ -173,7 +173,7 @@ const SleepBlock = React.memo(function SleepBlock({entry,onDelete,onEdit,entries
           return<div key={i} style={{borderTop:"1px solid rgba(139,124,246,0.10)",padding:"10px 18px"}}>
             {/* Waking header: tappable pill (start → end) + duration tag */}
             <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:allEventsForWaking.length>0?6:0,flexWrap:"wrap"}}>
-              <button onClick={e=>{e.stopPropagation();const didx=editingIdx===i?null:i;setEditingIdx(didx);if(didx!==null){setEditStart(w.time||"");const dur=w.durationMin||0;if(isActive){const now=new Date();setEditEnd(`${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`)}else{const[sh,sm]=(w.time||"00:00").split(":").map(Number);const endTot=sh*60+sm+dur;const eh=Math.floor(endTot/60)%24;const em=endTot%60;setEditEnd(`${String(eh).padStart(2,"0")}:${String(em).padStart(2,"0")}`)}}}} style={{display:"inline-flex",alignItems:"center",gap:6,fontSize:T.fSM,fontWeight:700,color:isActive?"#fbbf24":"#7dd3fc",padding:"4px 10px",borderRadius:9,background:isActive?"rgba(251,191,36,0.13)":"rgba(59,130,246,0.13)",border:`1px solid ${editingIdx===i?"rgba(139,124,246,0.55)":(isActive?"rgba(251,191,36,0.32)":"rgba(59,130,246,0.25)")}`,fontVariantNumeric:"tabular-nums",cursor:"pointer"}}>
+              <button onClick={e=>{e.stopPropagation();const didx=editingIdx===i?null:i;setEditingIdx(didx);if(didx!==null){setEditStart(w.time||"");const dur=w.durationMin||0;if(isActive){const now=new Date();setEditEnd(`${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`)}else{const[sh,sm]=(w.time||"00:00").split(":").map(Number);const endTot=sh*60+sm+dur;const eh=Math.floor(endTot/60)%24;const em=endTot%60;setEditEnd(`${String(eh).padStart(2,"0")}:${String(em).padStart(2,"0")}`)}}}} className="hit44" style={{display:"inline-flex",alignItems:"center",gap:6,fontSize:T.fSM,fontWeight:700,color:isActive?"#fbbf24":"#7dd3fc",padding:"4px 10px",borderRadius:9,background:isActive?"rgba(251,191,36,0.13)":"rgba(59,130,246,0.13)",border:`1px solid ${editingIdx===i?"rgba(139,124,246,0.55)":(isActive?"rgba(251,191,36,0.32)":"rgba(59,130,246,0.25)")}`,fontVariantNumeric:"tabular-nums",cursor:"pointer"}}>
                 {isActive?<span style={{width:6,height:6,borderRadius:"50%",background:"#fbbf24",boxShadow:"0 0 6px #fbbf24",animation:"liveDotPulse 1.5s ease-in-out infinite"}}/>:<Icon name="sun" size={9} color="#7dd3fc"/>}
                 <span>{w.time} → {wakingEndStr}</span>
                 <svg viewBox="0 0 24 24" style={{width:9,height:9,stroke:isActive?"#fbbf24":"#7dd3fc",fill:"none",strokeWidth:2.5,opacity:0.55,marginLeft:2}}><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>

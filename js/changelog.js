@@ -4,6 +4,27 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.93", date: "2026-06-12",
+    pt: {
+      title: "Pacote 3h da manhã",
+      bullets: [
+        '★ **"Acordou" em 1 toque**: de manhã, sem acordar registrado, ele vira o primeiro botão rápido — registra na hora com a duração da noite. Some quando registrado.',
+        '★ **Fralda e Mamadeira durante a soneca/amamentação**: os 2 botões rápidos que já existiam no despertar noturno agora aparecem também com timer de soneca ou amamentação rodando.',
+        'Os **botões rápidos ganharam posição fixa por tipo** (alimentação à esquerda, sono no centro, cuidado à direita) — memória muscular, menos toque errado.',
+        'Controles pequenos da madrugada (Acordar/Dormir, despertares, pause da amamentação) ganharam **área de toque de 44px** invisível — mais fácil de acertar no escuro.',
+      ],
+    },
+    en: {
+      title: "The 3am pack",
+      bullets: [
+        '★ **"Woke up" in 1 tap**: in the morning, with no wake-up logged, it becomes the first quick button — logs instantly with the night\'s duration. Disappears once logged.',
+        '★ **Diaper and Bottle during nap/nursing**: the 2 quick buttons from night wake now also show while a nap or nursing timer runs.',
+        'Quick buttons got **fixed positions per type** (feeding left, sleep center, care right) — muscle memory, fewer mis-taps.',
+        'Small night controls (Wake/Sleep, wakings, nursing pause) got an invisible **44px touch area** — easier to hit in the dark.',
+      ],
+    },
+  },
+  {
     v: "11.9.92", date: "2026-06-12",
     pt: {
       title: "4 bugs corrigidos (da revisão completa)",

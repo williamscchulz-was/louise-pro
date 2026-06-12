@@ -107,6 +107,10 @@
     /* v11.9.83: quick buttons adaptativos — só os recém-surgidos animam (montam com key nova). */
     @keyframes qbtnPop{0%{transform:scale(0.82);opacity:0}100%{transform:scale(1);opacity:1}}
     .qbtn-appear{animation:qbtnPop .38s cubic-bezier(0.34,1.56,0.64,1)}
+    /* v11.9.93: hit-area invisível de ~44px (Apple HIG) pros controles pequenos da madrugada
+       (pill Acordar/Dormir, wakings, EventMini, pause da amamentação) — visual intacto. */
+    .hit44{position:relative}
+    .hit44::after{content:"";position:absolute;left:-8px;right:-8px;top:-9px;bottom:-9px}
     /* v11.9.58: esconde nav pill quando picker de marco aberto — Save ficava atras */
     body.milestone-picker-open #nav-host{display:none}
     @keyframes progressShimmer{0%,100%{opacity:0.7}50%{opacity:1}}
