@@ -99,10 +99,11 @@ function AddForm({type,onSave,onSaveBatch,savedMeds,onSaveMeds,editEntry,lastBot
         return;
       }
     }
-    // v11.9.92: vírgula decimal — teclado pt-BR digita "4,5"; parseFloat puro truncava pra 4
-    // silenciosamente (corrupção de dado de crescimento). Mesmo parse do Profile/History.
-    else if(type==="temperature"){if(!tempV){invalid();return}payload={...b,value:parseFloat(String(tempV).replace(",","."))}}
-    else if(type==="growth"){const pF=v=>parseFloat(String(v).replace(",","."));payload={...b,weightKg:weightKg?pF(weightKg):undefined,lengthCm:lengthCm?pF(lengthCm):undefined,headCm:headCm?pF(headCm):undefined}}
+    // v11.9.92/12.0.0: vírgula decimal — os inputs são type="text" inputMode="decimal"
+    // (type="number" DESCARTAVA a vírgula antes do onChange). pF troca vírgula→ponto e
+    // blinda contra NaN (retorna undefined), pra nunca gravar lixo no Firestore.
+    else if(type==="temperature"){const tv=parseFloat(String(tempV).replace(",","."));if(!Number.isFinite(tv)){invalid();return}payload={...b,value:tv}}
+    else if(type==="growth"){const pF=v=>{const n=parseFloat(String(v).replace(",","."));return Number.isFinite(n)?n:undefined};payload={...b,weightKg:pF(weightKg),lengthCm:pF(lengthCm),headCm:pF(headCm)}}
     if(!payload)return;
     savingRef.current=true;setSaving(true);
     try{await onSave(payload)}catch(e){}
@@ -238,8 +239,8 @@ function AddForm({type,onSave,onSaveBatch,savedMeds,onSaveMeds,editEntry,lastBot
           </div>);
         })()}
       </Modal>
-      {type==="temperature"&&<Fld label={`${_lang==="en"?"Temperature":"Temperatura"} (°C)`}><input type="number" inputMode="decimal" step="0.1" placeholder="36.5" value={tempV} onChange={e=>setTempV(e.target.value)} style={{...inp,fontSize:36,fontWeight:800,textAlign:"center"}}/></Fld>}
-      {type==="growth"&&<><Fld label={`${L("weight")} (kg)`}><input type="number" inputMode="decimal" step="0.01" placeholder="Ex: 4.5" value={weightKg} onChange={e=>setWeightKg(e.target.value)} style={{...inp,fontSize:T.f3XL,fontWeight:800,textAlign:"center"}}/></Fld><Fld label={`${_lang==="en"?"Length":"Comprimento"} (cm)`}><input type="number" inputMode="decimal" step="0.1" placeholder="Ex: 55.0" value={lengthCm} onChange={e=>setLengthCm(e.target.value)} style={{...inp,fontSize:T.f3XL,fontWeight:800,textAlign:"center"}}/></Fld><Fld label={`${L("head")} (cm)`}><input type="number" inputMode="decimal" step="0.1" placeholder="Ex: 37.0" value={headCm} onChange={e=>setHeadCm(e.target.value)} style={{...inp,fontSize:T.f3XL,fontWeight:800,textAlign:"center"}}/></Fld></>}
+      {type==="temperature"&&<Fld label={`${_lang==="en"?"Temperature":"Temperatura"} (°C)`}><input type="text" inputMode="decimal" placeholder={_lang==="en"?"36.5":"36,5"} value={tempV} onChange={e=>setTempV(e.target.value.replace(/[^0-9.,]/g,""))} style={{...inp,fontSize:36,fontWeight:800,textAlign:"center"}}/></Fld>}
+      {type==="growth"&&<><Fld label={`${L("weight")} (kg)`}><input type="text" inputMode="decimal" placeholder={_lang==="en"?"e.g. 4.5":"Ex: 4,5"} value={weightKg} onChange={e=>setWeightKg(e.target.value.replace(/[^0-9.,]/g,""))} style={{...inp,fontSize:T.f3XL,fontWeight:800,textAlign:"center"}}/></Fld><Fld label={`${_lang==="en"?"Length":"Comprimento"} (cm)`}><input type="text" inputMode="decimal" placeholder={_lang==="en"?"e.g. 55.0":"Ex: 55,0"} value={lengthCm} onChange={e=>setLengthCm(e.target.value.replace(/[^0-9.,]/g,""))} style={{...inp,fontSize:T.f3XL,fontWeight:800,textAlign:"center"}}/></Fld><Fld label={`${L("head")} (cm)`}><input type="text" inputMode="decimal" placeholder={_lang==="en"?"e.g. 37.0":"Ex: 37,0"} value={headCm} onChange={e=>setHeadCm(e.target.value.replace(/[^0-9.,]/g,""))} style={{...inp,fontSize:T.f3XL,fontWeight:800,textAlign:"center"}}/></Fld></>}
       {/* v11.8.0: notes removido de medicine. Tambem nao mostra em drops stage. */}
       {type!=="medicine"&&<Fld label={L("notes")}><textarea placeholder={_lang==="en"?"Note...":"Anotação..."} value={notes} onChange={e=>setNotes(e.target.value)} rows={2} style={{...inp,resize:"vertical"}}/></Fld>}
       {type==="tummytime"&&!isEdit&&onStartTimer&&<button onClick={()=>onStartTimer("tummytime")} style={{width:"100%",padding:16,borderRadius:16,background:`linear-gradient(180deg,${cfg.color}28,${cfg.color}10)`,color:"#fde68a",fontSize:T.fLG,fontWeight:700,letterSpacing:-0.2,border:`1px solid ${cfg.color}55`,boxShadow:`0 1px 0 0 rgba(255,255,255,0.1) inset, 0 4px 12px -4px ${cfg.color}35`,marginBottom:10,display:"flex",alignItems:"center",justifyContent:"center",gap:10,cursor:"pointer"}}><Icon name="play" size={14} color="#fde68a"/>{_lang==="en"?"Start timer":"Iniciar timer"}</button>}

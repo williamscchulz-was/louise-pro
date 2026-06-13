@@ -4,6 +4,21 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.100", date: "2026-06-13",
+    pt: {
+      title: "Vírgula na temperatura e no crescimento — agora vai",
+      bullets: [
+        '★ Dá pra **digitar vírgula** no peso, comprimento, perímetro e temperatura. O campo era do tipo numérico, que **descartava a vírgula** antes de salvar (o teclado do iPhone em português usa vírgula) — virei pra campo de texto com teclado decimal. "36,5" agora entra como 36,5.',
+      ],
+    },
+    en: {
+      title: "Comma in temperature and growth — fixed for real",
+      bullets: [
+        '★ You can now **type a comma** in weight, length, head and temperature. The field was a numeric input that **dropped the comma** before saving (the pt-BR iPhone keyboard uses a comma) — switched to a text field with the decimal keypad.',
+      ],
+    },
+  },
+  {
     v: "11.9.99", date: "2026-06-12",
     pt: {
       title: "Crescimento repaginado",
