@@ -4,6 +4,25 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.101", date: "2026-06-16",
+    pt: {
+      title: "Iniciar timer pelo + — pra todos os timers",
+      bullets: [
+        '★ Ao abrir **sono, soneca, amamentação ou tummy time pelo +**, agora aparece **"Iniciar timer agora"** no topo (antes só o tummy tinha). Um divisor "ou registrar manual" separa do registro com horário/duração — você escolhe começar o cronômetro ou lançar um evento passado.',
+        'Ficou necessário porque o tummy saiu dos atalhos da Home (v11.9.32): sem isso, não dava pra cronometrar tummy de lugar nenhum.',
+        'Amamentação pelo + abre o seletor de lado (esq/dir) antes de começar, igual ao atalho da Home.',
+      ],
+    },
+    en: {
+      title: "Start a timer from + — for every timer",
+      bullets: [
+        '★ Opening **sleep, nap, nursing or tummy time from +** now shows **"Start timer now"** at the top (only tummy had it before). An "or log manually" divider separates it from the time/duration entry — pick between starting the stopwatch or logging a past event.',
+        'It became necessary because tummy left the Home shortcuts (v11.9.32): without it, there was no way to time tummy at all.',
+        'Nursing from + opens the side picker (left/right) before starting, same as the Home shortcut.',
+      ],
+    },
+  },
+  {
     v: "11.9.100", date: "2026-06-13",
     pt: {
       title: "Vírgula na temperatura e no crescimento — agora vai",

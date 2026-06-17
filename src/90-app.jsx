@@ -1296,7 +1296,7 @@ function App(){
         popup e resolve o jank de anim\u00e7\u00e3o no iPhone. prop `wide` deixa um pouco mais largo
         pros campos de data/hora caberem confort\u00e1veis. */}
     <Modal open={!!formType} onClose={()=>{setFormType(null);setEditEntry(null)}} wide>
-      {formType&&<AddForm type={formType} onSave={addEntry} onSaveBatch={addMedicineBatch} savedMeds={savedMeds} onSaveMeds={async m=>await FB.saveMeds(m)} editEntry={editEntry} lastBottleMl={lastBottleMl} lastBottleEntry={lastBottleEntry} feedingIntervalMin={feedingIntervalMin} topMl={topMl} suggestedMl={routineState?.nextBottleMl} onStartTimer={type=>{startTimer(type);setFormType(null);setShowAdd(false)}}/>}
+      {formType&&<AddForm type={formType} onSave={addEntry} onSaveBatch={addMedicineBatch} savedMeds={savedMeds} onSaveMeds={async m=>await FB.saveMeds(m)} editEntry={editEntry} lastBottleMl={lastBottleMl} lastBottleEntry={lastBottleEntry} feedingIntervalMin={feedingIntervalMin} topMl={topMl} suggestedMl={routineState?.nextBottleMl} onStartTimer={type=>{setFormType(null);setShowAdd(false);if(type==="nursing")setShowNursingPicker(true);else startTimer(type)}}/>}
     </Modal>
 
     {showProfile&&<ProfilePage profile={profile} entries={entries} onSave={async p=>await FB.saveProfile(p)} onBack={()=>{setShowProfile(false);setProfileIsDirty(false)}} onGrowth={()=>{growthFromRef.current={page,profile:true};setShowProfile(false);setProfileIsDirty(false);goTo("growth")}} onShowChangelog={()=>setShowChangelog(true)} hasUnreadChangelog={hasUnreadChangelog} reminders={reminders} onAddReminder={async r=>await FB.addReminder(r)} onDelReminder={async id=>await FB.delReminder(id)} onDirtyChange={setProfileIsDirty} cancelSignal={profileCancelSignal} saveSignal={profileSaveSignal}/>}

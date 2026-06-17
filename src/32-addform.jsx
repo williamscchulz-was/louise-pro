@@ -113,12 +113,20 @@ function AddForm({type,onSave,onSaveBatch,savedMeds,onSaveMeds,editEntry,lastBot
   const isToday=date===todayStr();
   // v11.9.15: usa fmtRelDate ("Ontem", "Anteontem", weekday, ou data curta) em vez de só short date.
   const dateLbl=isToday?L("today"):fmtRelDate(date);
+  // v11.9.101: tipos-timer ganham "Iniciar timer" no topo do form (era so tummytime).
+  // Cor clara por tipo, fiel ao vocabulario do timer ativo (roxo/azul/ambar).
+  const isTimerType=type==="sleep"||type==="nap"||type==="nursing"||type==="tummytime";
+  const tLight=type==="tummytime"?"#fde68a":type==="nursing"?"#7dd3fc":"#c4b5fd";
   return(<div style={{paddingBottom:20}}>
     <div style={{display:"flex",alignItems:"center",gap:12,padding:"0 20px 16px"}}>
       <div style={{width:32,height:32,borderRadius:10,background:cfg.bg,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name={cfg.icon} size={18} color={cfg.color}/></div>
       <span style={{fontSize:T.fXL,fontWeight:700}}>{cfg.label[_lang]||cfg.label.en}</span>
     </div>
     <div style={{padding:"0 20px"}}>
+      {isTimerType&&!isEdit&&onStartTimer&&<>
+        <button onClick={()=>onStartTimer(type)} style={{width:"100%",padding:16,borderRadius:16,background:`linear-gradient(180deg,${cfg.color}28,${cfg.color}10)`,color:tLight,fontSize:T.fLG,fontWeight:700,letterSpacing:-0.2,border:`1px solid ${cfg.color}55`,boxShadow:`0 1px 0 0 rgba(255,255,255,0.1) inset, 0 4px 12px -4px ${cfg.color}35`,marginBottom:14,display:"flex",alignItems:"center",justifyContent:"center",gap:10,cursor:"pointer"}}><Icon name="play" size={14} color={tLight}/>{_lang==="en"?"Start timer now":"Iniciar timer agora"}</button>
+        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}><span style={{flex:1,height:1,background:T.gB}}/><span style={{fontSize:T.fSM,color:T.dim,fontWeight:600}}>{_lang==="en"?"or log manually":"ou registrar manual"}</span><span style={{flex:1,height:1,background:T.gB}}/></div>
+      </>}
       {/* Date + Time row */}
       <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr)",gap:10,marginBottom:18}}>
         <Fld label={(_lang==="en"?"Day · ":"Dia · ")+dateLbl}><input type="date" value={date} onChange={e=>setDate(e.target.value)} style={{...inp,colorScheme:"dark"}}/></Fld>
@@ -243,7 +251,6 @@ function AddForm({type,onSave,onSaveBatch,savedMeds,onSaveMeds,editEntry,lastBot
       {type==="growth"&&<><Fld label={`${L("weight")} (kg)`}><input type="text" inputMode="decimal" placeholder={_lang==="en"?"e.g. 4.5":"Ex: 4,5"} value={weightKg} onChange={e=>setWeightKg(e.target.value.replace(/[^0-9.,]/g,""))} style={{...inp,fontSize:T.f3XL,fontWeight:800,textAlign:"center"}}/></Fld><Fld label={`${_lang==="en"?"Length":"Comprimento"} (cm)`}><input type="text" inputMode="decimal" placeholder={_lang==="en"?"e.g. 55.0":"Ex: 55,0"} value={lengthCm} onChange={e=>setLengthCm(e.target.value.replace(/[^0-9.,]/g,""))} style={{...inp,fontSize:T.f3XL,fontWeight:800,textAlign:"center"}}/></Fld><Fld label={`${L("head")} (cm)`}><input type="text" inputMode="decimal" placeholder={_lang==="en"?"e.g. 37.0":"Ex: 37,0"} value={headCm} onChange={e=>setHeadCm(e.target.value.replace(/[^0-9.,]/g,""))} style={{...inp,fontSize:T.f3XL,fontWeight:800,textAlign:"center"}}/></Fld></>}
       {/* v11.8.0: notes removido de medicine. Tambem nao mostra em drops stage. */}
       {type!=="medicine"&&<Fld label={L("notes")}><textarea placeholder={_lang==="en"?"Note...":"Anotação..."} value={notes} onChange={e=>setNotes(e.target.value)} rows={2} style={{...inp,resize:"vertical"}}/></Fld>}
-      {type==="tummytime"&&!isEdit&&onStartTimer&&<button onClick={()=>onStartTimer("tummytime")} style={{width:"100%",padding:16,borderRadius:16,background:`linear-gradient(180deg,${cfg.color}28,${cfg.color}10)`,color:"#fde68a",fontSize:T.fLG,fontWeight:700,letterSpacing:-0.2,border:`1px solid ${cfg.color}55`,boxShadow:`0 1px 0 0 rgba(255,255,255,0.1) inset, 0 4px 12px -4px ${cfg.color}35`,marginBottom:10,display:"flex",alignItems:"center",justifyContent:"center",gap:10,cursor:"pointer"}}><Icon name="play" size={14} color="#fde68a"/>{_lang==="en"?"Start timer":"Iniciar timer"}</button>}
       <button onClick={doSave} disabled={saving} key={shakeFlash} style={{width:"100%",padding:18,borderRadius:18,background:`linear-gradient(180deg,${cfg.color},${cfg.color}dd)`,color:T.bg1,fontSize:T.fXL,fontWeight:700,letterSpacing:-0.3,border:"none",boxShadow:`0 1px 0 0 rgba(255,255,255,0.25) inset, 0 0 0 1px rgba(255,255,255,0.06), 0 12px 32px -8px ${cfg.color}55, 0 4px 8px -4px ${cfg.color}33`,transition:"transform 0.2s cubic-bezier(0.22,1,0.36,1)",cursor:saving?"wait":"pointer",opacity:saving?0.75:1,animation:shakeFlash?"shakeX 0.35s ease":"none",display:"flex",alignItems:"center",justifyContent:"center",gap:10}}>{saving&&<span style={{width:14,height:14,borderRadius:"50%",border:"2px solid rgba(7,11,30,0.25)",borderTopColor:T.bg1,animation:"spin 0.7s linear infinite"}}/>}{saving?(_lang==="en"?"Saving\u2026":"Salvando\u2026"):(isEdit?L("update"):(type==="medicine"&&!isEdit&&selectedMeds.size>0?`${L("save")} (${selectedMeds.size})`:L("save")))}</button>
     </div>
   </div>);
