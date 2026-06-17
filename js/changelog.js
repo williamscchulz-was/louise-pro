@@ -4,6 +4,23 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.102", date: "2026-06-16",
+    pt: {
+      title: "Tummy time sai do Stats",
+      bullets: [
+        'Removidos o **card de média** (topo) e o **gráfico de barras** (fim) de tummy time no Stats — deixou de ser informação prioritária. O grid de cards do topo voltou a 3 colunas (Fraldas / Mamadas / Sonecas).',
+        'Tummy time continua sendo registrado normalmente (pelo + e nos eventos) — só saiu das estatísticas.',
+      ],
+    },
+    en: {
+      title: "Tummy time leaves Stats",
+      bullets: [
+        'Removed the **average card** (top) and the **bar chart** (bottom) for tummy time in Stats — no longer priority info. The top card grid is back to 3 columns (Diapers / Feeds / Naps).',
+        'Tummy time is still logged normally (via + and in events) — it just left the statistics.',
+      ],
+    },
+  },
+  {
     v: "11.9.101", date: "2026-06-16",
     pt: {
       title: "Iniciar timer pelo + — pra todos os timers",

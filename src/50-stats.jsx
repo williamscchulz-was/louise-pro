@@ -31,8 +31,6 @@ const StatsPage = React.memo(function StatsPage({entries,onGrowth}){
     const slReal=sumRealSleep(sleeps);
     const slAwake=sumAwakeInSleep(sleeps);
     const simetCount=de.filter(e=>e.type==="medicine"&&e.name&&/simet/i.test(e.name)).length;
-    const tumEntries=de.filter(e=>e.type==="tummytime"&&e.durationMin);
-    const tumMin=Math.round(tumEntries.reduce((s,e)=>s+(e.durationMin||0),0));
     // v11.9.3: granularidade extra — naps duration, poop/wet split, ww (wake window).
     const napsOnly=de.filter(e=>e.type==="nap"&&e.durationMin);
     const napTotalMin=Math.round(napsOnly.reduce((s,e)=>s+e.durationMin,0));
@@ -48,8 +46,6 @@ const StatsPage = React.memo(function StatsPage({entries,onGrowth}){
       slAwake:slAwake,
       slBed:slReal+slAwake,
       simet:simetCount,
-      tum:tumEntries.length,
-      tumMin:tumMin,
       napTotalMin,napMaxMin,poopCount,wetCount
     }
   });
@@ -85,9 +81,6 @@ const StatsPage = React.memo(function StatsPage({entries,onGrowth}){
   const avgDiapers=Math.round(avgDays.reduce((s,dt)=>s+entries.filter(e=>e.date===dt&&e.type==="diaper").length,0)/numComplete*10)/10;
   const avgFeedings=Math.round(avgDays.reduce((s,dt)=>s+entries.filter(e=>e.date===dt&&(e.type==="bottle"||e.type==="nursing")).length,0)/numComplete*10)/10;
   const avgNaps=Math.round(avgDays.reduce((s,dt)=>s+entries.filter(e=>e.date===dt&&e.type==="nap").length,0)/numComplete*10)/10;
-  const avgTum=Math.round(avgData.reduce((s,d)=>s+d.tum,0)/numComplete*10)/10;
-  const mxTumMin=Math.max(...data.map(d=>d.tumMin),1);
-  const totalTumInPeriod=data.reduce((s,d)=>s+d.tum,0);
   // v11.9.3: averages adicionais
   const avgNapMin=Math.round(avgData.reduce((s,d)=>s+d.napTotalMin,0)/numComplete);
   // v11.9.5: media de tempo POR SONECA (total min / total naps), nao por dia.
@@ -155,7 +148,7 @@ const StatsPage = React.memo(function StatsPage({entries,onGrowth}){
         </div>}
       </div>
     </div>
-    <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)",gap:8,marginBottom:16}}>
+    <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)",gap:8,marginBottom:16}}>
       <div style={{background:"rgba(20,26,60,0.5)",borderRadius:20,border:`1px solid ${T.gBSoft}`,padding:"14px 8px 12px",textAlign:"center",boxShadow:T.insetTop}}>
         <div style={{fontSize:T.fXS,color:T.label,letterSpacing:-0.05,marginBottom:6,fontWeight:600}}>{_lang==="en"?"Diapers/day":"Fraldas/dia"}</div>
         <div style={{fontSize:T.f2XL,fontWeight:800,color:T.pink,letterSpacing:-0.8,fontVariantNumeric:"tabular-nums",lineHeight:1}}>{avgDiapers}</div>
@@ -171,12 +164,6 @@ const StatsPage = React.memo(function StatsPage({entries,onGrowth}){
         <div style={{fontSize:T.fXS,color:T.label,letterSpacing:-0.05,marginBottom:6,fontWeight:600}}>{_lang==="en"?"Naps/day":"Sonecas/dia"}</div>
         <div style={{fontSize:T.f2XL,fontWeight:800,color:T.accent,letterSpacing:-0.8,fontVariantNumeric:"tabular-nums",lineHeight:1}}>{avgNaps}</div>
         <div style={{fontSize:T.fXS,color:T.dim,marginTop:5,fontVariantNumeric:"tabular-nums",letterSpacing:0.2}}>{avgNapDur>0?`~${fmtDur(avgNapDur)}${_lang==="en"?"/nap":"/soneca"}`:""}</div>
-      </div>
-      <div style={{background:"rgba(20,26,60,0.5)",borderRadius:20,border:`1px solid ${T.gBSoft}`,padding:"14px 8px 12px",textAlign:"center",boxShadow:T.insetTop}}>
-        <div style={{fontSize:T.fXS,color:T.label,letterSpacing:-0.05,marginBottom:6,fontWeight:600}}>{_lang==="en"?"Tummy time":"Tummy time"}</div>
-        {/* v11.9.20: tempo TOTAL/dia vira destaque (mais útil que count). Count fica em sub. */}
-        <div style={{fontSize:T.f2XL,fontWeight:800,color:T.amber,letterSpacing:-0.8,fontVariantNumeric:"tabular-nums",lineHeight:1}}>{(()=>{const tt=avgData.reduce((s,d)=>s+d.tumMin,0)/numComplete;return tt>=1?fmtDur(Math.round(tt)):avgTum})()}</div>
-        <div style={{fontSize:T.fXS,color:T.dim,marginTop:5,fontVariantNumeric:"tabular-nums",letterSpacing:0.2}}>{avgTum>0?`${avgTum}${_lang==="en"?" sessions/day":" sessões/dia"}`:""}</div>
       </div>
     </div>
     {[{t:_lang==="en"?"Milk (ml)":"Leite (ml)",f:"ml",max:mxMl,c:T.green,stacked:false},{t:_lang==="en"?"Sleep · real + awake":"Sono · real + acordada",f:"sl",max:mxSl,c:T.purple,stacked:true},{t:_lang==="en"?"Naps duration":"Sonecas — duração",f:"napTotalMin",max:Math.max(...data.map(d=>d.napTotalMin),1),c:T.accent,stacked:false,fmt:"dur"},{t:_lang==="en"?"Poop/day":"Cocô/dia",f:"poopCount",max:mxPoop,c:"#a16b4a",stacked:false}].map(ch=>(
@@ -256,47 +243,6 @@ const StatsPage = React.memo(function StatsPage({entries,onGrowth}){
                 {sel&&dayPill(d,String(v))}
                 {numDays<=14&&<span style={{fontSize:T.fXS,color:T.sub,fontWeight:600}}>{v>0?v:""}</span>}
                 <div style={{width:"85%",maxWidth:numDays>20?8:18,height:Math.max((v/mxSimet)*50,2),borderRadius:numDays>20?2:5,background:v>0?`linear-gradient(180deg,${T.amber},#d97706)`:T.bg3,transition:"height .5s",opacity:sel?1:(d.isToday?1:0.75),boxShadow:v>0?`0 0 8px ${T.amber}33`:"none"}}/>
-                {numDays<=14&&<span style={{fontSize:T.fXS,color:d.isToday?T.accent:T.dim,fontWeight:d.isToday?700:400}}>{d.isToday?(_lang==="en"?"Today":"Hoje"):d.label}</span>}
-              </div>
-            })}
-          </div>
-          {numDays>14&&<div style={{display:"flex",justifyContent:"space-between",padding:"4px 4px 0",fontSize:T.fXS,color:T.dim}}><span>{data[0]?.label}</span><span>{data[Math.floor(data.length/2)]?.label}</span><span>{data[data.length-1]?.label}</span></div>}
-        </>
-      )}
-    </div>
-
-    {/* ── TUMMY TIME CARD ── minutes/day bar chart */}
-    <div style={{marginBottom:22,padding:"14px 14px 12px",background:"rgba(22,28,60,0.4)",borderRadius:14,border:`1px solid ${T.gB}`}}>
-      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
-        <div style={{display:"flex",alignItems:"center",gap:8}}>
-          <div style={{width:28,height:28,borderRadius:9,background:`${T.amber}1a`,border:`1px solid ${T.amber}33`,display:"flex",alignItems:"center",justifyContent:"center"}}>
-            <Icon name="baby" size={14} color={T.amber}/>
-          </div>
-          <div>
-            <div style={{fontSize:T.fMD,fontWeight:700,color:T.text}}>Tummy time</div>
-            <div style={{fontSize:T.fXS,color:T.dim,marginTop:1}}>{_lang==="en"?"Minutes per day":"Minutos por dia"}</div>
-          </div>
-        </div>
-        <div style={{display:"flex",gap:14,alignItems:"center"}}>
-          <div style={{textAlign:"right"}}>
-            <div style={{fontSize:T.fXS,color:T.dim,textTransform:"uppercase",letterSpacing:0.5}}>{_lang==="en"?"Avg/day":"Méd/dia"}</div>
-            <div style={{fontSize:T.fXL,fontWeight:800,color:T.amber,fontVariantNumeric:"tabular-nums"}}>{avgTum}<span style={{fontSize:T.fSM,opacity:0.6,marginLeft:2}}>{_lang==="en"?"sess":"sess"}</span></div>
-          </div>
-        </div>
-      </div>
-      {totalTumInPeriod===0?(
-        <div style={{padding:"24px 12px",textAlign:"center",fontSize:T.fSM,color:T.dim,fontStyle:"italic"}}>
-          {_lang==="en"?"No tummy time in this period":"Nenhum tummy time neste período"}
-        </div>
-      ):(
-        <>
-          <div style={{display:"flex",gap:numDays>20?1:numDays>14?2:5,alignItems:"flex-end",height:100,background:"rgba(14,18,48,0.5)",borderRadius:10,padding:"14px 4px 6px",border:`1px solid ${T.gB}`,position:"relative"}}>
-            {data.map(d=>{
-              const v=d.tumMin;const k="tummy:"+d.date;const sel=selBar===k;
-              return<div key={d.date} onClick={()=>tapBar(k)} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2,minWidth:0,position:"relative",cursor:"pointer"}}>
-                {sel&&dayPill(d,`${v}m`)}
-                {numDays<=14&&<span style={{fontSize:T.fXS,color:T.sub,fontWeight:600}}>{v>0?`${v}m`:""}</span>}
-                <div style={{width:"85%",maxWidth:numDays>20?8:18,height:Math.max((v/mxTumMin)*50,2),borderRadius:numDays>20?2:5,background:v>0?`linear-gradient(180deg,${T.amber},#d97706)`:T.bg3,transition:"height .5s",opacity:sel?1:(d.isToday?1:0.75),boxShadow:v>0?`0 0 8px ${T.amber}33`:"none"}}/>
                 {numDays<=14&&<span style={{fontSize:T.fXS,color:d.isToday?T.accent:T.dim,fontWeight:d.isToday?700:400}}>{d.isToday?(_lang==="en"?"Today":"Hoje"):d.label}</span>}
               </div>
             })}
