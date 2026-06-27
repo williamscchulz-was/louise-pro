@@ -237,7 +237,7 @@ function App(){
       // variar de dose ent\u00e3o ficam como "pede gotas" (dose="") pra abrir o picker.
       // Roda 1x por device (flag em localStorage) pra respeitar futuras edi\u00e7\u00f5es manuais.
       const ASK_DROPS=/simet|paracetam|novalgin/i;
-      let list=d||[{name:"Floripa",dose:"6 gotas"},{name:"Vit. D",dose:"2 gotas"},{name:"C\u00f3licaliv",dose:"5 gotas"},{name:"Simeticona",dose:""},{name:"Paracetamol",dose:""}];
+      let list=d||[{name:"Myrafer",dose:""},{name:"Vit. D",dose:"2 gotas"},{name:"C\u00f3licaliv",dose:"5 gotas"},{name:"Simeticona",dose:""},{name:"Paracetamol",dose:""}];
       try{
         // v11.8.2: migra\u00e7\u00e3o v2 \u2014 limpa dose de meds de gotas variaveis + adiciona C\u00f3licaliv
         // se n\u00e3o existir. Roda 1x por device. Respeita edi\u00e7\u00f5es manuais futuras.
@@ -464,6 +464,8 @@ function App(){
     if(activeTimer.type==="tummytime"){
       const m=Math.floor(mins);const sec=Math.round((mins-m)*60);
       showToast(`Tummy time · ${m}min${sec>0?` ${sec}s`:""}`,undoStop(createdIds));
+    }else if(activeTimer.type==="bath"){
+      showToast(_lang==="en"?`Bath · ${mins}min`:`Banho · ${mins}min`,undoStop(createdIds));
     }else{
       const wakingNote=wakings.length>0?` (${wakings.length} ${_lang==="en"?"wake"+(wakings.length>1?"s":""):"despertar"+(wakings.length>1?"es":"")})`:"";
       showToast(`${mins}min ${_lang==="en"?"logged":"registrado"}${wakingNote}`,undoStop(createdIds))
@@ -626,7 +628,8 @@ function App(){
       slots.push({key:"nap"+i,type:"nap",icon:"cloud",col:T.accent,target:minToTime(tMin),targetMin:tMin,tolMin:60,num:i+1,match:null,lbl:`${i+1}${_lang==="en"?["st","nd","rd","th"][i]||"th":"ª"} ${_lang==="en"?"Nap":"Soneca"}`,chip:`${i+1}${_lang==="en"?"a":"ª"} S`})
     });
     if(r.bathTime){const tMin=adj(toMinutes(r.bathTime),"bath");slots.push({key:"bath",type:"bath",icon:"bath",col:T.cyan,target:minToTime(tMin),targetMin:tMin,tolMin:60,match:findMatch(["bath"],tMin,60),lbl:_lang==="en"?"Bath":"Banho",chip:_lang==="en"?"Bath":"Banho"})}
-    // v11.9.88-91: estágios pós-banho — mamadeira pós-banho + Floripa + vitamina D.
+    // v11.9.88-91/104: estágios pós-banho — mamadeira pós-banho + Myrafer + vitamina D
+    // (Floripa virou Myrafer na v11.9.104, mesmo mecanismo calculado: mamadeira + 5min).
     // v11.9.90: aparecem por DEFAULT (banho+15min) SEM precisar salvar Ajustes — o Salvar
     // nem liberava sem mudança, então os estágios nunca apareciam (bug da v11.9.88).
     // r.postBathBottleTime, se salvo, sobrescreve o default.
@@ -642,7 +645,7 @@ function App(){
     if(pbTimeStr){pbTMin=adj(toMinutes(pbTimeStr),"pb");pbHit=findMatch(["bottle"],pbTMin,45,90);slots.push({key:"pbbottle",type:"pbbottle",icon:"bottle",col:T.green,target:minToTime(pbTMin),targetMin:pbTMin,tolMin:60,match:pbHit,lbl:_lang==="en"?"Post-bath bottle":"Mamad. pós-banho",chip:_lang==="en"?"Bottle":"Mamad."})}
     if(pbTMin!=null){
       const fMin=(pbHit&&pbHit.time?toMinutes(pbHit.time):pbTMin)+5;
-      slots.push({key:"floripa",type:"floripa",icon:"pill",col:T.amber,target:minToTime(fMin),targetMin:fMin,tolMin:60,match:medToday(/florip/i),lbl:"Floripa",chip:"Floripa"});
+      slots.push({key:"myrafer",type:"myrafer",icon:"pill",col:T.amber,target:minToTime(fMin),targetMin:fMin,tolMin:60,match:medToday(/myrafer/i),lbl:"Myrafer",chip:"Myrafer"});
       slots.push({key:"vitd",type:"vitd",icon:"droplet",col:T.amber,target:minToTime(fMin),targetMin:fMin,tolMin:60,match:medToday(/vit(amina)?\s*\.?\s*d/i),lbl:_lang==="en"?"Vitamin D":"Vitamina D",chip:"Vit D"});
     }
     if(r.bedtime){const tMin=adj(toMinutes(r.bedtime),"bed");slots.push({key:"bedtime",type:"bedtime",icon:"bed",col:T.purple,target:minToTime(tMin),targetMin:tMin,tolMin:60,match:findMatch(["sleep"],tMin,60),lbl:_lang==="en"?"Bedtime":"Bedtime",chip:_lang==="en"?"Bed":"Bed"})}

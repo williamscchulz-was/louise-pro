@@ -178,11 +178,12 @@ const TimerBar = React.memo(function TimerBar({activeTimer,onStop,onSwitch,onPau
   }
   const secs=Math.max(0,Math.floor((Date.now()-new Date(activeTimer.startTime).getTime())/1000));
   const isTum=activeTimer.type==="tummytime";
-  const tCol=isTum?T.amber:T.purple;
-  const tColLight=isTum?"#fde68a":"#c4b5fd";
-  const tColLightRgba=isTum?"rgba(253,230,138,0.9)":"rgba(196,181,253,0.85)";
-  const tLabel=isTum?(_lang==="en"?"Tummy time":"Tummy time"):(activeTimer.type==="nap"?TL("nap"):TL("sleep"));
-  const tIconName=isTum?"baby":(activeTimer.type==="nap"?"cloud":"bed");
+  const isBath=activeTimer.type==="bath"; // v11.9.104: banho cronometrável
+  const tCol=isTum?T.amber:isBath?T.cyan:T.purple;
+  const tColLight=isTum?"#fde68a":isBath?"#7dd3fc":"#c4b5fd";
+  const tColLightRgba=isTum?"rgba(253,230,138,0.9)":isBath?"rgba(125,211,252,0.9)":"rgba(196,181,253,0.85)";
+  const tLabel=isTum?(_lang==="en"?"Tummy time":"Tummy time"):TL(activeTimer.type);
+  const tIconName=isTum?"baby":isBath?"bath":(activeTimer.type==="nap"?"cloud":"bed");
   // Format time: tummytime uses mm:ss, sleep/nap uses h:mm:ss via fmtTimer
   const timeDisplay=isTum?`${String(Math.floor(secs/60)).padStart(2,"0")}:${String(secs%60).padStart(2,"0")}`:fmtTimer(secs);
   // Since label: "desde HH:MM" showing the start time
@@ -201,7 +202,7 @@ const TimerBar = React.memo(function TimerBar({activeTimer,onStop,onSwitch,onPau
     <button onClick={()=>onEditStart&&onEditStart()} style={{width:40,height:40,borderRadius:12,background:`${tCol}20`,border:`1px solid ${tCol}40`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset",flexShrink:0}}><Icon name="pencil" size={15} color={tColLight}/></button>
     {/* v11.9.96: <3min em sono/soneca = mis-tap → o stop vira "descartar" (cinza, ✕):
         o stopTimer só limpa o timer, sem criar entry nem wakeup. Depois disso volta o stop normal. */}
-    {(()=>{const isDiscard=!isTum&&secs<180;return<button onClick={onStop} aria-label={isDiscard?(_lang==="en"?"Discard timer":"Descartar timer"):(_lang==="en"?"Stop":"Parar")} style={{width:50,height:50,borderRadius:15,background:isDiscard?"linear-gradient(180deg,rgba(85,90,128,0.35),rgba(85,90,128,0.18))":`linear-gradient(180deg,${tCol}60,${tCol}35)`,border:isDiscard?"1px solid rgba(85,90,128,0.55)":`1px solid ${tCol}70`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:isDiscard?"0 1px 0 0 rgba(255,255,255,0.08) inset":`0 1px 0 0 rgba(255,255,255,0.15) inset, 0 6px 16px -6px ${tCol}55`,position:"relative",flexShrink:0,transition:"background .3s ease, border-color .3s ease"}}>{isDiscard?<span style={{fontSize:18,fontWeight:700,color:"#a3aac8",lineHeight:1}}>✕</span>:<Icon name="stop" size={16} color="#fff"/>}</button>})()}
+    {(()=>{const isDiscard=(activeTimer.type==="sleep"||activeTimer.type==="nap")&&secs<180;return<button onClick={onStop} aria-label={isDiscard?(_lang==="en"?"Discard timer":"Descartar timer"):(_lang==="en"?"Stop":"Parar")} style={{width:50,height:50,borderRadius:15,background:isDiscard?"linear-gradient(180deg,rgba(85,90,128,0.35),rgba(85,90,128,0.18))":`linear-gradient(180deg,${tCol}60,${tCol}35)`,border:isDiscard?"1px solid rgba(85,90,128,0.55)":`1px solid ${tCol}70`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:isDiscard?"0 1px 0 0 rgba(255,255,255,0.08) inset":`0 1px 0 0 rgba(255,255,255,0.15) inset, 0 6px 16px -6px ${tCol}55`,position:"relative",flexShrink:0,transition:"background .3s ease, border-color .3s ease"}}>{isDiscard?<span style={{fontSize:18,fontWeight:700,color:"#a3aac8",lineHeight:1}}>✕</span>:<Icon name="stop" size={16} color="#fff"/>}</button>})()}
   </div>)})
 
 // v11.9.0: memoizado pra não re-renderizar quando outros states do App mudam

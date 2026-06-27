@@ -347,13 +347,13 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
             </div>
           </div>
           {/* v11.9.88-91: estágio pós-banho (default banho+15min, aplicado sozinho em runtime).
-              Floripa e Vit. D não têm campo — são calculados: mamadeira pós-banho + 5min. */}
+              Myrafer e Vit. D não têm campo — são calculados: mamadeira pós-banho + 5min. */}
           <div style={{borderTop:`1px solid ${T.gB}`,paddingTop:14}}>
             <div style={{fontSize:T.fSM,fontWeight:700,color:T.sub,textTransform:"uppercase",letterSpacing:0.5,marginBottom:10}}>{_lang==="en"?"Post-bath":"Pós-banho"}</div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
               <Fld label={_lang==="en"?"Bottle":"Mamadeira"}><input type="time" value={postBathBottleTime} onChange={e=>setPostBathBottleTime(e.target.value)} style={{...inp,padding:"14px 12px",fontSize:T.fLG,textAlign:"center",colorScheme:"dark",fontVariantNumeric:"tabular-nums"}}/></Fld>
             </div>
-            <div style={{fontSize:T.fXS,color:T.dim,marginTop:2}}>{_lang==="en"?"Floripa and Vit. D are automatic: 5min after the post-bath bottle.":"Floripa e Vit. D entram sozinhos: 5min depois da mamadeira pós-banho."}</div>
+            <div style={{fontSize:T.fXS,color:T.dim,marginTop:2}}>{_lang==="en"?"Myrafer and Vit. D are automatic: 5min after the post-bath bottle.":"Myrafer e Vit. D entram sozinhos: 5min depois da mamadeira pós-banho."}</div>
           </div>
         </>}
       </div>

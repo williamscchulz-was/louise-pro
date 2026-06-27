@@ -115,8 +115,8 @@ function AddForm({type,onSave,onSaveBatch,savedMeds,onSaveMeds,editEntry,lastBot
   const dateLbl=isToday?L("today"):fmtRelDate(date);
   // v11.9.101: tipos-timer ganham "Iniciar timer" no topo do form (era so tummytime).
   // Cor clara por tipo, fiel ao vocabulario do timer ativo (roxo/azul/ambar).
-  const isTimerType=type==="sleep"||type==="nap"||type==="nursing"||type==="tummytime";
-  const tLight=type==="tummytime"?"#fde68a":type==="nursing"?"#7dd3fc":"#c4b5fd";
+  const isTimerType=type==="sleep"||type==="nap"||type==="nursing"||type==="tummytime"||type==="bath";
+  const tLight=type==="tummytime"?"#fde68a":(type==="nursing"||type==="bath")?"#7dd3fc":"#c4b5fd";
   return(<div style={{paddingBottom:20}}>
     <div style={{display:"flex",alignItems:"center",gap:12,padding:"0 20px 16px"}}>
       <div style={{width:32,height:32,borderRadius:10,background:cfg.bg,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name={cfg.icon} size={18} color={cfg.color}/></div>

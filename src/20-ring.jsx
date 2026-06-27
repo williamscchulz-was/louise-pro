@@ -17,6 +17,7 @@ const Ring = React.memo(function Ring({activeTimer,napSug,tick,recentEvents,lang
     if(activeTimer.type==="nursing"){sub=lang==="en"?"Nursing":"Amamentando";col1="#2563eb";col2="#60a5fa"}
     else if(activeTimer.type==="nap"){sub=lang==="en"?"Napping":"Soneca";col1="#7c3aed";col2="#c084fc"}
     else if(activeTimer.type==="tummytime"){sub=lang==="en"?"Tummy time":"Tummy time";col1="#d97706";col2="#fbbf24"}
+    else if(activeTimer.type==="bath"){sub=lang==="en"?"Bath":"Banho";col1="#0e7490";col2="#22d3ee"}
     else{sub=lang==="en"?"Bedtime":"Boa noite";col1="#7c3aed";col2="#c084fc";isBedtime=true}
   } else if(napSug){
     lbl=fmtDur(napSug.el);sub=lang==="en"?"Awake for":"Acordado(a)";

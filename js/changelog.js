@@ -4,6 +4,23 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.104", date: "2026-06-16",
+    pt: {
+      title: "Timer de banho + Myrafer na rotina",
+      bullets: [
+        '★ **O banho agora pode ser cronometrado**: ao abrir banho aparece "Iniciar timer agora" — começa, para e registra a duração (igual ao tummy time). Quem quiser, ainda registra na hora, como antes.',
+        '★ Na rotina, o **Floripa virou Myrafer** — mesmo esquema: entra sozinho 5min depois da mamadeira pós-banho, marca ✓ quando registrado em qualquer hora do dia.',
+      ],
+    },
+    en: {
+      title: "Bath timer + Myrafer in the routine",
+      bullets: [
+        '★ **Bath can now be timed**: opening bath shows "Start timer now" — start, stop, logs the duration (like tummy time). You can still log it instantly, as before.',
+        '★ In the routine, **Floripa became Myrafer** — same mechanic: auto 5min after the post-bath bottle, ✓ when logged any time of day.',
+      ],
+    },
+  },
+  {
     v: "11.9.103", date: "2026-06-16",
     pt: {
       title: "Banho e temperatura agora aparecem no anel",
