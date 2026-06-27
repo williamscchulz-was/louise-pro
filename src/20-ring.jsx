@@ -47,7 +47,10 @@ const Ring = React.memo(function Ring({activeTimer,napSug,tick,recentEvents,lang
   const toAng=mins=>{const t=Math.max(0,Math.min(1,(mins-dayStart)/daySpan));return startAng+t*totalArc};
   const descArc=(sA,eA)=>{const s=sA*Math.PI/180,e=eA*Math.PI/180;return`M ${cx+R*Math.cos(s)} ${cy+R*Math.sin(s)} A ${R} ${R} 0 ${eA-sA>180?1:0} 1 ${cx+R*Math.cos(e)} ${cy+R*Math.sin(e)}`};
   const sleepEvs=evs.filter(e=>e.type==="nap"&&e.durationMin>0);
-  const dotEvs=evs.filter(e=>e.type==="bottle"||e.type==="nursing"||e.type==="diaper"||e.type==="medicine"||e.type==="tummytime");
+  // v11.9.103: TODOS os eventos de horário aparecem no arco (mantendo o agrupamento por
+  // proximidade). Faltavam banho e temperatura. Sono/soneca viram arcos; acordar = sol;
+  // crescimento/marco ficam de fora (são registros, não eventos do ritmo do dia).
+  const dotEvs=evs.filter(e=>e.type==="bottle"||e.type==="nursing"||e.type==="diaper"||e.type==="medicine"||e.type==="tummytime"||e.type==="bath"||e.type==="temperature");
   const sleepArcs=sleepEvs.map(ev=>{
     const mins=toMin(ev.time),dur=ev.durationMin;
     if(mins+dur<dayStart||mins>dayStart+daySpan)return null;

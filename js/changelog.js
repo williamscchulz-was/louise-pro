@@ -4,6 +4,21 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.103", date: "2026-06-16",
+    pt: {
+      title: "Banho e temperatura agora aparecem no anel",
+      bullets: [
+        '★ O anel do dia mostrava mamadeira, amamentação, fralda, remédio e tummy time — mas **banho e temperatura ficavam de fora**. Agora aparecem também, com o mesmo agrupamento por proximidade de horário.',
+      ],
+    },
+    en: {
+      title: "Bath and temperature now show on the ring",
+      bullets: [
+        '★ The day ring showed bottle, nursing, diaper, medicine and tummy time — but **bath and temperature were missing**. They now appear too, with the same time-proximity grouping.',
+      ],
+    },
+  },
+  {
     v: "11.9.102", date: "2026-06-16",
     pt: {
       title: "Tummy time sai do Stats",
