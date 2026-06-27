@@ -678,8 +678,13 @@ function App(){
       else if(!nextAssigned){s.status="next";nextAssigned=true}
       else{s.status="pending"}
     }
-    // A 1ª pendente "late" vira "next-late" (prioridade no headline). v11.9.87: era um
-    // if/else com os DOIS ramos idênticos (dead code) — colapsado, mesmo comportamento.
+    // v11.9.105: PULADO — uma etapa "late" cujo dia já SEGUIU (existe etapa de alvo MAIOR já
+    // feita) foi pulada, não está mais sendo cobrada. Vira neutra e LIBERA a "rotina concluída
+    // (parcial)". Ex: 3ª soneca não rolou mas o banho já aconteceu → a soneca foi pulada, não
+    // está "atrasada". Uma "late" recente (nada depois feito ainda) continua cobrando (next-late).
+    const maxDoneTarget=slots.reduce((m,s)=>(s.status==="done"&&s.targetMin>m?s.targetMin:m),-1);
+    for(const s of slots){if(s.status==="late"&&s.targetMin<maxDoneTarget)s.status="skipped"}
+    // A 1ª "late" RESTANTE (recente, ainda possível) vira "next-late" — prioridade no headline.
     const firstLate=slots.find(s=>s.status==="late");
     if(firstLate)firstLate.status="next-late";
     const headline=slots.find(s=>s.status==="next-late")||slots.find(s=>s.status==="next");
@@ -698,8 +703,11 @@ function App(){
     const mlGoal=profile?.mlGoal||0;
     let nextBottleMl=null;
     if(mlGoal>0){const remain=Math.max(1,bottlesTarget-bottlesDone);nextBottleMl=Math.max(0,Math.round((mlGoal-consumedMl)/remain/5)*5)}
-    const allDone=slots.every(s=>s.status==="done");
-    return{slots,headline,bottlesDone,bottlesTarget,allDone,hasRoutine:true,wakeDelta,nextBottleMl,mlGoal,consumedMl};
+    // v11.9.105: rotina "parcialmente feita" — concluída quando NADA está pendente (tudo done
+    // OU pulado) e ao menos 1 etapa aconteceu. skippedCount alimenta o "concluída · N pulado".
+    const skippedCount=slots.filter(s=>s.status==="skipped").length;
+    const allDone=slots.some(s=>s.status==="done")&&slots.every(s=>s.status==="done"||s.status==="skipped");
+    return{slots,headline,bottlesDone,bottlesTarget,allDone,skippedCount,hasRoutine:true,wakeDelta,nextBottleMl,mlGoal,consumedMl};
   },[profile?.routine,profile?.mlGoal,entries,todayE,tick,activeTimer]);
   // v11.9.83: 3 quick buttons adaptativos (ver suggestQuickActions no topo). nowMin é lido
   // no render — refresca ao abrir o app, registrar algo ou navegar (sem tick novo/bateria).
@@ -1091,7 +1099,7 @@ function App(){
           {routineState.allDone?<div style={{padding:"6px 4px",display:"flex",alignItems:"center",justifyContent:"center",gap:10}}>
             <span style={{flex:1,height:1,background:`linear-gradient(90deg,transparent,${T.green}50,transparent)`}}/>
             <div style={{width:18,height:18,borderRadius:"50%",background:T.green,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name="check" size={11} color="#04061a"/></div>
-            <span style={{fontSize:T.fSM,color:T.green,fontWeight:700,letterSpacing:0.6,textTransform:"uppercase"}}>{L("routineDone")}</span>
+            <span style={{fontSize:T.fSM,color:T.green,fontWeight:700,letterSpacing:0.6,textTransform:"uppercase"}}>{L("routineDone")}{routineState.skippedCount>0&&<span style={{color:T.dim,fontWeight:600}}> · {routineState.skippedCount} {_lang==="en"?"skipped":(routineState.skippedCount>1?"puladas":"pulada")}</span>}</span>
             <span style={{flex:1,height:1,background:`linear-gradient(90deg,transparent,${T.green}50,transparent)`}}/>
           </div>:routineState.headline?(()=>{
             const h=routineState.headline;
@@ -1118,22 +1126,23 @@ function App(){
               <div style={{display:"flex",gap:5,marginTop:11}}>
                 {routineState.slots.map(s=>{
                   const isDone=s.status==="done";
+                  const isSkip=s.status==="skipped";
                   const isLateSeg=s.status==="late"||s.status==="next-late";
                   const isNextSeg=s.status==="next";
-                  const segBg=isDone?T.green:isLateSeg?"#fb923c":isNextSeg?T.accent:`${T.accent}22`;
+                  const segBg=isDone?T.green:isSkip?`${T.dim}55`:isLateSeg?"#fb923c":isNextSeg?T.accent:`${T.accent}22`;
                   return<div key={s.key} title={s.lbl} className={isNextSeg?"rt-seg-next":""} style={{flex:1,height:5,borderRadius:3,background:segBg,transition:"background .4s ease"}}/>
                 })}
               </div>
               {routineExpanded&&<div className="rt-expand" style={{marginTop:11,paddingTop:11,borderTop:`1px solid ${accentCol}1f`,display:"flex",flexDirection:"column",gap:8}}>
                 {routineState.wakeDelta!==0&&<div style={{display:"flex",alignItems:"center",gap:7,padding:"6px 9px",borderRadius:9,background:"rgba(251,191,36,0.10)",border:"1px solid rgba(251,191,36,0.24)"}}><Icon name="clock" size={12} color={T.amber}/><span style={{fontSize:T.fXS,color:T.amber,fontWeight:600,lineHeight:1.3}}>{_lang==="en"?`Woke ${fmtDur(Math.abs(routineState.wakeDelta))} ${routineState.wakeDelta<0?"earlier":"later"} — times shifted`:`Acordou ${fmtDur(Math.abs(routineState.wakeDelta))} ${routineState.wakeDelta<0?"mais cedo":"mais tarde"} — horários ajustados`}</span></div>}
                 {routineState.slots.map(s=>{
-                  const sd=s.status==="done",sl=s.status==="late"||s.status==="next-late",sn=s.status==="next";
-                  const sc=sd?T.green:sl?"#fb923c":sn?T.accent:T.dim;
-                  return<div key={s.key} style={{display:"flex",alignItems:"center",gap:9}}>
-                    <div style={{width:16,height:16,borderRadius:"50%",border:`1.5px solid ${sc}`,background:sd?T.green:"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{sd?<Icon name="check" size={9} color="#04061a"/>:sl?<span style={{color:sc,fontSize:9,fontWeight:800}}>!</span>:null}</div>
-                    <Icon name={s.icon} size={13} color={s.col}/>
-                    <span style={{flex:1,minWidth:0,fontSize:T.fSM,color:sd?T.sub:T.text,fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.lbl}</span>
-                    <span style={{fontSize:T.fSM,color:sc,fontWeight:700,fontVariantNumeric:"tabular-nums",flexShrink:0}}>{s.match&&s.match.time?s.match.time:s.target}</span>
+                  const sd=s.status==="done",sk=s.status==="skipped",sl=s.status==="late"||s.status==="next-late",sn=s.status==="next";
+                  const sc=sd?T.green:sk?T.dim:sl?"#fb923c":sn?T.accent:T.dim;
+                  return<div key={s.key} style={{display:"flex",alignItems:"center",gap:9,opacity:sk?0.6:1}}>
+                    <div style={{width:16,height:16,borderRadius:"50%",border:`1.5px solid ${sc}`,background:sd?T.green:"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{sd?<Icon name="check" size={9} color="#04061a"/>:sk?<span style={{color:sc,fontSize:11,fontWeight:800,lineHeight:1}}>–</span>:sl?<span style={{color:sc,fontSize:9,fontWeight:800}}>!</span>:null}</div>
+                    <Icon name={s.icon} size={13} color={sk?T.dim:s.col}/>
+                    <span style={{flex:1,minWidth:0,fontSize:T.fSM,color:sd||sk?T.sub:T.text,fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",textDecoration:sk?"line-through":"none"}}>{s.lbl}</span>
+                    <span style={{fontSize:T.fSM,color:sc,fontWeight:700,fontVariantNumeric:"tabular-nums",flexShrink:0}}>{sk?(_lang==="en"?"skipped":"pulado"):(s.match&&s.match.time?s.match.time:s.target)}</span>
                   </div>
                 })}
                 <div style={{display:"flex",alignItems:"center",gap:9,marginTop:1}}>

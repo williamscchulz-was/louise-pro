@@ -4,6 +4,25 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.105", date: "2026-06-16",
+    pt: {
+      title: "Rotina entende etapa pulada + conclui parcial",
+      bullets: [
+        '★ A rotina agora reconhece **etapas puladas**: se uma soneca (ou outra etapa) não rolou e o dia já seguiu (algo mais tarde já aconteceu), ela aparece **riscada/cinza como "pulada"** em vez de ficar te cobrando como atrasada pra sempre.',
+        '★ E a rotina pode ficar **concluída de forma parcial**: quando tudo que ia acontecer aconteceu (mesmo com alguma etapa pulada), mostra ✓ "Rotina concluída · N pulada" — antes ela nunca fechava o dia se faltasse uma etapa.',
+        'Uma etapa atrasada recente, que ainda pode rolar, continua te lembrando como antes — só vira "pulada" quando o dia claramente passou dela.',
+      ],
+    },
+    en: {
+      title: "Routine understands skipped stages + partial done",
+      bullets: [
+        '★ The routine now recognizes **skipped stages**: if a nap (or other stage) didn\'t happen and the day moved on (something later already happened), it shows **struck-through/grey as "skipped"** instead of nagging as late forever.',
+        '★ And the routine can reach **partially done**: when everything that was going to happen happened (even with a skipped stage), it shows ✓ "Routine done · N skipped" — before it never closed the day if a stage was missing.',
+        'A recently-late stage that can still happen keeps reminding you — it only becomes "skipped" once the day clearly passed it.',
+      ],
+    },
+  },
+  {
     v: "11.9.104", date: "2026-06-16",
     pt: {
       title: "Timer de banho + Myrafer na rotina",
