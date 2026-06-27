@@ -1,10 +1,13 @@
-function AddForm({type,onSave,onSaveBatch,savedMeds,onSaveMeds,editEntry,lastBottleMl,lastBottleEntry,feedingIntervalMin,topMl,onStartTimer,suggestedMl}){const cfg=TYPES[type];const ed=editEntry||{};
+function AddForm({type,onSave,onSaveBatch,savedMeds,onSaveMeds,editEntry,lastBottleMl,lastBottleEntry,feedingIntervalMin,topMl,onStartTimer,suggestedMl,allEntries}){const cfg=TYPES[type];const ed=editEntry||{};
   const[date,setDate]=useState(ed.date||todayStr());
   // v11.9.3: Bottle volta a usar nowTime (revertido o smart default da v11.9.1 — usuário
   // prefere registrar no horário real, não no horário esperado).
   const[time,setTime]=useState(ed.time||nowTime());
-  const[ml,setMl]=useState(ed.ml?String(ed.ml):(type==="bottle"&&!editEntry?String(suggestedMl||lastBottleMl||""):""));const[durH,setDurH]=useState(ed.durationMin?String(Math.floor(ed.durationMin/60)):"");const[durM,setDurM]=useState(ed.durationMin?String(ed.durationMin%60):"");
-  const[diaperT,setDiaperT]=useState(ed.subtype||"wet");const[medN,setMedN]=useState(ed.name||"");const[medD,setMedD]=useState(ed.dose||"");
+  // v11.9.106: defaults inteligentes por horário — ml típico daquela hora (não o último ml cru)
+  // e subtype de fralda mais provável da hora. Caem no fallback antigo com pouco dado.
+  const _nm0=new Date(),_nowMin=_nm0.getHours()*60+_nm0.getMinutes();
+  const[ml,setMl]=useState(ed.ml?String(ed.ml):(type==="bottle"&&!editEntry?String(hourlyTypicalMl(allEntries,_nowMin)||suggestedMl||lastBottleMl||""):""));const[durH,setDurH]=useState(ed.durationMin?String(Math.floor(ed.durationMin/60)):"");const[durM,setDurM]=useState(ed.durationMin?String(ed.durationMin%60):"");
+  const[diaperT,setDiaperT]=useState(ed.subtype||(type==="diaper"&&!editEntry?(likelyDiaperSubtype(allEntries,_nowMin)||"wet"):"wet"));const[medN,setMedN]=useState(ed.name||"");const[medD,setMedD]=useState(ed.dose||"");
   const[tempV,setTempV]=useState(ed.value?String(ed.value):"");const[side,setSide]=useState(ed.side||"left");const[nurseM,setNurseM]=useState(ed.durationMin&&type==="nursing"?String(ed.durationMin):"");
   const[tumM,setTumM]=useState(ed.durationMin&&type==="tummytime"?String(Math.floor(ed.durationMin)):"");
   const[tumS,setTumS]=useState(ed.durationMin&&type==="tummytime"?String(Math.round((ed.durationMin-Math.floor(ed.durationMin))*60)):"");

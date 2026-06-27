@@ -1084,7 +1084,7 @@ function App(){
             const lbl=SHORT[tp]||(cfg.label?cfg.label[_lang]:tp);
             // v11.9.93: "wakeup" registra em 1 toque via quickWakeup (anti-duplicata de 60s
             // + nightSleepMin já embutidos) — era a função morta desde a v11.9.x.
-            const act=tp==="wakeup"?quickWakeup:tp==="nursing"?(()=>setShowNursingPicker(true)):(tp==="sleep"||tp==="nap"||tp==="tummytime")?(()=>startTimer(tp)):(()=>{setFormType(tp);setShowAdd(false)});
+            const act=tp==="wakeup"?quickWakeup:tp==="nursing"?(()=>setShowNursingPicker(true)):(tp==="sleep"||tp==="nap"||tp==="tummytime"||tp==="bath")?(()=>startTimer(tp)):(()=>{setFormType(tp);setShowAdd(false)});
             return<button key={tp} aria-label={(_lang==="en"?"Add ":"Adicionar ")+lbl} onClick={act} className="qbtn-appear" style={{padding:"12px 0 10px",minHeight:64,borderRadius:14,background:`${col}08`,border:`1px solid ${col}18`,display:"flex",flexDirection:"column",alignItems:"center",gap:5,boxShadow:`0 1px 0 0 rgba(255,255,255,0.04) inset`}}><Icon name={ic} size={20} color={col}/><span style={{fontSize:T.fSM,fontWeight:700,color:col,letterSpacing:-0.1}}>{lbl}</span></button>;
           })}
         </div>}
@@ -1308,7 +1308,7 @@ function App(){
         popup e resolve o jank de anim\u00e7\u00e3o no iPhone. prop `wide` deixa um pouco mais largo
         pros campos de data/hora caberem confort\u00e1veis. */}
     <Modal open={!!formType} onClose={()=>{setFormType(null);setEditEntry(null)}} wide>
-      {formType&&<AddForm type={formType} onSave={addEntry} onSaveBatch={addMedicineBatch} savedMeds={savedMeds} onSaveMeds={async m=>await FB.saveMeds(m)} editEntry={editEntry} lastBottleMl={lastBottleMl} lastBottleEntry={lastBottleEntry} feedingIntervalMin={feedingIntervalMin} topMl={topMl} suggestedMl={routineState?.nextBottleMl} onStartTimer={type=>{setFormType(null);setShowAdd(false);if(type==="nursing")setShowNursingPicker(true);else startTimer(type)}}/>}
+      {formType&&<AddForm type={formType} onSave={addEntry} onSaveBatch={addMedicineBatch} savedMeds={savedMeds} onSaveMeds={async m=>await FB.saveMeds(m)} editEntry={editEntry} lastBottleMl={lastBottleMl} lastBottleEntry={lastBottleEntry} feedingIntervalMin={feedingIntervalMin} topMl={topMl} suggestedMl={routineState?.nextBottleMl} allEntries={entries} onStartTimer={type=>{setFormType(null);setShowAdd(false);if(type==="nursing")setShowNursingPicker(true);else startTimer(type)}}/>}
     </Modal>
 
     {showProfile&&<ProfilePage profile={profile} entries={entries} onSave={async p=>await FB.saveProfile(p)} onBack={()=>{setShowProfile(false);setProfileIsDirty(false)}} onGrowth={()=>{growthFromRef.current={page,profile:true};setShowProfile(false);setProfileIsDirty(false);goTo("growth")}} onShowChangelog={()=>setShowChangelog(true)} hasUnreadChangelog={hasUnreadChangelog} reminders={reminders} onAddReminder={async r=>await FB.addReminder(r)} onDelReminder={async id=>await FB.delReminder(id)} onDirtyChange={setProfileIsDirty} cancelSignal={profileCancelSignal} saveSignal={profileSaveSignal}/>}

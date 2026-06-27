@@ -4,6 +4,25 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.106", date: "2026-06-16",
+    pt: {
+      title: "Banho em 1 toque + registro mais esperto",
+      bullets: [
+        '★ **O banho começa o timer com 1 toque** agora (igual sono/soneca) — direto do atalho da Home, sem abrir formulário.',
+        '★ **ml por horário**: ao registrar mamadeira, o campo já vem com o volume **típico daquela hora** (madrugada ≠ pós-banho), não o último ml. Aprende do histórico; com pouco dado, usa o anterior.',
+        '★ **Fralda pré-preenchida**: o tipo (xixi/cocô) já vem selecionado pelo padrão do horário — um toque a menos no registro mais frequente do dia.',
+      ],
+    },
+    en: {
+      title: "Bath in 1 tap + smarter logging",
+      bullets: [
+        '★ **Bath starts the timer in 1 tap** now (like sleep/nap) — straight from the Home shortcut, no form.',
+        '★ **ml by hour**: logging a bottle, the field pre-fills with the **typical volume for that hour** (night ≠ post-bath), not the last ml. Learns from history; falls back with little data.',
+        '★ **Diaper pre-filled**: the type (wet/dirty) comes pre-selected by the hour\'s pattern — one less tap on the day\'s most frequent log.',
+      ],
+    },
+  },
+  {
     v: "11.9.105", date: "2026-06-16",
     pt: {
       title: "Rotina entende etapa pulada + conclui parcial",
