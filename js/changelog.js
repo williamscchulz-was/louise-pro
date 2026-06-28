@@ -4,6 +4,23 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.108", date: "2026-06-16",
+    pt: {
+      title: "Boletim da semana no topo do Resumo",
+      bullets: [
+        '★ **Uma frase que resume a semana** aparece no topo do Resumo: a maior mudança real vs a semana passada — "mais sono, +1h/dia", "mamando mais, +80ml/dia" ou "noites mais tranquilas".',
+        'Só aparece quando há dado suficiente e a mudança é mesmo significativa (nada de "+2ml").',
+      ],
+    },
+    en: {
+      title: "Week recap at the top of Summary",
+      bullets: [
+        '★ **A one-line week recap** at the top of Summary: the biggest real change vs last week — "more sleep, +1h/day", "drinking more, +80ml/day" or "calmer nights".',
+        'Only shows with enough data and a genuinely meaningful change.',
+      ],
+    },
+  },
+  {
     v: "11.9.107", date: "2026-06-16",
     pt: {
       title: "Avisos espertos: dose dupla e dedo gordo",

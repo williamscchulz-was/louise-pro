@@ -104,6 +104,9 @@ const StatsPage = React.memo(function StatsPage({entries,onGrowth}){
     :(_lang==="en"?`Last ${numComplete} complete day${numComplete>1?"s":""}`:`Últimos ${numComplete} ${numComplete>1?"dias completos":"dia completo"}`);
   const exportCSV=()=>{const h="Data,Hora,Tipo,Detalhe,Notas\n";const rows=entries.map(e=>{let d="";if(e.ml)d=`${e.ml}ml`;else if(e.durationMin)d=fmtDur(e.durationMin);else if(e.name)d=e.name;else if(e.value)d=`${e.value}°C`;else if(e.subtype)d=e.subtype;return`${e.date},${e.time},${TL(e.type)||e.type},${d},${e.notes||""}`}).join("\n");const blob=new Blob([h+rows],{type:"text/csv"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=`louise-pro-${todayStr()}.csv`;a.click();URL.revokeObjectURL(url)};
   const TrendBadge=({val})=>val===0?null:<div style={{display:"flex",alignItems:"center",gap:3,marginTop:4}}><Icon name={val>0?"arrowUp":"arrowDown"} size={10} color={val>0?T.green:T.orange}/><span style={{fontSize:T.fXS,fontWeight:600,color:val>0?T.green:T.orange}}>{val>0?"+":""}{val}%</span><span style={{fontSize:T.fXS,color:T.dim}}>vs {_lang==="en"?"prev":"ant"}</span></div>;
+  // v11.9.108: boletim da semana (1 frase). Sem useMemo de propósito — StatsPage é memo e
+  // lê _lang (global), então useMemo[entries] congelaria o idioma; recalcular é barato.
+  const headline=weeklyHeadline(entries,_lang);
   // Empty state: no entries recorded yet (first install, nothing logged). v11.0.
   if(entries.length===0){
     return(<div style={{padding:"calc(16px + env(safe-area-inset-top)) 20px 0"}}>
@@ -125,6 +128,15 @@ const StatsPage = React.memo(function StatsPage({entries,onGrowth}){
         <button onClick={exportCSV} style={{display:"flex",alignItems:"center",gap:4,padding:"6px 10px",borderRadius:8,background:"rgba(22,28,60,0.6)",border:`1px solid ${T.gB}`,fontSize:T.fSM,fontWeight:600,color:T.sub}}>CSV</button>
       </div>
     </div>
+    {headline&&<div style={{display:"flex",gap:11,alignItems:"center",padding:"13px 15px",borderRadius:16,marginBottom:10,background:"linear-gradient(180deg,rgba(139,124,246,0.12),rgba(139,124,246,0.045))",border:`1px solid ${T.accent}28`}}>
+      <div style={{flexShrink:0,width:34,height:34,borderRadius:11,background:headline.tone==="up"?"rgba(163,230,53,0.14)":headline.tone==="down"?"rgba(251,146,60,0.14)":"rgba(139,124,246,0.14)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+        <Icon name={headline.icon} size={17} color={headline.tone==="up"?T.green:headline.tone==="down"?T.orange:T.lilac}/>
+      </div>
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{fontSize:T.fXS,fontWeight:700,letterSpacing:1,textTransform:"uppercase",color:T.lilac,marginBottom:2}}>{_lang==="en"?"This week":"Esta semana"}</div>
+        <div style={{fontSize:T.fMD,fontWeight:600,color:T.heading,lineHeight:1.4}}>{headline.text}</div>
+      </div>
+    </div>}
     <div style={{background:"rgba(22,28,60,0.4)",borderRadius:14,border:`1px solid ${T.gB}`,padding:4,marginBottom:6}}>
       {/* v11.9.25: "all" virou "90d" — label honesto. subEntries usa janela de 90d, "Tudo"
           era misleading. Pra histórico mais antigo (futuro), re-adicionar lazy load. */}
