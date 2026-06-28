@@ -4,6 +4,27 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.113", date: "2026-06-16",
+    pt: {
+      title: "Polimento da auditoria de design",
+      bullets: [
+        '★ A **Curva de comportamento** ganhou um resumo "Esta semana" no topo, os gráficos entram em sequência e o ponto que você toca agora tem transição suave.',
+        'O botão de **Comportamento** no Resumo virou rótulo (antes era só ícone) com área de toque maior.',
+        'Recorde novo de sono ganhou um pulso sutil; o aviso do Salvar desliza pra dentro; cores e tamanhos alinhados ao padrão do app.',
+        'Exportação CSV agora respeita o idioma (cabeçalho e tipo de fralda traduzidos).',
+      ],
+    },
+    en: {
+      title: "Design-audit polish",
+      bullets: [
+        '★ The **Behavior curve** got a "This week" summary up top, the charts stagger in, and the point you tap now animates smoothly.',
+        'The **Behavior** button in Summary now has a label (was icon-only) and a bigger tap area.',
+        'A new sleep record gently pulses; the Save warning slides in; colors and sizes aligned to the app system.',
+        'CSV export now respects the language (header and diaper type translated).',
+      ],
+    },
+  },
+  {
     v: "11.9.112", date: "2026-06-16",
     pt: {
       title: "Blindagem: build não publica código quebrado",

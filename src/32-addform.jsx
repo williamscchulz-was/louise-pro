@@ -64,7 +64,7 @@ function AddForm({type,onSave,onSaveBatch,savedMeds,onSaveMeds,editEntry,lastBot
   // v11.9.107: aviso suave (anti-dose-dupla / outlier). guardMsg!=null → o botão pede um
   // 2º toque pra confirmar; muda de valor → re-arma (limpa o aviso).
   const[guardMsg,setGuardMsg]=useState(null);
-  useEffect(()=>{setGuardMsg(null)},[ml,tempV,weightKg,lengthCm,headCm,durH,durM,endTime,tumM,tumS,medN,selectedMeds,diaperT,nurseM,side,time]);
+  useEffect(()=>{setGuardMsg(null)},[ml,tempV,weightKg,lengthCm,headCm,durH,durM,endTime,tumM,tumS,medN,selectedMeds,diaperT,nurseM,side,time,date]);
   const invalid=(msg)=>{Haptic.warning();setShakeFlash(n=>n+1)};
   const doSave=async()=>{
     if(savingRef.current||saving)return;
@@ -260,7 +260,7 @@ function AddForm({type,onSave,onSaveBatch,savedMeds,onSaveMeds,editEntry,lastBot
       {type==="growth"&&<><Fld label={`${L("weight")} (kg)`}><input type="text" inputMode="decimal" placeholder={_lang==="en"?"e.g. 4.5":"Ex: 4,5"} value={weightKg} onChange={e=>setWeightKg(e.target.value.replace(/[^0-9.,]/g,""))} style={{...inp,fontSize:T.f3XL,fontWeight:800,textAlign:"center"}}/></Fld><Fld label={`${_lang==="en"?"Length":"Comprimento"} (cm)`}><input type="text" inputMode="decimal" placeholder={_lang==="en"?"e.g. 55.0":"Ex: 55,0"} value={lengthCm} onChange={e=>setLengthCm(e.target.value.replace(/[^0-9.,]/g,""))} style={{...inp,fontSize:T.f3XL,fontWeight:800,textAlign:"center"}}/></Fld><Fld label={`${L("head")} (cm)`}><input type="text" inputMode="decimal" placeholder={_lang==="en"?"e.g. 37.0":"Ex: 37,0"} value={headCm} onChange={e=>setHeadCm(e.target.value.replace(/[^0-9.,]/g,""))} style={{...inp,fontSize:T.f3XL,fontWeight:800,textAlign:"center"}}/></Fld></>}
       {/* v11.8.0: notes removido de medicine. Tambem nao mostra em drops stage. */}
       {type!=="medicine"&&<Fld label={L("notes")}><textarea placeholder={_lang==="en"?"Note...":"Anotação..."} value={notes} onChange={e=>setNotes(e.target.value)} rows={2} style={{...inp,resize:"vertical"}}/></Fld>}
-      {guardMsg&&<div style={{display:"flex",gap:9,alignItems:"flex-start",padding:"11px 13px",borderRadius:12,background:"rgba(245,158,11,0.10)",border:"1px solid rgba(245,158,11,0.32)",marginBottom:10}}>
+      {guardMsg&&<div className="guard-in" style={{display:"flex",gap:9,alignItems:"flex-start",padding:"11px 13px",borderRadius:12,background:`${T.amber}1a`,border:`1px solid ${T.amber}33`,marginBottom:10}}>
         <span style={{flexShrink:0,width:18,height:18,borderRadius:"50%",background:T.amber,color:T.bg1,fontSize:12,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center",marginTop:1}}>!</span>
         <span style={{fontSize:T.fSM,color:"#fcd9a0",lineHeight:1.4,fontWeight:600}}>{guardMsg}</span>
       </div>}

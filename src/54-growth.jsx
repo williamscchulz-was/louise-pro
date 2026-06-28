@@ -142,7 +142,7 @@ function GrowthPage({entries,birthDate,profile,onBack,onAddEntry,onDeleteEntry})
           <path d={pathStr(whoSteps,"p50")} fill="none" stroke={`${color}44`} strokeWidth="1" strokeDasharray="4,3"/>
           <path d={pathStr(whoSteps,"p3")} fill="none" stroke={`${color}22`} strokeWidth="0.5"/>
           <path d={pathStr(whoSteps,"p97")} fill="none" stroke={`${color}22`} strokeWidth="0.5"/>
-          {pts.map((p,i)=><circle key={i} cx={x(p.ageM)} cy={y(p[field])} r={selIdx===i?5.5:4} fill={color} stroke={T.bg1} strokeWidth={2}/>)}
+          {pts.map((p,i)=><circle key={i} className="chart-dot" cx={x(p.ageM)} cy={y(p[field])} r={selIdx===i?5.5:4} fill={color} stroke={T.bg1} strokeWidth={2}/>)}
           {pts.length>1&&<path d={pts.map((p,i)=>`${i===0?"M":"L"}${x(p.ageM).toFixed(1)},${y(p[field]).toFixed(1)}`).join(" ")} fill="none" stroke={color} strokeWidth="2"/>}
           <text x={W-4} y={y(whoSteps[whoSteps.length-1].p50)+4} textAnchor="end" fill={`${color}66`} fontSize="8">P50</text>
           <text x={W-4} y={y(whoSteps[whoSteps.length-1].p97)+4} textAnchor="end" fill={`${color}44`} fontSize="7">P97</text>
@@ -150,7 +150,7 @@ function GrowthPage({entries,birthDate,profile,onBack,onAddEntry,onDeleteEntry})
           {/* Hit areas (r=13, transparentes) por cima de tudo — alvo de toque decente no iPhone */}
           {pts.map((p,i)=><circle key={`hit${i}`} cx={x(p.ageM)} cy={y(p[field])} r={13} fill="transparent" style={{cursor:"pointer"}} onClick={()=>setSelPt(s=>s&&s.field===field&&s.i===i?null:{field,i})}/>)}
         </svg>
-        {sel&&<div style={{position:"absolute",left:`${selLeft}%`,top:`${selTop}%`,transform:selBelow?"translate(-50%,12px)":"translate(-50%,calc(-100% - 12px))",zIndex:6,whiteSpace:"nowrap",background:"linear-gradient(180deg,rgba(32,38,76,0.98),rgba(20,26,58,0.97))",border:`1px solid ${color}66`,borderRadius:9,padding:"4px 9px",boxShadow:"0 6px 18px -6px rgba(0,0,0,0.6)",pointerEvents:"none",textAlign:"center"}}>
+        {sel&&<div key={selIdx} className="chart-tip" style={{position:"absolute",left:`${selLeft}%`,top:`${selTop}%`,transform:selBelow?"translate(-50%,12px)":"translate(-50%,calc(-100% - 12px))",zIndex:6,whiteSpace:"nowrap",background:"linear-gradient(180deg,rgba(32,38,76,0.98),rgba(20,26,58,0.97))",border:`1px solid ${color}66`,borderRadius:9,padding:"4px 9px",boxShadow:"0 6px 18px -6px rgba(0,0,0,0.6)",pointerEvents:"none",textAlign:"center"}}>
           <div style={{fontSize:T.fXS,color:T.lilac,fontWeight:700,letterSpacing:0.2}}>{sel.label}</div>
           <div style={{fontSize:T.fSM,color:"#fff",fontWeight:800,fontVariantNumeric:"tabular-nums",marginTop:1}}>{formatGrowthVal(sel[field])} {unit}{selRes&&selRes.percentile!=null?` · P${selRes.percentile}`:""}</div>
         </div>}

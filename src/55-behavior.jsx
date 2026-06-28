@@ -6,7 +6,7 @@ function BehaviorPage({entries,birthDate,onBack}){
   const[selPt,setSelPt]=useState(null);
   const dLbl=ds=>ds?new Date(ds+"T12:00").toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{day:"numeric",month:"short"}).replace(".",""):"";
 
-  function BehaviorChart({label,emoji,unit,field,color,fmtVal,band}){
+  function BehaviorChart({label,emoji,unit,field,color,fmtVal,band,idx}){
     const pts=weekly.filter(p=>p[field]!=null&&!(field!=="wakings"&&p[field]<=0));
     if(pts.length<2)return null;
     const W=320,H=140;
@@ -33,7 +33,7 @@ function BehaviorPage({entries,birthDate,onBack}){
     const selLeft=sel?Math.max(16,Math.min(84,(x(selIdx)/W)*100)):0;
     const selTop=sel?(y(sel[field])/H)*100:0;
     const selBelow=sel?selTop<32:false;
-    return(<div style={{background:"linear-gradient(180deg,rgba(22,28,60,0.55),rgba(20,26,60,0.32))",border:`1px solid ${T.gBSoft}`,borderRadius:18,padding:"15px 16px",marginBottom:13,boxShadow:T.insetTop}}>
+    return(<div className="home-rise-in" style={{background:"linear-gradient(180deg,rgba(22,28,60,0.55),rgba(20,26,60,0.32))",border:`1px solid ${T.gBSoft}`,borderRadius:18,padding:"15px 16px",marginBottom:13,boxShadow:T.insetTop,animationDelay:`${(idx||0)*70}ms`}}>
       <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:11}}>
         <div style={{width:20,height:20,borderRadius:7,background:`${color}1f`,border:`1px solid ${color}40`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><span style={{fontSize:10,lineHeight:1}}>{emoji}</span></div>
         <span style={{fontSize:T.fXS,fontWeight:800,letterSpacing:1,textTransform:"uppercase",color}}>{label}</span>
@@ -45,11 +45,11 @@ function BehaviorPage({entries,birthDate,onBack}){
           {midPath&&<path d={midPath} fill="none" stroke={`${color}3a`} strokeWidth="1" strokeDasharray="4,3"/>}
           <path d={areaPath} fill={`${color}12`} stroke="none"/>
           <path d={linePath} fill="none" stroke={color} strokeWidth="2.2" strokeLinejoin="round" strokeLinecap="round"/>
-          {pts.map((p,i)=><circle key={i} cx={x(i)} cy={y(p[field])} r={selIdx===i?5.5:3.5} fill={color} stroke={T.bg1} strokeWidth={2}/>)}
+          {pts.map((p,i)=><circle key={i} className="chart-dot" cx={x(i)} cy={y(p[field])} r={selIdx===i?5.5:3.5} fill={color} fillOpacity={p.tracked!=null&&p.tracked<4?0.45:1} stroke={T.bg1} strokeWidth={2}/>)}
           {band&&<text x={W-4} y={y((typicalSleepMin(pts[n-1].ageM).lo+typicalSleepMin(pts[n-1].ageM).hi)/2)-4} textAnchor="end" fill={`${color}66`} fontSize="7">{_lang==="en"?"typical":"típico"}</text>}
           {pts.map((p,i)=><circle key={`hit${i}`} cx={x(i)} cy={y(p[field])} r={14} fill="transparent" style={{cursor:"pointer"}} onClick={()=>setSelPt(s=>s&&s.field===field&&s.i===i?null:{field,i})}/>)}
         </svg>
-        {sel&&<div style={{position:"absolute",left:`${selLeft}%`,top:`${selTop}%`,transform:selBelow?"translate(-50%,12px)":"translate(-50%,calc(-100% - 12px))",zIndex:6,whiteSpace:"nowrap",background:"linear-gradient(180deg,rgba(32,38,76,0.98),rgba(20,26,58,0.97))",border:`1px solid ${color}66`,borderRadius:9,padding:"4px 9px",boxShadow:"0 6px 18px -6px rgba(0,0,0,0.6)",pointerEvents:"none",textAlign:"center"}}>
+        {sel&&<div key={selIdx} className="chart-tip" style={{position:"absolute",left:`${selLeft}%`,top:`${selTop}%`,transform:selBelow?"translate(-50%,12px)":"translate(-50%,calc(-100% - 12px))",zIndex:6,whiteSpace:"nowrap",background:"linear-gradient(180deg,rgba(32,38,76,0.98),rgba(20,26,58,0.97))",border:`1px solid ${color}66`,borderRadius:9,padding:"4px 9px",boxShadow:"0 6px 18px -6px rgba(0,0,0,0.6)",pointerEvents:"none",textAlign:"center"}}>
           <div style={{fontSize:T.fXS,color:T.lilac,fontWeight:700,letterSpacing:0.2}}>{_lang==="en"?"wk of":"sem."} {dLbl(sel.endDate)}</div>
           <div style={{fontSize:T.fSM,color:"#fff",fontWeight:800,fontVariantNumeric:"tabular-nums",marginTop:1}}>{fmtVal(sel[field])}</div>
         </div>}
@@ -77,10 +77,19 @@ function BehaviorPage({entries,birthDate,onBack}){
         <div style={{fontSize:T.fMD,color:T.sub,lineHeight:1.55,maxWidth:270,margin:"0 auto"}}>{_lang==="en"?"Keep logging for a couple of weeks and the behavior curves will appear here.":"Continue registrando por algumas semanas e as curvas de comportamento aparecem aqui."}</div>
       </div>
     ):(<>
+      {(()=>{const hl=weeklyHeadline(entries,_lang);return hl?(<div className="home-rise-in" style={{display:"flex",gap:11,alignItems:"center",padding:"13px 15px",borderRadius:16,marginBottom:13,background:"linear-gradient(180deg,rgba(139,124,246,0.12),rgba(139,124,246,0.045))",border:`1px solid ${T.accent}28`}}>
+        <div style={{flexShrink:0,width:34,height:34,borderRadius:11,background:hl.tone==="up"?"rgba(163,230,53,0.14)":hl.tone==="down"?"rgba(251,146,60,0.14)":"rgba(139,124,246,0.14)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+          <Icon name={hl.icon} size={17} color={hl.tone==="up"?T.green:hl.tone==="down"?T.orange:T.lilac}/>
+        </div>
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{fontSize:T.fXS,fontWeight:700,letterSpacing:1,textTransform:"uppercase",color:T.lilac,marginBottom:2}}>{_lang==="en"?"This week":"Esta semana"}</div>
+          <div style={{fontSize:T.fMD,fontWeight:600,color:T.heading,lineHeight:1.4}}>{hl.text}</div>
+        </div>
+      </div>):null})()}
       <div style={{fontSize:T.fSM,fontWeight:800,color:T.accent,textTransform:"uppercase",letterSpacing:1,margin:"4px 0 12px"}}>{_lang==="en"?"Weekly curves":"Curvas semanais"}</div>
-      <BehaviorChart label={_lang==="en"?"Total sleep/day":"Sono total/dia"} emoji={"\u{1F319}"} unit={_lang==="en"?"per day":"por dia"} field="totalSleep" color={T.lilac} band={true} fmtVal={v=>fmtDur(Math.round(v))}/>
-      <BehaviorChart label={_lang==="en"?"Milk/day":"Leite/dia"} emoji={"\u{1F37C}"} unit="ml" field="mlDay" color={T.green} fmtVal={v=>`${Math.round(v)} ml`}/>
-      <BehaviorChart label={_lang==="en"?"Wake-ups/night":"Despertares/noite"} emoji={"✨"} unit={_lang==="en"?"per night":"por noite"} field="wakings" color={T.amber} fmtVal={v=>v.toFixed(1).replace(".",_lang==="en"?".":",")}/>
+      <BehaviorChart idx={0} label={_lang==="en"?"Total sleep/day":"Sono total/dia"} emoji={"\u{1F319}"} unit={_lang==="en"?"per day":"por dia"} field="totalSleep" color={T.lilac} band={true} fmtVal={v=>fmtDur(Math.round(v))}/>
+      <BehaviorChart idx={1} label={_lang==="en"?"Milk/day":"Leite/dia"} emoji={"\u{1F37C}"} unit="ml" field="mlDay" color={T.green} fmtVal={v=>`${Math.round(v)} ml`}/>
+      <BehaviorChart idx={2} label={_lang==="en"?"Wake-ups/night":"Despertares/noite"} emoji={"\u{2728}"} unit={_lang==="en"?"per night":"por noite"} field="wakings" color={T.amber} fmtVal={v=>v.toFixed(1).replace(".",_lang==="en"?".":",")}/>
       <div style={{padding:"6px 0 20px",fontSize:T.fXS,color:T.dim,textAlign:"center",lineHeight:1.6}}>
         {_lang==="en"?"Each point = a week's daily average. The soft band on sleep is the typical range for age (NSF/AAP) — depends on how much you log.":"Cada ponto = média diária de uma semana. A faixa suave no sono é o intervalo típico p/ idade (NSF/AAP) — depende de quanto você registra."}
       </div>

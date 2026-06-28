@@ -29,6 +29,14 @@
     .home-fade-in{animation:homeFadeIn .5s ease both}
     @keyframes homeRiseIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
     .home-rise-in{animation:homeRiseIn .45s cubic-bezier(0.22,1,0.36,1) both}
+    /* v11.9.113 (auditoria de design): micro-interações de gráfico + banners. Via CLASSE
+       (invariante 1) — componentes re-renderizam e inline resetaria. */
+    .chart-dot{transition:r .22s cubic-bezier(0.34,1.56,0.64,1)}
+    @keyframes chartTipIn{from{opacity:0}to{opacity:1}}
+    .chart-tip{animation:chartTipIn .16s ease}
+    .guard-in{animation:slideUp .22s cubic-bezier(0.22,1,0.36,1)}
+    @keyframes newBadgePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+    .new-badge-pulse{animation:newBadgePulse 1.8s ease-in-out infinite}
     @keyframes mercurySpin{to{transform:rotate(360deg)}}
     @keyframes slideDown{from{transform:translateX(-50%) translateY(-20px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
     @keyframes toastSlideDown{from{transform:translateY(-20px);opacity:0}to{transform:translateY(0);opacity:1}}

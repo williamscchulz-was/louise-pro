@@ -102,7 +102,7 @@ const StatsPage = React.memo(function StatsPage({entries,onGrowth,onBehavior}){
   const avgSubtitle=usingFallback
     ?(_lang==="en"?"Today only · still in progress":"Apenas hoje · ainda em curso")
     :(_lang==="en"?`Last ${numComplete} complete day${numComplete>1?"s":""}`:`Últimos ${numComplete} ${numComplete>1?"dias completos":"dia completo"}`);
-  const exportCSV=()=>{const h="Data,Hora,Tipo,Detalhe,Notas\n";const rows=entries.map(e=>{let d="";if(e.ml)d=`${e.ml}ml`;else if(e.durationMin)d=fmtDur(e.durationMin);else if(e.name)d=e.name;else if(e.value)d=`${e.value}°C`;else if(e.subtype)d=e.subtype;return`${e.date},${e.time},${TL(e.type)||e.type},${d},${e.notes||""}`}).join("\n");const blob=new Blob([h+rows],{type:"text/csv"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=`louise-pro-${todayStr()}.csv`;a.click();URL.revokeObjectURL(url)};
+  const exportCSV=()=>{const h=(_lang==="en"?"Date,Time,Type,Detail,Notes":"Data,Hora,Tipo,Detalhe,Notas")+"\n";const rows=entries.map(e=>{let d="";if(e.ml)d=`${e.ml}ml`;else if(e.durationMin)d=fmtDur(e.durationMin);else if(e.name)d=e.name;else if(e.value)d=`${e.value}°C`;else if(e.subtype)d=L(e.subtype)||e.subtype;return`${e.date},${e.time},${TL(e.type)||e.type},${d},${e.notes||""}`}).join("\n");const blob=new Blob([h+rows],{type:"text/csv"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=`louise-pro-${todayStr()}.csv`;a.click();URL.revokeObjectURL(url)};
   const TrendBadge=({val})=>val===0?null:<div style={{display:"flex",alignItems:"center",gap:3,marginTop:4}}><Icon name={val>0?"arrowUp":"arrowDown"} size={10} color={val>0?T.green:T.orange}/><span style={{fontSize:T.fXS,fontWeight:600,color:val>0?T.green:T.orange}}>{val>0?"+":""}{val}%</span><span style={{fontSize:T.fXS,color:T.dim}}>vs {_lang==="en"?"prev":"ant"}</span></div>;
   // v11.9.108: boletim da semana (1 frase). Sem useMemo de propósito — StatsPage é memo e
   // lê _lang (global), então useMemo[entries] congelaria o idioma; recalcular é barato.
@@ -124,7 +124,7 @@ const StatsPage = React.memo(function StatsPage({entries,onGrowth,onBehavior}){
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
       <h2 style={{fontSize:T.fXL,fontWeight:700,margin:0}}>{L("summary")}</h2>
       <div style={{display:"flex",gap:6}}>
-        {onBehavior&&<button onClick={onBehavior} aria-label={_lang==="en"?"Behavior trends":"Comportamento"} style={{display:"flex",alignItems:"center",justifyContent:"center",width:32,height:32,borderRadius:8,background:"rgba(139,124,246,0.1)",border:"1px solid rgba(139,124,246,0.22)"}}><Icon name="chart" size={14} color={T.lilac}/></button>}
+        {onBehavior&&<button className="hit44" onClick={onBehavior} aria-label={_lang==="en"?"Behavior trends":"Comportamento"} style={{display:"flex",alignItems:"center",gap:4,padding:"6px 10px",borderRadius:8,background:"rgba(139,124,246,0.1)",border:"1px solid rgba(139,124,246,0.22)",fontSize:T.fSM,fontWeight:600,color:T.lilac}}><Icon name="chart" size={12} color={T.lilac}/>{_lang==="en"?"Behavior":"Comport."}</button>}
         <button onClick={onGrowth} style={{display:"flex",alignItems:"center",gap:4,padding:"6px 10px",borderRadius:8,background:"rgba(163,230,53,0.08)",border:"1px solid rgba(163,230,53,0.12)",fontSize:T.fSM,fontWeight:600,color:"#a3e635"}}><Icon name="ruler" size={12} color="#a3e635"/>{L("growth")}</button>
         <button onClick={exportCSV} style={{display:"flex",alignItems:"center",gap:4,padding:"6px 10px",borderRadius:8,background:"rgba(22,28,60,0.6)",border:`1px solid ${T.gB}`,fontSize:T.fSM,fontWeight:600,color:T.sub}}>CSV</button>
       </div>
@@ -458,7 +458,7 @@ const StatsPage = React.memo(function StatsPage({entries,onGrowth,onBehavior}){
         </div>
         <div style={{display:"grid",gridTemplateColumns:`repeat(${tiles.length},1fr)`,gap:8,marginBottom:10}}>
           {tiles.map((t,i)=><div key={i} style={{position:"relative",padding:"13px 8px",borderRadius:14,background:"linear-gradient(180deg,rgba(22,28,60,0.55),rgba(20,26,60,0.32))",border:`1px solid ${t.hot?t.col+"66":T.gB}`,textAlign:"center",overflow:"hidden"}}>
-            {t.hot&&<div style={{position:"absolute",top:6,right:6,fontSize:8,fontWeight:900,letterSpacing:0.5,color:T.bg1,background:t.col,borderRadius:5,padding:"1px 4px"}}>{_lang==="en"?"NEW":"NOVO"}</div>}
+            {t.hot&&<div className="new-badge-pulse" style={{position:"absolute",top:6,right:6,fontSize:T.fXS,fontWeight:900,letterSpacing:0.5,color:T.bg1,background:t.col,borderRadius:5,padding:"1px 4px"}}>{_lang==="en"?"NEW":"NOVO"}</div>}
             <Icon name={t.ic} size={15} color={t.col}/>
             <div style={{fontSize:T.fLG,fontWeight:800,color:T.heading,marginTop:5,letterSpacing:-0.3,fontVariantNumeric:"tabular-nums"}}>{t.val}</div>
             <div style={{fontSize:T.fXS,color:T.sub,fontWeight:600,marginTop:2}}>{t.lbl}</div>
@@ -468,7 +468,7 @@ const StatsPage = React.memo(function StatsPage({entries,onGrowth,onBehavior}){
         <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
           {rec.badges.map(b=><div key={b.key} style={{display:"flex",alignItems:"center",gap:5,padding:"5px 10px",borderRadius:20,background:b.date?"rgba(163,230,53,0.10)":"rgba(22,28,60,0.5)",border:`1px solid ${b.date?"rgba(163,230,53,0.28)":T.gB}`,opacity:b.date?1:0.5}}>
             <Icon name={b.date?"check":"moon"} size={10} color={b.date?T.green:T.dim}/>
-            <span style={{fontSize:T.fXS,fontWeight:700,color:b.date?"#bef264":T.dim}}>{badgeLbl[b.key]}</span>
+            <span style={{fontSize:T.fXS,fontWeight:700,color:b.date?T.green:T.dim}}>{badgeLbl[b.key]}</span>
           </div>)}
         </div>
       </div>);
