@@ -4,6 +4,21 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.111", date: "2026-06-16",
+    pt: {
+      title: "Correção crítica — app voltou a abrir",
+      bullets: [
+        '★ Um caractere especial na verificação de remédios corrompia o JS no passo de build e travava o app na abertura (regressão silenciosa desde a v11.9.107). Resolvido na raiz e o build foi blindado pra isso nunca mais acontecer.',
+      ],
+    },
+    en: {
+      title: "Critical fix — app opens again",
+      bullets: [
+        '★ A special character in the medicine check corrupted the JS during build and broke app startup (a silent regression since v11.9.107). Fixed at the root and the build was hardened so it can never recur.',
+      ],
+    },
+  },
+  {
     v: "11.9.110", date: "2026-06-16",
     pt: {
       title: "Curva de comportamento — sono, leite e despertares",

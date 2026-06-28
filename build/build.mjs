@@ -73,7 +73,11 @@ if (!result || !result.code) {
 console.log("[build] compiled output: " + result.code.length + " chars");
 
 // Replace the babel block with plain <script> containing compiled code.
-html = html.replace(BABEL_SCRIPT_RE, "<script>\n" + result.code + "\n</script>");
+// IMPORTANT: use a FUNCTION replacer — a string replacement would interpret $&, $1, $`,
+// $', $$ in result.code as special patterns (bug v11.9.107→110: a "\\$&" regex-escape in
+// the source got mangled into the matched <script> tag, corrupting the JS → app dead on
+// boot). Function replacers receive the code verbatim, immune to any $ in app source.
+html = html.replace(BABEL_SCRIPT_RE, () => "<script>\n" + result.code + "\n</script>");
 
 // Remove the @babel/standalone CDN script tag — it's no longer needed at runtime.
 // The tag looks like:
