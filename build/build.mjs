@@ -13,6 +13,21 @@ import { readFileSync, writeFileSync, mkdirSync, cpSync, rmSync, existsSync, rea
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 import babel from "@babel/core";
+import vm from "node:vm";
+
+// v11.9.112: syntax-guard. Compila (NÃO executa) o código com vm.Script — joga
+// SyntaxError se o JS for inválido. Usado pra blindar o deploy: um bundle quebrado
+// JAMAIS pode ir pro ar (Babel transpilar OK não garante que a injeção no HTML ficou
+// válida — vide o bug do $& v11.9.107). Falha = process.exit(1) → o CI aborta.
+function assertValidJS(label, code) {
+  try {
+    new vm.Script(code, { filename: label });
+  } catch (e) {
+    console.error("\n[build] ❌ FATAL: " + label + " não é JavaScript válido — deploy abortado.");
+    console.error("[build]   " + (e && e.message));
+    process.exit(1);
+  }
+}
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, "..");
@@ -125,6 +140,21 @@ if (BUNDLE_SCRIPT_RE.test(html)) {
 
 writeFileSync(join(DIST, "index.html"), html);
 console.log("[build] wrote dist/index.html (" + html.length + " chars)");
+
+// ─── SYNTAX GUARD (v11.9.112) ────────────────────────────────────
+// Valida o JS REALMENTE gerado (inline do index + bundle). Se qualquer um não
+// parsear, aborta o build → o GitHub Action falha → NADA quebrado é publicado.
+{
+  const inlineBlocks = [...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)].map(m => m[1]);
+  const appInline = inlineBlocks.filter(b => b.includes("APP_VERSION")).sort((a, b) => b.length - a.length)[0] || "";
+  if (!appInline) {
+    console.error("[build] ❌ FATAL: não achei o script inline do app no output.");
+    process.exit(1);
+  }
+  assertValidJS("dist/index.html (app inline)", appInline);
+  assertValidJS("dist/js/app-libs.js", bundle);
+  console.log("[build] ✓ syntax guard OK — app inline + app-libs.js parseiam limpos");
+}
 
 // Extract APP_VERSION from the compiled HTML for service worker cache-busting.
 // sw.js uses __APP_VERSION__ as a placeholder that we replace here, so every

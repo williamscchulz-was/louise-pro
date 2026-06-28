@@ -4,6 +4,23 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.112", date: "2026-06-16",
+    pt: {
+      title: "Blindagem: build não publica código quebrado",
+      bullets: [
+        '★ O passo de build agora **valida o JavaScript final** e **aborta o deploy** se algo não compilar — código quebrado não chega mais até você.',
+        '★ **Auto-recuperação**: se o app abrir com erro de cache antigo, ele limpa o cache e recarrega sozinho, sem você precisar fazer nada.',
+      ],
+    },
+    en: {
+      title: "Hardening: the build won't ship broken code",
+      bullets: [
+        '★ The build step now **validates the final JavaScript** and **aborts the deploy** if anything fails to compile — broken code can no longer reach you.',
+        '★ **Self-heal**: if the app opens with a stale-cache error, it clears the cache and reloads itself, with nothing for you to do.',
+      ],
+    },
+  },
+  {
     v: "11.9.111", date: "2026-06-16",
     pt: {
       title: "Correção crítica — app voltou a abrir",

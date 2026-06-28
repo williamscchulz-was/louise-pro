@@ -201,6 +201,23 @@
 
   <script>
   window.onerror=function(msg,src,line,col,err){
+    // v11.9.112: SELF-HEAL. Um SyntaxError no boot = bundle corrompido (quase sempre
+    // um cache ruim de deploy antigo). Em vez de mostrar tela morta, limpa TODOS os
+    // caches + desregistra o service worker + recarrega — UMA vez por sessão (flag em
+    // sessionStorage evita loop infinito caso a versão no servidor esteja mesmo quebrada).
+    try{
+      if(/SyntaxError|Unexpected (identifier|token|string|number|end)/i.test(String(msg||'')) && !sessionStorage.getItem('lp_selfheal')){
+        sessionStorage.setItem('lp_selfheal','1');
+        var reload=function(){try{location.reload()}catch(_){}};
+        var jobs=[];
+        if(window.caches&&caches.keys){jobs.push(caches.keys().then(function(ks){return Promise.all(ks.map(function(k){return caches.delete(k)}))}).catch(function(){}));}
+        if(navigator.serviceWorker&&navigator.serviceWorker.getRegistrations){jobs.push(navigator.serviceWorker.getRegistrations().then(function(rs){return Promise.all(rs.map(function(r){return r.unregister()}))}).catch(function(){}));}
+        Promise.all(jobs).then(reload);
+        setTimeout(reload,2500);
+        var h=document.createElement('div');h.style.cssText='position:fixed;inset:0;z-index:99999;background:#070b1e;color:#8b90b8;display:flex;align-items:center;justify-content:center;font-family:monospace;font-size:13px;text-align:center;padding:24px';h.textContent='Atualizando Louise Pro…';document.body.appendChild(h);
+        return false;
+      }
+    }catch(_){}
     var d=document.getElementById('error-display');
     if(!d){d=document.createElement('div');d.id='error-display';d.style.cssText='position:fixed;inset:0;z-index:9999;background:#0a0e28;color:#f87171;padding:40px 20px;font-family:monospace;font-size:13px;overflow:auto;white-space:pre-wrap';document.body.appendChild(d);d.innerHTML='<div style="font-size:20px;font-weight:bold;color:#fbbf24;margin-bottom:16px">⚠ Louise Pro — Error</div>';}
     d.innerHTML+='<div style="margin-bottom:12px;padding:12px;background:rgba(248,113,113,0.1);border-radius:8px;border-left:3px solid #f87171"><b>'+msg+'</b>\nLine: '+line+' Col: '+col+'\n'+(err&&err.stack?err.stack:'')+'</div>';
