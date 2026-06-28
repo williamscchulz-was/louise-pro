@@ -4,6 +4,25 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.109", date: "2026-06-16",
+    pt: {
+      title: "Recordes de sono no Resumo",
+      bullets: [
+        '★ **Card de recordes de sono** no Resumo: mais sono numa noite, maior soneca e melhor noite (menos despertares) — cada um com a data do recorde.',
+        '★ **Badges que destravam**: 4h emendadas, 6h emendadas, noite com ≤1 despertar, noite completa. Acendem sozinhos conforme a Louise evolui.',
+        'Recorde batido nos últimos 2 dias ganha um selo "NOVO".',
+      ],
+    },
+    en: {
+      title: "Sleep records in Summary",
+      bullets: [
+        '★ **Sleep records card** in Summary: most sleep in a night, longest nap and best night (fewest wakings) — each with its date.',
+        '★ **Unlockable badges**: 4h straight, 6h straight, night with ≤1 waking, slept through. They light up as Louise grows.',
+        'A record set in the last 2 days gets a "NEW" tag.',
+      ],
+    },
+  },
+  {
     v: "11.9.108", date: "2026-06-16",
     pt: {
       title: "Boletim da semana no topo do Resumo",

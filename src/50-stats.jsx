@@ -436,6 +436,42 @@ const StatsPage = React.memo(function StatsPage({entries,onGrowth}){
         </>}
       </div>);
     }catch(e){console.warn("[WeeklyReport] render error",e);return null}})()}
+    {(()=>{
+      // v11.9.109: Recordes de sono — conquistas auto-detectadas (não precisam registro).
+      const rec=sleepRecords(entries);if(!rec)return null;
+      const today=todayStr();
+      const dlabel=d=>d?new Date(d+"T12:00").toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{day:"numeric",month:"short"}).replace(".",""):"";
+      const isHot=d=>{if(!d)return false;const diff=(Date.parse(today)-Date.parse(d))/86400000;return diff>=0&&diff<=1.5};
+      const wkLbl=n=>n===0?(_lang==="en"?"0 wake-ups":"0 despertares"):`${n} ${_lang==="en"?(n===1?"wake-up":"wake-ups"):(n===1?"despertar":"despertares")}`;
+      const tiles=[
+        rec.longestSleep&&{ic:"moon",col:T.lilac,lbl:_lang==="en"?"Most in a night":"Mais numa noite",val:fmtDur(rec.longestSleep.min),sub:dlabel(rec.longestSleep.date),hot:isHot(rec.longestSleep.date)},
+        rec.longestNap&&{ic:"cloud",col:T.accent,lbl:_lang==="en"?"Longest nap":"Maior soneca",val:fmtDur(rec.longestNap.min),sub:dlabel(rec.longestNap.date),hot:isHot(rec.longestNap.date)},
+        rec.bestNight&&{ic:"star",col:T.green,lbl:_lang==="en"?"Best night":"Melhor noite",val:wkLbl(rec.bestNight.wakings),sub:dlabel(rec.bestNight.date),hot:isHot(rec.bestNight.date)},
+      ].filter(Boolean);
+      if(!tiles.length)return null;
+      const badgeLbl={h4:_lang==="en"?"4h straight":"4h emendadas",h6:_lang==="en"?"6h straight":"6h emendadas",w1:_lang==="en"?"≤1 waking":"≤1 despertar",through:_lang==="en"?"Slept through":"Noite completa"};
+      return(<div style={{marginTop:16}}>
+        <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:9,padding:"0 2px"}}>
+          <Icon name="moon" size={14} color={T.lilac}/>
+          <span style={{fontSize:T.fSM,fontWeight:800,color:T.heading,letterSpacing:0.2,textTransform:"uppercase"}}>{_lang==="en"?"Sleep records":"Recordes de sono"}</span>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:`repeat(${tiles.length},1fr)`,gap:8,marginBottom:10}}>
+          {tiles.map((t,i)=><div key={i} style={{position:"relative",padding:"13px 8px",borderRadius:14,background:"linear-gradient(180deg,rgba(22,28,60,0.55),rgba(20,26,60,0.32))",border:`1px solid ${t.hot?t.col+"66":T.gB}`,textAlign:"center",overflow:"hidden"}}>
+            {t.hot&&<div style={{position:"absolute",top:6,right:6,fontSize:8,fontWeight:900,letterSpacing:0.5,color:T.bg1,background:t.col,borderRadius:5,padding:"1px 4px"}}>{_lang==="en"?"NEW":"NOVO"}</div>}
+            <Icon name={t.ic} size={15} color={t.col}/>
+            <div style={{fontSize:T.fLG,fontWeight:800,color:T.heading,marginTop:5,letterSpacing:-0.3,fontVariantNumeric:"tabular-nums"}}>{t.val}</div>
+            <div style={{fontSize:T.fXS,color:T.sub,fontWeight:600,marginTop:2}}>{t.lbl}</div>
+            {t.sub&&<div style={{fontSize:T.fXS,color:T.dim,marginTop:1}}>{t.sub}</div>}
+          </div>)}
+        </div>
+        <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+          {rec.badges.map(b=><div key={b.key} style={{display:"flex",alignItems:"center",gap:5,padding:"5px 10px",borderRadius:20,background:b.date?"rgba(163,230,53,0.10)":"rgba(22,28,60,0.5)",border:`1px solid ${b.date?"rgba(163,230,53,0.28)":T.gB}`,opacity:b.date?1:0.5}}>
+            <Icon name={b.date?"check":"moon"} size={10} color={b.date?T.green:T.dim}/>
+            <span style={{fontSize:T.fXS,fontWeight:700,color:b.date?"#bef264":T.dim}}>{badgeLbl[b.key]}</span>
+          </div>)}
+        </div>
+      </div>);
+    })()}
   </div>);
 });
 
