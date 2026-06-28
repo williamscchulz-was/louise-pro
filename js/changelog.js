@@ -4,6 +4,25 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.110", date: "2026-06-16",
+    pt: {
+      title: "Curva de comportamento — sono, leite e despertares",
+      bullets: [
+        '★ **Nova página Comportamento** (no Resumo, ícone de gráfico): curvas semanais de sono total/dia, leite/dia e despertares/noite — toque num ponto pra ver a semana.',
+        '★ O gráfico de sono mostra a **faixa típica para a idade** (NSF/AAP) por trás da curva da Louise — referência suave, não diagnóstico.',
+        'Cada ponto é a média diária de uma semana; precisa de ~2 semanas de registro pra aparecer.',
+      ],
+    },
+    en: {
+      title: "Behavior curve — sleep, milk & wake-ups",
+      bullets: [
+        '★ **New Behavior page** (in Summary, chart icon): weekly curves for total sleep/day, milk/day and wake-ups/night — tap a point to see the week.',
+        "★ The sleep chart shows the **typical range for age** (NSF/AAP) behind Louise's curve — a soft reference, not a diagnosis.",
+        "Each point is a week's daily average; needs ~2 weeks of logging to appear.",
+      ],
+    },
+  },
+  {
     v: "11.9.109", date: "2026-06-16",
     pt: {
       title: "Recordes de sono no Resumo",

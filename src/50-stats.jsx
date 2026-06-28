@@ -1,4 +1,4 @@
-const StatsPage = React.memo(function StatsPage({entries,onGrowth}){
+const StatsPage = React.memo(function StatsPage({entries,onGrowth,onBehavior}){
   const[period,setPeriod]=useState(7);
   // v11.9.81: tocar numa barra mostra o valor+data (essencial em 14d+, onde os números
   // somem). selBar = chave da barra tocada ("campo:data"). A COLUNA inteira é o alvo de
@@ -124,6 +124,7 @@ const StatsPage = React.memo(function StatsPage({entries,onGrowth}){
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
       <h2 style={{fontSize:T.fXL,fontWeight:700,margin:0}}>{L("summary")}</h2>
       <div style={{display:"flex",gap:6}}>
+        {onBehavior&&<button onClick={onBehavior} aria-label={_lang==="en"?"Behavior trends":"Comportamento"} style={{display:"flex",alignItems:"center",justifyContent:"center",width:32,height:32,borderRadius:8,background:"rgba(139,124,246,0.1)",border:"1px solid rgba(139,124,246,0.22)"}}><Icon name="chart" size={14} color={T.lilac}/></button>}
         <button onClick={onGrowth} style={{display:"flex",alignItems:"center",gap:4,padding:"6px 10px",borderRadius:8,background:"rgba(163,230,53,0.08)",border:"1px solid rgba(163,230,53,0.12)",fontSize:T.fSM,fontWeight:600,color:"#a3e635"}}><Icon name="ruler" size={12} color="#a3e635"/>{L("growth")}</button>
         <button onClick={exportCSV} style={{display:"flex",alignItems:"center",gap:4,padding:"6px 10px",borderRadius:8,background:"rgba(22,28,60,0.6)",border:`1px solid ${T.gB}`,fontSize:T.fSM,fontWeight:600,color:T.sub}}>CSV</button>
       </div>

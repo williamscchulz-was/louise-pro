@@ -14,7 +14,8 @@ Este `CLAUDE.md` é lido automaticamente pelo Claude Code no início de toda ses
 - **Localização**: Blumenau, SC, Brasil (BRT, UTC-3)
 - **Repositório**: https://github.com/williamscchulz-was/louise-pro
 - **Live**: https://williamscchulz-was.github.io/louise-pro/
-- **Versão atual**: v11.9.109 (app) / routine-engine v2.2.4
+- **Versão atual**: v11.9.110 (app) / routine-engine v2.2.4
+- **Curva de comportamento (v11.9.110):** página nova `BehaviorPage` (`src/55-behavior.jsx`) — clone visual do GrowthPage (overlay+Starfield+eyebrow cards+tap-to-inspect). 3 gráficos semanais (sono total/dia, leite/dia, despertares/noite) sobre `behaviorWeekly(entries,birthDate,10)` (00-core, PURA: janelas de 7 dias terminando ontem, ≥2 dias rastreados/semana, devolve `{totalSleep,nightSleep,mlDay,wakings,ageM,endDate}`). O sono tem banda suave `typicalSleepMin(ageM)` (NSF/AAP, referência não-diagnóstica + nota de "depende de quanto registra"). Rotada como o Crescimento: `goBehavior` (useCallback ACIMA do early-return), `behaviorFromRef`, `page==="behavior"`, botão ícone-gráfico no header do StatsPage (`onBehavior`). 12 asserts de harness.
 - **Recordes de sono (v11.9.109):** `sleepRecords(entries)` (00-core, PURA) → `{longestSleep,longestNap,bestNight,badges}`. Recorde de sono usa REAL (durationMin − soma das `wakings[].durationMin`, pra não inflar com noites de muitos despertares); bestNight = menos despertares entre noites com ≥4h reais; 4 badges destravam UMA vez (`h4`≥240, `h6`≥360, `w1`≥300 & ≤1 desp., `through`≥360 & 0 desp.). Card "Recordes de sono" no FIM do StatsPage (3 tiles + chips de badge acesos/apagados); recorde ≤1.5 dias ganha selo "NOVO". 10 asserts de harness.
 - **Boletim da semana (v11.9.108):** `weeklyHeadline(entries,lang)` (00-core, PURA) → 1 frase no TOPO do StatsPage com a MAIOR mudança significativa (por `rel`) dos últimos 7 dias completos vs os 7 anteriores. Métricas: sono/dia, ml/dia, despertares/noite (limiares min abs/rel: 25min/0.10, 40ml/0.10, 0.6/0.15; exige ≥3 dias rastreados por semana). Render SEM useMemo (StatsPage é `React.memo` e lê `_lang` global — useMemo[entries] congelaria o idioma). Card lilás com Icon + eyebrow "Esta semana". 9 asserts de harness.
 - **Aviso suave no Salvar (v11.9.107):** `entryWarn(type,payload,allEntries)` (00-core, PURA, retorna `{pt,en}` ou null) pega (1) **dose dupla** — mesmo remédio por nome ≤4h, ou mamada/amamentação ≤30min (cenário 2-devices: o outro iPhone já registrou) — e (2) **outlier/dedo-gordo** (ml fora de mediana·[0.45,2.2] com ≥5 amostras; temp <34/>41,5; sono/soneca >16h; peso/comp/cabeça fora de faixa de bebê). NÃO bloqueia: AddForm mostra banner amber + o botão vira "Salvar assim mesmo"; `guardMsg` exige 2º toque e o `useEffect` re-arma (limpa) quando qualquer valor muda. 25 asserts de harness.
@@ -60,6 +61,7 @@ louise-pro/
 │   ├── 50-stats.jsx         ← StatsPage
 │   ├── 52-history.jsx       ← HistoryPage
 │   ├── 54-growth.jsx        ← GrowthPage
+│   ├── 55-behavior.jsx      ← BehaviorPage (curva de comportamento, v11.9.110)
 │   ├── 56-milestones.jsx    ← MILESTONE_BADGES, MilestonesPage
 │   ├── 60-starfield-backup.jsx ← STARFIELD_DATA, Starfield, BACKUP_KEY, BackupSection
 │   └── 90-app.jsx           ← App (componente raiz, ~1.260 linhas) + ReactDOM mount

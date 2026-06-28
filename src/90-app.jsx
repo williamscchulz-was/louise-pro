@@ -889,6 +889,9 @@ function App(){
   // restaura a origem em vez de despejar sempre no Stats.
   const growthFromRef=useRef({page:"stats"});
   const goGrowth=useCallback(()=>{growthFromRef.current={page:"stats"};setPage("growth");setShowAdd(false);setFormType(null)},[]);
+  // v11.9.110: Comportamento (curva semanal) — mesmo padrão do Crescimento. useCallback ANTES do early-return.
+  const behaviorFromRef=useRef({page:"stats"});
+  const goBehavior=useCallback(()=>{behaviorFromRef.current={page:"stats"};setPage("behavior");setShowAdd(false);setFormType(null)},[]);
   if(splash||loading)return(
     <div style={{background:"linear-gradient(180deg,#0e0825,#070b1e 70%,#070b1e)",minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",fontFamily:"'Outfit',sans-serif",overflow:"hidden",opacity:splash?1:0,transition:"opacity .4s",position:"relative"}}>
       <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
@@ -1239,7 +1242,7 @@ function App(){
       </div>
           </div>
           <div style={{width:`${100/3}%`,flexShrink:0,minWidth:0,contentVisibility:"auto",containIntrinsicSize:"auto 100vh"}}>
-            <StatsPage entries={entries} onGrowth={goGrowth} lang={lang}/>
+            <StatsPage entries={entries} onGrowth={goGrowth} onBehavior={goBehavior} lang={lang}/>
           </div>
           <div style={{width:`${100/3}%`,flexShrink:0,minWidth:0,contentVisibility:"auto",containIntrinsicSize:"auto 100vh"}}>
             <HistoryPage entries={entries} onDelete={deleteEntry} onEdit={startEdit} activeTimer={activeTimer} lang={lang}/>
@@ -1247,6 +1250,7 @@ function App(){
         </div>
       </div>:null}
       {page==="growth"&&<GrowthPage entries={entries} birthDate={profile.birthDate} profile={profile} onBack={()=>{const f=growthFromRef.current||{page:"stats"};goTo(f.page||"stats");if(f.profile)setShowProfile(true)}} onAddEntry={addEntry} onDeleteEntry={deleteEntry}/>}
+      {page==="behavior"&&<BehaviorPage entries={entries} birthDate={profile.birthDate} onBack={()=>{const f=behaviorFromRef.current||{page:"stats"};goTo(f.page||"stats")}}/>}
       {page==="milestones"&&<MilestonesPage entries={entries} birthDate={profile.birthDate} profile={profile} onBack={()=>goTo("home")} onAddEntry={addEntry} onDeleteEntry={deleteEntry}/>}
       {/* Bottom spacer so content clears nav bar + timer (dynamic w/ safe-area) */}
       {/* Sem bottom spacer (v10.2.9) — queremos conteúdo passando ATRÁS da nav
