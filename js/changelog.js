@@ -4,6 +4,25 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.107", date: "2026-06-16",
+    pt: {
+      title: "Avisos espertos: dose dupla e dedo gordo",
+      bullets: [
+        '★ **Aviso de dose dupla**: se o outro celular já registrou o mesmo remédio (≤4h) ou uma mamada (≤30min), o Salvar pede um **2º toque** pra confirmar — sem bloquear nada.',
+        '★ **Detector de valor estranho**: ml muito fora do normal, 365°C, 50kg, 20h de sono… o app pergunta "confere?" antes de gravar. Pega digitação errada na hora.',
+        'O aviso some sozinho quando você muda o valor.',
+      ],
+    },
+    en: {
+      title: "Smart warnings: double dose & typos",
+      bullets: [
+        '★ **Double-dose warning**: if the other phone already logged the same med (≤4h) or a feed (≤30min), Save asks for a **2nd tap** to confirm — nothing is blocked.',
+        '★ **Odd-value detector**: ml way off, 365°C, 50kg, 20h of sleep… the app asks "correct?" before saving. Catches typos on the spot.',
+        'The warning clears itself when you change the value.',
+      ],
+    },
+  },
+  {
     v: "11.9.106", date: "2026-06-16",
     pt: {
       title: "Banho em 1 toque + registro mais esperto",

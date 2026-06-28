@@ -61,6 +61,10 @@ function AddForm({type,onSave,onSaveBatch,savedMeds,onSaveMeds,editEntry,lastBot
   const[saving,setSaving]=useState(false);
   const savingRef=useRef(false);
   const[shakeFlash,setShakeFlash]=useState(0);
+  // v11.9.107: aviso suave (anti-dose-dupla / outlier). guardMsg!=null → o botão pede um
+  // 2º toque pra confirmar; muda de valor → re-arma (limpa o aviso).
+  const[guardMsg,setGuardMsg]=useState(null);
+  useEffect(()=>{setGuardMsg(null)},[ml,tempV,weightKg,lengthCm,headCm,durH,durM,endTime,tumM,tumS,medN,selectedMeds,diaperT,nurseM,side,time]);
   const invalid=(msg)=>{Haptic.warning();setShakeFlash(n=>n+1)};
   const doSave=async()=>{
     if(savingRef.current||saving)return;
@@ -86,6 +90,7 @@ function AddForm({type,onSave,onSaveBatch,savedMeds,onSaveMeds,editEntry,lastBot
         const names=Array.from(selectedMeds);
         if(names.length===0){invalid();return}
         const picked=names.map(n=>savedMeds.find(m=>m.name===n)).filter(Boolean);
+        if(!guardMsg){const w=picked.map(m=>entryWarn("medicine",{type:"medicine",name:m.name,date,time,id:""},allEntries)).find(Boolean);if(w){setGuardMsg(_lang==="en"?w.en:w.pt);Haptic.warning();return}}
         const fixedMeds=picked.filter(m=>m.dose&&m.dose.trim());
         const dropMeds=picked.filter(m=>!m.dose||!m.dose.trim());
         if(dropMeds.length>0){
@@ -108,6 +113,7 @@ function AddForm({type,onSave,onSaveBatch,savedMeds,onSaveMeds,editEntry,lastBot
     else if(type==="temperature"){const tv=parseFloat(String(tempV).replace(",","."));if(!Number.isFinite(tv)){invalid();return}payload={...b,value:tv}}
     else if(type==="growth"){const pF=v=>{const n=parseFloat(String(v).replace(",","."));return Number.isFinite(n)?n:undefined};payload={...b,weightKg:pF(weightKg),lengthCm:pF(lengthCm),headCm:pF(headCm)}}
     if(!payload)return;
+    if(!guardMsg){const w=entryWarn(type,payload,allEntries);if(w){setGuardMsg(_lang==="en"?w.en:w.pt);Haptic.warning();return}}
     savingRef.current=true;setSaving(true);
     try{await onSave(payload)}catch(e){}
     // N\u00e3o reseta saving: parent desmonta o form via setFormType(null) quando termina.
@@ -254,7 +260,11 @@ function AddForm({type,onSave,onSaveBatch,savedMeds,onSaveMeds,editEntry,lastBot
       {type==="growth"&&<><Fld label={`${L("weight")} (kg)`}><input type="text" inputMode="decimal" placeholder={_lang==="en"?"e.g. 4.5":"Ex: 4,5"} value={weightKg} onChange={e=>setWeightKg(e.target.value.replace(/[^0-9.,]/g,""))} style={{...inp,fontSize:T.f3XL,fontWeight:800,textAlign:"center"}}/></Fld><Fld label={`${_lang==="en"?"Length":"Comprimento"} (cm)`}><input type="text" inputMode="decimal" placeholder={_lang==="en"?"e.g. 55.0":"Ex: 55,0"} value={lengthCm} onChange={e=>setLengthCm(e.target.value.replace(/[^0-9.,]/g,""))} style={{...inp,fontSize:T.f3XL,fontWeight:800,textAlign:"center"}}/></Fld><Fld label={`${L("head")} (cm)`}><input type="text" inputMode="decimal" placeholder={_lang==="en"?"e.g. 37.0":"Ex: 37,0"} value={headCm} onChange={e=>setHeadCm(e.target.value.replace(/[^0-9.,]/g,""))} style={{...inp,fontSize:T.f3XL,fontWeight:800,textAlign:"center"}}/></Fld></>}
       {/* v11.8.0: notes removido de medicine. Tambem nao mostra em drops stage. */}
       {type!=="medicine"&&<Fld label={L("notes")}><textarea placeholder={_lang==="en"?"Note...":"Anotação..."} value={notes} onChange={e=>setNotes(e.target.value)} rows={2} style={{...inp,resize:"vertical"}}/></Fld>}
-      <button onClick={doSave} disabled={saving} key={shakeFlash} style={{width:"100%",padding:18,borderRadius:18,background:`linear-gradient(180deg,${cfg.color},${cfg.color}dd)`,color:T.bg1,fontSize:T.fXL,fontWeight:700,letterSpacing:-0.3,border:"none",boxShadow:`0 1px 0 0 rgba(255,255,255,0.25) inset, 0 0 0 1px rgba(255,255,255,0.06), 0 12px 32px -8px ${cfg.color}55, 0 4px 8px -4px ${cfg.color}33`,transition:"transform 0.2s cubic-bezier(0.22,1,0.36,1)",cursor:saving?"wait":"pointer",opacity:saving?0.75:1,animation:shakeFlash?"shakeX 0.35s ease":"none",display:"flex",alignItems:"center",justifyContent:"center",gap:10}}>{saving&&<span style={{width:14,height:14,borderRadius:"50%",border:"2px solid rgba(7,11,30,0.25)",borderTopColor:T.bg1,animation:"spin 0.7s linear infinite"}}/>}{saving?(_lang==="en"?"Saving\u2026":"Salvando\u2026"):(isEdit?L("update"):(type==="medicine"&&!isEdit&&selectedMeds.size>0?`${L("save")} (${selectedMeds.size})`:L("save")))}</button>
+      {guardMsg&&<div style={{display:"flex",gap:9,alignItems:"flex-start",padding:"11px 13px",borderRadius:12,background:"rgba(245,158,11,0.10)",border:"1px solid rgba(245,158,11,0.32)",marginBottom:10}}>
+        <span style={{flexShrink:0,width:18,height:18,borderRadius:"50%",background:T.amber,color:T.bg1,fontSize:12,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center",marginTop:1}}>!</span>
+        <span style={{fontSize:T.fSM,color:"#fcd9a0",lineHeight:1.4,fontWeight:600}}>{guardMsg}</span>
+      </div>}
+      <button onClick={doSave} disabled={saving} key={shakeFlash} style={{width:"100%",padding:18,borderRadius:18,background:guardMsg?`linear-gradient(180deg,${T.amber},${T.amber}dd)`:`linear-gradient(180deg,${cfg.color},${cfg.color}dd)`,color:T.bg1,fontSize:T.fXL,fontWeight:700,letterSpacing:-0.3,border:"none",boxShadow:`0 1px 0 0 rgba(255,255,255,0.25) inset, 0 0 0 1px rgba(255,255,255,0.06), 0 12px 32px -8px ${cfg.color}55, 0 4px 8px -4px ${cfg.color}33`,transition:"transform 0.2s cubic-bezier(0.22,1,0.36,1)",cursor:saving?"wait":"pointer",opacity:saving?0.75:1,animation:shakeFlash?"shakeX 0.35s ease":"none",display:"flex",alignItems:"center",justifyContent:"center",gap:10}}>{saving&&<span style={{width:14,height:14,borderRadius:"50%",border:"2px solid rgba(7,11,30,0.25)",borderTopColor:T.bg1,animation:"spin 0.7s linear infinite"}}/>}{saving?(_lang==="en"?"Saving\u2026":"Salvando\u2026"):(guardMsg?(_lang==="en"?"Save anyway":"Salvar assim mesmo"):(isEdit?L("update"):(type==="medicine"&&!isEdit&&selectedMeds.size>0?`${L("save")} (${selectedMeds.size})`:L("save"))))}</button>
     </div>
   </div>);
 }
