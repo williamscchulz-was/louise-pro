@@ -37,6 +37,10 @@
     .guard-in{animation:slideUp .22s cubic-bezier(0.22,1,0.36,1)}
     @keyframes newBadgePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
     .new-badge-pulse{animation:newBadgePulse 1.8s ease-in-out infinite}
+    /* v11.9.114: patinho do banho boiando no arco (igual à nuvem da soneca, mas custom).
+       Via CLASSE (o Ring re-renderiza no tick — inline resetaria a cada 5s). */
+    .duck-bob{animation:duckBob 2.4s ease-in-out infinite;transform-origin:50% 80%}
+    @keyframes duckBob{0%,100%{transform:translateY(0) rotate(-5deg)}50%{transform:translateY(-3px) rotate(5deg)}}
     @keyframes mercurySpin{to{transform:rotate(360deg)}}
     @keyframes slideDown{from{transform:translateX(-50%) translateY(-20px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
     @keyframes toastSlideDown{from{transform:translateY(-20px);opacity:0}to{transform:translateY(0);opacity:1}}

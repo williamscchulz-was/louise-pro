@@ -4,6 +4,21 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.114", date: "2026-06-16",
+    pt: {
+      title: "Patinho no banho — o cronômetro ganhou vida no Ring",
+      bullets: [
+        '★ Durante o banho, o Ring agora mostra um **arco de água que cresce** (igual à soneca) com um **patinho de borracha boiando** 🦆 — e o miolo ganha um brilho cyan. Antes o banho não tinha nada disso no anel.',
+      ],
+    },
+    en: {
+      title: "Rubber duck — the bath timer comes alive on the Ring",
+      bullets: [
+        '★ During a bath, the Ring now shows a **water arc that grows** (like naps) with a **rubber duck floating** 🦆 — and the center gets a cyan glow. The bath had none of this on the ring before.',
+      ],
+    },
+  },
+  {
     v: "11.9.113", date: "2026-06-16",
     pt: {
       title: "Polimento da auditoria de design",
