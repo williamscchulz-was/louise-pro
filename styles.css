@@ -41,6 +41,13 @@
        Via CLASSE (o Ring re-renderiza no tick — inline resetaria a cada 5s). */
     .duck-bob{animation:duckBob 2.4s ease-in-out infinite;transform-origin:50% 80%}
     @keyframes duckBob{0%,100%{transform:translateY(0) rotate(-5deg)}50%{transform:translateY(-3px) rotate(5deg)}}
+    /* v11.9.115: água enchendo o miolo durante o banho (onda + maré + bolhas). Via classe. */
+    @keyframes rwDrift{to{transform:translateX(-50%)}}
+    .rw-wave{animation:rwDrift 7s linear infinite}
+    @keyframes rwTide{0%,100%{transform:translateY(2px)}50%{transform:translateY(-3px)}}
+    .rw-tide{animation:rwTide 5s ease-in-out infinite}
+    @keyframes rwBub{0%{transform:translateY(0);opacity:0}15%{opacity:.55}90%{opacity:.35}100%{transform:translateY(-44px);opacity:0}}
+    .rw-bub{animation:rwBub linear infinite}
     @keyframes mercurySpin{to{transform:rotate(360deg)}}
     @keyframes slideDown{from{transform:translateX(-50%) translateY(-20px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
     @keyframes toastSlideDown{from{transform:translateY(-20px);opacity:0}to{transform:translateY(0);opacity:1}}

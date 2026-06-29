@@ -4,6 +4,23 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.115", date: "2026-06-16",
+    pt: {
+      title: "Banho enche de água + constelação de eventos",
+      bullets: [
+        '★ Durante o banho, o **miolo do Ring agora enche de água** (com onda e bolhinhas subindo) por trás do tempo — completando a cena com o patinho que boia no arco.',
+        '★ **Constelação de eventos**: fios pontilhados ligam os registros próximos no tempo ao redor do arco, traçando o ritmo do dia — sem nunca cruzar o número do centro.',
+      ],
+    },
+    en: {
+      title: "Bath fills with water + event constellation",
+      bullets: [
+        '★ During a bath, the **Ring center now fills with water** (waves and rising bubbles) behind the time — completing the scene with the duck floating on the arc.',
+        "★ **Event constellation**: dotted threads link events that are close in time around the arc, tracing the day's rhythm — never crossing the center number.",
+      ],
+    },
+  },
+  {
     v: "11.9.114", date: "2026-06-16",
     pt: {
       title: "Patinho no banho — o cronômetro ganhou vida no Ring",
