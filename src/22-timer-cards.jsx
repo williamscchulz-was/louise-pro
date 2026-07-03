@@ -9,7 +9,7 @@ function LastFeedCard({entries}){
   return(<div style={{padding:"0 20px",marginBottom:14}}>
     <div style={{position:"relative",padding:"16px 18px 16px 22px",borderRadius:18,background:`linear-gradient(180deg,${col}12,${col}04)`,border:`1px solid ${col}32`,display:"flex",alignItems:"center",gap:14,overflow:"hidden",boxShadow:`0 1px 0 0 rgba(255,255,255,0.06) inset, 0 6px 16px -8px ${col}25`}}>
       <div style={{position:"absolute",left:0,top:0,bottom:0,width:4,background:`linear-gradient(180deg,${col},${col}40)`,borderRadius:"0 2px 2px 0",pointerEvents:"none"}}/>
-      <div style={{width:46,height:46,borderRadius:14,background:`linear-gradient(135deg,${col}38,${col}10)`,border:`1px solid ${col}50`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset"}}>
+      <div style={{width:46,height:46,borderRadius:14,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,...T.iconTile(col)}}>
         <Icon name={isBottle?"bottle":"breast"} size={20} color={colLight}/>
       </div>
       <div style={{flex:1,minWidth:0}}>
@@ -93,7 +93,7 @@ function EditStartModal({open,onClose,activeTimer,onSave}){
   };
   const wakingsCount=(activeTimer.wakings||[]).length;
   return(<Modal open={open} onClose={onClose}>
-    <div style={{width:64,height:64,margin:"0 auto 16px",borderRadius:20,background:`linear-gradient(135deg,${typeColor}38,${typeColor}10)`,border:`1px solid ${typeColor}50`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset",position:"relative"}}><Icon name={typeIcon} size={28} color={typeColorLight}/></div>
+    <div style={{width:64,height:64,margin:"0 auto 16px",borderRadius:20,display:"flex",alignItems:"center",justifyContent:"center",position:"relative",...T.iconTile(typeColor)}}><Icon name={typeIcon} size={28} color={typeColorLight}/></div>
     <div style={{textAlign:"center",fontSize:T.f2XL,fontWeight:800,letterSpacing:-0.5,color:T.heading,marginBottom:6}}>{_lang==="en"?"Edit start":"Editar início"}</div>
     <div style={{textAlign:"center",fontSize:T.fMD,color:"#9099c3",lineHeight:1.55,marginBottom:20}}>{_lang==="en"?`Change the start time of this ${typeLabel.toLowerCase()}. Wakings stay at their actual time.`:`Mude o horário de início deste ${typeLabel.toLowerCase()}. Despertares permanecem no horário real.`}</div>
     <div style={{fontSize:T.fSM,color:T.label,fontWeight:600,marginBottom:10,letterSpacing:-0.05}}>{_lang==="en"?"Day":"Data"}</div>
@@ -158,7 +158,7 @@ const TimerBar = React.memo(function TimerBar({activeTimer,onStop,onSwitch,onPau
     const bc=T.blue;
     return(<div style={{position:"absolute",bottom:"calc(88px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 32px)",maxWidth:448,padding:"14px 14px",borderRadius:20,background:`linear-gradient(180deg,${bc}1a,${bc}06)`,border:`1px solid ${bc}50`,backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",display:"flex",alignItems:"center",gap:10,pointerEvents:"auto",boxShadow:`0 1px 0 0 rgba(255,255,255,0.08) inset, 0 0 0 1px ${bc}15, 0 12px 30px -10px ${bc}40`,overflow:"hidden"}}>
       <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse at 50% 0%,rgba(255,255,255,0.05),transparent 60%)",pointerEvents:"none"}}/>
-      <div style={{position:"relative",width:44,height:44,borderRadius:13,background:`linear-gradient(135deg,${bc}38,${bc}10)`,border:`1px solid ${bc}55`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,boxShadow:"0 1px 0 0 rgba(255,255,255,0.1) inset"}}><Icon name="breast" size={20} color="#7dd3fc"/></div>
+      <div style={{position:"relative",width:44,height:44,borderRadius:13,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,...T.iconTile(bc)}}><Icon name="breast" size={20} color="#7dd3fc"/></div>
       <button onClick={()=>onSwitch("left")} style={{position:"relative",flex:1,padding:"8px 4px",borderRadius:14,background:isL?`linear-gradient(180deg,${bc}30,${bc}10)`:"transparent",border:isL?`1px solid ${bc}55`:"1px solid transparent",boxShadow:isL?"0 1px 0 0 rgba(255,255,255,0.1) inset":"none",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
         <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
           <span style={{fontSize:T.fSM,fontWeight:700,color:isL?"#7dd3fc":T.dim,letterSpacing:0.3}}>L</span>
@@ -191,7 +191,7 @@ const TimerBar = React.memo(function TimerBar({activeTimer,onStop,onSwitch,onPau
   const stTimeStr=`${String(stDate.getHours()).padStart(2,"0")}:${String(stDate.getMinutes()).padStart(2,"0")}`;
   return(<div style={{position:"absolute",bottom:"calc(88px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 32px)",maxWidth:448,padding:"16px 14px 16px 18px",borderRadius:20,background:`linear-gradient(180deg,${tCol}2e,${tCol}0f)`,border:`1px solid ${tCol}55`,backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",display:"flex",alignItems:"center",gap:12,pointerEvents:"auto",boxShadow:`0 1px 0 0 rgba(255,255,255,0.08) inset, 0 0 0 1px ${tCol}15, 0 12px 30px -10px ${tCol}40`,overflow:"hidden"}}>
     <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse at 50% 0%,rgba(255,255,255,0.06),transparent 60%)",pointerEvents:"none"}}/>
-    <div style={{width:50,height:50,borderRadius:15,background:`linear-gradient(135deg,${tCol}45,${tCol}15)`,border:`1px solid ${tCol}55`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,boxShadow:"0 1px 0 0 rgba(255,255,255,0.1) inset",position:"relative"}}><Icon name={tIconName} size={22} color={tColLight}/></div>
+    <div style={{width:50,height:50,borderRadius:15,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,position:"relative",...T.iconTile(tCol)}}><Icon name={tIconName} size={22} color={tColLight}/></div>
     <div style={{flex:1,position:"relative",minWidth:0}}>
       <div style={{fontSize:T.fSM,fontWeight:600,color:tColLightRgba,letterSpacing:-0.05,marginBottom:3,textTransform:"uppercase"}}>{tLabel}</div>
       <div style={{display:"flex",alignItems:"baseline",gap:8,flexWrap:"wrap"}}>

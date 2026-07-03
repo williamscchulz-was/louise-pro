@@ -523,7 +523,7 @@ function App(){
   const wetDiapers=todayDiapers.filter(e=>e.subtype==="wet"||e.subtype==="both").length;
   const dirtyDiapers=todayDiapers.filter(e=>e.subtype==="dirty"||e.subtype==="both").length;
   const napNums=useMemo(()=>{const naps=[...todayE].reverse().filter(e=>e.type==="nap");const m={};naps.forEach((n,i)=>{m[n.id]=i+1});return m},[todayE]);
-  const age=calcAge(profile.birthDate);const babyName=profile.name||"Bebê";
+  const age=calcAge(profile.birthDate);const babyName=profile.name||(_lang==="en"?"Baby":"Bebê");
   const sleepRec=useMemo(()=>getSleepRec(entries,age,profile.birthDate),[entries,age,profile.birthDate]);
   const sleepPattern=useMemo(()=>analyzeSleepPatterns(entries,7),[entries]);
   const daySchedule=useMemo(()=>{
@@ -568,6 +568,12 @@ function App(){
   // v11.9.71: rotina expansível (opt-in). Preferência por-device em localStorage.
   // Hook DEFINIDO AQUI (topo do App, antes do early-return de splash) — Rules of Hooks.
   const[routineExpanded,setRoutineExpanded]=useState(()=>{try{return localStorage.getItem("lp_routine_expanded")==="1"}catch(e){return false}});
+  // v11.9.116 (auditoria de design): nudge de onboarding quando o perfil ainda não tem
+  // nome — dispensável por-device (flag booleana, não por-dia — preencher o nome é ação
+  // única). NUNCA controlado por timer, só por !profile.name — respeita a regra de Home
+  // estável (nada que apareça/suma sozinho acima do Ring).
+  const[onbDismissed,setOnbDismissed]=useState(()=>{try{return localStorage.getItem("lp_onboarding_dismissed")==="1"}catch(e){return false}});
+  const dismissOnboarding=useCallback(()=>{setOnbDismissed(true);try{localStorage.setItem("lp_onboarding_dismissed","1")}catch(e){}},[]);
   const toggleRoutineExpanded=useCallback(()=>setRoutineExpanded(v=>{const nv=!v;try{localStorage.setItem("lp_routine_expanded",nv?"1":"0")}catch(e){}if(window.Haptic&&Haptic.light)Haptic.light();return nv}),[]);
   const routineState=useMemo(()=>{
     const r=profile?.routine;
@@ -1009,7 +1015,7 @@ function App(){
         </div>);
         return(<div style={{padding:"6px 4px 8px"}}>
           <div style={{textAlign:"center",marginBottom:14}}>
-            <div style={{fontSize:T.fSM,color:T.dim,fontWeight:700,letterSpacing:0.6,textTransform:"uppercase"}}>{_lang==="en"?"Quick stats":"Visão rápida"}</div>
+            <div style={{fontSize:T.fSM,color:T.label,fontWeight:700,letterSpacing:0.5,textTransform:"uppercase"}}>{_lang==="en"?"Quick stats":"Visão rápida"}</div>
             <h3 style={{fontSize:T.fXL,fontWeight:800,letterSpacing:-0.3,margin:"4px 0 0"}}>{_lang==="en"?"Louise · today + context":"Louise · hoje + contexto"}</h3>
           </div>
           <Item ic="bed" col={T.purple} k={_lang==="en"?"Yesterday's sleep":"Sono ontem"} v={ySleep>0?fmtDur(ySleep)+(yWakings>0?` · ${yWakings}x`:""):"—"}/>
@@ -1097,12 +1103,20 @@ function App(){
         {activeTimer&&((activeTimer.type==="sleep"&&activeTimer.nightWake)||activeTimer.type==="nap"||activeTimer.type==="nursing")&&<div style={{display:"flex",gap:6,padding:"0 20px",marginBottom:12}}><button onClick={()=>{setFormType("bottle");setShowAdd(false)}} style={{flex:1,padding:"12px 0 8px",borderRadius:14,background:`${T.green}16`,border:`1px solid ${T.green}40`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="bottle" size={18} color={T.green}/><span style={{fontSize:T.fXS,fontWeight:700,color:T.green}}>{_lang==="en"?"Bottle":"Mamad."}</span></button><button onClick={()=>{setFormType("diaper");setShowAdd(false)}} style={{flex:1,padding:"12px 0 8px",borderRadius:14,background:`${T.pink}16`,border:`1px solid ${T.pink}40`,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}><Icon name="diaper" size={18} color={T.pink}/><span style={{fontSize:T.fXS,fontWeight:700,color:T.pink}}>{_lang==="en"?"Diaper":"Fralda"}</span></button></div>}
         {/* v11.9.95: hierarquia estável — a ROTINA (ação) subiu pra cima dos efêmeros
             (napSug/insights), que desceram pra depois dela. Nada empurra o que importa. */}
+        {/* v11.9.116: nudge de onboarding — perfil sem nome ainda (1ª abertura real,
+            ex: cônjuge configurando o 2º device). Dispensável, sem timer. */}
+        {!profile.name&&!onbDismissed&&<div className="home-rise-in" style={{margin:"0 20px 14px",padding:"13px 15px",borderRadius:T.rLG,background:"linear-gradient(180deg,rgba(139,124,246,0.10),rgba(139,124,246,0.03))",border:`1px solid ${T.accent}28`,display:"flex",gap:11,alignItems:"center"}}>
+          <div style={{flexShrink:0,width:34,height:34,borderRadius:T.rSM,display:"flex",alignItems:"center",justifyContent:"center",...T.iconTile(T.accent)}}><Icon name="star" size={16} color={T.accent}/></div>
+          <div style={{flex:1,minWidth:0,fontSize:T.fSM,color:T.sub,lineHeight:1.4}}>{_lang==="en"?"Add her name and photo to make this feel like hers":"Adicione o nome e a foto dela pra isso ficar com a cara dela"}</div>
+          <button onClick={()=>setShowProfile(true)} className="hit44" style={{flexShrink:0,fontSize:T.fSM,fontWeight:700,color:T.accent,background:"none",border:"none",padding:"6px 4px"}}>{_lang==="en"?"Add":"Add."}</button>
+          <button onClick={dismissOnboarding} aria-label={_lang==="en"?"Dismiss":"Dispensar"} className="hit44" style={{flexShrink:0,width:20,height:20,display:"flex",alignItems:"center",justifyContent:"center",background:"none",border:"none",color:T.dim}}><Icon name="x" size={13} color={T.dim}/></button>
+        </div>}
         {/* v11.9.40: Card de rotina diária — só renderiza se profile.routine.enabled === true */}
         {routineState&&<div style={{margin:"0 20px 14px"}}>
           {routineState.allDone?<div style={{padding:"6px 4px",display:"flex",alignItems:"center",justifyContent:"center",gap:10}}>
             <span style={{flex:1,height:1,background:`linear-gradient(90deg,transparent,${T.green}50,transparent)`}}/>
             <div style={{width:18,height:18,borderRadius:"50%",background:T.green,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name="check" size={11} color="#04061a"/></div>
-            <span style={{fontSize:T.fSM,color:T.green,fontWeight:700,letterSpacing:0.6,textTransform:"uppercase"}}>{L("routineDone")}{routineState.skippedCount>0&&<span style={{color:T.dim,fontWeight:600}}> · {routineState.skippedCount} {_lang==="en"?"skipped":(routineState.skippedCount>1?"puladas":"pulada")}</span>}</span>
+            <span style={{fontSize:T.fSM,color:T.green,fontWeight:700,letterSpacing:0.5,textTransform:"uppercase"}}>{L("routineDone")}{routineState.skippedCount>0&&<span style={{color:T.label,fontWeight:600}}> · {routineState.skippedCount} {_lang==="en"?"skipped":(routineState.skippedCount>1?"puladas":"pulada")}</span>}</span>
             <span style={{flex:1,height:1,background:`linear-gradient(90deg,transparent,${T.green}50,transparent)`}}/>
           </div>:routineState.headline?(()=>{
             const h=routineState.headline;
@@ -1118,7 +1132,7 @@ function App(){
               <div onClick={toggleRoutineExpanded} style={{display:"flex",alignItems:"center",gap:9,cursor:"pointer"}}>
                 <Icon name={h.icon} size={16} color={h.col}/>
                 <div style={{flex:1,minWidth:0,display:"flex",alignItems:"baseline",gap:6,flexWrap:"wrap"}}>
-                  <span style={{fontSize:T.fXS,fontWeight:800,color:accentCol,textTransform:"uppercase",letterSpacing:0.8}}>{L("nextEvent")}</span>
+                  <span style={{fontSize:T.fXS,fontWeight:800,color:accentCol,textTransform:"uppercase",letterSpacing:1}}>{L("nextEvent")}</span>
                   <span style={{fontSize:T.fMD,fontWeight:700,color:T.heading,letterSpacing:-0.1}}>{h.lbl}</span>
                   <span style={{fontSize:T.fSM,color:accentCol,fontWeight:700,fontVariantNumeric:"tabular-nums"}}>{h.target}</span>
                   {isLate?<span style={{fontSize:T.fXS,color:accentCol,fontWeight:600}}>· +{fmtDur(lateMin)}</span>:(earlyMin>0&&earlyMin<=180?<span style={{fontSize:T.fXS,color:T.dim,fontWeight:600}}>· {L("earlyMin")} {fmtDur(earlyMin)}</span>:null)}
@@ -1164,14 +1178,14 @@ function App(){
         {/* v11.9.41: predição "Próx. soneca ~XX:XX" só aparece se a rotina (pediatra) NÃO estiver ativa. Com rotina on, o card "Próximo na rotina" assume — engine-prediction vira redundante. */}
         {!routineState&&!activeTimer&&sleepRec?.phase===2&&daySchedule.length>0&&daySchedule.filter(s=>s.status==="next").map((s,i)=><div key={"ns"+i} style={{margin:"0 20px 12px",padding:"10px 14px",borderRadius:12,background:`${T.accent}10`,border:`1px solid ${T.accent}18`,display:"flex",alignItems:"center",gap:10}}><Icon name="star" size={18} color={T.accent} fill={T.accent}/><div><div style={{fontSize:T.fMD,fontWeight:700,color:T.accent}}>{s.bed?(_lang==="en"?"Bedtime ~":"Sono ~"):(_lang==="en"?"Next nap ~":"Prox. soneca ~")}{minToTime(s.startMin)}</div><div style={{fontSize:T.fSM,color:T.sub}}>{s.bed?"":`${s.pos}${_lang==="en"?["","st","nd","rd"][s.pos]||"th":"a"} · `}WW {fmtDur(s.ww)}{s.durRange?" · "+s.durRange:""}</div></div></div>)}
         <InsightCards insights={dayInsights} phase={sleepRec?.phase} lang={lang}/>
-        <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr)",gap:6,padding:"0 20px",marginBottom:14}}>{[{i:"bottle",v:`${totalMl}`,u:"ml",c:T.green,t:["bottle"],tap:"bottle",l:_lang==="en"?"Bottle":"Mamad.",num:totalMl},{i:"pill",c:T.amber,dual:[{l:"Simeticona",c:T.amber,n:totalSimet,f:e=>e.type==="medicine"&&e.name&&/simet/i.test(e.name)},{l:"Tylenol",c:T.red,n:totalTylenol,f:e=>e.type==="medicine"&&e.name&&/tylenol|paraceta/i.test(e.name)}]},{i:"moon",v:fmtDur(totalSleep),c:T.purple,t:["sleep","nap"],tap:"nap",l:_lang==="en"?"Sleep":"Sono"},{i:"diaper",v:`${totalDiapers}`,c:T.pink,t:["diaper"],tap:"diaper",l:_lang==="en"?"Diaper":"Fralda",num:totalDiapers}].map((p,idx)=>{
+        <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr)",gap:8,padding:"0 20px",marginBottom:14}}>{[{i:"bottle",v:`${totalMl}`,u:"ml",c:T.green,t:["bottle"],tap:"bottle",l:_lang==="en"?"Bottle":"Mamad.",num:totalMl},{i:"pill",c:T.amber,dual:[{l:"Simeticona",c:T.amber,n:totalSimet,f:e=>e.type==="medicine"&&e.name&&/simet/i.test(e.name)},{l:"Tylenol",c:T.red,n:totalTylenol,f:e=>e.type==="medicine"&&e.name&&/tylenol|paraceta/i.test(e.name)}]},{i:"moon",v:fmtDur(totalSleep),c:T.purple,t:["sleep","nap"],tap:"nap",l:_lang==="en"?"Sleep":"Sono"},{i:"diaper",v:`${totalDiapers}`,c:T.pink,t:["diaper"],tap:"diaper",l:_lang==="en"?"Diaper":"Fralda",num:totalDiapers}].map((p,idx)=>{
         // v11.9.89: card DUPLO de remédios — Simeticona | Tylenol dividem o MESMO card
         // (metade/metade com divisória), e o grid de resumo volta ao 2×2.
-        if(p.dual){return<div key={idx} className="home-card home-fade-in" style={{animationDelay:`${idx*55}ms`,padding:"9px 11px",borderRadius:14,background:`${p.c}07`,border:`1px solid ${p.c}14`,textAlign:"left",cursor:"default",position:"relative",overflow:"hidden",boxShadow:"0 1px 0 0 rgba(255,255,255,0.04) inset"}}>
+        if(p.dual){return<div key={idx} className="home-card home-fade-in" style={{animationDelay:`${idx*55}ms`,padding:"11px 12px",borderRadius:14,background:`${p.c}07`,border:`1px solid ${p.c}14`,textAlign:"left",cursor:"default",position:"relative",overflow:"hidden",boxShadow:"0 1px 0 0 rgba(255,255,255,0.04) inset"}}>
           <div style={{position:"absolute",top:0,left:0,right:0,height:1,background:`linear-gradient(90deg,transparent,${p.c}66,transparent)`,opacity:0.3,pointerEvents:"none"}}/>
           <div style={{display:"flex",alignItems:"stretch"}}>
             {p.dual.map((h,hi)=>{const hl=entries.find(h.f);const hago=hl?timeSince(hl.date,hl.time):null;return<div key={hi} style={{flex:1,minWidth:0,paddingLeft:hi>0?9:0,marginLeft:hi>0?9:0,borderLeft:hi>0?`1px solid ${p.c}1a`:"none"}}>
-              <div style={{display:"flex",alignItems:"center",gap:5,marginBottom:2}}><Icon name="pill" size={11} color={h.c}/><span style={{fontSize:T.fXS,color:T.dim,fontWeight:600,letterSpacing:0.3,textTransform:"uppercase",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{h.l}</span></div>
+              <div style={{display:"flex",alignItems:"center",gap:5,marginBottom:2}}><Icon name="pill" size={11} color={h.c}/><span style={{fontSize:T.fXS,color:T.label,fontWeight:600,letterSpacing:0.5,textTransform:"uppercase",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{h.l}</span></div>
               <div style={{fontSize:T.fLG,fontWeight:800,color:h.c,lineHeight:1,letterSpacing:-0.2,fontVariantNumeric:"tabular-nums"}}><CountUp end={h.n}/><span style={{fontSize:T.fSM,opacity:0.5,fontWeight:700,marginLeft:1}}>x</span></div>
               {hago&&<div style={{fontSize:T.fSM,color:`${h.c}88`,fontWeight:600,marginTop:1,fontVariantNumeric:"tabular-nums"}}>{hago}</div>}
             </div>})}
@@ -1193,7 +1207,7 @@ function App(){
         }
         // Diaper breakdown wet/dirty (v10.8.0). Opção C do mockup — ícones coloridos.
         const diaperBreakdown=p.tap==="diaper"&&(wetDiapers>0||dirtyDiapers>0)?(<div style={{display:"flex",gap:8,marginTop:3,fontSize:T.fSM,fontWeight:700,fontVariantNumeric:"tabular-nums"}}>{wetDiapers>0&&<span style={{display:"inline-flex",alignItems:"center",gap:3,color:"#93c5fd"}}><Icon name="droplet" size={11} color="#93c5fd"/>{wetDiapers}</span>}{dirtyDiapers>0&&<span style={{display:"inline-flex",alignItems:"center",gap:3,color:"#a16b4a"}}><Icon name="poop" size={11} color="#a16b4a"/>{dirtyDiapers}</span>}</div>):null;
-        return<div key={idx} className="home-card home-fade-in" style={{animationDelay:`${idx*55}ms`,padding:"9px 11px",borderRadius:14,background:`${p.c}07`,border:`1px solid ${p.c}14`,textAlign:"left",cursor:"default",position:"relative",overflow:"hidden",boxShadow:"0 1px 0 0 rgba(255,255,255,0.04) inset"}}><div style={{position:"absolute",top:0,left:0,right:0,height:1,background:`linear-gradient(90deg,transparent,${p.c}66,transparent)`,opacity:0.3,pointerEvents:"none"}}/><div style={{display:"flex",alignItems:"center",gap:5,marginBottom:2}}><Icon name={p.i} size={11} color={p.c}/><span style={{fontSize:T.fXS,color:T.dim,fontWeight:600,letterSpacing:0.3,textTransform:"uppercase"}}>{p.l}</span></div><div style={{fontSize:T.fLG,fontWeight:800,color:p.c,lineHeight:1,letterSpacing:-0.2,fontVariantNumeric:"tabular-nums"}}>{p.num!=null?<CountUp end={p.num}/>:<span key={p.v} className="val-pulse">{p.v}</span>}{p.u?<span style={{fontSize:T.fSM,opacity:0.5,fontWeight:700,marginLeft:1}}>{p.u}</span>:null}{p.tap==="bottle"&&profile.mlGoal>0&&totalMl>0?<span style={{fontSize:T.fXS,opacity:0.55,fontWeight:700,marginLeft:5}}>· {Math.round((totalMl/profile.mlGoal)*100)}%</span>:null}</div>{diaperBreakdown}{feedProg?<><div style={{height:3,borderRadius:2,background:`${p.c}1a`,marginTop:6,overflow:"hidden"}}><div style={{height:"100%",width:`${Math.min(100,feedProg.prog*100)}%`,background:feedProg.prog>=0.8?feedProg.barColor:`linear-gradient(90deg,${p.c},${p.c}cc)`,borderRadius:2,transition:"width .4s ease, background .3s ease"}}/></div><div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginTop:3,fontSize:T.fXS,fontWeight:600,fontVariantNumeric:"tabular-nums"}}><span style={{color:`${p.c}88`}}>{ago}</span><span style={{color:feedProg.barColor,fontWeight:700}}>{feedProg.prog>=1?`+${feedProg.lateMin}m late`:`→ ${feedProg.nextStr}`}</span></div></>:(ago&&<div style={{fontSize:T.fSM,color:`${p.c}88`,fontWeight:600,marginTop:1,fontVariantNumeric:"tabular-nums"}}>{ago}</div>)}</div>})}</div>
+        return<div key={idx} className="home-card home-fade-in" style={{animationDelay:`${idx*55}ms`,padding:"11px 12px",borderRadius:14,background:`${p.c}07`,border:`1px solid ${p.c}14`,textAlign:"left",cursor:"default",position:"relative",overflow:"hidden",boxShadow:"0 1px 0 0 rgba(255,255,255,0.04) inset"}}><div style={{position:"absolute",top:0,left:0,right:0,height:1,background:`linear-gradient(90deg,transparent,${p.c}66,transparent)`,opacity:0.3,pointerEvents:"none"}}/><div style={{display:"flex",alignItems:"center",gap:5,marginBottom:2}}><Icon name={p.i} size={11} color={p.c}/><span style={{fontSize:T.fXS,color:T.dim,fontWeight:600,letterSpacing:0.3,textTransform:"uppercase"}}>{p.l}</span></div><div style={{fontSize:T.fLG,fontWeight:800,color:p.c,lineHeight:1,letterSpacing:-0.2,fontVariantNumeric:"tabular-nums"}}>{p.num!=null?<CountUp end={p.num}/>:<span key={p.v} className="val-pulse">{p.v}</span>}{p.u?<span style={{fontSize:T.fSM,opacity:0.5,fontWeight:700,marginLeft:1}}>{p.u}</span>:null}{p.tap==="bottle"&&profile.mlGoal>0&&totalMl>0?<span style={{fontSize:T.fXS,opacity:0.55,fontWeight:700,marginLeft:5}}>· {Math.round((totalMl/profile.mlGoal)*100)}%</span>:null}</div>{diaperBreakdown}{feedProg?<><div style={{height:3,borderRadius:2,background:`${p.c}1a`,marginTop:6,overflow:"hidden"}}><div style={{height:"100%",width:`${Math.min(100,feedProg.prog*100)}%`,background:feedProg.prog>=0.8?feedProg.barColor:`linear-gradient(90deg,${p.c},${p.c}cc)`,borderRadius:2,transition:"width .4s ease, background .3s ease"}}/></div><div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginTop:3,fontSize:T.fXS,fontWeight:600,fontVariantNumeric:"tabular-nums"}}><span style={{color:`${p.c}88`}}>{ago}</span><span style={{color:feedProg.barColor,fontWeight:700}}>{feedProg.prog>=1?`+${feedProg.lateMin}m late`:`→ ${feedProg.nextStr}`}</span></div></>:(ago&&<div style={{fontSize:T.fSM,color:`${p.c}88`,fontWeight:600,marginTop:1,fontVariantNumeric:"tabular-nums"}}>{ago}</div>)}</div>})}</div>
         {/* v11.9.95: Curiosidade desceu pra cá (era acima do Ring) — fica até o ✕. */}
         <CuriosityCard age={age} lang={lang} tick={tick}/>
         {/* v11.9.62: "Próximo marco" — linha minimalista única (antes era card com 3 itens).
@@ -1214,7 +1228,7 @@ function App(){
           const next=upcoming[0];
           return<button onClick={()=>goTo("milestones")} style={{display:"flex",alignItems:"center",gap:8,width:"calc(100% - 40px)",margin:"0 20px 14px",padding:"7px 12px",borderRadius:11,background:"rgba(250,204,21,0.035)",border:"1px solid rgba(250,204,21,0.12)",textAlign:"left",cursor:"pointer"}}>
             <Icon name="star" size={12} color="#fcd34d"/>
-            <span style={{fontSize:T.fXS,fontWeight:800,color:"#fcd34d",textTransform:"uppercase",letterSpacing:0.8,flexShrink:0}}>{L("nextMilestone")}</span>
+            <span style={{fontSize:T.fXS,fontWeight:800,color:"#fcd34d",textTransform:"uppercase",letterSpacing:1,flexShrink:0}}>{L("nextMilestone")}</span>
             <span style={{flex:1,minWidth:0,fontSize:T.fSM,fontWeight:600,color:T.sub,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{next.label[_lang]||next.label.en}</span>
             <span style={{fontSize:T.fSM,color:T.dim,fontWeight:600,flexShrink:0}}>→</span>
           </button>
@@ -1250,8 +1264,8 @@ function App(){
         </div>
       </div>:null}
       {page==="growth"&&<GrowthPage entries={entries} birthDate={profile.birthDate} profile={profile} onBack={()=>{const f=growthFromRef.current||{page:"stats"};goTo(f.page||"stats");if(f.profile)setShowProfile(true)}} onAddEntry={addEntry} onDeleteEntry={deleteEntry}/>}
-      {page==="behavior"&&<BehaviorPage entries={entries} birthDate={profile.birthDate} onBack={()=>{const f=behaviorFromRef.current||{page:"stats"};goTo(f.page||"stats")}}/>}
-      {page==="milestones"&&<MilestonesPage entries={entries} birthDate={profile.birthDate} profile={profile} onBack={()=>goTo("home")} onAddEntry={addEntry} onDeleteEntry={deleteEntry}/>}
+      {page==="behavior"&&<BehaviorPage entries={entries} birthDate={profile.birthDate} onBack={()=>{const f=behaviorFromRef.current||{page:"stats"};goTo(f.page||"stats")}} lang={lang}/>}
+      {page==="milestones"&&<MilestonesPage entries={entries} birthDate={profile.birthDate} profile={profile} onBack={()=>goTo("home")} onAddEntry={addEntry} onDeleteEntry={deleteEntry} lang={lang}/>}
       {/* Bottom spacer so content clears nav bar + timer (dynamic w/ safe-area) */}
       {/* Sem bottom spacer (v10.2.9) — queremos conteúdo passando ATRÁS da nav
           pill translúcida (Instagram-style: você rola até o fim, o último card
@@ -1299,7 +1313,7 @@ function App(){
         O AddForm em si (Bottle/Amount/Save) continua Sheet porque tem inputs e scroll. */}
     <Modal open={showAdd&&!formType} onClose={()=>setShowAdd(false)}>
       <div style={{fontSize:T.fSM,fontWeight:700,color:T.label,letterSpacing:0.5,textTransform:"uppercase",marginBottom:16,textAlign:"center"}}>{_lang==="en"?"Add event":"Adicionar evento"}</div>
-      <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)",gap:"10px 0"}}>{["wakeup","bottle","nursing","sleep","nap","diaper","bath","medicine","temperature","tummytime"].map((type,i)=>{const cfg=TYPES[type];const last=entries.find(e=>e.type===type);const agoRaw=last?timeSince(last.date,last.time):null;const ago=agoRaw==="now"?"Just now":agoRaw;return(<button key={type} onClick={()=>setFormType(type)} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8,padding:"8px 4px 4px",animation:`slideUp .3s ease ${i*0.025}s both`}}>
+      <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)",gap:"10px 0"}}>{["wakeup","bottle","nursing","sleep","nap","diaper","bath","medicine","temperature","tummytime"].map((type,i)=>{const cfg=TYPES[type];const last=entries.find(e=>e.type===type);const agoRaw=last?timeSince(last.date,last.time):null;const ago=agoRaw==="now"?"Just now":agoRaw;return(<button key={type} onClick={()=>setFormType(type)} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8,padding:"8px 4px 4px",animation:`slideUp .3s cubic-bezier(0.22,1,0.36,1) ${i*0.025}s both`}}>
         <div style={{width:58,height:58,borderRadius:"50%",background:`radial-gradient(circle at 35% 30%, rgba(50,60,120,0.95), rgba(18,22,55,0.98))`,border:`1.5px solid ${cfg.color}25`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 4px 16px rgba(0,0,0,0.35), 0 0 20px ${cfg.color}18, inset 0 1px 0 rgba(200,210,255,0.08), inset 0 -2px 4px rgba(0,0,0,0.2)`,position:"relative",overflow:"hidden",filter:`drop-shadow(0 0 4px ${cfg.color}44)`}}>
           <div style={{position:"absolute",top:"15%",left:"25%",width:"40%",height:"30%",background:`radial-gradient(ellipse,${cfg.color}12,transparent)`,borderRadius:"50%",filter:"blur(5px)"}}/>
           <Icon name={cfg.icon} size={22} color={cfg.color}/>
@@ -1347,7 +1361,7 @@ function App(){
     {showProfile?<nav style={{position:"fixed",bottom:"calc(8px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",width:"auto",maxWidth:"none",opacity:1,display:"flex",alignItems:"center",gap:8,padding:"0",pointerEvents:"auto",background:"transparent",border:"none",boxShadow:"none",zIndex:250}}>
       <div style={{position:"relative",width:60,height:60,display:"flex",alignItems:"center",justifyContent:"center"}}>
         <div style={{position:"absolute",inset:0,borderRadius:"50%",background:"conic-gradient(from 0deg, #8b7cf6 0%, #e0d4ff 15%, #ffffff 22%, #c4b5fd 35%, #8b7cf6 50%, #5b4aaf 65%, #ffffff 78%, #a78bfa 92%, #8b7cf6 100%)",animation:"mercurySpin 3s linear infinite",willChange:"transform",transformOrigin:"center center"}}/>
-        <div style={{position:"absolute",inset:-4,borderRadius:"50%",boxShadow:"0 0 20px rgba(139,124,246,0.55)",pointerEvents:"none"}}/>
+        <div style={{position:"absolute",inset:-4,borderRadius:"50%",boxShadow:`0 0 20px ${T.accent}8c`,pointerEvents:"none"}}/>
         <div style={{position:"absolute",inset:2.5,borderRadius:"50%",background:"linear-gradient(180deg,rgba(14,18,48,0.98),rgba(8,10,28,0.99))"}}/>
         <button aria-label={L("home")} onClick={()=>{setShowProfile(false);setProfileIsDirty(false)}} style={{position:"relative",zIndex:2,width:55,height:55,borderRadius:"50%",background:"transparent",color:T.lilac,border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}>
           <Icon name="home" size={20} color="#c4b5fd"/>

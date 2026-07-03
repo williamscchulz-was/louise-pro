@@ -6,6 +6,10 @@
 # viajam pra TODAS as maquinas (casa/trabalho/etc). Ver "Workflow multi-maquina" no CLAUDE.md.
 !.claude/settings.json
 !.claude/hooks/
+# v11.9.116: agents/ (conselheiro-fable) + docs de auditoria versionados — mesmo motivo:
+# precisam viajar pra todas as maquinas, nao ficar presos numa memoria local por-device.
+!.claude/agents/
+!.claude/audit-2026-07.md
 .validate/
 node_modules/
 dist/

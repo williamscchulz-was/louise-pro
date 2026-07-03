@@ -18,7 +18,9 @@
     @keyframes slideUpCentered{from{transform:translateX(-50%) translateY(12px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
     /* v11.9.70: micro-interação do segmento "próximo" da rotina — pulse sutil via CLASSE
        (não inline: a rotina re-renderiza a cada tick e inline resetaria a animação). */
-    @keyframes rtSegPulse{0%,100%{opacity:1}50%{opacity:0.45}}
+    /* v11.9.116: respiração assimétrica (subida rápida, plateau, descida lenta) em vez de
+       pisca binário de 2 paradas — fica logo abaixo do Ring, que já usa curvas orgânicas. */
+    @keyframes rtSegPulse{0%{opacity:1}40%{opacity:1}70%{opacity:0.45}100%{opacity:1}}
     .rt-seg-next{animation:rtSegPulse 1.8s ease-in-out infinite}
     @keyframes rtExpandIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
     .rt-expand{animation:rtExpandIn .25s ease}
@@ -40,6 +42,11 @@
     /* v11.9.114: patinho do banho boiando no arco (igual à nuvem da soneca, mas custom).
        Via CLASSE (o Ring re-renderiza no tick — inline resetaria a cada 5s). */
     .duck-bob{animation:duckBob 2.4s ease-in-out infinite;transform-origin:50% 80%}
+    /* v11.9.116 (auditoria de design): toggles de Ajustes ganham a mesma física de mola
+       (cubic-bezier(0.34,1.56,0.64,1)) já usada em .home-card/.qbtn-appear/.val-pulse —
+       via CLASSE (nunca inline), mantendo o invariante mesmo sem tick nesses componentes. */
+    .toggle-track{transition:background .22s ease-out, border-color .22s ease-out, box-shadow .22s ease-out}
+    .toggle-thumb{transition:left .28s cubic-bezier(0.34,1.56,0.64,1)}
     @keyframes duckBob{0%,100%{transform:translateY(0) rotate(-5deg)}50%{transform:translateY(-3px) rotate(5deg)}}
     /* v11.9.115: água enchendo o miolo durante o banho (onda + maré + bolhas). Via classe. */
     @keyframes rwDrift{to{transform:translateX(-50%)}}
@@ -73,7 +80,7 @@
     @keyframes splDraw{to{stroke-dashoffset:0}}
     @keyframes splFill{to{opacity:1}}
     .spl-draw{stroke-dasharray:1;stroke-dashoffset:1;animation:splDraw 2.2s cubic-bezier(0.4,0,0.2,1) .15s forwards}
-    .spl-fill{opacity:0;animation:splFill .7s ease 2.0s forwards}
+    .spl-fill{opacity:0;animation:splFill .7s cubic-bezier(0.22,1,0.36,1) 2.0s forwards}
     /* v11.9.98: splash curto (aberturas seguintes do dia) — logo preenchida direto, sem traço. */
     .spl-fill-quick{opacity:0;animation:splFill .45s ease .05s forwards}
     @keyframes splashText{0%{opacity:0;transform:translateY(8px)}50%{opacity:0}100%{opacity:1;transform:translateY(0)}}

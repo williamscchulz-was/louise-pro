@@ -4,6 +4,29 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.116", date: "2026-06-16",
+    pt: {
+      title: "Polimento nível prêmio — 33 achados implementados",
+      bullets: [
+        '★ **Contraste**: texto pequeno cinza-escuro (dose de remédio, rótulos) estava abaixo do mínimo legível — corrigido nos pontos críticos.',
+        '★ **Escala de raio e sombra**: cards ganharam profundidade real (sombra sutil, não só brilho de borda); cantos alinhados a 5 tamanhos-padrão.',
+        '★ **Crescimento** ganhou tela de "sem dados ainda" com botão de ação (antes ficava mudo).',
+        '★ Comportamento e Marcos: correção de performance (paravam de recalcular à toa a cada 5 segundos).',
+        'Toggles de Ajustes, botão "+", avisos e splash ganharam a mesma física de mola do resto do app. Tiles de ícone, tooltips de gráfico e fundos de página consolidados num só padrão. +5 áreas de toque ampliadas. Nudge leve pra completar o perfil na 1ª abertura.',
+      ],
+    },
+    en: {
+      title: "Premium-tier polish — 33 findings implemented",
+      bullets: [
+        '★ **Contrast**: small dark-grey text (medicine dose, labels) was below the legible minimum — fixed at the critical spots.',
+        '★ **Radius & shadow scale**: cards got real depth (a soft shadow, not just a border highlight); corners aligned to 5 standard sizes.',
+        '★ **Growth** got a proper "no data yet" state with an action button (was silent before).',
+        '★ Behavior and Milestones: performance fix (stopped needlessly recomputing every 5 seconds).',
+        'Settings toggles, the "+" button, warnings and splash now share the same spring physics as the rest of the app. Icon tiles, chart tooltips and page backgrounds consolidated into one pattern. +5 tap areas enlarged. A light nudge to complete the profile on first open.',
+      ],
+    },
+  },
+  {
     v: "11.9.115", date: "2026-06-16",
     pt: {
       title: "Banho enche de água + constelação de eventos",

@@ -134,7 +134,7 @@ function GrowthPage({entries,birthDate,profile,onBack,onAddEntry,onDeleteEntry})
       <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:11}}>
         <div style={{width:20,height:20,borderRadius:7,background:`${color}1f`,border:`1px solid ${color}40`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><span style={{fontSize:10,lineHeight:1}}>{emoji}</span></div>
         <span style={{fontSize:T.fXS,fontWeight:800,letterSpacing:1,textTransform:"uppercase",color}}>{label}</span>
-        <span style={{marginLeft:"auto",fontSize:T.fXS,color:T.dim,fontWeight:700,letterSpacing:0.5}}>{unit}</span>
+        <span style={{marginLeft:"auto",fontSize:T.fXS,color:T.label,fontWeight:700,letterSpacing:0.5}}>{unit}</span>
       </div>
       <div style={{position:"relative"}}>
         <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{width:"100%",height:"auto",display:"block",background:"rgba(10,14,38,0.45)",borderRadius:12,border:`1px solid ${T.gBSoft}`}}>
@@ -150,13 +150,13 @@ function GrowthPage({entries,birthDate,profile,onBack,onAddEntry,onDeleteEntry})
           {/* Hit areas (r=13, transparentes) por cima de tudo — alvo de toque decente no iPhone */}
           {pts.map((p,i)=><circle key={`hit${i}`} cx={x(p.ageM)} cy={y(p[field])} r={13} fill="transparent" style={{cursor:"pointer"}} onClick={()=>setSelPt(s=>s&&s.field===field&&s.i===i?null:{field,i})}/>)}
         </svg>
-        {sel&&<div key={selIdx} className="chart-tip" style={{position:"absolute",left:`${selLeft}%`,top:`${selTop}%`,transform:selBelow?"translate(-50%,12px)":"translate(-50%,calc(-100% - 12px))",zIndex:6,whiteSpace:"nowrap",background:"linear-gradient(180deg,rgba(32,38,76,0.98),rgba(20,26,58,0.97))",border:`1px solid ${color}66`,borderRadius:9,padding:"4px 9px",boxShadow:"0 6px 18px -6px rgba(0,0,0,0.6)",pointerEvents:"none",textAlign:"center"}}>
+        {sel&&<div key={selIdx} className="chart-tip" style={{position:"absolute",left:`${selLeft}%`,top:`${selTop}%`,transform:selBelow?"translate(-50%,12px)":"translate(-50%,calc(-100% - 12px))",zIndex:6,whiteSpace:"nowrap",background:T.tooltipBg,border:`1px solid ${color}66`,borderRadius:9,padding:"4px 9px",boxShadow:T.tooltipShadow,pointerEvents:"none",textAlign:"center"}}>
           <div style={{fontSize:T.fXS,color:T.lilac,fontWeight:700,letterSpacing:0.2}}>{sel.label}</div>
           <div style={{fontSize:T.fSM,color:"#fff",fontWeight:800,fontVariantNumeric:"tabular-nums",marginTop:1}}>{formatGrowthVal(sel[field])} {unit}{selRes&&selRes.percentile!=null?` · P${selRes.percentile}`:""}</div>
         </div>}
       </div>
       {monthTicks.length>0&&<div style={{position:"relative",height:13,marginTop:4}}>
-        {monthTicks.map(t=><span key={t.m} style={{position:"absolute",left:`${(x(t.m)/W)*100}%`,transform:"translateX(-50%)",fontSize:T.fXS,color:T.dim,fontWeight:600,letterSpacing:0.3}}>{t.label}</span>)}
+        {monthTicks.map(t=><span key={t.m} style={{position:"absolute",left:`${(x(t.m)/W)*100}%`,transform:"translateX(-50%)",fontSize:T.fXS,color:T.label,fontWeight:600,letterSpacing:0.3}}>{t.label}</span>)}
       </div>}
     </div>);
   }
@@ -200,7 +200,7 @@ function GrowthPage({entries,birthDate,profile,onBack,onAddEntry,onDeleteEntry})
 
   // v11.9.99: página virou overlay (padrão MilestonesPage/ProfilePage) — fixed, Starfield,
   // header com título gradiente + back 40pt, conteúdo em eyebrow cards (padrão Profile).
-  return(<div className="page-switch" style={{position:"fixed",inset:0,zIndex:200,maxWidth:480,margin:"0 auto",background:"radial-gradient(ellipse 140% 55% at 50% 100%, #1a1f52 0%, transparent 70%), radial-gradient(ellipse at 50% 0%, #10153d 0%, #070b1e 65%), #070b1e",overflowY:"auto",overflowX:"hidden",overscrollBehavior:"contain",WebkitOverflowScrolling:"touch",paddingTop:"env(safe-area-inset-top)",paddingBottom:"calc(100px + env(safe-area-inset-bottom))"}}>
+  return(<div className="page-switch" style={{position:"fixed",inset:0,zIndex:200,maxWidth:480,margin:"0 auto",background:T.pageBg,overflowY:"auto",overflowX:"hidden",overscrollBehavior:"contain",WebkitOverflowScrolling:"touch",paddingTop:"env(safe-area-inset-top)",paddingBottom:"calc(100px + env(safe-area-inset-bottom))"}}>
     <Starfield/>
     {/* Header */}
     <div style={{display:"flex",alignItems:"center",gap:12,padding:"16px 14px 14px 20px"}}>
@@ -213,7 +213,7 @@ function GrowthPage({entries,birthDate,profile,onBack,onAddEntry,onDeleteEntry})
     </div>
     <div style={{padding:"0 20px"}}>
 
-    {showForm&&<div style={{background:"linear-gradient(180deg,rgba(22,28,60,0.55),rgba(20,26,60,0.32))",border:`1px solid ${T.gBSoft}`,borderRadius:18,padding:"15px 16px",marginBottom:13,boxShadow:T.insetTop}}>
+    {showForm&&<div style={{background:"linear-gradient(180deg,rgba(22,28,60,0.55),rgba(20,26,60,0.32))",border:`1px solid ${T.gBSoft}`,borderRadius:18,padding:"15px 16px",marginBottom:13,boxShadow:T.cardShadowRaised}}>
       <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:13}}>
         <div style={{width:20,height:20,borderRadius:7,background:"rgba(163,230,53,0.12)",border:"1px solid rgba(163,230,53,0.25)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name="ruler" size={11} color="#a3e635"/></div>
         <span style={{fontSize:T.fXS,fontWeight:800,letterSpacing:1,textTransform:"uppercase",color:"#a3e635"}}>{isEdit?(_lang==="en"?"Edit measurement":"Editar medição"):(_lang==="en"?"New measurement":"Nova medição")}</span>
@@ -246,10 +246,18 @@ function GrowthPage({entries,birthDate,profile,onBack,onAddEntry,onDeleteEntry})
       {isEdit&&<button onClick={doDelete} style={{background:"transparent",border:"none",color:T.red,fontSize:T.fMD,fontWeight:600,padding:10,marginTop:8,width:"100%"}}>{_lang==="en"?"Delete this measurement":"Excluir esta medição"}</button>}
     </div>}
 
+    {/* v11.9.116: empty state dedicado — só GrowthPage não tinha (cenário mais provável
+        no 1º uso real: perfil sem dados de nascimento e zero medições). */}
+    {allPoints.length===0?<div style={{padding:"48px 24px 20px",textAlign:"center"}}>
+      <div style={{width:58,height:58,borderRadius:18,background:"rgba(163,230,53,0.1)",border:"1px solid rgba(163,230,53,0.22)",display:"inline-flex",alignItems:"center",justifyContent:"center",marginBottom:16}}><Icon name="ruler" size={26} color="#a3e635"/></div>
+      <div style={{fontSize:T.fLG,fontWeight:700,color:T.heading,letterSpacing:-0.2,marginBottom:6}}>{_lang==="en"?"No measurements yet":"Sem medições ainda"}</div>
+      <div style={{fontSize:T.fMD,color:T.sub,lineHeight:1.55,maxWidth:250,margin:"0 auto 18px"}}>{_lang==="en"?"Add the first measurement to see percentiles and growth curves.":"Adicione a primeira medição pra ver percentis e curvas de crescimento."}</div>
+      <button onClick={openNew} style={{padding:"12px 22px",borderRadius:12,background:"linear-gradient(135deg,#a3e635,#65a30d)",color:"#101604",fontSize:T.fMD,fontWeight:800,boxShadow:"0 4px 14px -4px rgba(163,230,53,0.4)"}}>{_lang==="en"?"Add first measurement":"Adicionar 1ª medição"}</button>
+    </div>:<>
     {/* Percentile cards */}
     <div style={{display:"flex",alignItems:"baseline",justifyContent:"space-between",marginBottom:10}}>
       <span style={{fontSize:T.fSM,fontWeight:800,color:T.accent,textTransform:"uppercase",letterSpacing:1}}>{_lang==="en"?"Current percentiles":"Percentis atuais"}</span>
-      {latest&&<span style={{fontSize:T.fXS,color:T.dim,fontWeight:700,fontVariantNumeric:"tabular-nums"}}>
+      {latest&&<span style={{fontSize:T.fXS,color:T.label,fontWeight:700,fontVariantNumeric:"tabular-nums"}}>
         {latest.isBirth?(_lang==="en"?"Birth data":L("birthData")):`${_lang==="en"?"Last":"Últ."}: ${latest.label}`} · {ageMonths.toFixed(1)} {_lang==="en"?"mo":"meses"}
       </span>}
     </div>
@@ -269,7 +277,7 @@ function GrowthPage({entries,birthDate,profile,onBack,onAddEntry,onDeleteEntry})
     {allPoints.length>0&&<><div style={{fontSize:T.fSM,fontWeight:800,color:T.accent,textTransform:"uppercase",letterSpacing:1,margin:"18px 0 10px"}}>{_lang==="en"?"History":"Histórico"}</div>
       {[...allPoints].reverse().map((p,i)=>{
         const clickable=!p.isBirth&&p.entryId;
-        const rowStyle={display:"flex",alignItems:"center",gap:12,padding:"11px 12px",marginBottom:6,background:"rgba(20,26,60,0.42)",borderRadius:12,border:`1px solid ${T.gBSoft}`,boxShadow:T.insetTop,width:"100%",textAlign:"left",cursor:clickable?"pointer":"default",opacity:p.isBirth?0.75:1};
+        const rowStyle={display:"flex",alignItems:"center",gap:12,padding:"11px 12px",marginBottom:6,background:"rgba(20,26,60,0.42)",borderRadius:12,border:`1px solid ${T.gBSoft}`,boxShadow:T.cardShadow,width:"100%",textAlign:"left",cursor:clickable?"pointer":"default",opacity:p.isBirth?0.75:1};
         const content=<>
           <span style={{fontSize:T.fSM,color:T.sub,minWidth:50,fontWeight:600}}>{p.label}</span>
           <div style={{flex:1,display:"flex",gap:10,fontSize:T.fMD,flexWrap:"wrap"}}>
@@ -283,9 +291,10 @@ function GrowthPage({entries,birthDate,profile,onBack,onAddEntry,onDeleteEntry})
       })}
     </>}
     {/* Source footer */}
-    <div style={{padding:"14px 0 20px",fontSize:T.fXS,color:T.dim,textAlign:"center",lineHeight:1.6}}>
+    <div style={{padding:"14px 0 20px",fontSize:T.fXS,color:T.label,textAlign:"center",lineHeight:1.6}}>
       {_lang==="en"?"WHO curves for girls 0-24mo. Dashed line = P50 (median). Band = P3-P97.":"Curvas OMS para meninas 0-24m. Linha tracejada = P50 (mediana). Faixa = P3-P97."}
     </div>
+    </>}
     </div>
   </div>);
 }

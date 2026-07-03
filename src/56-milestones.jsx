@@ -18,7 +18,7 @@ const MILESTONE_BADGES = [
 // Note: window.MILESTONES (sem DEV_) ja existe em curiosities.js — sao curiosidades
 // mensais (2-12m). Namespaces separados pra evitar collision.
 // Entries com type:"milestone" guardam: key (chave do DEV_MILESTONES), category, date, note.
-function MilestonesPage({entries,birthDate,profile,onBack,onAddEntry,onDeleteEntry}){
+const MilestonesPage = React.memo(function MilestonesPage({entries,birthDate,profile,onBack,onAddEntry,onDeleteEntry,lang}){
   const[confirmDelKey,setConfirmDelKey]=useState(null); // v11.9.65: 2-step inline delete (substitui confirm() nativo)
   const all=window.DEV_MILESTONES||[];
   const allSigns=window.CONCERNING_SIGNS||[];
@@ -95,10 +95,10 @@ function MilestonesPage({entries,birthDate,profile,onBack,onAddEntry,onDeleteEnt
     }catch(e){Haptic.warning()}
     setBusy(false);
   };
-  return(<div style={{position:"fixed",inset:0,zIndex:200,maxWidth:480,margin:"0 auto",background:"radial-gradient(ellipse 140% 55% at 50% 100%, #1a1f52 0%, transparent 70%), radial-gradient(ellipse at 50% 0%, #10153d 0%, #070b1e 65%), #070b1e",overflowY:"auto",overflowX:"hidden",overscrollBehavior:"contain",WebkitOverflowScrolling:"touch",paddingTop:"env(safe-area-inset-top)",paddingBottom:"calc(100px + env(safe-area-inset-bottom))"}}>
+  return(<div className="page-switch" style={{position:"fixed",inset:0,zIndex:200,maxWidth:480,margin:"0 auto",background:T.pageBg,overflowY:"auto",overflowX:"hidden",overscrollBehavior:"contain",WebkitOverflowScrolling:"touch",paddingTop:"env(safe-area-inset-top)",paddingBottom:"calc(100px + env(safe-area-inset-bottom))"}}>
     {/* Header */}
     <div style={{display:"flex",alignItems:"center",gap:10,padding:"16px 14px 14px 20px"}}>
-      <button aria-label={_lang==="en"?"Back":"Voltar"} onClick={onBack} style={{width:36,height:36,borderRadius:10,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name="back" size={18} color={T.sub}/></button>
+      <button className="hit44" aria-label={_lang==="en"?"Back":"Voltar"} onClick={onBack} style={{width:36,height:36,borderRadius:10,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name="back" size={18} color={T.sub}/></button>
       <div style={{flex:1,minWidth:0}}>
         <div style={{fontSize:T.fXL,fontWeight:800,letterSpacing:-0.2}}>{L("milestonesTitle")}</div>
         <div style={{fontSize:T.fSM,color:T.sub,marginTop:1,fontVariantNumeric:"tabular-nums"}}>{milestoneEntries.length} {L("milestonesDone")} · {ageMonths}m</div>
@@ -239,7 +239,7 @@ function MilestonesPage({entries,birthDate,profile,onBack,onAddEntry,onDeleteEnt
       </div>
     </div>}
   </div>);
-}
+});
 
 // Starfield gerado 1x por sessão (dados aleatórios mas estáveis enquanto o app tá aberto).
 // Extraído pra cá + React.memo pra nunca re-renderizar junto com o App. v10.5.3.

@@ -16,10 +16,10 @@ function InboxPanel({inbox,onClose,onMarkRead,onMarkAllRead,lang,isRead}){
     const h=Math.floor(diff/60),m=diff%60;
     return m>0?`${h}h${m}m`:`${h}h`;
   };
-  return(<div style={{position:"fixed",inset:0,zIndex:210,maxWidth:480,margin:"0 auto",background:"linear-gradient(180deg,rgba(7,11,30,0.99),rgba(5,8,24,0.98))",backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",display:"flex",flexDirection:"column",paddingTop:"env(safe-area-inset-top)",paddingBottom:"env(safe-area-inset-bottom)",animation:"fadeIn .25s ease"}}>
+  return(<div className="page-switch" style={{position:"fixed",inset:0,zIndex:210,maxWidth:480,margin:"0 auto",background:"linear-gradient(180deg,rgba(7,11,30,0.99),rgba(5,8,24,0.98))",backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",display:"flex",flexDirection:"column",paddingTop:"env(safe-area-inset-top)",paddingBottom:"env(safe-area-inset-bottom)"}}>
     {/* Header */}
     <div style={{display:"flex",alignItems:"center",gap:14,padding:"22px 22px 18px",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
-      <div style={{width:42,height:42,borderRadius:13,background:"linear-gradient(135deg,rgba(139,124,246,0.25),rgba(139,124,246,0.08))",border:"1px solid rgba(139,124,246,0.35)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset"}}>
+      <div style={{width:42,height:42,borderRadius:13,display:"flex",alignItems:"center",justifyContent:"center",...T.iconTile(T.accent)}}>
         <Icon name="bell" size={20} color="#c4b5fd"/>
       </div>
       <div style={{flex:1}}>
@@ -61,7 +61,7 @@ function InboxPanel({inbox,onClose,onMarkRead,onMarkAllRead,lang,isRead}){
         const colLight=it.type==="good"?"#6ee7b7":it.type==="warn"?"#fdba74":it.type==="curiosity"?"#c4b5fd":"#7dd3fc";
         return(<button key={it.key} onClick={()=>unread&&onMarkRead(it.key)} style={{position:"relative",display:"flex",alignItems:"flex-start",gap:13,padding:"16px 22px 16px 26px",margin:"0 18px 8px",borderRadius:18,background:unread?`linear-gradient(180deg,${col}1a,${col}05)`:"rgba(22,28,60,0.35)",border:`1px solid ${unread?col+"38":T.gBSoft}`,boxShadow:unread?`0 1px 0 0 rgba(255,255,255,0.06) inset, 0 6px 16px -8px ${col}25`:T.insetTop,overflow:"hidden",width:"calc(100% - 36px)",textAlign:"left",cursor:unread?"pointer":"default"}}>
           <div style={{position:"absolute",left:0,top:0,bottom:0,width:4,background:`linear-gradient(180deg,${col},${col}40)`,borderRadius:"0 2px 2px 0",pointerEvents:"none",opacity:unread?1:0.4}}/>
-          <div style={{width:38,height:38,borderRadius:12,background:`linear-gradient(135deg,${col}40,${col}10)`,border:`1px solid ${col}50`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,opacity:unread?1:0.5,boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset"}}>
+          <div style={{width:38,height:38,borderRadius:12,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,opacity:unread?1:0.5,...T.iconTile(col)}}>
             <Icon name={ic} size={17} color={colLight}/>
           </div>
           <div style={{flex:1,minWidth:0}}>

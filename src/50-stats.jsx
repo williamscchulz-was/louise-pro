@@ -5,7 +5,7 @@ const StatsPage = React.memo(function StatsPage({entries,onGrowth,onBehavior}){
   // toque (bem maior que o tracinho fino), e o pill flutua acima da barra selecionada.
   const[selBar,setSelBar]=useState(null);
   const tapBar=k=>setSelBar(p=>p===k?null:k);
-  const dayPill=(d,val)=>(<div style={{position:"absolute",bottom:"100%",left:"50%",transform:"translateX(-50%)",marginBottom:6,zIndex:6,whiteSpace:"nowrap",background:"linear-gradient(180deg,rgba(32,38,76,0.98),rgba(20,26,58,0.97))",border:`1px solid ${T.accent}66`,borderRadius:9,padding:"4px 9px",boxShadow:"0 6px 18px -6px rgba(0,0,0,0.6)",pointerEvents:"none",textAlign:"center"}}><div style={{fontSize:T.fXS,color:T.lilac,fontWeight:700,letterSpacing:0.2}}>{new Date(d.date+"T12:00").toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{weekday:"short",day:"numeric",month:"numeric"}).replace(/\./g,"")}</div><div style={{fontSize:T.fSM,color:"#fff",fontWeight:800,fontVariantNumeric:"tabular-nums",marginTop:1}}>{val}</div></div>);
+  const dayPill=(d,val)=>(<div className="chart-tip" style={{position:"absolute",bottom:"100%",left:"50%",transform:"translateX(-50%)",marginBottom:6,zIndex:6,whiteSpace:"nowrap",background:T.tooltipBg,border:`1px solid ${T.accent}66`,borderRadius:9,padding:"4px 9px",boxShadow:T.tooltipShadow,pointerEvents:"none",textAlign:"center"}}><div style={{fontSize:T.fXS,color:T.lilac,fontWeight:700,letterSpacing:0.2}}>{new Date(d.date+"T12:00").toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{weekday:"short",day:"numeric",month:"numeric"}).replace(/\./g,"")}</div><div style={{fontSize:T.fSM,color:"#fff",fontWeight:800,fontVariantNumeric:"tabular-nums",marginTop:1}}>{val}</div></div>);
   const today=todayStr();
   // Build the day window:
   // - For numeric periods (7/14/30): N complete past days (yesterday → N days ago) + today as bonus
@@ -103,7 +103,7 @@ const StatsPage = React.memo(function StatsPage({entries,onGrowth,onBehavior}){
     ?(_lang==="en"?"Today only · still in progress":"Apenas hoje · ainda em curso")
     :(_lang==="en"?`Last ${numComplete} complete day${numComplete>1?"s":""}`:`Últimos ${numComplete} ${numComplete>1?"dias completos":"dia completo"}`);
   const exportCSV=()=>{const h=(_lang==="en"?"Date,Time,Type,Detail,Notes":"Data,Hora,Tipo,Detalhe,Notas")+"\n";const rows=entries.map(e=>{let d="";if(e.ml)d=`${e.ml}ml`;else if(e.durationMin)d=fmtDur(e.durationMin);else if(e.name)d=e.name;else if(e.value)d=`${e.value}°C`;else if(e.subtype)d=L(e.subtype)||e.subtype;return`${e.date},${e.time},${TL(e.type)||e.type},${d},${e.notes||""}`}).join("\n");const blob=new Blob([h+rows],{type:"text/csv"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=`louise-pro-${todayStr()}.csv`;a.click();URL.revokeObjectURL(url)};
-  const TrendBadge=({val})=>val===0?null:<div style={{display:"flex",alignItems:"center",gap:3,marginTop:4}}><Icon name={val>0?"arrowUp":"arrowDown"} size={10} color={val>0?T.green:T.orange}/><span style={{fontSize:T.fXS,fontWeight:600,color:val>0?T.green:T.orange}}>{val>0?"+":""}{val}%</span><span style={{fontSize:T.fXS,color:T.dim}}>vs {_lang==="en"?"prev":"ant"}</span></div>;
+  const TrendBadge=({val})=>val===0?null:<div style={{display:"flex",alignItems:"center",gap:3,marginTop:4}}><Icon name={val>0?"arrowUp":"arrowDown"} size={10} color={val>0?T.green:T.orange}/><span style={{fontSize:T.fXS,fontWeight:600,color:val>0?T.green:T.orange}}>{val>0?"+":""}{val}%</span><span style={{fontSize:T.fXS,color:T.label}}>vs {_lang==="en"?"prev":"ant"}</span></div>;
   // v11.9.108: boletim da semana (1 frase). Sem useMemo de propósito — StatsPage é memo e
   // lê _lang (global), então useMemo[entries] congelaria o idioma; recalcular é barato.
   const headline=weeklyHeadline(entries,_lang);
@@ -114,7 +114,7 @@ const StatsPage = React.memo(function StatsPage({entries,onGrowth,onBehavior}){
         <h2 style={{fontSize:T.fXL,fontWeight:700,margin:0}}>{L("summary")}</h2>
       </div>
       <div style={{padding:"60px 24px 20px",textAlign:"center"}}>
-        <div style={{width:58,height:58,borderRadius:18,background:"rgba(139,124,246,0.08)",border:"1px solid rgba(139,124,246,0.15)",display:"inline-flex",alignItems:"center",justifyContent:"center",marginBottom:16,color:"rgba(196,181,253,0.5)"}}><Icon name="chart" size={26} color="rgba(196,181,253,0.5)"/></div>
+        <div style={{width:58,height:58,borderRadius:18,background:`${T.lilac}14`,border:`1px solid ${T.lilac}26`,display:"inline-flex",alignItems:"center",justifyContent:"center",marginBottom:16,color:T.lilac}}><Icon name="chart" size={26} color={T.lilac}/></div>
         <div style={{fontSize:T.fLG,fontWeight:700,color:T.heading,letterSpacing:-0.2,marginBottom:6}}>{_lang==="en"?"Not enough data yet":"Sem dados suficientes"}</div>
         <div style={{fontSize:T.fMD,color:T.sub,lineHeight:1.55,maxWidth:260,margin:"0 auto"}}>{_lang==="en"?"Log some events over a few days and patterns will appear here — averages, trends, growth curves.":"Registre alguns eventos nos próximos dias e os padrões aparecem aqui — médias, tendências, curvas de crescimento."}</div>
       </div>
@@ -129,7 +129,7 @@ const StatsPage = React.memo(function StatsPage({entries,onGrowth,onBehavior}){
         <button onClick={exportCSV} style={{display:"flex",alignItems:"center",gap:4,padding:"6px 10px",borderRadius:8,background:"rgba(22,28,60,0.6)",border:`1px solid ${T.gB}`,fontSize:T.fSM,fontWeight:600,color:T.sub}}>CSV</button>
       </div>
     </div>
-    {headline&&<div style={{display:"flex",gap:11,alignItems:"center",padding:"13px 15px",borderRadius:16,marginBottom:10,background:"linear-gradient(180deg,rgba(139,124,246,0.12),rgba(139,124,246,0.045))",border:`1px solid ${T.accent}28`}}>
+    {headline&&<div style={{display:"flex",gap:11,alignItems:"center",padding:"13px 15px",borderRadius:16,marginBottom:14,background:"linear-gradient(180deg,rgba(139,124,246,0.12),rgba(139,124,246,0.045))",border:`1px solid ${T.accent}28`,boxShadow:T.cardShadowRaised}}>
       <div style={{flexShrink:0,width:34,height:34,borderRadius:11,background:headline.tone==="up"?"rgba(163,230,53,0.14)":headline.tone==="down"?"rgba(251,146,60,0.14)":"rgba(139,124,246,0.14)",display:"flex",alignItems:"center",justifyContent:"center"}}>
         <Icon name={headline.icon} size={17} color={headline.tone==="up"?T.green:headline.tone==="down"?T.orange:T.lilac}/>
       </div>
@@ -156,27 +156,27 @@ const StatsPage = React.memo(function StatsPage({entries,onGrowth,onBehavior}){
         <div style={{fontSize:T.f2XL,fontWeight:800,color:T.purple}}>{fmtDur(avgSl)}</div>
         <TrendBadge val={trendSl}/>
         {avgAwake>0&&<div style={{marginTop:8,paddingTop:6,borderTop:`1px solid ${T.purple}15`,display:"flex",flexDirection:"column",gap:3}}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline"}}><span style={{fontSize:T.fXS,color:T.dim}}>{_lang==="en"?"In bed":"Na cama"}</span><span style={{fontSize:T.fSM,fontWeight:600,color:T.sub,fontVariantNumeric:"tabular-nums"}}>{fmtDur(avgBed)}</span></div>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline"}}><span style={{fontSize:T.fXS,color:T.dim}}>{_lang==="en"?"Awake":"Acordada"}</span><span style={{fontSize:T.fSM,fontWeight:600,color:"#60a5fa",fontVariantNumeric:"tabular-nums"}}>{fmtDur(avgAwake)}{avgWakings>0?` · ${avgWakings}x`:""}</span></div>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline"}}><span style={{fontSize:T.fXS,color:T.label}}>{_lang==="en"?"In bed":"Na cama"}</span><span style={{fontSize:T.fSM,fontWeight:600,color:T.text,fontVariantNumeric:"tabular-nums"}}>{fmtDur(avgBed)}</span></div>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline"}}><span style={{fontSize:T.fXS,color:T.label}}>{_lang==="en"?"Awake":"Acordada"}</span><span style={{fontSize:T.fSM,fontWeight:600,color:"#60a5fa",fontVariantNumeric:"tabular-nums"}}>{fmtDur(avgAwake)}{avgWakings>0?` · ${avgWakings}x`:""}</span></div>
         </div>}
       </div>
     </div>
     <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)",gap:8,marginBottom:16}}>
-      <div style={{background:"rgba(20,26,60,0.5)",borderRadius:20,border:`1px solid ${T.gBSoft}`,padding:"14px 8px 12px",textAlign:"center",boxShadow:T.insetTop}}>
+      <div style={{background:"rgba(20,26,60,0.5)",borderRadius:20,border:`1px solid ${T.gBSoft}`,padding:"14px 8px 12px",textAlign:"center",boxShadow:T.cardShadow}}>
         <div style={{fontSize:T.fXS,color:T.label,letterSpacing:-0.05,marginBottom:6,fontWeight:600}}>{_lang==="en"?"Diapers/day":"Fraldas/dia"}</div>
         <div style={{fontSize:T.f2XL,fontWeight:800,color:T.pink,letterSpacing:-0.8,fontVariantNumeric:"tabular-nums",lineHeight:1}}>{avgDiapers}</div>
-        <div style={{fontSize:T.fXS,color:T.dim,marginTop:5,fontVariantNumeric:"tabular-nums",letterSpacing:0.2}}>💧 {avgWet} · 💩 {avgPoop}</div>
+        <div style={{fontSize:T.fXS,color:T.label,marginTop:5,fontVariantNumeric:"tabular-nums",letterSpacing:0.2}}>💧 {avgWet} · 💩 {avgPoop}</div>
       </div>
-      <div style={{background:"rgba(20,26,60,0.5)",borderRadius:20,border:`1px solid ${T.gBSoft}`,padding:"14px 8px 12px",textAlign:"center",boxShadow:T.insetTop}}>
+      <div style={{background:"rgba(20,26,60,0.5)",borderRadius:20,border:`1px solid ${T.gBSoft}`,padding:"14px 8px 12px",textAlign:"center",boxShadow:T.cardShadow}}>
         <div style={{fontSize:T.fXS,color:T.label,letterSpacing:-0.05,marginBottom:6,fontWeight:600}}>{_lang==="en"?"Feeds/day":"Mamadas/dia"}</div>
         <div style={{fontSize:T.f2XL,fontWeight:800,color:T.blue,letterSpacing:-0.8,fontVariantNumeric:"tabular-nums",lineHeight:1}}>{avgFeedings}</div>
         {/* v11.9.20: ml/feed médio + intervalo */}
-        <div style={{fontSize:T.fXS,color:T.dim,marginTop:5,fontVariantNumeric:"tabular-nums",letterSpacing:0.2}}>{avgFeedings>0&&avgMl>0?`${Math.round(avgMl/avgFeedings)}ml · ~${Math.round(24/avgFeedings*10)/10}h`:(avgFeedings>0?`~${Math.round(24/avgFeedings*10)/10}h`:"")}</div>
+        <div style={{fontSize:T.fXS,color:T.label,marginTop:5,fontVariantNumeric:"tabular-nums",letterSpacing:0.2}}>{avgFeedings>0&&avgMl>0?`${Math.round(avgMl/avgFeedings)}ml · ~${Math.round(24/avgFeedings*10)/10}h`:(avgFeedings>0?`~${Math.round(24/avgFeedings*10)/10}h`:"")}</div>
       </div>
-      <div style={{background:"rgba(20,26,60,0.5)",borderRadius:20,border:`1px solid ${T.gBSoft}`,padding:"14px 8px 12px",textAlign:"center",boxShadow:T.insetTop}}>
+      <div style={{background:"rgba(20,26,60,0.5)",borderRadius:20,border:`1px solid ${T.gBSoft}`,padding:"14px 8px 12px",textAlign:"center",boxShadow:T.cardShadow}}>
         <div style={{fontSize:T.fXS,color:T.label,letterSpacing:-0.05,marginBottom:6,fontWeight:600}}>{_lang==="en"?"Naps/day":"Sonecas/dia"}</div>
         <div style={{fontSize:T.f2XL,fontWeight:800,color:T.accent,letterSpacing:-0.8,fontVariantNumeric:"tabular-nums",lineHeight:1}}>{avgNaps}</div>
-        <div style={{fontSize:T.fXS,color:T.dim,marginTop:5,fontVariantNumeric:"tabular-nums",letterSpacing:0.2}}>{avgNapDur>0?`~${fmtDur(avgNapDur)}${_lang==="en"?"/nap":"/soneca"}`:""}</div>
+        <div style={{fontSize:T.fXS,color:T.label,marginTop:5,fontVariantNumeric:"tabular-nums",letterSpacing:0.2}}>{avgNapDur>0?`~${fmtDur(avgNapDur)}${_lang==="en"?"/nap":"/soneca"}`:""}</div>
       </div>
     </div>
     {[{t:_lang==="en"?"Milk (ml)":"Leite (ml)",f:"ml",max:mxMl,c:T.green,stacked:false},{t:_lang==="en"?"Sleep · real + awake":"Sono · real + acordada",f:"sl",max:mxSl,c:T.purple,stacked:true},{t:_lang==="en"?"Naps duration":"Sonecas — duração",f:"napTotalMin",max:Math.max(...data.map(d=>d.napTotalMin),1),c:T.accent,stacked:false,fmt:"dur"},{t:_lang==="en"?"Poop/day":"Cocô/dia",f:"poopCount",max:mxPoop,c:"#a16b4a",stacked:false}].map(ch=>(
@@ -350,7 +350,7 @@ const StatsPage = React.memo(function StatsPage({entries,onGrowth,onBehavior}){
           {validBuckets.map((b,i)=><span key={i} style={{flex:1,textAlign:"center",fontSize:T.fXS,color:i===validBuckets.length-1?T.accent:T.dim,fontWeight:700,letterSpacing:0.4}}>{b.shortLabel}</span>)}
         </div></>);
       };
-      const cardStyle={background:"linear-gradient(180deg,rgba(22,28,60,0.6),rgba(20,26,60,0.45))",border:`1px solid ${T.gBSoft}`,borderRadius:14,padding:"12px 14px 12px",marginBottom:8,boxShadow:T.insetTop};
+      const cardStyle={background:"linear-gradient(180deg,rgba(22,28,60,0.6),rgba(20,26,60,0.45))",border:`1px solid ${T.gBSoft}`,borderRadius:14,padding:"12px 14px 12px",marginBottom:8,boxShadow:T.cardShadow};
       const topRow=(ic,col,lab,val,trend)=><div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
         <div style={{width:24,height:24,borderRadius:8,background:`${col}1a`,border:`1px solid ${col}33`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name={ic} size={12} color={col}/></div>
         <span style={{fontSize:T.fSM,color:T.dim,textTransform:"uppercase",letterSpacing:0.4,fontWeight:700}}>{lab}</span>
@@ -388,7 +388,7 @@ const StatsPage = React.memo(function StatsPage({entries,onGrowth,onBehavior}){
         <div style={{display:"flex",alignItems:"center",gap:8,padding:"6px 4px 4px",borderTop:`1px solid ${T.gBSoft}`,paddingTop:18}}>
           <h2 style={{fontSize:T.fLG,fontWeight:800,margin:0,letterSpacing:-0.3}}>{_lang==="en"?"Weekly report":"Relatório semanal"}</h2>
           <span style={{fontSize:T.fSM,color:T.dim,fontWeight:600,letterSpacing:0.3}}>{validBuckets.length} {_lang==="en"?"weeks":"semanas"}</span>
-          <button aria-label={_lang==="en"?"Share this week":"Compartilhar semana"} onClick={onShare} style={{marginLeft:"auto",width:32,height:32,borderRadius:10,background:"rgba(139,124,246,0.12)",border:"1px solid rgba(139,124,246,0.28)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+          <button className="hit44" aria-label={_lang==="en"?"Share this week":"Compartilhar semana"} onClick={onShare} style={{marginLeft:"auto",width:32,height:32,borderRadius:10,background:"rgba(139,124,246,0.12)",border:"1px solid rgba(139,124,246,0.28)",display:"flex",alignItems:"center",justifyContent:"center"}}>
             <Icon name="share" size={14} color={T.accent}/>
           </button>
         </div>

@@ -160,10 +160,10 @@ function AddForm({type,onSave,onSaveBatch,savedMeds,onSaveMeds,editEntry,lastBot
         <div style={{display:"flex",flexWrap:"wrap",gap:8,marginBottom:18}}>
           {savedMeds.map((m,i)=><button key={i} onClick={()=>{setMedN(m.name);setMedD(m.dose||"");setShowML(false)}} style={{flex:"1 1 calc(50% - 4px)",padding:"10px 14px",borderRadius:12,background:medN===m.name?`${T.amber}20`:T.glass,border:`1px solid ${medN===m.name?`${T.amber}55`:T.gB}`,textAlign:"left",boxShadow:medN===m.name?`0 0 12px ${T.amber}15`:"none"}}>
             <div style={{fontSize:T.fMD,fontWeight:700,color:medN===m.name?T.amber:T.text}}>{m.name}</div>
-            {m.dose&&<div style={{fontSize:T.fSM,color:medN===m.name?T.amber:T.dim,opacity:0.7,marginTop:2}}>{m.dose}</div>}
+            {m.dose&&<div style={{fontSize:T.fSM,color:medN===m.name?T.amber:T.label,marginTop:2}}>{m.dose}</div>}
           </button>)}
           <button onClick={()=>{setMedN("");setMedD("");setShowML(true)}} style={{flex:"1 1 calc(50% - 4px)",padding:"10px 14px",borderRadius:12,background:showML?`${T.amber}20`:"transparent",border:`1px dashed ${showML?`${T.amber}55`:T.gB}`,display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
-            <Icon name="plus" size={14} color={T.dim}/><span style={{fontSize:T.fMD,fontWeight:600,color:T.dim}}>{_lang==="en"?"Other":"Outro"}</span>
+            <Icon name="plus" size={14} color={T.label}/><span style={{fontSize:T.fMD,fontWeight:600,color:T.label}}>{_lang==="en"?"Other":"Outro"}</span>
           </button>
         </div>
         {showML&&<><Fld label={L("name")}><input type="text" placeholder={L("name")} value={medN} onChange={e=>setMedN(e.target.value)} style={inp}/></Fld>
@@ -171,14 +171,14 @@ function AddForm({type,onSave,onSaveBatch,savedMeds,onSaveMeds,editEntry,lastBot
       </>}
       {type==="medicine"&&!isEdit&&<>
         {/* v11.8.0: multi-select chips. Meds sem dose mostram gota e abrem picker no save. */}
-        <div style={{fontSize:T.fSM,fontWeight:700,color:T.dim,letterSpacing:0.4,margin:"0 0 8px 4px",textTransform:"uppercase"}}>{_lang==="en"?"Select (1 or more)":"Selecione (1 ou mais)"}</div>
+        <div style={{fontSize:T.fSM,fontWeight:700,color:T.label,letterSpacing:0.4,margin:"0 0 8px 4px",textTransform:"uppercase"}}>{_lang==="en"?"Select (1 or more)":"Selecione (1 ou mais)"}</div>
         <div style={{display:"flex",flexWrap:"wrap",gap:8,marginBottom:14}}>
           {savedMeds.map((m,i)=>{
             const asks=!m.dose||!m.dose.trim();
             const on=selectedMeds.has(m.name);
             return(<button key={i} onClick={()=>toggleMed(m.name)} onPointerDown={()=>startMedPress(m)} onPointerUp={endMedPress} onPointerCancel={endMedPress} onPointerMove={endMedPress} style={{flex:"1 1 calc(50% - 4px)",padding:"10px 30px 10px 14px",borderRadius:12,position:"relative",background:on?`${T.amber}24`:T.glass,border:`1px solid ${on?`${T.amber}88`:T.gB}`,textAlign:"left",boxShadow:on?`0 0 12px ${T.amber}15`:"none",transition:"all .2s"}}>
               <div style={{fontSize:T.fMD,fontWeight:700,color:on?T.amber:T.text,letterSpacing:-0.1}}>{m.name}</div>
-              <div style={{fontSize:T.fSM,color:on?`${T.amber}cc`:T.dim,marginTop:2,opacity:asks?0.85:0.7,fontStyle:asks?"italic":"normal"}}>
+              <div style={{fontSize:T.fSM,color:on?`${T.amber}cc`:T.label,marginTop:2,fontStyle:asks?"italic":"normal"}}>
                 {asks?(_lang==="en"?"asks drops on save":"pergunta ao salvar"):m.dose}
               </div>
               {asks&&<span style={{position:"absolute",top:6,right:28,fontSize:T.fSM,opacity:on?0.95:0.5}}>{"\uD83D\uDCA7"}</span>}
@@ -186,7 +186,7 @@ function AddForm({type,onSave,onSaveBatch,savedMeds,onSaveMeds,editEntry,lastBot
             </button>);
           })}
           <button onClick={()=>{setMedN("");setMedD("");setEditingMedName(null);setShowML(v=>!v)}} style={{flex:"1 1 calc(50% - 4px)",padding:"10px 14px",borderRadius:12,background:showML&&!editingMedName?`${T.amber}14`:"transparent",border:`1px dashed ${showML&&!editingMedName?`${T.amber}55`:T.gB}`,display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
-            <Icon name="plus" size={14} color={T.dim}/><span style={{fontSize:T.fMD,fontWeight:600,color:T.dim}}>{_lang==="en"?"Other":"Outro"}</span>
+            <Icon name="plus" size={14} color={T.label}/><span style={{fontSize:T.fMD,fontWeight:600,color:T.label}}>{_lang==="en"?"Other":"Outro"}</span>
           </button>
         </div>
         {showML&&<div style={{padding:12,borderRadius:12,background:"rgba(20,26,60,0.4)",border:`1px solid ${T.gBSoft}`,marginBottom:12}}>

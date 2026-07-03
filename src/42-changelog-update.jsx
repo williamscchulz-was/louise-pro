@@ -32,7 +32,7 @@ function ChangelogModal({onClose,lang}){
     <div onClick={e=>e.stopPropagation()} style={{background:T.bg1,borderRadius:20,border:"1px solid rgba(139,124,246,0.25)",boxShadow:"0 20px 60px rgba(0,0,0,0.6)",display:"flex",flexDirection:"column",width:"100%",maxWidth:460,maxHeight:"100%",overflow:"hidden"}}>
       {/* Header */}
       <div style={{padding:"16px 18px",borderBottom:"1px solid rgba(139,124,246,0.12)",display:"flex",alignItems:"center",gap:12,background:"linear-gradient(180deg,rgba(139,124,246,0.08),transparent)",flexShrink:0}}>
-        <div style={{width:38,height:38,borderRadius:11,background:"linear-gradient(135deg,rgba(139,124,246,0.25),rgba(124,58,237,0.15))",border:"1px solid rgba(139,124,246,0.3)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+        <div style={{width:38,height:38,borderRadius:11,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,...T.iconTile(T.accent)}}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c4b5fd" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/></svg>
         </div>
         <div style={{flex:1,minWidth:0}}>
@@ -63,7 +63,7 @@ function ChangelogModal({onClose,lang}){
 }
 
 function UpdateToast({fromVersion,toVersion,onView,onDismiss,lang}){
-  return(<div style={{position:"fixed",top:"calc(14px + env(safe-area-inset-top))",left:14,right:14,maxWidth:460,margin:"0 auto",padding:"18px 20px",borderRadius:20,background:"linear-gradient(180deg,rgba(155,141,248,0.96),rgba(124,58,237,0.94))",backdropFilter:"blur(24px)",WebkitBackdropFilter:"blur(24px)",border:"1px solid rgba(255,255,255,0.18)",boxShadow:"0 1px 0 0 rgba(255,255,255,0.25) inset, 0 0 0 1px rgba(255,255,255,0.06), 0 16px 48px -8px rgba(139,124,246,0.5)",display:"flex",alignItems:"flex-start",gap:14,color:"#fff",zIndex:150,animation:"toastSlideDown .4s ease",overflow:"hidden"}}>
+  return(<div style={{position:"fixed",top:"calc(14px + env(safe-area-inset-top))",left:14,right:14,maxWidth:460,margin:"0 auto",padding:"18px 20px",borderRadius:20,background:"linear-gradient(180deg,rgba(155,141,248,0.96),rgba(124,58,237,0.94))",backdropFilter:"blur(18px)",WebkitBackdropFilter:"blur(18px)",border:"1px solid rgba(255,255,255,0.18)",boxShadow:"0 1px 0 0 rgba(255,255,255,0.25) inset, 0 0 0 1px rgba(255,255,255,0.06), 0 16px 48px -8px rgba(139,124,246,0.5)",display:"flex",alignItems:"flex-start",gap:14,color:"#fff",zIndex:150,animation:"toastSlideDown .35s cubic-bezier(0.22,1,0.36,1)",overflow:"hidden"}}>
     <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse at 50% 0%,rgba(255,255,255,0.12),transparent 60%)",pointerEvents:"none"}}/>
     <div style={{position:"relative",width:42,height:42,borderRadius:13,background:"linear-gradient(135deg,rgba(255,255,255,0.28),rgba(255,255,255,0.12))",border:"1px solid rgba(255,255,255,0.3)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,boxShadow:"0 1px 0 0 rgba(255,255,255,0.3) inset"}}>
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>

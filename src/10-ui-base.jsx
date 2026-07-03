@@ -61,7 +61,30 @@ function Icon({name,size=20,color="currentColor",fill="none"}){
 //   T.f2XL=22 (display sm)                        — absorveu 20, 22
 //   T.f3XL=28 (display)                           — absorveu 26, 28
 // Sobram inline apenas hero displays raros (34, 36, 52) — 5 ocorrências total.
-const T={bg1:"#070b1e",bg2:"#0d1133",bg3:"#141a42",glass:"rgba(22,28,60,0.6)",gB:"rgba(90,100,180,0.12)",gBSoft:"rgba(255,255,255,0.06)",insetTop:"0 1px 0 0 rgba(255,255,255,0.04) inset",insetTopStrong:"0 1px 0 0 rgba(255,255,255,0.08) inset",text:"#e4e6f5",sub:"#a3aac8",dim:"#555a80",accent:"#8b7cf6",green:"#34d399",greenS:"rgba(52,211,153,0.1)",purple:"#a78bfa",purpleS:"rgba(167,139,250,0.1)",pink:"#f472b6",pinkS:"rgba(244,114,182,0.1)",amber:"#fbbf24",amberS:"rgba(251,191,36,0.1)",orange:"#fb923c",orangeS:"rgba(251,146,60,0.1)",blue:"#38bdf8",blueS:"rgba(56,189,248,0.12)",red:"#f87171",redS:"rgba(248,113,113,0.1)",cyan:"#22d3ee",cyanS:"rgba(34,211,238,0.1)",heading:"#f0f2ff",label:"#7a80a8",lilac:"#c4b5fd",fXS:9,fSM:11,fMD:13,fLG:15,fXL:17,f2XL:22,f3XL:28};
+const T={bg1:"#070b1e",bg2:"#0d1133",bg3:"#141a42",glass:"rgba(22,28,60,0.6)",gB:"rgba(90,100,180,0.12)",gBSoft:"rgba(255,255,255,0.06)",insetTop:"0 1px 0 0 rgba(255,255,255,0.04) inset",insetTopStrong:"0 1px 0 0 rgba(255,255,255,0.08) inset",text:"#e4e6f5",sub:"#a3aac8",dim:"#555a80",accent:"#8b7cf6",green:"#34d399",greenS:"rgba(52,211,153,0.1)",purple:"#a78bfa",purpleS:"rgba(167,139,250,0.1)",pink:"#f472b6",pinkS:"rgba(244,114,182,0.1)",amber:"#fbbf24",amberS:"rgba(251,191,36,0.1)",orange:"#fb923c",orangeS:"rgba(251,146,60,0.1)",blue:"#38bdf8",blueS:"rgba(56,189,248,0.12)",red:"#f87171",redS:"rgba(248,113,113,0.1)",cyan:"#22d3ee",cyanS:"rgba(34,211,238,0.1)",heading:"#f0f2ff",label:"#7a80a8",lilac:"#c4b5fd",fXS:9,fSM:11,fMD:13,fLG:15,fXL:17,f2XL:22,f3XL:28,
+  // v11.9.116 (auditoria de design): escala fechada de borderRadius — 20 valores soltos
+  // no codebase faziam o papel de 5. Mesma filosofia da escala T.f* (7 níveis, "não cresce").
+  rXS:8,rSM:9,rMD:12,rLG:18,rXL:22,
+  // Elevação real (sombra externa sutil) pros cards de conteúdo — T.insetTop sozinho é só
+  // um brilho de 1px na borda, não separa o card do fundo estrelado. box-shadow puro
+  // (sem backdrop-filter) = custo zero adicional em iPhone.
+  cardShadow:"0 1px 0 0 rgba(255,255,255,0.05) inset, 0 6px 20px -12px rgba(0,0,0,0.45)",
+  cardShadowRaised:"0 1px 0 0 rgba(255,255,255,0.06) inset, 0 10px 28px -14px rgba(0,0,0,0.55)",
+  // Fundo compartilhado das 4 páginas full-screen (Growth/Behavior/Profile/Milestones) —
+  // era string idêntica duplicada 4x.
+  pageBg:"radial-gradient(ellipse 140% 55% at 50% 100%, #1a1f52 0%, transparent 70%), radial-gradient(ellipse at 50% 0%, #10153d 0%, #070b1e 65%), #070b1e",
+  // Balão de tooltip dos gráficos (Growth/Behavior/Stats dayPill) — 3ª duplicata do mesmo par bg+shadow.
+  tooltipBg:"linear-gradient(180deg,rgba(32,38,76,0.98),rgba(20,26,58,0.97))",
+  tooltipShadow:"0 6px 18px -6px rgba(0,0,0,0.6), 0 1px 0 0 rgba(255,255,255,0.06) inset",
+};
+// v11.9.116: tile de ícone (avatar circular/quadrado atrás de um Icon) — a mesma fórmula
+// "linear-gradient(135deg, cor 2 stops)" se repetia ~15x com drift de alpha (copy-paste).
+// 3º stop quebra o "flat 2-stop genérico"; boxShadow ganha sombra externa sutil além do
+// inset (dava só brilho de borda, sem separar do card atrás).
+function iconTile(col){
+  return{background:`linear-gradient(150deg, ${col}42 0%, ${col}18 55%, ${col}08 100%)`,border:`1px solid ${col}50`,boxShadow:`0 1px 0 0 rgba(255,255,255,0.08) inset, 0 2px 6px -3px ${col}40`};
+}
+T.iconTile=iconTile;
 // v11.9.67: estilo base de input hoisted (era duplicado 3x em Sheet/Profile/Growth).
 // Spread + override pros casos especiais: {...INP_BASE, textAlign:"center"} etc.
 const INP_BASE={width:"100%",maxWidth:"100%",boxSizing:"border-box",WebkitAppearance:"none",appearance:"none",padding:"17px 18px",background:"rgba(20,26,60,0.55)",border:`1px solid ${T.gBSoft}`,borderRadius:16,color:T.text,fontSize:T.fXL,fontWeight:600,letterSpacing:-0.2,outline:"none",boxShadow:T.insetTop};

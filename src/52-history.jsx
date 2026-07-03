@@ -69,31 +69,32 @@ const HistoryPage = React.memo(function HistoryPage({entries,onDelete,onEdit,act
   return(<div style={{padding:"calc(16px + env(safe-area-inset-top)) 20px 0"}}>
     <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
       <h2 style={{fontSize:T.fXL,fontWeight:700,margin:0}}>{L("history")}</h2>
-      <button aria-label={searchOpen?(_lang==="en"?"Close search":"Fechar busca"):(_lang==="en"?"Search":"Buscar")} onClick={()=>{const v=!searchOpen;setSearchOpen(v);if(!v)setSearchQuery("")}} style={{width:34,height:34,borderRadius:11,background:searchOpen?"rgba(139,124,246,0.15)":"rgba(22,28,60,0.6)",border:`1px solid ${searchOpen?"rgba(139,124,246,0.32)":T.gBSoft}`,display:"flex",alignItems:"center",justifyContent:"center"}}>
+      <button className="hit44" aria-label={searchOpen?(_lang==="en"?"Close search":"Fechar busca"):(_lang==="en"?"Search":"Buscar")} onClick={()=>{const v=!searchOpen;setSearchOpen(v);if(!v)setSearchQuery("")}} style={{width:34,height:34,borderRadius:11,background:searchOpen?"rgba(139,124,246,0.15)":"rgba(22,28,60,0.6)",border:`1px solid ${searchOpen?"rgba(139,124,246,0.32)":T.gBSoft}`,display:"flex",alignItems:"center",justifyContent:"center"}}>
         <Icon name={searchOpen?"x":"search"} size={15} color={searchOpen?T.accent:T.sub}/>
       </button>
     </div>
     {searchOpen&&<div style={{marginBottom:14}}>
       <div style={{position:"relative"}}>
         <input type="search" autoFocus inputMode="search" placeholder={_lang==="en"?"Search by name, type, ml, dose…":"Buscar por nome, tipo, ml, dose…"} value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} style={{width:"100%",padding:"14px 40px 14px 16px",borderRadius:14,background:"rgba(20,26,60,0.55)",border:`1px solid ${searchActive?"rgba(139,124,246,0.4)":T.gBSoft}`,color:T.text,fontSize:T.fLG,fontWeight:500,outline:"none",WebkitAppearance:"none",appearance:"none",boxShadow:T.insetTop}}/>
-        {searchQuery&&<button aria-label={_lang==="en"?"Clear":"Limpar"} onClick={()=>setSearchQuery("")} style={{position:"absolute",right:8,top:"50%",transform:"translateY(-50%)",width:28,height:28,borderRadius:8,background:"rgba(14,18,48,0.6)",border:"none",display:"flex",alignItems:"center",justifyContent:"center",color:T.dim}}><Icon name="x" size={12} color={T.dim}/></button>}
+        {searchQuery&&<button className="hit44" aria-label={_lang==="en"?"Clear":"Limpar"} onClick={()=>setSearchQuery("")} style={{position:"absolute",right:8,top:"50%",transform:"translateY(-50%)",width:28,height:28,borderRadius:8,background:"rgba(14,18,48,0.6)",border:"none",display:"flex",alignItems:"center",justifyContent:"center",color:T.dim}}><Icon name="x" size={12} color={T.dim}/></button>}
       </div>
       {searchActive&&<div style={{fontSize:T.fSM,color:T.dim,marginTop:8,padding:"0 4px",fontWeight:600,letterSpacing:0.2}}>{searchResults.reduce((s,g)=>s+g.items.length,0)} {_lang==="en"?"results across":"resultados em"} {searchResults.length} {_lang==="en"?"days":"dias"}</div>}
     </div>}
     {searchActive?(<div>
       {searchResults.length===0?<div style={{textAlign:"center",padding:"50px 20px",color:T.dim}}>
         <Icon name="search" size={28} color={T.dim}/>
-        <div style={{fontSize:T.fMD,marginTop:10,fontWeight:600}}>{_lang==="en"?"No matches":"Nenhum resultado"}</div>
+        <div style={{fontSize:T.fMD,marginTop:10,fontWeight:600,color:T.text}}>{_lang==="en"?`No results for "${searchQuery}"`:`Nenhum resultado para "${searchQuery}"`}</div>
         <div style={{fontSize:T.fSM,color:T.dim,marginTop:4}}>{_lang==="en"?"Try a different term":"Tente um termo diferente"}</div>
+        <button onClick={()=>setSearchQuery("")} className="hit44" style={{marginTop:14,background:"none",border:"none",color:T.accent,fontSize:T.fSM,fontWeight:700,padding:"6px 10px"}}>{_lang==="en"?"Clear search":"Limpar busca"}</button>
       </div>:searchResults.map(g=>(<div key={g.date} style={{marginBottom:18}}>
         <div style={{fontSize:T.fSM,fontWeight:700,color:T.dim,letterSpacing:0.6,textTransform:"uppercase",marginBottom:8,padding:"0 4px"}}>{fmtRelDate(g.date)} <span style={{color:T.sub,fontWeight:500,letterSpacing:0,textTransform:"none",marginLeft:4}}>· {g.items.length} {_lang==="en"?(g.items.length===1?"item":"items"):(g.items.length===1?"item":"itens")}</span></div>
         {g.items.map(e=>(e.type==="sleep"&&e.wakings&&e.wakings.length>0)?<SleepBlock key={e.id} entry={e} lang={lang} onDelete={onDelete} onEdit={onEdit} entries={entries} activeTimer={activeTimer} onSaveTimer={FB.saveTimer} onSaveEntry={FB.addEntry}/>:<EntryRow key={e.id} entry={e} lang={lang} onDelete={onDelete} onEdit={onEdit}/>)}
       </div>))}
     </div>):(<>
     {/* Date navigator card */}
-    <div style={{background:"linear-gradient(180deg,rgba(22,28,60,0.55),rgba(20,26,60,0.4))",borderRadius:20,border:`1px solid ${T.gBSoft}`,padding:"18px 18px 16px",marginBottom:14,boxShadow:T.insetTop}}>
+    <div style={{background:"linear-gradient(180deg,rgba(22,28,60,0.55),rgba(20,26,60,0.4))",borderRadius:20,border:`1px solid ${T.gBSoft}`,padding:"18px 18px 16px",marginBottom:14,boxShadow:T.cardShadow}}>
       <div style={{display:"flex",alignItems:"center",gap:12}}>
-        <button onClick={()=>setDateIdx(dateIdx+1)} style={{width:38,height:38,borderRadius:12,background:"rgba(22,28,60,0.6)",border:`1px solid ${T.gBSoft}`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:T.insetTop}}><Icon name="back" size={14} color={T.sub}/></button>
+        <button className="hit44" onClick={()=>setDateIdx(dateIdx+1)} style={{width:38,height:38,borderRadius:12,background:"rgba(22,28,60,0.6)",border:`1px solid ${T.gBSoft}`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:T.insetTop}}><Icon name="back" size={14} color={T.sub}/></button>
         <div style={{flex:1,textAlign:"center",position:"relative"}}>
           {/* v11.9.18: tap no header da data abre picker pra jump rápido */}
           <input type="date" value={viewDate} max={todayStr()} onChange={e=>{
@@ -116,7 +117,7 @@ const HistoryPage = React.memo(function HistoryPage({entries,onDelete,onEdit,act
             <span style={{fontWeight:600,fontVariantNumeric:"tabular-nums"}}>{dayE.length} {L("reg")}</span>
           </div>
         </div>
-        <button onClick={()=>setDateIdx(Math.max(0,dateIdx-1))} disabled={isToday} style={{width:38,height:38,borderRadius:12,background:"rgba(22,28,60,0.6)",border:`1px solid ${T.gBSoft}`,display:"flex",alignItems:"center",justifyContent:"center",opacity:isToday?0.3:1,boxShadow:T.insetTop}}><Icon name="forward" size={14} color={T.sub}/></button>
+        <button className="hit44" onClick={()=>setDateIdx(Math.max(0,dateIdx-1))} disabled={isToday} style={{width:38,height:38,borderRadius:12,background:"rgba(22,28,60,0.6)",border:`1px solid ${T.gBSoft}`,display:"flex",alignItems:"center",justifyContent:"center",opacity:isToday?0.3:1,boxShadow:T.insetTop}}><Icon name="forward" size={14} color={T.sub}/></button>
       </div>
     </div>
     {/* Type filters */}
@@ -124,7 +125,7 @@ const HistoryPage = React.memo(function HistoryPage({entries,onDelete,onEdit,act
       {filters.map(f=>{const isActive=filter===f.v;return<button key={f.v} onClick={()=>setFilter(f.v)} style={{padding:"9px 16px",borderRadius:12,fontSize:T.fMD,fontWeight:600,whiteSpace:"nowrap",letterSpacing:-0.1,background:isActive?`linear-gradient(180deg,${f.c}38,${f.c}12)`:"rgba(22,28,60,0.5)",color:isActive?f.c:T.sub,border:`1px solid ${isActive?f.c+"55":T.gBSoft}`,boxShadow:isActive?`0 1px 0 0 rgba(255,255,255,0.1) inset, 0 0 0 1px ${f.c}25, 0 6px 16px -8px ${f.c}50`:T.insetTop}}>{f.l}</button>})}
     </div>
     {filtered.length===0?(<div style={{padding:"48px 24px 20px",textAlign:"center"}}>
-      <div style={{width:58,height:58,borderRadius:18,background:"rgba(139,124,246,0.08)",border:"1px solid rgba(139,124,246,0.15)",display:"inline-flex",alignItems:"center",justifyContent:"center",marginBottom:16,color:"rgba(196,181,253,0.5)"}}><Icon name="clock" size={26} color="rgba(196,181,253,0.5)"/></div>
+      <div style={{width:58,height:58,borderRadius:18,background:`${T.accent}14`,border:`1px solid ${T.accent}26`,display:"inline-flex",alignItems:"center",justifyContent:"center",marginBottom:16,color:T.accent}}><Icon name="clock" size={26} color={T.accent}/></div>
       <div style={{fontSize:T.fLG,fontWeight:700,color:T.heading,letterSpacing:-0.2,marginBottom:6}}>{_lang==="en"?"No events this day":"Nenhum evento neste dia"}</div>
       <div style={{fontSize:T.fMD,color:T.sub,lineHeight:1.55,maxWidth:240,margin:"0 auto"}}>{filter!=="all"?(_lang==="en"?"Try changing the filter or switching to another day.":"Tente mudar o filtro ou ir para outro dia."):(_lang==="en"?"Tap + below to register the first.":"Toque + abaixo para registrar o primeiro.")}</div>
     </div>):listItems}

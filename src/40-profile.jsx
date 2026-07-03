@@ -275,7 +275,7 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
   const inp=INP_BASE;
   // v11.7.1: Profile usa o MESMO gradient do body + Starfield interno pra compartilhar
   // a identidade visual do app — antes (v11.7) era transparent e mostrava a aba atr\u00e1s.
-  return(<div style={{position:"fixed",inset:0,zIndex:200,maxWidth:480,margin:"0 auto",background:"radial-gradient(ellipse 140% 55% at 50% 100%, #1a1f52 0%, transparent 70%), radial-gradient(ellipse at 50% 0%, #10153d 0%, #070b1e 65%), #070b1e",overflowY:"auto",overflowX:"hidden",overscrollBehavior:"contain",WebkitOverflowScrolling:"touch",paddingTop:"env(safe-area-inset-top)",paddingBottom:"calc(100px + env(safe-area-inset-bottom))"}}>
+  return(<div className="page-switch" style={{position:"fixed",inset:0,zIndex:200,maxWidth:480,margin:"0 auto",background:T.pageBg,overflowY:"auto",overflowX:"hidden",overscrollBehavior:"contain",WebkitOverflowScrolling:"touch",paddingTop:"env(safe-area-inset-top)",paddingBottom:"calc(100px + env(safe-area-inset-bottom))"}}>
     <Starfield/>
     {/* Fade overlays removed — both top and bottom gradient strips were visually distracting,
         making content look dimmed/buggy rather than giving a clean melt effect. Simple solid scroll. */}
@@ -298,15 +298,15 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
       {/* v11.9.75: hero — avatar + nome (gradiente) + idade. Ancora a identidade da Louise. */}
       <div style={{display:"flex",flexDirection:"column",alignItems:"center",marginBottom:22}}><button onClick={()=>fr.current?.click()} style={{width:88,height:88,borderRadius:"50%",overflow:"hidden",background:T.glass,border:`2px solid ${T.accent}33`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 4px 20px rgba(0,0,0,0.3)"}}>{photo?<img src={photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<Icon name="sun" size={32} color={T.sub}/>}</button><input ref={fr} type="file" accept="image/*" style={{display:"none"}} onChange={handlePhoto}/>{name&&<div style={{fontSize:T.f2XL,fontWeight:800,letterSpacing:-0.4,marginTop:11,background:"linear-gradient(180deg,#ffffff,#c4b5fd)",WebkitBackgroundClip:"text",backgroundClip:"text",WebkitTextFillColor:"transparent",color:"transparent"}}>{name}</div>}{(()=>{const a=calcAge(birth);return a?<div style={{fontSize:T.fSM,color:T.accent,fontWeight:600,marginTop:3,fontVariantNumeric:"tabular-nums"}}>{a.totalDays} {_lang==="en"?"days":"dias"}{a.months>0?` · ${a.months} ${_lang==="en"?"mo":"m"}`:""}</div>:null})()}<span style={{fontSize:T.fXS,color:T.dim,marginTop:6}}>{_lang==="en"?"Tap photo to change":"Toque na foto para trocar"}</span></div>
       {/* ── GROUP: PERFIL ── name/birth/mlGoal + birth data + view growth */}
-      <div style={{background:"linear-gradient(180deg,rgba(22,28,60,0.55),rgba(20,26,60,0.32))",border:`1px solid ${T.gBSoft}`,borderRadius:18,padding:"15px 16px",marginBottom:13,boxShadow:T.insetTop}}>
+      <div style={{background:"linear-gradient(180deg,rgba(22,28,60,0.55),rgba(20,26,60,0.32))",border:`1px solid ${T.gBSoft}`,borderRadius:18,padding:"15px 16px",marginBottom:13,boxShadow:T.cardShadow}}>
         <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:13}}>
-          <div style={{width:20,height:20,borderRadius:7,background:`${T.purple}1f`,border:`1px solid ${T.purple}40`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name="star" size={11} color={T.purple}/></div>
+          <div style={{width:20,height:20,borderRadius:T.rSM,background:`${T.purple}1f`,border:`1px solid ${T.purple}40`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name="star" size={11} color={T.purple}/></div>
           <span style={{fontSize:T.fXS,fontWeight:800,letterSpacing:1,textTransform:"uppercase",color:T.purple}}>{_lang==="en"?"Profile":"Perfil"}</span>
         </div>
         <Fld label={L("name")}><input type="text" placeholder={_lang==="en"?"e.g. Louise":"Ex: Louise"} value={name} onChange={e=>setName(e.target.value)} style={inp}/></Fld>
         <Fld label={L("birthDate")}><input type="date" value={birth} onChange={e=>setBirth(e.target.value)} style={{...inp,colorScheme:"dark",maxWidth:"100%",WebkitAppearance:"none",textAlign:"center"}}/></Fld>
         <Fld label={L("dailyMilkGoal")}><input type="number" inputMode="numeric" placeholder={_lang==="en"?"e.g. 600":"Ex: 600"} value={mlGoal} onChange={e=>setMlGoal(e.target.value)} style={inp}/></Fld>
-        <div style={{fontSize:T.fSM,fontWeight:700,color:T.dim,margin:"4px 0 10px",textTransform:"uppercase",letterSpacing:1.2}}>{L("birthData")}</div>
+        <div style={{fontSize:T.fXS,fontWeight:800,color:T.label,margin:"4px 0 10px",textTransform:"uppercase",letterSpacing:1}}>{L("birthData")}</div>
         <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)",gap:8}}>
           <Fld label={`${L("weight")} (kg)`}><input type="text" inputMode="decimal" placeholder={_lang==="pt"?"3,2":"3.2"} value={birthWeight} onChange={e=>setBirthWeight(e.target.value)} style={{...inp,textAlign:"center",padding:"12px 8px"}}/></Fld>
           <Fld label={`${_lang==="en"?"Length":"Comp."} (cm)`}><input type="text" inputMode="decimal" placeholder="49" value={birthLength} onChange={e=>setBirthLength(e.target.value)} style={{...inp,textAlign:"center",padding:"12px 8px"}}/></Fld>
@@ -317,9 +317,9 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
         </button>
       </div>
       {/* ── GROUP: ROTINA ── toggle + hora alvo de cada evento + count de mamadas */}
-      <div style={{background:"linear-gradient(180deg,rgba(22,28,60,0.55),rgba(20,26,60,0.32))",border:`1px solid ${T.gBSoft}`,borderRadius:18,padding:"15px 16px",marginBottom:13,boxShadow:T.insetTop}}>
+      <div style={{background:"linear-gradient(180deg,rgba(22,28,60,0.55),rgba(20,26,60,0.32))",border:`1px solid ${T.gBSoft}`,borderRadius:18,padding:"15px 16px",marginBottom:13,boxShadow:T.cardShadow}}>
         <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:13}}>
-          <div style={{width:20,height:20,borderRadius:7,background:`${T.accent}1f`,border:`1px solid ${T.accent}40`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name="clock" size={11} color={T.accent}/></div>
+          <div style={{width:20,height:20,borderRadius:T.rSM,background:`${T.accent}1f`,border:`1px solid ${T.accent}40`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name="clock" size={11} color={T.accent}/></div>
           <span style={{fontSize:T.fXS,fontWeight:800,letterSpacing:1,textTransform:"uppercase",color:T.accent}}>{_lang==="en"?"Routine":"Rotina"}</span>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:routineEnabled?14:0}}>
@@ -327,8 +327,8 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
             <div style={{fontSize:T.fLG,fontWeight:700,color:T.heading,letterSpacing:-0.2}}>{L("routineSection")}</div>
             <div style={{fontSize:T.fSM,color:T.sub,lineHeight:1.45,marginTop:3}}>{L("routineHelp")}</div>
           </div>
-          <button aria-label={L("routineEnable")} onClick={()=>setRoutineEnabled(!routineEnabled)} style={{width:52,height:30,borderRadius:15,background:routineEnabled?T.accent:"rgba(20,26,60,0.6)",border:`1px solid ${routineEnabled?T.accent:T.gB}`,position:"relative",flexShrink:0,cursor:"pointer",transition:"all .2s"}}>
-            <span style={{position:"absolute",top:2,left:routineEnabled?24:2,width:24,height:24,borderRadius:"50%",background:"#fff",transition:"left .2s",boxShadow:"0 2px 6px rgba(0,0,0,0.3)"}}/>
+          <button aria-label={L("routineEnable")} onClick={()=>setRoutineEnabled(!routineEnabled)} className="toggle-track" style={{width:52,height:30,borderRadius:15,background:routineEnabled?T.accent:"rgba(20,26,60,0.6)",border:`1px solid ${routineEnabled?T.accent:T.gB}`,position:"relative",flexShrink:0,cursor:"pointer"}}>
+            <span className="toggle-thumb" style={{position:"absolute",top:2,left:routineEnabled?24:2,width:24,height:24,borderRadius:"50%",background:"#fff",boxShadow:"0 2px 6px rgba(0,0,0,0.3)"}}/>
           </button>
         </div>
         {routineEnabled&&<>
@@ -358,9 +358,9 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
         </>}
       </div>
       {/* ── GROUP: PREFERÊNCIAS ── language + keep screen on */}
-      <div style={{background:"linear-gradient(180deg,rgba(22,28,60,0.55),rgba(20,26,60,0.32))",border:`1px solid ${T.gBSoft}`,borderRadius:18,padding:"15px 16px",marginBottom:13,boxShadow:T.insetTop}}>
+      <div style={{background:"linear-gradient(180deg,rgba(22,28,60,0.55),rgba(20,26,60,0.32))",border:`1px solid ${T.gBSoft}`,borderRadius:18,padding:"15px 16px",marginBottom:13,boxShadow:T.cardShadow}}>
         <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:13}}>
-          <div style={{width:20,height:20,borderRadius:7,background:`${T.cyan}1f`,border:`1px solid ${T.cyan}40`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name="gear" size={11} color={T.cyan}/></div>
+          <div style={{width:20,height:20,borderRadius:T.rSM,background:`${T.cyan}1f`,border:`1px solid ${T.cyan}40`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name="gear" size={11} color={T.cyan}/></div>
           <span style={{fontSize:T.fXS,fontWeight:800,letterSpacing:1,textTransform:"uppercase",color:T.cyan}}>{_lang==="en"?"Preferences":"Preferências"}</span>
         </div>
         <Fld label={langSel==="en"?"Language":"Idioma"}>
@@ -377,15 +377,15 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
             <div style={{fontSize:T.fLG,fontWeight:700,marginBottom:4,color:T.heading,letterSpacing:-0.2}}>{langSel==="en"?"Keep screen on":"Manter tela ligada"}</div>
             <div style={{fontSize:T.fMD,color:T.label,lineHeight:1.5}}>{langSel==="en"?"During night wake & nursing timers":"Durante despertar noturno e amamentação"}</div>
           </div>
-          <button onClick={()=>{const v=!keepScreenOn;setKeepScreenOn(v);persistToggle({keepScreenOn:v})}} style={{position:"relative",width:52,height:32,borderRadius:16,background:keepScreenOn?`linear-gradient(180deg,${T.accent},#6d5cd4)`:"rgba(14,18,48,0.8)",border:`1px solid ${keepScreenOn?"rgba(139,124,246,0.5)":T.gBSoft}`,transition:"all .2s",flexShrink:0,cursor:"pointer",padding:0,boxShadow:keepScreenOn?"0 1px 0 0 rgba(255,255,255,0.18) inset, 0 4px 12px -4px rgba(139,124,246,0.4)":T.insetTop}}>
-            <div style={{position:"absolute",top:3,left:keepScreenOn?25:3,width:24,height:24,borderRadius:"50%",background:"#fff",transition:"left .2s",boxShadow:"0 2px 6px rgba(0,0,0,0.4)"}}/>
+          <button onClick={()=>{const v=!keepScreenOn;setKeepScreenOn(v);persistToggle({keepScreenOn:v})}} className="toggle-track" style={{position:"relative",width:52,height:32,borderRadius:16,background:keepScreenOn?`linear-gradient(180deg,${T.accent},#6d5cd4)`:"rgba(14,18,48,0.8)",border:`1px solid ${keepScreenOn?"rgba(139,124,246,0.5)":T.gBSoft}`,flexShrink:0,cursor:"pointer",padding:0,boxShadow:keepScreenOn?"0 1px 0 0 rgba(255,255,255,0.18) inset, 0 4px 12px -4px rgba(139,124,246,0.4)":T.insetTop}}>
+            <div className="toggle-thumb" style={{position:"absolute",top:3,left:keepScreenOn?25:3,width:24,height:24,borderRadius:"50%",background:"#fff",boxShadow:"0 2px 6px rgba(0,0,0,0.4)"}}/>
           </button>
         </div>
       </div>
       {/* ── GROUP: NOTIFICAÇÕES ── push toggle + medication reminders + feeding reminder */}
-      <div style={{background:"linear-gradient(180deg,rgba(22,28,60,0.55),rgba(20,26,60,0.32))",border:`1px solid ${T.gBSoft}`,borderRadius:18,padding:"15px 16px",marginBottom:13,boxShadow:T.insetTop}}>
+      <div style={{background:"linear-gradient(180deg,rgba(22,28,60,0.55),rgba(20,26,60,0.32))",border:`1px solid ${T.gBSoft}`,borderRadius:18,padding:"15px 16px",marginBottom:13,boxShadow:T.cardShadow}}>
         <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:13}}>
-          <div style={{width:20,height:20,borderRadius:7,background:`${T.amber}1f`,border:`1px solid ${T.amber}40`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name="bell" size={11} color={T.amber}/></div>
+          <div style={{width:20,height:20,borderRadius:T.rSM,background:`${T.amber}1f`,border:`1px solid ${T.amber}40`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name="bell" size={11} color={T.amber}/></div>
           <span style={{fontSize:T.fXS,fontWeight:800,letterSpacing:1,textTransform:"uppercase",color:T.amber}}>{_lang==="en"?"Notifications":"Notificações"}</span>
         </div>
         {/* Push notifications toggle */}
@@ -399,8 +399,8 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
                (langSel==="en"?"Tap to enable":"Toque para ativar")}
             </div>
           </div>
-          <button onClick={handlePushToggle} disabled={!pushSupported||pushBusy||pushPermission==="denied"} style={{position:"relative",width:52,height:32,borderRadius:16,background:pushEnabled&&pushSupported?`linear-gradient(180deg,${T.accent},#6d5cd4)`:"rgba(14,18,48,0.8)",border:`1px solid ${pushEnabled&&pushSupported?"rgba(139,124,246,0.5)":T.gBSoft}`,transition:"all .2s",flexShrink:0,cursor:pushSupported&&!pushBusy&&pushPermission!=="denied"?"pointer":"not-allowed",padding:0,opacity:!pushSupported||pushPermission==="denied"?0.4:1,boxShadow:pushEnabled&&pushSupported?"0 1px 0 0 rgba(255,255,255,0.18) inset, 0 4px 12px -4px rgba(139,124,246,0.4)":T.insetTop}}>
-            <div style={{position:"absolute",top:3,left:pushEnabled&&pushSupported?25:3,width:24,height:24,borderRadius:"50%",background:"#fff",transition:"left .2s",boxShadow:"0 2px 6px rgba(0,0,0,0.4)"}}/>
+          <button onClick={handlePushToggle} disabled={!pushSupported||pushBusy||pushPermission==="denied"} className="toggle-track" style={{position:"relative",width:52,height:32,borderRadius:16,background:pushEnabled&&pushSupported?`linear-gradient(180deg,${T.accent},#6d5cd4)`:"rgba(14,18,48,0.8)",border:`1px solid ${pushEnabled&&pushSupported?"rgba(139,124,246,0.5)":T.gBSoft}`,flexShrink:0,cursor:pushSupported&&!pushBusy&&pushPermission!=="denied"?"pointer":"not-allowed",padding:0,opacity:!pushSupported||pushPermission==="denied"?0.4:1,boxShadow:pushEnabled&&pushSupported?"0 1px 0 0 rgba(255,255,255,0.18) inset, 0 4px 12px -4px rgba(139,124,246,0.4)":T.insetTop}}>
+            <div className="toggle-thumb" style={{position:"absolute",top:3,left:pushEnabled&&pushSupported?25:3,width:24,height:24,borderRadius:"50%",background:"#fff",boxShadow:"0 2px 6px rgba(0,0,0,0.4)"}}/>
           </button>
         </div>
 
@@ -409,7 +409,7 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
 
         {/* ── REMINDERS sub-card ── medication push reminders */}
         <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
-          <div style={{width:32,height:32,borderRadius:10,background:`linear-gradient(135deg,${T.accent}38,${T.accent}10)`,border:`1px solid ${T.accent}50`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset"}}>
+          <div style={{width:32,height:32,borderRadius:10,display:"flex",alignItems:"center",justifyContent:"center",...T.iconTile(T.accent)}}>
             <Icon name="bell" size={15} color="#c4b5fd"/>
           </div>
           <div style={{fontSize:T.fLG,fontWeight:700,color:T.heading,letterSpacing:-0.2}}>{langSel==="en"?"Medication reminders":"Lembretes de medicamento"}</div>
@@ -430,21 +430,21 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
                   <div style={{fontSize:T.fSM,color:T.lilac,fontWeight:600,flex:1,lineHeight:1.4}}>{langSel==="en"?<>Editing <b>{r.nome||"—"}</b></>:<>Editando <b>{r.nome||"—"}</b></>}</div>
                 </div>
                 <div style={{fontSize:T.fSM,fontWeight:700,color:T.label,margin:"0 0 4px",letterSpacing:0.5,textTransform:"uppercase"}}>{langSel==="en"?"Name":"Nome"}</div>
-                <input type="text" value={editNome} onChange={e=>setEditNome(e.target.value)} placeholder={langSel==="en"?"Name":"Nome"} style={{...inp,padding:"13px 16px",fontSize:T.fLG,marginBottom:8}}/>
+                <input type="text" value={editNome} onChange={e=>setEditNome(e.target.value)} placeholder={langSel==="en"?"Name":"Nome"} style={{...inp,padding:"14px 16px",fontSize:T.fLG,marginBottom:8}}/>
                 <div style={{fontSize:T.fSM,fontWeight:700,color:T.label,margin:"0 0 4px",letterSpacing:0.5,textTransform:"uppercase"}}>{langSel==="en"?"Dose":"Dose"}</div>
-                <input type="text" value={editDose} onChange={e=>setEditDose(e.target.value)} placeholder={langSel==="en"?"Dose":"Dose"} style={{...inp,padding:"13px 16px",fontSize:T.fLG,marginBottom:8}}/>
+                <input type="text" value={editDose} onChange={e=>setEditDose(e.target.value)} placeholder={langSel==="en"?"Dose":"Dose"} style={{...inp,padding:"14px 16px",fontSize:T.fLG,marginBottom:8}}/>
                 <div style={{fontSize:T.fSM,fontWeight:700,color:T.label,margin:"0 0 4px",letterSpacing:0.5,textTransform:"uppercase"}}>{langSel==="en"?"Time":"Horário"}</div>
-                <input type="time" value={editHorario} onChange={e=>setEditHorario(e.target.value)} style={{...inp,padding:"13px 16px",fontSize:T.fLG,fontWeight:700,colorScheme:"dark",textAlign:"center",marginBottom:8}}/>
+                <input type="time" value={editHorario} onChange={e=>setEditHorario(e.target.value)} style={{...inp,padding:"14px 16px",fontSize:T.fLG,fontWeight:700,colorScheme:"dark",textAlign:"center",marginBottom:8}}/>
                 <div style={{fontSize:T.fSM,fontWeight:700,color:T.label,margin:"6px 0 4px",letterSpacing:0.5,textTransform:"uppercase",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                   <span>{langSel==="en"?"Notification title":"Título da notificação"}</span>
                   <span style={{fontSize:T.fXS,color:"#555580",fontWeight:500,letterSpacing:0,textTransform:"none"}}>{langSel==="en"?"optional":"opcional"}</span>
                 </div>
-                <input type="text" value={editTitulo} onChange={e=>setEditTitulo(e.target.value)} placeholder={langSel==="en"?"Default: Reminder":"Padrão: Lembrete"} style={{...inp,padding:"13px 16px",fontSize:T.fLG,marginBottom:8}}/>
+                <input type="text" value={editTitulo} onChange={e=>setEditTitulo(e.target.value)} placeholder={langSel==="en"?"Default: Reminder":"Padrão: Lembrete"} style={{...inp,padding:"14px 16px",fontSize:T.fLG,marginBottom:8}}/>
                 <div style={{fontSize:T.fSM,fontWeight:700,color:T.label,margin:"0 0 4px",letterSpacing:0.5,textTransform:"uppercase",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                   <span>{langSel==="en"?"Notification body":"Corpo da notificação"}</span>
                   <span style={{fontSize:T.fXS,color:"#555580",fontWeight:500,letterSpacing:0,textTransform:"none"}}>{langSel==="en"?"optional":"opcional"}</span>
                 </div>
-                <textarea value={editCorpo} onChange={e=>setEditCorpo(e.target.value)} placeholder={langSel==="en"?"Default: name + dose":"Padrão: nome + dose"} style={{...inp,padding:"13px 16px",fontSize:T.fLG,minHeight:62,resize:"vertical",fontFamily:"inherit",lineHeight:1.45,marginBottom:12}}/>
+                <textarea value={editCorpo} onChange={e=>setEditCorpo(e.target.value)} placeholder={langSel==="en"?"Default: name + dose":"Padrão: nome + dose"} style={{...inp,padding:"14px 16px",fontSize:T.fLG,minHeight:62,resize:"vertical",fontFamily:"inherit",lineHeight:1.45,marginBottom:12}}/>
                 <div style={{display:"flex",gap:8,marginTop:4}}>
                   <button onClick={cancelRemEdit} disabled={editBusy} style={{flex:1,padding:12,borderRadius:12,background:"rgba(139,124,246,0.05)",border:"1px solid rgba(139,124,246,0.15)",color:T.sub,fontSize:T.fMD,fontWeight:700,opacity:editBusy?0.5:1}}>{langSel==="en"?"Cancel":"Cancelar"}</button>
                   <button onClick={()=>saveRemEdit(r)} disabled={editBusy||!editNome.trim()||!editHorario} style={{flex:2,padding:12,borderRadius:12,background:editNome.trim()&&editHorario?`linear-gradient(180deg,#9b8df8,#7c3aed)`:"rgba(14,18,48,0.8)",color:editNome.trim()&&editHorario?"#fff":T.dim,fontSize:T.fMD,fontWeight:800,letterSpacing:-0.2,border:`1px solid ${editNome.trim()&&editHorario?"rgba(139,124,246,0.5)":T.gBSoft}`,opacity:editBusy?0.6:1}}>{langSel==="en"?"Save changes":"Salvar alterações"}</button>
@@ -485,12 +485,12 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
                 <span>{langSel==="en"?"Notification title":"Título da notificação"}</span>
                 <span style={{fontSize:T.fXS,color:"#555580",fontWeight:500,letterSpacing:0,textTransform:"none"}}>{langSel==="en"?"optional":"opcional"}</span>
               </div>
-              <input type="text" placeholder={langSel==="en"?"Default: Reminder":"Padrão: Lembrete"} value={remTitulo} onChange={e=>setRemTitulo(e.target.value)} style={{...inp,padding:"13px 16px",fontSize:T.fLG}}/>
+              <input type="text" placeholder={langSel==="en"?"Default: Reminder":"Padrão: Lembrete"} value={remTitulo} onChange={e=>setRemTitulo(e.target.value)} style={{...inp,padding:"14px 16px",fontSize:T.fLG}}/>
               <div style={{fontSize:T.fSM,fontWeight:700,color:T.label,margin:"4px 0 -2px",letterSpacing:0.5,textTransform:"uppercase",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                 <span>{langSel==="en"?"Notification body":"Corpo da notificação"}</span>
                 <span style={{fontSize:T.fXS,color:"#555580",fontWeight:500,letterSpacing:0,textTransform:"none"}}>{langSel==="en"?"optional":"opcional"}</span>
               </div>
-              <textarea placeholder={langSel==="en"?"Default: name + dose":"Padrão: nome + dose"} value={remCorpo} onChange={e=>setRemCorpo(e.target.value)} style={{...inp,padding:"13px 16px",fontSize:T.fLG,minHeight:62,resize:"vertical",fontFamily:"inherit",lineHeight:1.45}}/>
+              <textarea placeholder={langSel==="en"?"Default: name + dose":"Padrão: nome + dose"} value={remCorpo} onChange={e=>setRemCorpo(e.target.value)} style={{...inp,padding:"14px 16px",fontSize:T.fLG,minHeight:62,resize:"vertical",fontFamily:"inherit",lineHeight:1.45}}/>
             </>}
             <div style={{display:"flex",gap:8,alignItems:"center"}}>
               <input type="time" value={remHorario} onChange={e=>setRemHorario(e.target.value)} style={{...inp,padding:"14px 16px",fontSize:T.fLG,fontWeight:700,colorScheme:"dark",textAlign:"center",flex:1}}/>
@@ -523,7 +523,7 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
 
         {/* ── FEEDING REMINDER sub-card ── single global push reminder based on interval since last bottle */}
         <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
-          <div style={{width:32,height:32,borderRadius:10,background:`linear-gradient(135deg,${T.accent}38,${T.accent}10)`,border:`1px solid ${T.accent}50`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset"}}>
+          <div style={{width:32,height:32,borderRadius:10,display:"flex",alignItems:"center",justifyContent:"center",...T.iconTile(T.accent)}}>
             <Icon name="bottle" size={15} color="#c4b5fd"/>
           </div>
           <div style={{fontSize:T.fLG,fontWeight:700,color:T.heading,letterSpacing:-0.2}}>{langSel==="en"?"Feeding reminder":"Lembrete de mamada"}</div>
@@ -538,8 +538,8 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
             <div style={{fontSize:T.fLG,fontWeight:700,color:T.heading,letterSpacing:-0.2,marginBottom:3}}>{langSel==="en"?"Enable reminder":"Ativar lembrete"}</div>
             <div style={{fontSize:T.fSM,color:T.label,lineHeight:1.45}}>{langSel==="en"?"Notify when it's feeding time":"Notificar quando estiver na hora"}</div>
           </div>
-          <button onClick={()=>{const v=!fdEnabled;setFdEnabled(v);saveFeedReminder({ativo:v})}} disabled={fdBusy} style={{position:"relative",width:52,height:32,borderRadius:16,background:fdEnabled?`linear-gradient(180deg,${T.accent},#6d5cd4)`:"rgba(14,18,48,0.8)",border:`1px solid ${fdEnabled?"rgba(139,124,246,0.5)":T.gBSoft}`,transition:"all .2s",flexShrink:0,cursor:fdBusy?"not-allowed":"pointer",padding:0,opacity:fdBusy?0.6:1,boxShadow:fdEnabled?"0 1px 0 0 rgba(255,255,255,0.18) inset, 0 4px 12px -4px rgba(139,124,246,0.4)":T.insetTop}}>
-            <div style={{position:"absolute",top:3,left:fdEnabled?25:3,width:24,height:24,borderRadius:"50%",background:"#fff",transition:"left .2s",boxShadow:"0 2px 6px rgba(0,0,0,0.4)"}}/>
+          <button onClick={()=>{const v=!fdEnabled;setFdEnabled(v);saveFeedReminder({ativo:v})}} disabled={fdBusy} className="toggle-track" style={{position:"relative",width:52,height:32,borderRadius:16,background:fdEnabled?`linear-gradient(180deg,${T.accent},#6d5cd4)`:"rgba(14,18,48,0.8)",border:`1px solid ${fdEnabled?"rgba(139,124,246,0.5)":T.gBSoft}`,flexShrink:0,cursor:fdBusy?"not-allowed":"pointer",padding:0,opacity:fdBusy?0.6:1,boxShadow:fdEnabled?"0 1px 0 0 rgba(255,255,255,0.18) inset, 0 4px 12px -4px rgba(139,124,246,0.4)":T.insetTop}}>
+            <div className="toggle-thumb" style={{position:"absolute",top:3,left:fdEnabled?25:3,width:24,height:24,borderRadius:"50%",background:"#fff",boxShadow:"0 2px 6px rgba(0,0,0,0.4)"}}/>
           </button>
         </div>
 
@@ -590,14 +590,14 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
       </div>
       {/* ── GROUP: DADOS ── backup (eyebrow sibling above BackupSection, which brings its own card) */}
       <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:13,marginTop:2}}>
-        <div style={{width:20,height:20,borderRadius:7,background:`${T.green}1f`,border:`1px solid ${T.green}40`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name="cloud" size={11} color={T.green}/></div>
+        <div style={{width:20,height:20,borderRadius:T.rSM,background:`${T.green}1f`,border:`1px solid ${T.green}40`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name="cloud" size={11} color={T.green}/></div>
         <span style={{fontSize:T.fXS,fontWeight:800,letterSpacing:1,textTransform:"uppercase",color:T.green}}>{_lang==="en"?"Data":"Dados"}</span>
       </div>
       <BackupSection/>
       {/* ── GROUP: SOBRE ── version/changelog + streak */}
-      <div style={{background:"linear-gradient(180deg,rgba(22,28,60,0.55),rgba(20,26,60,0.32))",border:`1px solid ${T.gBSoft}`,borderRadius:18,padding:"15px 16px",marginBottom:13,marginTop:14,boxShadow:T.insetTop}}>
+      <div style={{background:"linear-gradient(180deg,rgba(22,28,60,0.55),rgba(20,26,60,0.32))",border:`1px solid ${T.gBSoft}`,borderRadius:18,padding:"15px 16px",marginBottom:13,marginTop:14,boxShadow:T.cardShadow}}>
         <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:13}}>
-          <div style={{width:20,height:20,borderRadius:7,background:`${T.pink}1f`,border:`1px solid ${T.pink}40`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name="star" size={11} color={T.pink}/></div>
+          <div style={{width:20,height:20,borderRadius:T.rSM,background:`${T.pink}1f`,border:`1px solid ${T.pink}40`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name="star" size={11} color={T.pink}/></div>
           <span style={{fontSize:T.fXS,fontWeight:800,letterSpacing:1,textTransform:"uppercase",color:T.pink}}>{_lang==="en"?"About":"Sobre"}</span>
         </div>
         <button onClick={onShowChangelog} style={{width:"100%",padding:"14px 16px",borderRadius:14,background:"rgba(22,28,60,0.4)",border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",gap:12,textAlign:"left",cursor:"pointer"}}>
