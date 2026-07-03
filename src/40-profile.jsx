@@ -275,7 +275,7 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
   const inp=INP_BASE;
   // v11.7.1: Profile usa o MESMO gradient do body + Starfield interno pra compartilhar
   // a identidade visual do app — antes (v11.7) era transparent e mostrava a aba atr\u00e1s.
-  return(<div className="page-switch" style={{position:"fixed",inset:0,zIndex:200,maxWidth:480,margin:"0 auto",background:T.pageBg,overflowY:"auto",overflowX:"hidden",overscrollBehavior:"contain",WebkitOverflowScrolling:"touch",paddingTop:"env(safe-area-inset-top)",paddingBottom:"calc(100px + env(safe-area-inset-bottom))"}}>
+  return(<div className="page-switch" style={{position:"fixed",inset:0,zIndex:200,maxWidth:480,margin:"0 auto",background:T.pageBg,overflowY:"auto",overflowX:"hidden",overscrollBehavior:"none",WebkitOverflowScrolling:"touch",paddingTop:"env(safe-area-inset-top)",paddingBottom:"calc(100px + env(safe-area-inset-bottom))"}}>
     <Starfield/>
     {/* Fade overlays removed — both top and bottom gradient strips were visually distracting,
         making content look dimmed/buggy rather than giving a clean melt effect. Simple solid scroll. */}

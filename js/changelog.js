@@ -4,6 +4,21 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.117", date: "2026-06-16",
+    pt: {
+      title: "Correção: elástico de rolagem em telas com pouco conteúdo",
+      bullets: [
+        '★ Ajustes, Crescimento, Comportamento e Marcos tinham um "elástico" de rolagem que podia puxar uma área grande em branco antes de voltar — mais visível em telas com pouco conteúdo (ex: Crescimento sem medições ainda). Removido: essas telas agora ficam fixas nos limites do conteúdo.',
+      ],
+    },
+    en: {
+      title: "Fix: scroll bounce on light-content screens",
+      bullets: [
+        '★ Settings, Growth, Behavior and Milestones had a scroll "bounce" that could pull a large blank area before snapping back — more visible on screens with little content (e.g. Growth with no measurements yet). Fixed: these screens now stay fixed at the content boundaries.',
+      ],
+    },
+  },
+  {
     v: "11.9.116", date: "2026-06-16",
     pt: {
       title: "Polimento nível prêmio — 33 achados implementados",

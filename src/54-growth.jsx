@@ -200,7 +200,7 @@ function GrowthPage({entries,birthDate,profile,onBack,onAddEntry,onDeleteEntry})
 
   // v11.9.99: página virou overlay (padrão MilestonesPage/ProfilePage) — fixed, Starfield,
   // header com título gradiente + back 40pt, conteúdo em eyebrow cards (padrão Profile).
-  return(<div className="page-switch" style={{position:"fixed",inset:0,zIndex:200,maxWidth:480,margin:"0 auto",background:T.pageBg,overflowY:"auto",overflowX:"hidden",overscrollBehavior:"contain",WebkitOverflowScrolling:"touch",paddingTop:"env(safe-area-inset-top)",paddingBottom:"calc(100px + env(safe-area-inset-bottom))"}}>
+  return(<div className="page-switch" style={{position:"fixed",inset:0,zIndex:200,maxWidth:480,margin:"0 auto",background:T.pageBg,overflowY:"auto",overflowX:"hidden",overscrollBehavior:"none",WebkitOverflowScrolling:"touch",paddingTop:"env(safe-area-inset-top)",paddingBottom:"calc(100px + env(safe-area-inset-bottom))"}}>
     <Starfield/>
     {/* Header */}
     <div style={{display:"flex",alignItems:"center",gap:12,padding:"16px 14px 14px 20px"}}>
