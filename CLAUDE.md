@@ -266,6 +266,40 @@ Filtro complexo que já gerou vários bugs. Estado atual (v10.4.6+):
 
 -----
 
+## Hierarquia de modelos e orquestração multi-agente (v11.9.118)
+
+Plano fixo (Max), não API por token: Opus 4.8, Sonnet 5 e Haiku 4.5 estão TODOS incluídos na assinatura — custo por token entre eles é irrelevante. O ÚNICO recurso que consome crédito pago (usage credits, por cima da assinatura) é o **Fable 5** (~2x o custo do Opus) — por isso ele é escalação cirúrgica, nunca rotina.
+
+**Hierarquia** (o projeto não é complexo o bastante pra Opus ser o padrão — Sonnet dá conta do loop):
+- **Sonnet 5** (`claude-sonnet-5`) = loop principal / executor padrão. Recebe o pedido, planeja, implementa o trabalho comum, reconhece quando algo exige mais capacidade e delega.
+- **Opus 4.8** (`claude-opus-4-8`) = escalação pra trabalho substantivo/difícil — decisão de arquitetura não-trivial, bug que resistiu à 1ª tentativa do Sonnet, qualquer coisa onde o raciocínio está claramente na superfície. Chamado via `Agent`/`Workflow` com `model:"opus"` — sem arquivo de subagente dedicado, override inline é suficiente pro tamanho deste projeto.
+- **Haiku 4.5** (`claude-haiku-4-5-20251001`) = mecânico e rápido (renomear, edits triviais, rodar comando, boilerplate repetitivo). Chamado com `model:"haiku"` quando o trabalho é bem definido e não exige julgamento.
+- **Fable 5** (`claude-fable-5`) = conselheiro sob demanda, ver `.claude/agents/conselheiro-fable.md`.
+
+**Escada de escalação é LINEAR: Sonnet → Opus → Fable.** Sonnet nunca chama o Fable direto — se reconhece algo genuinamente difícil, escala pro Opus; é o **Opus** quem decide, por julgamento, se aciona o conselheiro Fable — só quando (a) o problema resiste ao próprio raciocínio do Opus, ou (b) é decisão de arquitetura realmente cabeluda onde a capacidade extra do Fable muda o resultado de forma mensurável.
+
+Regras anti-falha: Sonnet nunca insiste sozinho em trabalho que claramente pede mais capacidade (na dúvida, escala pro Opus); Opus nunca insiste sozinho num problema que claramente o superou (na dúvida, escala pro Fable); Fable nunca é chamado pra grunt work ou planejamento trivial (queima crédito à toa).
+
+### Ponytail — escada de minimalismo (adaptada do princípio, não o plugin real)
+
+Antes de gerar qualquer código, rodar esta escada de 7 degraus, nessa ordem exata (baseado em github.com/DietrichGebert/ponytail — aqui é só o princípio nas instruções, sem hooks/plugin de terceiro rodando automaticamente a cada turno):
+
+1. **Precisa existir?** (YAGNI — pular a feature se não for necessária)
+2. **Já existe no código?** (reusar antes de reescrever — ex: `T.iconTile`, `T.cardShadow`, `T.pageBg` já existem exatamente pra isso)
+3. **Standard library resolve?**
+4. **Recurso nativo da plataforma resolve?** (ex: `<input type="date">` em vez de um date-picker customizado)
+5. **Dependência já instalada resolve?**
+6. **Dá pra fazer em 1 linha?**
+7. **Só então: o mínimo que funciona.**
+
+Isso formaliza o que o projeto já pratica (regra de stack: "questionar se o próximo bundler/dependência vale o ganho" — ver seção Stack). **Nunca corta em**: validação de input, tratamento de perda de dado, segurança, acessibilidade — essas guardas não entram na escada, são sempre mantidas.
+
+Enforcement em 2 pontos: (1) **na entrada** — quem vai implementar (Sonnet, Opus quando escalado, ou Fable quando convocado) roda a escada antes de escrever ("isso precisa mesmo existir?"); (2) **na saída** — ao revisar output de um subagente delegado, rejeitar over-engineering antes de aceitar (arquivo/dependência desnecessária, abstração prematura, componente novo onde um degrau menor resolvia).
+
+**Atalho deliberado**: se cortar caminho conscientemente (ex: hardcode temporário em vez de generalizar agora), marcar com comentário `ponytail: <o quê + caminho de upgrade>` no código — não é atalho negligente, é decisão registrada pra achar depois (`grep -rn "ponytail:" src/` levanta a lista).
+
+-----
+
 ## Princípios e práticas (NÃO NEGOCIÁVEIS)
 
 ### Workflow obrigatório
