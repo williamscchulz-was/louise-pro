@@ -10,12 +10,17 @@ on:
     branches: [main]
   workflow_dispatch:
 
-# Only one deploy at a time. Cancel older pending runs if a new push
-# arrives, but let the running one finish so a production deploy isn't
-# aborted mid-flight.
+# Only one deploy at a time. cancel-in-progress:true — se duas runs
+# disparam quase juntas pro mesmo push (visto 2x: v11.9.117 e o redeploy
+# vazio seguinte — provável corrida entre um push manual e o hook de
+# auto-push do fim de turno), a run mais velha é cancelada de forma limpa
+# em vez de deixar as duas competirem pelo mesmo deploy do GitHub Pages,
+# onde uma delas falhava com erro real (não cancelamento). Como cada run
+# builda o MESMO commit, cancelar a mais velha nunca perde trabalho —
+# a run nova reproduz o mesmo dist/ e termina o deploy sozinha.
 concurrency:
   group: pages
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 permissions:
   contents: read
