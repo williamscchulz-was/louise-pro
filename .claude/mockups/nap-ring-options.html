@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Opções de animação — Soneca no Ring</title>
+<style>
+  :root{
+    --bg0:#070b1e; --bg1:#0d1133; --bg2:#141a42; --bg3:#1a1f52;
+    --purple:#7c3aed; --purple2:#c084fc; --lilac:#c4b5fd; --heading:#f0f2ff; --sub:#a3aac8;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family:'Outfit',-apple-system,'Segoe UI',sans-serif;
+    background:
+      radial-gradient(ellipse 140% 55% at 50% 0%, var(--bg3) 0%, transparent 60%),
+      radial-gradient(ellipse at 50% 100%, #10153d 0%, var(--bg0) 65%), var(--bg0);
+    color:var(--heading); padding:36px 20px 80px;
+  }
+  .wrap{max-width:420px;margin:0 auto}
+  h1{font-size:22px;font-weight:800;letter-spacing:-0.3px;margin:0 0 6px;
+     background:linear-gradient(180deg,#fff,var(--lilac));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .dek{font-size:13px;color:var(--sub);line-height:1.6;margin:0 0 28px}
+
+  .today{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:16px;margin-bottom:32px;display:flex;gap:14px;align-items:center}
+  .today .lbl{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--sub);margin-bottom:3px}
+  .today .desc{font-size:12.5px;color:var(--sub);line-height:1.5}
+
+  .card{background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:22px 18px 20px;margin-bottom:22px;position:relative;overflow:hidden}
+  .card .tag{position:absolute;top:14px;left:18px;font-size:10px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--lilac)}
+  .stage{width:220px;height:220px;margin:30px auto 6px;position:relative}
+  .stage svg.arc-svg{position:absolute;inset:0}
+  .center-fx{position:absolute;top:50%;left:50%;width:60%;height:60%;transform:translate(-50%,-50%);border-radius:50%;overflow:hidden;pointer-events:none}
+  .rider{position:absolute;z-index:4;filter:drop-shadow(0 2px 6px rgba(0,0,0,.5))}
+  .name{text-align:center;font-size:15px;font-weight:800;letter-spacing:-0.2px;margin-top:8px}
+  .desc-row{display:flex;gap:8px;margin-top:12px;font-size:12px;color:var(--sub);line-height:1.55}
+  .desc-row b{color:var(--heading);font-weight:700}
+  .note{font-size:11.5px;color:var(--sub);opacity:0.85;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.06)}
+
+  /* ambient nebula core (shared) */
+  .neb{position:absolute;top:50%;left:50%;width:62%;height:40%;transform:translate(-50%,-50%);border-radius:50%;filter:blur(16px);pointer-events:none}
+  @keyframes nebBreathe{0%,100%{opacity:.6;transform:translate(-50%,-50%) scale(.9)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}}
+  .neb{animation:nebBreathe 6s ease-in-out infinite}
+
+  /* A) SHEEP */
+  @keyframes sheepBob{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-4px) rotate(4deg)}}
+  .sheep-rider{animation:sheepBob 2.6s ease-in-out infinite;transform-origin:50% 85%}
+  @keyframes zzzFloat{0%{transform:translateY(0) scale(.6);opacity:0}20%{opacity:1}100%{transform:translateY(-46px) scale(1.05);opacity:0}}
+  .zzz{position:absolute;bottom:8px;font-weight:800;font-family:Georgia,serif;color:#e9d5ff;animation:zzzFloat 3.2s ease-in infinite}
+
+  /* B) CLOUD */
+  @keyframes cloudDrift{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+  .cloud-rider{animation:cloudDrift 3.4s ease-in-out infinite}
+  @keyframes mistPulse{0%,100%{opacity:.45;transform:translate(-50%,-50%) scale(.9)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}}
+  .mist{position:absolute;top:50%;left:50%;width:105%;height:60%;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(ellipse at 50% 50%,rgba(196,181,253,0.2),transparent 70%);filter:blur(5px);animation:mistPulse 5s ease-in-out infinite}
+
+  /* C) MOON */
+  @keyframes moonBob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-3px) rotate(3deg)}}
+  .moon-rider{animation:moonBob 3s ease-in-out infinite}
+  @keyframes sparkleTwinkle{0%,100%{opacity:.15;transform:scale(.7)}50%{opacity:1;transform:scale(1.15)}}
+  .sparkle{position:absolute;border-radius:50%;background:#fff;animation:sparkleTwinkle 2.4s ease-in-out infinite}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Soneca no Ring — 3 opções</h1>
+  <p class="dek">Hoje a soneca é só um círculo genérico brilhando (ícone de nuvem). O banho ganhou o patinho + água no miolo — aqui vão 3 caminhos equivalentes pra soneca. Escolhe uma (ou pede ajuste) e eu implemento igual fizemos com o banho.</p>
+
+  <div class="today">
+    <div style="width:44px;height:44px;border-radius:50%;background:radial-gradient(circle,rgba(124,58,237,0.35),rgba(124,58,237,0.08));border:1px solid rgba(192,132,252,0.4);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c084fc" stroke-width="2"><path d="M18 10h1a4 4 0 010 8H7a5 5 0 01-.5-9.96A7 7 0 0118 10z"/></svg>
+    </div>
+    <div><div class="lbl">Hoje</div><div class="desc">Círculo genérico + ícone de nuvem, sem personagem, sem efeito no miolo além da nebulosa padrão.</div></div>
+  </div>
+
+  <!-- ============ A: SHEEP ============ -->
+  <div class="card">
+    <span class="tag">Opção A</span>
+    <div class="stage">
+      <svg class="arc-svg" viewBox="0 0 220 220"><path d="M 40 175 A 90 90 0 1 1 180 175" fill="none" stroke="url(#gA)" stroke-width="14" stroke-linecap="round"/><defs><linearGradient id="gA" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#c084fc"/><stop offset="100%" stop-color="#7c3aed"/></linearGradient></defs></svg>
+      <div class="neb" style="background:radial-gradient(ellipse at 50% 50%,rgba(139,124,246,0.28),rgba(124,58,237,0.1) 46%,transparent 73%)"></div>
+      <div class="center-fx">
+        <div class="zzz" style="left:44%;font-size:13px;animation-delay:0s">z</div>
+        <div class="zzz" style="left:54%;font-size:17px;animation-delay:1.1s">z</div>
+        <div class="zzz" style="left:48%;font-size:21px;animation-delay:2.2s">Z</div>
+      </div>
+      <div class="rider sheep-rider" style="left:34px;top:60px">
+        <svg width="42" height="34" viewBox="0 0 44 36">
+          <ellipse cx="17" cy="19" rx="5.5" ry="5" fill="#f4f1ea"/>
+          <ellipse cx="24" cy="15" rx="6" ry="5.5" fill="#f4f1ea"/>
+          <ellipse cx="27" cy="22" rx="6.5" ry="6" fill="#f4f1ea"/>
+          <ellipse cx="19" cy="24" rx="6" ry="5.5" fill="#f4f1ea"/>
+          <ellipse cx="22" cy="20" rx="9" ry="7.5" fill="#fdfcf9"/>
+          <ellipse cx="10" cy="21" rx="6.5" ry="6" fill="#e8c9a0"/>
+          <path d="M4 17 Q1 21 5 24" stroke="#d9b183" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+          <path d="M6.5 19 q2 -1.5 3.5 0" stroke="#5c4632" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+          <path d="M12.5 19 q2 -1.5 3.5 0" stroke="#5c4632" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+          <path d="M9 25 q1.5 1.3 3 0" stroke="#c48f5e" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+    <div class="name">🐑 Ovelha saltando</div>
+    <div class="desc-row"><span><b>Carona no arco:</b> ovelhinha fofa (corpo de nuvenzinhas + rostinho de olhos fechados) pulando/balançando ao longo do arco, tipo "contando carneirinhos".<br><b>Miolo:</b> bolhinhas "zzz" subindo devagar e sumindo, no lugar da água do banho.</span></div>
+    <div class="note">Mais "literal e fofo" (mesma categoria do patinho). Risco: nenhum — motivo de sono universalmente reconhecível.</div>
+  </div>
+
+  <!-- ============ B: CLOUD ============ -->
+  <div class="card">
+    <span class="tag">Opção B</span>
+    <div class="stage">
+      <svg class="arc-svg" viewBox="0 0 220 220"><path d="M 40 175 A 90 90 0 1 1 180 175" fill="none" stroke="url(#gB)" stroke-width="14" stroke-linecap="round"/><defs><linearGradient id="gB" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#c084fc"/><stop offset="100%" stop-color="#7c3aed"/></linearGradient></defs></svg>
+      <div class="neb" style="background:radial-gradient(ellipse at 50% 50%,rgba(165,180,252,0.24),rgba(99,102,241,0.09) 46%,transparent 73%)"></div>
+      <div class="center-fx"><div class="mist"></div><div class="mist" style="animation-delay:2.5s;width:70%;height:38%"></div></div>
+      <div class="rider cloud-rider" style="left:90px;top:35px">
+        <svg width="44" height="34" viewBox="0 0 46 34">
+          <path d="M9 24 Q2 24 2 18 Q2 12 9 13 Q10 6 18 7 Q25 2 31 8 Q40 7 40 15 Q44 16 42 22 Q41 26 34 25 Z" fill="#e9e6ff"/>
+          <path d="M14 17 q1.8 -1.4 3.2 0" stroke="#7c6ba8" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+          <path d="M21 17 q1.8 -1.4 3.2 0" stroke="#7c6ba8" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+          <path d="M15.5 22 q2.5 2 5 0" stroke="#a396c9" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+    <div class="name">☁️ Nuvem sonolenta</div>
+    <div class="desc-row"><span><b>Carona no arco:</b> nuvenzinha fofa com rostinho de olhos fechados e sorriso leve, boiando/derivando devagar (mais lento que o patinho, tipo flutuando).<br><b>Miolo:</b> névoa suave atravessando devagar, tipo neblina de sonho.</span></div>
+    <div class="note">Reforça o ícone que já existe hoje pra soneca (nuvem). Risco: pode competir visualmente com a nebulosa de fundo, que já é meio "nublada" — precisa contraste de cor bem definido.</div>
+  </div>
+
+  <!-- ============ C: MOON ============ -->
+  <div class="card">
+    <span class="tag">Opção C</span>
+    <div class="stage">
+      <svg class="arc-svg" viewBox="0 0 220 220"><path d="M 40 175 A 90 90 0 1 1 180 175" fill="none" stroke="url(#gC)" stroke-width="14" stroke-linecap="round"/><defs><linearGradient id="gC" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#c084fc"/><stop offset="100%" stop-color="#7c3aed"/></linearGradient></defs></svg>
+      <div class="neb" style="background:radial-gradient(ellipse at 50% 50%,rgba(148,163,255,0.22),rgba(79,70,229,0.08) 46%,transparent 73%)"></div>
+      <div class="center-fx">
+        <div class="sparkle" style="left:30%;top:35%;width:3px;height:3px;animation-delay:.2s"></div>
+        <div class="sparkle" style="left:62%;top:28%;width:2px;height:2px;animation-delay:1s"></div>
+        <div class="sparkle" style="left:70%;top:55%;width:3px;height:3px;animation-delay:1.7s"></div>
+        <div class="sparkle" style="left:38%;top:62%;width:2px;height:2px;animation-delay:.6s"></div>
+      </div>
+      <div class="rider moon-rider" style="left:150px;top:65px">
+        <svg width="38" height="38" viewBox="0 0 40 40">
+          <path d="M24 4 A16 16 0 1 0 24 36 A12.5 12.5 0 0 1 24 4 Z" fill="#fde9a8"/>
+          <path d="M17 19 q1.6 -1.3 3 0" stroke="#8a6d2e" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+          <path d="M23 19 q1.6 -1.3 3 0" stroke="#8a6d2e" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+          <path d="M18.5 24 q2.5 2 5 0" stroke="#b9925a" stroke-width="1" fill="none" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+    <div class="name">🌙 Lua cochilando</div>
+    <div class="desc-row"><span><b>Carona no arco:</b> luinha crescente com rostinho de olhos fechados, balançando de leve.<br><b>Miolo:</b> poeira de estrelas extra cintilando (reforça o tema "cosmos" do app).</span></div>
+    <div class="note">Mais alinhada ao tema geral do app (cosmos), mas a lua já aparece hoje como marcador do "bedtime" no próprio Ring — pode confundir soneca com hora de dormir à noite. É a opção com mais risco de sobreposição de significado.</div>
+  </div>
+
+  <div style="text-align:center;font-size:12px;color:var(--sub);margin-top:8px">Nas 3: se aprovado, tiro a "ponta-cometa" atual da soneca (mesma lição do banho — 2 marcadores brigando fica poluído).</div>
+</div>
+</body>
+</html>

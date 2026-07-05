@@ -4,6 +4,21 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.119", date: "2026-07-05",
+    pt: {
+      title: "Ovelhinha na soneca",
+      bullets: [
+        '★ Igual o banho ganhou o patinho, a **soneca** agora tem sua própria ovelhinha boiando no arco do Ring — com "zzz" subindo no miolo.',
+      ],
+    },
+    en: {
+      title: "A little sheep for naps",
+      bullets: [
+        '★ Just like bath got its rubber duck, **naps** now have their own little sheep riding the Ring\'s arc — with "zzz" floating up from the center.',
+      ],
+    },
+  },
+  {
     v: "11.9.118", date: "2026-07-05",
     pt: {
       title: "Fix: etapa atrasada da rotina ficava presa mesmo com o dia seguindo",
