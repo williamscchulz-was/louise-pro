@@ -4,6 +4,21 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.120", date: "2026-07-05",
+    pt: {
+      title: "Transição de atualização vira tela cheia",
+      bullets: [
+        '★ Quando o app atualiza sozinho em segundo plano, sumiu o banner verde que ficava empilhado por cima da tela (brigando com o aviso de nova versão). Agora é uma **tela cheia com a silhueta do splash se redesenhando** — igual a abertura do app — antes de recarregar.',
+      ],
+    },
+    en: {
+      title: "Update transition is now full-screen",
+      bullets: [
+        '★ When the app updates itself in the background, the small green banner that used to stack on top of the screen (fighting with the new-version notice) is gone. It\'s now a **full-screen redraw of the splash silhouette** — same as opening the app — before reloading.',
+      ],
+    },
+  },
+  {
     v: "11.9.119", date: "2026-07-05",
     pt: {
       title: "Ovelhinha na soneca",

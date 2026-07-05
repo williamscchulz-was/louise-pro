@@ -1,0 +1,135 @@
+<meta charset="UTF-8">
+<title>Transição de atualização — 3 opções</title>
+<style>
+  :root{--bg0:#070b1e;--bg1:#0d1133;--bg3:#1a1f52;--heading:#f0f2ff;--sub:#a3aac8;--lilac:#c4b5fd;--accent:#8b7cf6;--green:#34d399}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Outfit',-apple-system,'Segoe UI',sans-serif;background:radial-gradient(ellipse 140% 55% at 50% 0%,var(--bg3) 0%,transparent 60%),radial-gradient(ellipse at 50% 100%,#10153d 0%,var(--bg0) 65%),var(--bg0);color:var(--heading);padding:36px 20px 80px}
+  .wrap{max-width:440px;margin:0 auto}
+  h1{font-size:22px;font-weight:800;letter-spacing:-.3px;margin:0 0 6px;background:linear-gradient(180deg,#fff,var(--lilac));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .dek{font-size:13px;color:var(--sub);line-height:1.6;margin:0 0 24px}
+  .problem{background:rgba(248,113,113,0.06);border:1px solid rgba(248,113,113,0.18);border-radius:16px;padding:16px;margin-bottom:32px}
+  .problem .lbl{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#f87171;margin-bottom:8px}
+  .problem-demo{position:relative;height:70px;background:rgba(20,26,60,0.5);border-radius:12px;overflow:hidden}
+  .p-toast{position:absolute;top:34px;left:10px;right:10px;height:28px;border-radius:8px;background:linear-gradient(180deg,rgba(155,141,248,0.9),rgba(124,58,237,0.85));display:flex;align-items:center;padding:0 10px;font-size:9px;font-weight:700;color:#fff}
+  .p-banner{position:absolute;top:8px;left:10px;right:10px;height:24px;border-radius:8px;background:linear-gradient(180deg,#34d399,#10b981);display:flex;align-items:center;gap:6px;padding:0 10px;font-size:9px;font-weight:800;color:#052015}
+  .problem .desc{font-size:12px;color:var(--sub);margin-top:10px;line-height:1.5}
+
+  .card{background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.08);border-radius:22px;padding:20px 18px;margin-bottom:24px}
+  .tag{font-size:10px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--lilac);margin-bottom:14px;display:block}
+  .phone{width:230px;height:420px;margin:0 auto;border-radius:32px;border:6px solid #05060f;background:#070b1e;position:relative;overflow:hidden;box-shadow:0 20px 50px -12px rgba(0,0,0,.7)}
+  .name{text-align:center;font-size:15px;font-weight:800;margin-top:14px}
+  .desc-row{font-size:12px;color:var(--sub);line-height:1.55;margin-top:10px}
+  .desc-row b{color:var(--heading)}
+  .note{font-size:11px;color:var(--sub);opacity:.85;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.06)}
+
+  /* ============ A: silhueta redesenhando ============ */
+  .stageA{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(ellipse 140% 55% at 50% 100%,#1a1f52 0%,transparent 70%),radial-gradient(ellipse at 50% 0%,#10153d 0%,#070b1e 65%),#070b1e}
+  .starsA{position:absolute;inset:0}
+  .starsA span{position:absolute;width:2px;height:2px;border-radius:50%;background:rgba(160,170,255,.5)}
+  @keyframes haloBreatheA{0%,100%{opacity:.35;transform:translate(-50%,-50%) scale(.9)}50%{opacity:.8;transform:translate(-50%,-50%) scale(1.08)}}
+  .haloA{position:absolute;top:50%;left:50%;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(167,139,250,.35),transparent 70%);filter:blur(10px);transform:translate(-50%,-50%);animation:haloBreatheA 2.4s ease-in-out infinite}
+  @keyframes drawA{to{stroke-dashoffset:0}}
+  @keyframes fillA{0%,55%{opacity:0}100%{opacity:1}}
+  .silDraw{stroke-dasharray:1;stroke-dashoffset:1;animation:drawA 1.8s cubic-bezier(.4,0,.2,1) 3}
+  .silFill{opacity:0;animation:fillA 1.8s ease infinite}
+  .txtA{margin-top:16px;font-size:12px;color:var(--sub);letter-spacing:.3px;animation:fillA 1.8s ease infinite}
+  .dotsA span{animation:dotBlink 1.4s ease-in-out infinite}
+  .dotsA span:nth-child(2){animation-delay:.2s}.dotsA span:nth-child(3){animation-delay:.4s}
+  @keyframes dotBlink{0%,100%{opacity:.2}50%{opacity:1}}
+
+  /* ============ B: estrelas se reorganizando ============ */
+  .stageB{position:absolute;inset:0;background:radial-gradient(ellipse 140% 55% at 50% 100%,#1a1f52 0%,transparent 70%),radial-gradient(ellipse at 50% 0%,#10153d 0%,#070b1e 65%),#070b1e}
+  .starB{position:absolute;width:5px;height:5px;border-radius:50%;background:#fff;box-shadow:0 0 8px rgba(196,181,253,.8);animation:convergeB 2.6s ease-in-out infinite}
+  @keyframes convergeB{0%{transform:translate(0,0) scale(1);opacity:.9}55%{transform:translate(var(--tx),var(--ty)) scale(.4);opacity:.5}100%{transform:translate(0,0) scale(1);opacity:.9}}
+  .coreB{position:absolute;top:50%;left:50%;width:26px;height:26px;border-radius:50%;background:radial-gradient(circle,#fff,rgba(196,181,253,.6) 60%,transparent);transform:translate(-50%,-50%);animation:coreBreatheB 2.6s ease-in-out infinite}
+  @keyframes coreBreatheB{0%,100%{opacity:.5;transform:translate(-50%,-50%) scale(.7)}55%{opacity:1;transform:translate(-50%,-50%) scale(1.3)}}
+  .txtB{position:absolute;bottom:120px;left:0;right:0;text-align:center;font-size:12px;color:var(--sub)}
+
+  /* ============ C: respiro do anel ============ */
+  .stageC{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse 140% 55% at 50% 100%,#1a1f52 0%,transparent 70%),radial-gradient(ellipse at 50% 0%,#10153d 0%,#070b1e 65%),#070b1e}
+  .ringC{width:130px;height:130px;border-radius:50%;border:10px solid transparent;border-top-color:#c084fc;border-right-color:#c084fc;animation:spinC 1.6s linear infinite;position:relative}
+  @keyframes spinC{to{transform:rotate(360deg)}}
+  .checkC{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);opacity:0;animation:popC 3.2s ease infinite}
+  @keyframes popC{0%,70%{opacity:0;transform:translate(-50%,-50%) scale(.5)}85%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}100%{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+  .txtC{position:absolute;bottom:120px;left:0;right:0;text-align:center;font-size:12px;color:var(--sub)}
+</style>
+
+<div class="wrap">
+  <h1>Transição de atualização</h1>
+  <p class="dek">Hoje, quando um novo Service Worker assume o controle, um banner verde aparece EM CIMA da tela que já estava aberta — que às vezes ainda mostra o toast roxo "you're on vX" por baixo. Os dois brigando é o que você viu no print. Aqui vão 3 propostas de tela cheia, cobrindo tudo de forma intencional, com uma animação fofa em vez do banner + reload seco.</p>
+
+  <div class="problem">
+    <div class="lbl">Hoje (o problema)</div>
+    <div class="problem-demo">
+      <div class="p-toast">You're on v11.9.118. Tap to see what's new.</div>
+      <div class="p-banner"><span style="width:8px;height:8px;border:1.5px solid rgba(5,8,32,.4);border-top-color:#052015;border-radius:50%;display:inline-block;animation:spinC .8s linear infinite"></span> Atualizando Louise Pro…</div>
+    </div>
+    <div class="desc">Banner de 800ms empilhado por cima do toast antigo, depois reload seco. Os dois competem visualmente e não parecem parte do mesmo app.</div>
+  </div>
+
+  <!-- ============ A ============ -->
+  <div class="card">
+    <span class="tag">Opção A — Recomendada</span>
+    <div class="phone">
+      <div class="stageA">
+        <div class="starsA" id="starsA"></div>
+        <div class="haloA"></div>
+        <svg width="90" height="90" viewBox="0 0 512 512" style="position:relative;z-index:1">
+          <defs><linearGradient id="gA1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e7deff"/><stop offset="1" stop-color="#8b7cf6"/></linearGradient></defs>
+          <path d="M 251.500 82.468 C 235.776 85.897, 226.386 91.743, 207.976 109.561 C 200.537 116.760, 190.187 125.805, 184.976 129.660 C 169.740 140.932, 164.231 148.366, 163.271 158.950 C 161.899 174.074, 171.303 192.232, 185.602 202.070 L 189.899 205.027 187.773 200.263 C 185.328 194.785, 184.013 179.587, 185.827 177.773 C 186.607 176.993, 188.695 178.348, 193.255 182.594 C 208.520 196.807, 229.709 203.970, 261 205.494 C 290.767 206.944, 296.365 210.624, 297.195 229.285 C 298.209 252.073, 310.558 265.347, 336.430 271.461 C 358.051 276.569, 369.241 287.034, 377.365 309.739 C 381.748 321.989, 381.971 348.244, 377.807 361.829 L 375.255 370.157 379.086 366.416 C 381.193 364.359, 382.746 362.399, 382.538 362.061 C 382.329 361.724, 384.200 359.209, 386.695 356.474 C 389.191 353.738, 390.842 352.196, 390.366 353.047 C 389.888 353.902, 390.281 353.743, 391.245 352.693 C 392.204 351.647, 392.733 350.377, 392.420 349.871 C 392.107 349.365, 392.447 349.074, 393.176 349.225 C 393.927 349.381, 394.435 348.714, 394.350 347.683 C 394.267 346.684, 394.452 346.119, 394.760 346.427 C 395.697 347.364, 398.167 343.080, 397.403 341.844 C 396.972 341.146, 397.130 340.962, 397.802 341.377 C 399.397 342.363, 406.479 327.011, 409.604 315.794 C 413.319 302.459, 414.088 277.794, 411.217 264 C 407.403 245.665, 400.295 231.180, 386.379 213.379 C 371.896 194.852, 368.533 187.974, 364.475 168.581 C 361.439 154.074, 359.684 148.435, 355.737 140.500 C 345.047 119.010, 322.901 97.177, 302.330 87.850 C 288.140 81.416, 266.720 79.148, 251.500 82.468 M 188.202 189.559 C 188.850 198.574, 192.162 205.524, 200.034 214.382 C 208.861 224.316, 209.320 226.328, 206.395 242.268 C 204.366 253.320, 204.694 253.814, 214.300 254.208 L 221.424 254.500 222.096 257.801 C 222.920 261.849, 223.298 262.250, 226.286 262.250 C 227.963 262.250, 228.965 263.068, 229.712 265.047 C 230.473 267.064, 231.567 267.936, 233.634 268.172 C 235.891 268.430, 237.052 269.524, 239.101 273.323 C 245.949 286.021, 252.592 285.757, 268.500 272.155 C 279.704 262.575, 282.113 261.604, 282.533 266.500 C 282.580 267.050, 283.702 269.750, 285.025 272.500 C 293.960 291.063, 278.597 315.916, 244.309 338.370 C 238.704 342.041, 232.456 346.946, 230.424 349.272 C 227.295 352.852, 226.826 353.117, 227.361 351 C 227.709 349.625, 228.272 346.025, 228.611 343 C 228.961 339.888, 230.214 335.981, 231.499 334 C 237.406 324.895, 234.368 318.061, 223.060 315.016 C 218.319 313.739, 215 315.451, 215 319.174 C 215 320.643, 214.491 320.910, 212.597 320.435 C 208.215 319.335, 207.550 323.926, 210.879 332.306 C 212.129 335.453, 210.993 338.338, 206.571 343.250 C 203.412 346.760, 204.120 347.014, 196.799 339.750 C 193.335 336.313, 188.813 332.243, 186.750 330.707 C 182.602 327.618, 181.983 326, 184.951 326 C 194.327 326, 202 321.386, 202 315.748 C 202 313.906, 202.486 311.914, 203.079 311.321 C 204.912 309.488, 206.145 302.140, 204.984 299.969 C 204.203 298.510, 204.352 297.219, 205.578 294.850 L 207.216 291.681 203.468 288.534 L 199.720 285.387 199.908 276.859 C 200.236 261.955, 194.622 251.892, 182.708 246.029 C 164.536 237.087, 139.947 240.523, 126.344 253.905 C 115.658 264.417, 111.100 284.730, 116.517 297.696 C 117.758 300.665, 117.651 301.669, 115.392 308.239 C 111.455 319.689, 108.813 331.926, 108.752 338.996 C 108.696 345.434, 114.348 370.142, 116.026 370.798 C 116.445 370.962, 116.540 372.045, 116.236 373.204 C 115.827 374.768, 116.024 375.103, 116.997 374.502 C 117.888 373.951, 118.069 374.080, 117.560 374.902 C 116.501 376.616, 117.820 381.229, 119.136 380.416 C 119.856 379.971, 119.977 380.498, 119.500 382 C 119.052 383.413, 119.159 384.020, 119.788 383.631 C 121.013 382.874, 122.262 385.767, 121.349 387.245 C 120.987 387.830, 121.144 388.029, 121.699 387.686 C 122.663 387.090, 128.639 394.422, 128.883 396.500 C 128.947 397.050, 129.338 397.510, 129.750 397.521 C 130.614 397.546, 161.021 428, 160.181 428 C 159.876 428, 160.904 429.334, 162.466 430.964 C 164.028 432.595, 165.660 433.710, 166.093 433.443 C 166.526 433.175, 168.144 434.541, 169.690 436.478 L 172.500 440 230.089 440 L 287.678 440 296.158 431.750 C 300.822 427.212, 310.947 416.300, 318.659 407.500 C 326.370 398.700, 333.520 390.825, 334.547 390 C 337.953 387.266, 318.346 412.279, 306.576 425.683 C 300.209 432.934, 295 439.092, 295 439.368 C 295 440.112, 343.405 440.165, 345.336 439.424 L 355 419 358 407 361.989 398.493 C 362.723 398.442, 362.382 397.552, 362.054 396.698, 362.270 396, 362.862 396 C 366.678 387.325, 366.045 385.675, 366.952 385 C 367.876 384.606, 367.576 384.124 C 367.022 383.227, 370.905 370.896, 373.441 365.500 C 375.677 360.741, 377.993 345.339, 377.997 335.208 C 378.003 316.444, 372.105 299.628, 361.499 288.172 C 354.722 280.852, 347.202 276.842, 335.114 274.100 C 307.682 267.880, 294.032 251.793, 294.006 225.654 C 293.993 212.789, 287.851 209.911, 256.500 208.075 C 227.061 206.352, 211.547 200.881, 190.602 184.837 L 187.704 182.617 188.202 189.559 M 122.849 317.595 C 122.670 327.002, 122.806 330.027, 123.680 336 C 124.315 340.338, 124.364 340.392, 125.051 337.500 C 125.443 335.850, 125.817 332.163, 125.882 329.307 C 125.976 325.153, 126.445 323.802, 128.223 322.557 C 134.037 318.484, 138.540 323.367, 139.441 334.722 C 139.781 339, 141.264 346.294, 142.737 350.932 C 144.946 357.884, 145.389 361.039, 145.263 368.913 L 145.110 378.463 149.454 382.508 C 158.932 391.334, 221.097 422.651, 227.472 421.811 C 229.249 421.577, 233.705 416.197, 245.537 400 C 261.952 377.530, 278.600 353.322, 275.797 356 C 273.883 357.829, 259.515 376.316, 248.207 391.500 C 240.834 401.400, 234.624 409.685, 234.407 409.911 C 233.509 410.845, 229.598 406.138, 227.003 401 C 222.687 392.456, 221 385.481, 221 376.184 L 221 367.730 218.920 370.375 C 217.776 371.829, 216.356 372.720, 215.765 372.355 C 213.455 375.867, 213.684 376.531, 215.932 378.782 C 217.836 380.689, 219.012 383.364, 219.873 387.747 C 221.373 395.389, 223.166 399.793, 227.597 406.718 C 235.085 418.425, 231.328 420.973, 216.237 414.425 C 189.780 402.946, 157.176 385.769, 151.138 380.129 C 148.264 377.444, 148.165 377.051, 148.191 368.425 C 148.213 361.370, 147.644 357.719, 145.473 351 C 143.820 345.880, 142.473 338.968, 142.087 333.618 C 141.468 325.022, 141.335 324.643, 137.973 321.837 C 136.063 320.242, 134.500 318.542, 134.500 318.059 C 134.500 316.858, 129.482 313, 127.921 313 C 127.226 313, 125.835 312.255, 124.829 311.345 C 123.073 309.756, 122.994 310.004, 122.849 317.595"
+            fill="url(#gA1)" class="silFill" fill-rule="evenodd"/>
+          <path d="M 251.500 82.468 C 235.776 85.897, 226.386 91.743, 207.976 109.561 C 200.537 116.760, 190.187 125.805, 184.976 129.660 C 169.740 140.932, 164.231 148.366, 163.271 158.950 C 161.899 174.074, 171.303 192.232, 185.602 202.070"
+            fill="none" stroke="url(#gA1)" stroke-width="3" stroke-linecap="round" pathLength="1" class="silDraw"/>
+        </svg>
+        <div class="txtA">Deixando tudo prontinho<span class="dotsA"><span>.</span><span>.</span><span>.</span></span></div>
+      </div>
+    </div>
+    <div class="name">✨ Silhueta se redesenhando</div>
+    <div class="desc-row"><b>Reaproveita</b> o traço-e-preenche real do splash de abertura (mesmo asset, mesmo gradiente) — em vez de inventar algo novo, a logo "se refaz" pra comunicar "tudo novo por dentro". Texto quente no lugar de "Atualizando Louise Pro…".</div>
+    <div class="note">Cobre a tela INTEIRA assim que o novo Service Worker assume — a tela antiga (e o toast "you're on vX" que porventura estivesse mostrando) nunca fica visível por baixo.</div>
+  </div>
+
+  <!-- ============ B ============ -->
+  <div class="card">
+    <span class="tag">Opção B</span>
+    <div class="phone">
+      <div class="stageB" id="stageB"></div>
+    </div>
+    <div class="name">💫 Estrelas se reorganizando</div>
+    <div class="desc-row">Um punhado de estrelas do próprio starfield converge devagar pro centro, pulsando, e se espalha de novo — como se o cosmos do app estivesse "se reorganizando por dentro". Nenhum asset novo, só o vocabulário de partículas que já existe no Ring/Starfield.</div>
+    <div class="note">Mais abstrato que a opção A; funciona bem mas não tem tanta "personalidade de marca" quanto a silhueta.</div>
+  </div>
+
+  <!-- ============ C ============ -->
+  <div class="card">
+    <span class="tag">Opção C</span>
+    <div class="phone">
+      <div class="stageC">
+        <div class="ringC"></div>
+        <svg class="checkC" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        <div class="txtC">Só um instante…</div>
+      </div>
+    </div>
+    <div class="name">💜 Respiro do anel</div>
+    <div class="desc-row">Reaproveita a estética do próprio Ring (arco girando, cor lilás) — um respiro rápido que termina com um check verde de "pronto". Mais funcional/direto, menos "fofo" que as outras duas.</div>
+    <div class="note">A mais rápida de implementar (reusa cores/curvas já no styles.css), mas é a que menos comunica "carinho" — mais parecida com um loading genérico.</div>
+  </div>
+
+  <div style="text-align:center;font-size:12px;color:var(--sub);margin-top:8px">Nas 3: tela cheia (zIndex acima de tudo) some sozinha e recarrega ~1.4-1.8s depois — sem banner, sem toast por baixo brigando.</div>
+</div>
+
+<script>
+  const starsA=document.getElementById('starsA');
+  for(let i=0;i<18;i++){const s=document.createElement('span');s.style.left=Math.random()*100+'%';s.style.top=Math.random()*100+'%';s.style.opacity=(Math.random()*.5+.2);starsA.appendChild(s)}
+  const stageB=document.getElementById('stageB');
+  stageB.innerHTML='<div class="coreB"></div><div class="txtB">Ajeitando as estrelinhas…</div>';
+  for(let i=0;i<10;i++){
+    const s=document.createElement('div');s.className='starB';
+    const ang=(i/10)*Math.PI*2, dist=70+Math.random()*30;
+    s.style.left=(50+Math.cos(ang)*28)+'%';s.style.top=(45+Math.sin(ang)*22)+'%';
+    s.style.setProperty('--tx',(Math.cos(ang)*-dist*0.4)+'px');
+    s.style.setProperty('--ty',(Math.sin(ang)*-dist*0.4)+'px');
+    s.style.animationDelay=(i*0.08)+'s';
+    stageB.appendChild(s);
+  }
+</script>
