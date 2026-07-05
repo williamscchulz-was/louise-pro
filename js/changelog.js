@@ -4,6 +4,21 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.121", date: "2026-07-05",
+    pt: {
+      title: "Fix: cronômetro de soneca/sono mostrava número absurdo após 1h",
+      bullets: [
+        '★ Timer de soneca/sono/banho passando de 1 hora mostrava algo tipo "78:44" em vez de "1:18:44" — o relógio nunca convertia minutos em horas, só ia empilhando minutos. Corrigido.',
+      ],
+    },
+    en: {
+      title: "Fix: nap/sleep timer showed a nonsense number past 1h",
+      bullets: [
+        '★ A nap/sleep/bath timer running past 1 hour showed something like "78:44" instead of "1:18:44" — the clock never rolled minutes over into hours, it just kept stacking minutes. Fixed.',
+      ],
+    },
+  },
+  {
     v: "11.9.120", date: "2026-07-05",
     pt: {
       title: "Transição de atualização vira tela cheia",
