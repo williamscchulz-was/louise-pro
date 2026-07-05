@@ -430,7 +430,7 @@ function App(){
     // Desfazer = apaga as entries criadas + restaura o timer como estava.
     const prevTimer={...activeTimer};
     const undoStop=ids=>async()=>{for(const id of ids)await FB.delEntry(id);await FB.saveTimer(prevTimer)};
-    if(activeTimer.type==="nursing"){const now=Date.now();const elapsed=activeTimer.paused?0:(now-new Date(activeTimer.sideStart).getTime());let lMs=(activeTimer.leftMs||0),rMs=(activeTimer.rightMs||0);if(!activeTimer.paused){if(activeTimer.side==="left")lMs+=elapsed;else rMs+=elapsed}const totalMin=Math.max(1,Math.round((lMs+rMs)/60000));const lMin=Math.round(lMs/60000),rMin=Math.round(rMs/60000);const side=lMs>0&&rMs>0?"both":(lMs>0?"left":"right");const entry={type:"nursing",date:`${s.getFullYear()}-${String(s.getMonth()+1).padStart(2,"0")}-${String(s.getDate()).padStart(2,"0")}`,time:`${String(s.getHours()).padStart(2,"0")}:${String(s.getMinutes()).padStart(2,"0")}`,durationMin:totalMin,side,leftMin:lMin,rightMin:rMin,id:uid()};await FB.addEntry(entry);await FB.saveTimer(null);showToast(_lang==="en"?`Nursing ${totalMin}min (L:${lMin} R:${rMin})`:`Amamentação ${totalMin}min (E:${lMin} D:${rMin})`,undoStop([entry.id]))}else{
+    if(activeTimer.type==="nursing"){const now=Date.now();const elapsed=activeTimer.paused?0:(now-new Date(activeTimer.sideStart).getTime());let lMs=(activeTimer.leftMs||0),rMs=(activeTimer.rightMs||0);if(!activeTimer.paused){if(activeTimer.side==="left")lMs+=elapsed;else rMs+=elapsed}const totalMin=Math.max(1,Math.round((lMs+rMs)/60000));const lMin=Math.round(lMs/60000),rMin=Math.round(rMs/60000);const side=lMs>0&&rMs>0?"both":(lMs>0?"left":"right");const entry={type:"nursing",date:`${s.getFullYear()}-${String(s.getMonth()+1).padStart(2,"0")}-${String(s.getDate()).padStart(2,"0")}`,time:`${String(s.getHours()).padStart(2,"0")}:${String(s.getMinutes()).padStart(2,"0")}`,durationMin:totalMin,side,leftMin:lMin,rightMin:rMin,id:uid()};await FB.stopTimerAndLog([entry]);showToast(_lang==="en"?`Nursing ${totalMin}min (L:${lMin} R:${rMin})`:`Amamentação ${totalMin}min (E:${lMin} D:${rMin})`,undoStop([entry.id]))}else{
     // Sleep/nap stop — if sleep has wakings, persist them on the entry
     let wakings=activeTimer.wakings||[];
     // If there's an unclosed nightWake, close it now
@@ -448,8 +448,9 @@ function App(){
     const mins=activeTimer.type==="tummytime"?Math.max(1/60,elapsedMs/60000):Math.max(1,Math.round(elapsedMs/6e4));
     const entry={type:activeTimer.type,date:`${s.getFullYear()}-${String(s.getMonth()+1).padStart(2,"0")}-${String(s.getDate()).padStart(2,"0")}`,time:`${String(s.getHours()).padStart(2,"0")}:${String(s.getMinutes()).padStart(2,"0")}`,durationMin:activeTimer.type==="tummytime"?Math.round(mins*60)/60:mins,id:uid()};
     if(activeTimer.type==="sleep"&&wakings.length>0)entry.wakings=wakings;
-    const parts=splitMidnight(entry);for(const p of parts) await FB.addEntry(p);await FB.saveTimer(null);
+    const parts=splitMidnight(entry);
     const createdIds=parts.map(p=>p.id);
+    const toWrite=[...parts];
     // Auto-create wakeup event when bedtime ends (not for naps, not for tummytime).
     // v11.9.96: só pra noite DE VERDADE (>=30min) — sleep curto é mis-start e o wakeup
     // fantasma virava âncora do ajuste da rotina.
@@ -457,9 +458,12 @@ function App(){
       const totalAwake=wakings.reduce((s,w)=>s+(w.durationMin||0),0);
       const realSleep=Math.max(0,mins-totalAwake);
       const wakeup={type:"wakeup",date:todayStr(),time:nowTime(),id:uid(),nightSleepMin:realSleep,_autoFromBedtime:true};
-      await FB.addEntry(wakeup);
+      toWrite.push(wakeup);
       createdIds.push(wakeup.id);
     }
+    // v11.9.122: batch atômico — parts + wakeup + limpar timer ativo em 1 commit só
+    // (ver stopTimerAndLog no FB, index.html). Elimina a janela de "timer fantasma".
+    await FB.stopTimerAndLog(toWrite);
     // Toast: tummytime uses mm:ss format, sleep/nap uses min — todos com Desfazer (v11.9.96)
     if(activeTimer.type==="tummytime"){
       const m=Math.floor(mins);const sec=Math.round((mins-m)*60);

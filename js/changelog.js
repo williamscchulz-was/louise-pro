@@ -4,6 +4,21 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.122", date: "2026-07-05",
+    pt: {
+      title: "Fix: timer podia ficar preso mesmo depois de parar de verdade",
+      bullets: [
+        '★ Corrigido bug em que uma soneca/sono/banho já registrado (parado corretamente) continuava aparecendo como "ativo" na tela — se o app fosse pra segundo plano no momento exato de parar, o registro salvava mas o timer ficava fantasma tocando em todos os aparelhos. Agora as duas ações acontecem juntas, de forma atômica.',
+      ],
+    },
+    en: {
+      title: "Fix: timer could get stuck even after really being stopped",
+      bullets: [
+        '★ Fixed a bug where a nap/sleep/bath that was already logged (stopped correctly) kept showing as "active" on screen — if the app was backgrounded at the exact moment of stopping, the record saved but the timer became a phantom, still ticking on every device. Both actions now happen together, atomically.',
+      ],
+    },
+  },
+  {
     v: "11.9.121", date: "2026-07-05",
     pt: {
       title: "Fix: cronômetro de soneca/sono mostrava número absurdo após 1h",

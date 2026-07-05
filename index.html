@@ -458,6 +458,20 @@ window.FB = {
   async saveMeds(m) { await db.collection('config').doc('meds').set({list:m}); },
   subTimer(cb) { return db.collection('config').doc('active').onSnapshot(s => cb(s.exists ? s.data() : null)); },
   async saveTimer(t) { await db.collection('config').doc('active').set(t||{cleared:true}); },
+  // v11.9.122: escreve 1+ entries E limpa o timer ativo em UM COMMIT atômico — antes eram
+  // 2 escritas sequenciais separadas (addEntry, depois saveTimer(null)) dentro de stopTimer;
+  // se o app fosse suspenso pelo iOS entre uma e outra (ex: usuário trava o celular logo
+  // após apertar Parar), a entry salvava mas o timer ativo ficava preso "fantasma" tocando
+  // em todos os dispositivos até alguém notar (bug real, reportado pelo William com print).
+  async stopTimerAndLog(entries) {
+    const batch = db.batch();
+    for (const e of entries) {
+      const clean = Object.fromEntries(Object.entries(e).filter(([_,v]) => v !== undefined));
+      batch.set(db.collection('entries').doc(e.id), clean);
+    }
+    batch.set(db.collection('config').doc('active'), {cleared:true});
+    await batch.commit();
+  },
   subInbox(cb) { return db.collection('config').doc('inbox').onSnapshot(s => cb(s.exists ? s.data() : null)); },
   // MERGE defensivo: mesmo padrão do saveProfile — preserva campos não incluídos em `data`.
   async saveInbox(data) { await db.collection('config').doc('inbox').set(data, {merge:true}); },
