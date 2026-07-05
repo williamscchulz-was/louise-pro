@@ -688,7 +688,12 @@ function App(){
     // feita) foi pulada, não está mais sendo cobrada. Vira neutra e LIBERA a "rotina concluída
     // (parcial)". Ex: 3ª soneca não rolou mas o banho já aconteceu → a soneca foi pulada, não
     // está "atrasada". Uma "late" recente (nada depois feito ainda) continua cobrando (next-late).
-    const maxDoneTarget=slots.reduce((m,s)=>(s.status==="done"&&s.targetMin>m?s.targetMin:m),-1);
+    // v11.9.119: um timer ATIVO (soneca/banho/sono) que não bate com NENHUM slot oficial (ex:
+    // soneca "extra", fora de qualquer janela configurada) também prova que o dia seguiu — sem
+    // isso, uma etapa atrasada ficava presa em "atrasada" pra sempre mesmo com outra soneca
+    // claramente rolando depois dela. Conta o INÍCIO do timer como candidato, igual um "done".
+    const activeTimerStartMin=(activeTimer&&["nap","bath","sleep"].includes(activeTimer.type))?(()=>{const st=new Date(activeTimer.startTime);return st.getHours()*60+st.getMinutes()})():-1;
+    const maxDoneTarget=Math.max(slots.reduce((m,s)=>(s.status==="done"&&s.targetMin>m?s.targetMin:m),-1),activeTimerStartMin);
     for(const s of slots){if(s.status==="late"&&s.targetMin<maxDoneTarget)s.status="skipped"}
     // A 1ª "late" RESTANTE (recente, ainda possível) vira "next-late" — prioridade no headline.
     const firstLate=slots.find(s=>s.status==="late");

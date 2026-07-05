@@ -4,6 +4,21 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.118", date: "2026-07-05",
+    pt: {
+      title: "Fix: etapa atrasada da rotina ficava presa mesmo com o dia seguindo",
+      bullets: [
+        '★ Uma etapa atrasada (ex: 2ª soneca) só virava "pulada" quando uma etapa POSTERIOR já registrada existia. Se em vez disso houvesse um timer ativo (soneca/banho/sono) que não batesse com nenhum horário configurado, a etapa atrasada ficava presa pra sempre. Corrigido: o timer ativo agora também conta como prova de que o dia seguiu.',
+      ],
+    },
+    en: {
+      title: "Fix: late routine step stayed stuck even as the day moved on",
+      bullets: [
+        '★ A late step (e.g. 2nd nap) only flipped to "skipped" when a LATER step already had a logged entry. If instead there was an active timer (nap/bath/sleep) that didn\'t match any configured time, the late step stayed stuck forever. Fixed: an active timer now also counts as proof the day moved on.',
+      ],
+    },
+  },
+  {
     v: "11.9.117", date: "2026-06-16",
     pt: {
       title: "Correção: elástico de rolagem em telas com pouco conteúdo",
