@@ -4,6 +4,21 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.123", date: "2026-07-05",
+    pt: {
+      title: "Manter tela ligada também no banho",
+      bullets: [
+        'A opção "manter tela ligada" (Ajustes) agora também vale durante o timer de banho — antes só cobria amamentação, tummy time e desperta noturno.',
+      ],
+    },
+    en: {
+      title: "Keep screen on now also covers bath time",
+      bullets: [
+        'The "keep screen on" setting (Settings) now also applies during the bath timer — previously it only covered nursing, tummy time, and night wake.',
+      ],
+    },
+  },
+  {
     v: "11.9.122", date: "2026-07-05",
     pt: {
       title: "Fix: timer podia ficar preso mesmo depois de parar de verdade",

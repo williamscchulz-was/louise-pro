@@ -192,9 +192,9 @@ function App(){
     return()=>{document.body.classList.remove("bedtime-active")};
   },[activeTimer]);
 
-  // Wake Lock: keep screen on during night wake or nursing
+  // Wake Lock: keep screen on during night wake, nursing, tummytime or bath
   const wakeLockEnabled=profile.keepScreenOn!==false;
-  const shouldLock=wakeLockEnabled&&activeTimer&&(activeTimer.type==="nursing"||activeTimer.type==="tummytime"||(activeTimer.type==="sleep"&&activeTimer.nightWake));
+  const shouldLock=wakeLockEnabled&&activeTimer&&(activeTimer.type==="nursing"||activeTimer.type==="tummytime"||activeTimer.type==="bath"||(activeTimer.type==="sleep"&&activeTimer.nightWake));
   useEffect(()=>{
     if(shouldLock){WakeLock.request()}else{WakeLock.release()}
     const onVis=()=>{if(document.visibilityState==="visible"&&shouldLock)WakeLock.request()};
