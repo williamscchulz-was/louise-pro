@@ -733,6 +733,27 @@ function App(){
     const allDone=slots.some(s=>s.status==="done")&&slots.every(s=>s.status==="done"||s.status==="skipped");
     return{slots,headline,bottlesDone,bottlesTarget,allDone,skippedCount,hasRoutine:true,wakeDelta,nextBottleMl,mlGoal,consumedMl};
   },[profile?.routine,profile?.mlGoal,entries,todayE,tick,activeTimer]);
+  // v11.9.127: chuva de meteoros quando a rotina FECHA (mais-vida ideia E). Dispara só na
+  // TRANSIÇÃO false→true observada em sessão (prev seedado com null: abrir o app com a
+  // rotina já completa não conta) + trava de 1x/dia em localStorage. Overlay efêmero de
+  // 4.5s, pointer-events none — não mexe no layout da Home (invariante de estabilidade).
+  const[meteors,setMeteors]=useState(false);
+  const prevAllDone=useRef(null);
+  useEffect(()=>{
+    const ad=routineState?.allDone===true;
+    const was=prevAllDone.current;
+    prevAllDone.current=ad;
+    if(was===false&&ad){
+      const today=todayStr();let done="";
+      try{done=localStorage.getItem("lp_meteors_date")||""}catch(_){}
+      if(done!==today){
+        setMeteors(true);
+        try{localStorage.setItem("lp_meteors_date",today)}catch(_){}
+        const t=setTimeout(()=>setMeteors(false),4500);
+        return()=>clearTimeout(t);
+      }
+    }
+  },[routineState?.allDone]);
   // v11.9.83: 3 quick buttons adaptativos (ver suggestQuickActions no topo). nowMin é lido
   // no render — refresca ao abrir o app, registrar algo ou navegar (sem tick novo/bateria).
   const quickSuggestions=useMemo(()=>{const d=new Date();return suggestQuickActions(entries,todayE,d.getHours()*60+d.getMinutes(),profile?.routine)},[entries,todayE,tick,profile?.routine]);
@@ -1000,6 +1021,12 @@ function App(){
   return(<div style={{background:"transparent",height:"var(--phys-h, 100dvh)",overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch",overscrollBehavior:"none",color:T.text,maxWidth:480,margin:"0 auto",position:"relative"}}>
     {/* Starfield: componente memoizado, renderiza 1x por sessão (v10.5.3). */}
     <Starfield/>
+    {/* v11.9.127: chuva de meteoros 1x quando a rotina do dia fecha — atrás dos cards
+        (zIndex 0, mesmo plano do Starfield), some sozinha em 4.5s. */}
+    {meteors&&<div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:0,overflow:"hidden"}}>
+      {[{t:"12%",d:0},{t:"26%",d:0.9},{t:"44%",d:0.4},{t:"60%",d:1.6},{t:"76%",d:1.1}].map((m,i)=>
+        <div key={"mt"+i} className="meteor" style={{top:m.t,right:-70,animationDelay:m.d+"s"}}/>)}
+    </div>}
     {toast&&<Toast message={toast} lift={!!activeTimer} onUndo={undoRef.current?handleUndo:null} onRepeat={repeatRef.current?handleRepeat:null} onClose={()=>setToast(null)}/>}
     <Confetti trigger={confettiOn} onDone={()=>setConfettiOn(false)}/>
     {/* v11.9.9: Ring long-press detail modal. v11.9.13: IIFE só executa quando modal aberto

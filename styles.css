@@ -60,6 +60,11 @@
     @keyframes rocketBob{0%,100%{transform:rotate(6deg) translateY(0)}50%{transform:rotate(12deg) translateY(-4px)}}
     .rocket-flame{animation:rocketFlick .5s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:50% 0}
     @keyframes rocketFlick{from{transform:scaleY(.7);opacity:.75}to{transform:scaleY(1.12);opacity:1}}
+    /* v11.9.127: chuva de meteoros ao fechar a rotina do dia — cada risco cruza a tela 2x
+       (iteration-count 2, NAO infinite: o overlay desmonta em 4.5s; a dieta de movimento
+       vale — nada de loop eterno). Pausada em background pelo body.app-hidden global. */
+    .meteor{position:absolute;width:110px;height:1.5px;border-radius:2px;background:linear-gradient(90deg,transparent,rgba(196,181,253,0.9));box-shadow:0 0 6px rgba(196,181,253,0.5);transform:rotate(160deg);opacity:0;animation:meteorFall 2.1s ease-out 2}
+    @keyframes meteorFall{0%{opacity:0;transform:rotate(160deg) translateX(0)}6%{opacity:.9}30%{opacity:0;transform:rotate(160deg) translateX(60vw)}100%{opacity:0;transform:rotate(160deg) translateX(60vw)}}
     /* v11.9.115: água enchendo o miolo durante o banho (onda + maré + bolhas). Via classe. */
     @keyframes rwDrift{to{transform:translateX(-50%)}}
     .rw-wave{animation:rwDrift 7s linear infinite}

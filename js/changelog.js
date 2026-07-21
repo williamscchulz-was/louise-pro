@@ -4,6 +4,21 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.127", date: "2026-07-21",
+    pt: {
+      title: "O céu comemora quando a rotina fecha",
+      bullets: [
+        '★ Quando a última etapa da rotina do dia é concluída, uma **chuva de meteoros discreta** cruza o céu da Home — uma vez só, no momento de descompressão do dia.',
+      ],
+    },
+    en: {
+      title: "The sky celebrates when the routine is done",
+      bullets: [
+        '★ When the last step of the day\'s routine completes, a **subtle meteor shower** crosses the Home sky — just once, right at the day\'s wind-down moment.',
+      ],
+    },
+  },
+  {
     v: "11.9.126", date: "2026-07-21",
     pt: {
       title: "Foguetinho no tummy time 🚀",
