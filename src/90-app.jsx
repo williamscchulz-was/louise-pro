@@ -757,6 +757,14 @@ function App(){
   // v11.9.83: 3 quick buttons adaptativos (ver suggestQuickActions no topo). nowMin é lido
   // no render — refresca ao abrir o app, registrar algo ou navegar (sem tick novo/bateria).
   const quickSuggestions=useMemo(()=>{const d=new Date();return suggestQuickActions(entries,todayE,d.getHours()*60+d.getMinutes(),profile?.routine)},[entries,todayE,tick,profile?.routine]);
+  // v11.9.128: memória do dia (mais-vida ideia A). Em dia de aniversário redondo de uma
+  // "primeira vez", uma estrela cadente cruza o Ring + faísca tocável revela a memória.
+  // 1x/dia por device (lp_memory_seen). Hooks ACIMA do early-return de splash.
+  const memory=useMemo(()=>dailyMemory(entries,profile?.birthDate,today),[entries,profile?.birthDate,today]);
+  const[memorySeenDate,setMemorySeenDate]=useState(()=>{try{return localStorage.getItem("lp_memory_seen")||""}catch(e){return""}});
+  const[showMemory,setShowMemory]=useState(false);
+  const openMemory=useCallback(()=>{setShowMemory(true);const d=todayStr();setMemorySeenDate(d);try{localStorage.setItem("lp_memory_seen",d)}catch(e){}},[]);
+  const memoryActive=!!memory&&memorySeenDate!==today;
   // Live bedtime virtual entry: built when an active sleep timer is running.
   // Used by Home (shows in-progress block at top of today's list) and HistoryPage
   // (which intentionally HIDES it — bedtimes only appear in history once finalized).
@@ -1109,6 +1117,13 @@ function App(){
             position absolute, sem alterar layout. Fade in/out elegante. */}
         <div role="region" aria-label={_lang==="en"?"Ring with current state. Long-press for details":"Anel com estado atual. Pressione e segure para detalhes"} style={{padding:"4px 0 0",position:"relative"}} onPointerDown={onRingPointerDown} onPointerMove={onRingPointerMove} onPointerUp={onRingPointerUp} onPointerCancel={onRingPointerUp}>
           <Ring activeTimer={activeTimer} napSug={napSug} tick={tick} recentEvents={cycleE} lang={lang} showOrbit={showOrbit} screenLockActive={shouldLock}/>
+          {/* v11.9.128: estrela cadente + faísca da memória do dia — overlay absoluto,
+              zero impacto no layout (invariante de Home estável). stopPropagation pra
+              não disparar o long-press do Ring. */}
+          {memoryActive&&<>
+            <div className="mem-star" style={{position:"absolute",top:34,right:-10,width:90,height:2,borderRadius:2,background:"linear-gradient(90deg,transparent,#e9e2ff 70%,#fff)",boxShadow:"0 0 8px rgba(196,181,253,0.8)",pointerEvents:"none",zIndex:6}}/>
+            <button className="mem-spark hit44" aria-label={_lang==="en"?"A memory from today":"Uma memória de hoje"} onPointerDown={e=>e.stopPropagation()} onPointerUp={e=>e.stopPropagation()} onClick={e=>{e.stopPropagation();openMemory()}} style={{position:"absolute",top:40,right:30,zIndex:7,width:30,height:30,display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,filter:"drop-shadow(0 0 8px rgba(251,191,36,0.7))"}}>✨</button>
+          </>}
           <div style={{position:"absolute",top:14,right:18,display:"flex",gap:2.5,opacity:0.32,pointerEvents:"none"}}>
             <span style={{width:3,height:3,borderRadius:"50%",background:T.sub}}/>
             <span style={{width:3,height:3,borderRadius:"50%",background:T.sub}}/>
@@ -1379,6 +1394,15 @@ function App(){
     {showChangelog&&<ChangelogModal onClose={closeChangelog} lang={lang}/>}
     {showUpdateToast&&!showChangelog&&<UpdateToast fromVersion={profile.lastSeenVersion} toVersion={APP_VERSION} onView={openChangelog} onDismiss={dismissUpdateToast} lang={lang}/>}
     <EditStartModal open={showEditStart} onClose={()=>setShowEditStart(false)} activeTimer={activeTimer} onSave={handleEditStart}/>
+    {/* v11.9.128: revelação da memória do dia — toque em qualquer lugar fecha. */}
+    {showMemory&&memory&&<div onClick={()=>setShowMemory(false)} style={{position:"fixed",inset:0,zIndex:150,background:"rgba(4,6,18,0.72)",backdropFilter:"blur(6px)",display:"flex",alignItems:"center",justifyContent:"center",padding:24,animation:"fadeIn .25s ease"}}>
+      <div style={{maxWidth:340,width:"100%",borderRadius:T.rXL,background:"linear-gradient(180deg,rgba(28,24,64,0.97),rgba(16,20,50,0.97))",border:"1px solid rgba(251,191,36,0.35)",padding:"26px 22px",textAlign:"center",boxShadow:"0 24px 60px -12px rgba(0,0,0,0.8), 0 0 40px rgba(251,191,36,0.12)",animation:"slideUp .3s cubic-bezier(0.22,1,0.36,1)"}}>
+        <div style={{fontSize:26,marginBottom:10}}>✨</div>
+        <div style={{fontSize:T.fXS,fontWeight:800,letterSpacing:1.4,textTransform:"uppercase",color:"#fcd34d",marginBottom:8}}>{_lang==="en"?memory.en.head:memory.pt.head}</div>
+        <div style={{fontSize:T.fXL,fontWeight:800,letterSpacing:-0.3,lineHeight:1.35,color:T.heading,marginBottom:10}}>{_lang==="en"?memory.en.text:memory.pt.text}</div>
+        <div style={{fontSize:T.fSM,color:T.sub}}>{_lang==="en"?memory.en.sub:memory.pt.sub}</div>
+      </div>
+    </div>}
     {/* Nursing picker agora \u00e9 Modal central (v11.7), consistente com popup do bot\u00e3o +. */}
     <Modal open={showNursingPicker} onClose={()=>setShowNursingPicker(false)}>
       <div style={{display:"flex",justifyContent:"center",marginBottom:14}}>

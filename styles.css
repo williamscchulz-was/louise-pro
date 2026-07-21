@@ -60,6 +60,13 @@
     @keyframes rocketBob{0%,100%{transform:rotate(6deg) translateY(0)}50%{transform:rotate(12deg) translateY(-4px)}}
     .rocket-flame{animation:rocketFlick .5s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:50% 0}
     @keyframes rocketFlick{from{transform:scaleY(.7);opacity:.75}to{transform:scaleY(1.12);opacity:1}}
+    /* v11.9.128: estrela cadente da memoria do dia — cruza o Ring 3x apos abrir (FINITA,
+       nunca infinite) e a faisca pousada respira suave (opacity-only; precedente: softPulse
+       do ultimo dot idle). So aparece em dia de memoria, some apos o toque. */
+    .mem-star{opacity:0;transform:rotate(160deg);animation:memShoot 7s ease-out .8s 3}
+    @keyframes memShoot{0%{opacity:0;transform:rotate(160deg) translateX(0)}3%{opacity:1}13%{opacity:0;transform:rotate(160deg) translateX(56vw)}100%{opacity:0;transform:rotate(160deg) translateX(56vw)}}
+    .mem-spark{animation:memSparkBreathe 3.5s ease-in-out infinite}
+    @keyframes memSparkBreathe{0%,100%{opacity:.5}50%{opacity:1}}
     /* v11.9.127: chuva de meteoros ao fechar a rotina do dia — cada risco cruza a tela 2x
        (iteration-count 2, NAO infinite: o overlay desmonta em 4.5s; a dieta de movimento
        vale — nada de loop eterno). Pausada em background pelo body.app-hidden global. */

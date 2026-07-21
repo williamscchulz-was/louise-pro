@@ -4,6 +4,21 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.128", date: "2026-07-21",
+    pt: {
+      title: "Estrela cadente de memória ✨",
+      bullets: [
+        '★ Em dias especiais — 1 mês do primeiro sorriso, 100 dias do primeiro banho, aniversário da primeira noite de 6 horas — uma **estrela cadente cruza o céu da Home**. Toca na faísca pra revelar a memória. Nos outros dias, nada: é a raridade que faz ser especial.',
+      ],
+    },
+    en: {
+      title: "A shooting star of memories ✨",
+      bullets: [
+        '★ On special days — 1 month since the first smile, 100 days since the first bath, the anniversary of the first 6-hour night — a **shooting star crosses the Home sky**. Tap the spark to reveal the memory. On every other day, nothing: the rarity is what makes it special.',
+      ],
+    },
+  },
+  {
     v: "11.9.127", date: "2026-07-21",
     pt: {
       title: "O céu comemora quando a rotina fecha",
