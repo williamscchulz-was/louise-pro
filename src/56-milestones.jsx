@@ -20,6 +20,7 @@ const MILESTONE_BADGES = [
 // Entries com type:"milestone" guardam: key (chave do DEV_MILESTONES), category, date, note.
 const MilestonesPage = React.memo(function MilestonesPage({entries,birthDate,profile,onBack,onAddEntry,onDeleteEntry,lang}){
   const[confirmDelKey,setConfirmDelKey]=useState(null); // v11.9.65: 2-step inline delete (substitui confirm() nativo)
+  const[selStar,setSelStar]=useState(null); // v11.9.129: estrela selecionada no céu (tap-to-inspect, padrão dos gráficos)
   const all=window.DEV_MILESTONES||[];
   const allSigns=window.CONCERNING_SIGNS||[];
   const milestoneEntries=entries.filter(e=>e.type==="milestone")
@@ -36,6 +37,37 @@ const MilestonesPage = React.memo(function MilestonesPage({entries,birthDate,pro
     !doneKeys.has(m.key)
   );
   const signs=allSigns.filter(s=>s.checkupAge<=ageMonths+2);
+  // v11.9.129: O céu da Louise (mais-vida ideia C, integrada NA seção de conquistas que já
+  // existe — pedido do William). Cada marco registrado vira estrela acesa; os próximos, uma
+  // estrela apagada. Posições DETERMINÍSTICAS (hash da key, nada de Math.random no render)
+  // com anti-colisão por nudge; marcos próximos no tempo (≤14d) se ligam em constelação.
+  const skyData=useMemo(()=>{
+    const hash=s=>{let h=7;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;return Math.abs(h)};
+    const placed=[];
+    const place=key=>{
+      let x=10+(hash(key)%80),y=14+(hash(key+"~")%68),tries=0;
+      while(tries<24&&placed.some(p=>{const dx=p.x-x,dy=(p.y-y)*0.9;return dx*dx+dy*dy<190})){
+        x=10+((x+23)%80);y=14+((y+17)%68);tries++;
+      }
+      placed.push({x,y});
+      return{x,y};
+    };
+    const seenK=new Set();
+    const lit=milestoneEntries.slice().reverse()
+      .map(e=>{const m=all.find(x=>x.key===e.key);return m?{key:e.key,date:e.date,label:m.label}:null})
+      .filter(s=>s&&!seenK.has(s.key)&&seenK.add(s.key))
+      .map(s=>({...s,...place(s.key)}));
+    const dim=upcoming.slice(0,5).map(m=>({key:m.key,label:m.label,...place("dim:"+m.key)}));
+    const lines=[];
+    for(let i=1;i<lit.length;i++){
+      const a=lit[i-1],b=lit[i];
+      const gap=Math.abs(new Date(b.date+"T12:00:00")-new Date(a.date+"T12:00:00"))/864e5;
+      if(gap<=14)lines.push({x1:a.x,y1:a.y,x2:b.x,y2:b.y});
+    }
+    return{lit,dim,lines};
+  },[milestoneEntries,upcoming,all]);
+  const skyH=Math.max(190,Math.min(300,120+(skyData.lit.length+skyData.dim.length)*10));
+  const fmtStarDate=d=>new Date(d+"T12:00:00").toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{day:"numeric",month:"short"});
   // v11.9.61: stats agregadas pros badges (count por categoria + checkupAge)
   const badgeStats=useMemo(()=>{
     const byCat={motor_gross:0,motor_fine:0,language:0,social_emotional:0,cognitive:0};
@@ -104,6 +136,29 @@ const MilestonesPage = React.memo(function MilestonesPage({entries,birthDate,pro
         <div style={{fontSize:T.fSM,color:T.sub,marginTop:1,fontVariantNumeric:"tabular-nums"}}>{milestoneEntries.length} {L("milestonesDone")} · {ageMonths}m</div>
       </div>
       <button onClick={()=>{setPickedKey(null);setShowAdd(true)}} aria-label={_lang==="en"?"Add milestone":"Adicionar marco"} style={{width:40,height:40,borderRadius:12,background:"linear-gradient(135deg,#facc15,#f59e0b)",border:"none",display:"flex",alignItems:"center",justifyContent:"center",color:"#1a1f2e",fontSize:24,fontWeight:800,boxShadow:"0 4px 14px -4px rgba(250,204,21,0.5)",cursor:"pointer"}}>+</button>
+    </div>
+    {/* v11.9.129: O céu da Louise — cada marco é uma estrela acesa no dia em que aconteceu. */}
+    <div style={{padding:"0 20px 16px"}}>
+      <div style={{display:"flex",alignItems:"baseline",justifyContent:"space-between",marginBottom:10}}>
+        <span style={{fontSize:T.fSM,fontWeight:800,color:T.lilac,textTransform:"uppercase",letterSpacing:1,display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:T.fMD}}>✨</span>{_lang==="en"?"Louise's sky":"O céu da Louise"}</span>
+        <span style={{fontSize:T.fXS,color:T.lilac,fontWeight:800,fontVariantNumeric:"tabular-nums",letterSpacing:0.3,textTransform:"uppercase"}}>{skyData.lit.length} {_lang==="en"?(skyData.lit.length===1?"star lit":"stars lit"):(skyData.lit.length===1?"estrela acesa":"estrelas acesas")}</span>
+      </div>
+      <div onClick={()=>setSelStar(null)} style={{position:"relative",height:skyH,borderRadius:18,overflow:"hidden",background:"radial-gradient(ellipse 130% 70% at 50% 0%,rgba(26,31,82,0.55) 0%,transparent 65%),linear-gradient(180deg,rgba(14,18,44,0.9),rgba(10,14,38,0.95))",border:"1px solid rgba(196,181,253,0.16)",boxShadow:T.insetTop}}>
+        {[[8,22],[24,80],[41,12],[58,88],[72,30],[88,70],[15,55],[93,18],[50,50],[80,92],[33,38],[66,64]].map((p,i)=><span key={"du"+i} style={{position:"absolute",left:p[0]+"%",top:p[1]+"%",width:1.5,height:1.5,borderRadius:"50%",background:"rgba(180,190,255,0.35)"}}/>)}
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{position:"absolute",inset:0,width:"100%",height:"100%",pointerEvents:"none"}}>
+          {skyData.lines.map((l,i)=><line key={"cl"+i} x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} stroke="rgba(196,181,253,0.28)" strokeWidth="1" strokeDasharray="2 3" vectorEffect="non-scaling-stroke"/>)}
+        </svg>
+        {skyData.dim.map(s=><div key={"d"+s.key} style={{position:"absolute",left:s.x+"%",top:s.y+"%",transform:"translate(-50%,-50%)",fontSize:12,opacity:0.28,pointerEvents:"none"}}>☆</div>)}
+        {skyData.lit.map((s,i)=><button key={s.key} className="sky-star hit44" aria-label={s.label[_lang]||s.label.en} onClick={e=>{e.stopPropagation();setSelStar(selStar===s.key?null:s.key)}} style={{position:"absolute",left:s.x+"%",top:s.y+"%",transform:"translate(-50%,-50%)",fontSize:15,filter:"drop-shadow(0 0 6px rgba(251,191,36,0.6))",animationDelay:(i%5)*0.7+"s",padding:4,zIndex:2}}>⭐</button>)}
+        {selStar&&(()=>{const s=skyData.lit.find(x=>x.key===selStar);if(!s)return null;const below=s.y<55;return(<div className="chart-tip" style={{position:"absolute",left:Math.min(Math.max(s.x,24),76)+"%",top:(s.y+(below?8:-8))+"%",transform:below?"translate(-50%,0)":"translate(-50%,-100%)",background:T.tooltipBg,border:"1px solid rgba(251,191,36,0.35)",borderRadius:10,padding:"7px 11px",whiteSpace:"nowrap",boxShadow:T.tooltipShadow,pointerEvents:"none",zIndex:5}}>
+          <div style={{fontSize:T.fSM,fontWeight:800,color:T.heading}}>{s.label[_lang]||s.label.en}</div>
+          <div style={{fontSize:T.fXS,color:"#fcd34d",fontWeight:700,marginTop:2,fontVariantNumeric:"tabular-nums"}}>{fmtStarDate(s.date)}</div>
+        </div>)})()}
+        {skyData.lit.length===0&&<div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:6,padding:20,textAlign:"center"}}>
+          <div style={{fontSize:20}}>✨</div>
+          <div style={{fontSize:T.fSM,color:T.sub,lineHeight:1.5,maxWidth:230}}>{_lang==="en"?"Her first stars will light up here — log her first milestone.":"As primeiras estrelas dela vão acender aqui — registra o primeiro marco."}</div>
+        </div>}
+      </div>
     </div>
     {/* v11.9.61: Conquistas (badges grid) — earned gold glow, locked dim + progress */}
     <div style={{padding:"0 20px 14px"}}>

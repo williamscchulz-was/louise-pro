@@ -4,6 +4,21 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.129", date: "2026-07-21",
+    pt: {
+      title: "O céu da Louise 🌌",
+      bullets: [
+        '★ A página de Marcos ganhou um céu próprio: **cada conquista registrada é uma estrela acesa**, fixada no dia em que aconteceu — toca numa estrela pra ver qual foi e quando. As apagadas são o que ainda vem, e conquistas próximas no tempo se ligam em constelações.',
+      ],
+    },
+    en: {
+      title: "Louise\'s sky 🌌",
+      bullets: [
+        '★ The Milestones page got its own sky: **every logged achievement is a lit star**, pinned to the day it happened — tap a star to see which one and when. Dim stars are what\'s still to come, and achievements close in time link into constellations.',
+      ],
+    },
+  },
+  {
     v: "11.9.128", date: "2026-07-21",
     pt: {
       title: "Estrela cadente de memória ✨",

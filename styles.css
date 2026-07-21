@@ -67,6 +67,10 @@
     @keyframes memShoot{0%{opacity:0;transform:rotate(160deg) translateX(0)}3%{opacity:1}13%{opacity:0;transform:rotate(160deg) translateX(56vw)}100%{opacity:0;transform:rotate(160deg) translateX(56vw)}}
     .mem-spark{animation:memSparkBreathe 3.5s ease-in-out infinite}
     @keyframes memSparkBreathe{0%,100%{opacity:.5}50%{opacity:1}}
+    /* v11.9.129: ceu da Louise (pagina de marcos) — estrelas acesas respiram opacity-only,
+       delays escalonados via inline animationDelay (ok: delay nao reseta a anim). */
+    .sky-star{animation:skyStarTw 3.4s ease-in-out infinite;line-height:1}
+    @keyframes skyStarTw{0%,100%{opacity:.72}50%{opacity:1}}
     /* v11.9.127: chuva de meteoros ao fechar a rotina do dia — cada risco cruza a tela 2x
        (iteration-count 2, NAO infinite: o overlay desmonta em 4.5s; a dieta de movimento
        vale — nada de loop eterno). Pausada em background pelo body.app-hidden global. */
