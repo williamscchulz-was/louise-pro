@@ -173,7 +173,14 @@ function App(){
           localStorage.setItem("lp_last_backup_at",String(now)); // timestamp p/ display
         }catch(_){}
         setToast(_lang==="en"?"\u2713 Auto-backup saved":"\u2713 Backup autom\u00e1tico salvo");
-      }catch(e){console.warn("[LP] auto-backup failed:",e.message)}
+      }catch(e){
+        // v11.9.124: falha de backup era SILENCIOSA (so console.warn) — se o saveBackup
+        // passasse a falhar todo dia (teto de tamanho, rules, rede), ninguem saberia e o
+        // snapshot iria envelhecendo. Agora avisa na tela; nao marca lp_last_backup_date,
+        // entao tenta de novo na proxima abertura.
+        console.warn("[LP] auto-backup failed:",e.message);
+        setToast(_lang==="en"?"⚠️ Auto-backup failed — see Settings › Data":"⚠️ Backup automático falhou — ver Ajustes › Dados");
+      }
     },8000);
     return()=>clearTimeout(t);
   },[loading]);

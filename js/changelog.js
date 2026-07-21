@@ -4,6 +4,25 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.124", date: "2026-07-21",
+    pt: {
+      title: "Backup blindado",
+      bullets: [
+        '★ O backup diário agora é **garantidamente completo**: antes ele podia salvar só os últimos 90 dias sem avisar (dependia do cache do aparelho). Agora lê tudo direto do servidor — ou salva inteiro, ou avisa que falhou.',
+        'Snapshot agora é **comprimido** (~6-10x menor) — o limite de tamanho do Firestore deixa de ser um risco por anos.',
+        'Se o backup automático falhar, aparece um **aviso na tela** (antes falhava em silêncio).',
+      ],
+    },
+    en: {
+      title: "Bulletproof backup",
+      bullets: [
+        '★ The daily backup is now **guaranteed complete**: it could previously save only the last 90 days without warning (it depended on the device cache). It now reads everything straight from the server — either it saves whole, or it tells you it failed.',
+        'The snapshot is now **compressed** (~6-10x smaller) — Firestore\'s size limit stops being a risk for years.',
+        'If the automatic backup fails, a **visible warning** appears (it used to fail silently).',
+      ],
+    },
+  },
+  {
     v: "11.9.123", date: "2026-07-05",
     pt: {
       title: "Manter tela ligada também no banho",

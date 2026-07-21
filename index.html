@@ -523,23 +523,22 @@ window.FB = {
   // Dropbox / etc. Importa restaura. Nossa rede de seguranca caso o Firestore tenha quota
   // issue, conta suspensa, ou alguem deletar por acidente.
   async exportAll() {
-    // v11.9.25: tenta cache primeiro (Firestore offline persistence ja tem snapshot).
-    // Auto-backup diario antes lia do server toda manha (~1650 reads). Cache zera o custo
-    // quando ja existe (caso comum). Fallback pro server se cache vazio (raro - primeira
-    // execução pos-install ou apos cache clear).
-    const tryGet = async (ref) => {
-      try { const s = await ref.get({ source: 'cache' }); if (s && (s.exists || (s.docs && s.docs.length))) return s; } catch(_){}
-      return await ref.get();
-    };
-    const entriesSnap = await tryGet(db.collection('entries'));
+    // v11.9.124: TUDO do server, sempre. O cache-first da v11.9.25 tinha um bug sutil e grave:
+    // o cache offline do Firestore so contem o que as queries do app ja leram — e desde a
+    // v11.9.0 a unica query de entries e a janela de 90d. Resultado: o snapshot de backup
+    // podia nascer TRUNCADO em silencio (device com cache novo = so 90d, pra sempre).
+    // Backup ou e completo ou falha com erro visivel: { source: 'server' } nao tem fallback
+    // silencioso pro cache. Custo real: ~1 read/entry 1x/dia (~5% da cota gratis) — ok.
+    const sv = { source: 'server' };
+    const entriesSnap = await db.collection('entries').get(sv);
     const entries = entriesSnap.docs.map(d => ({...d.data(), _docId: d.id}));
-    const profileSnap = await tryGet(db.collection('config').doc('profile'));
+    const profileSnap = await db.collection('config').doc('profile').get(sv);
     const profile = profileSnap.exists ? profileSnap.data() : null;
-    const medsSnap = await tryGet(db.collection('config').doc('meds'));
+    const medsSnap = await db.collection('config').doc('meds').get(sv);
     const meds = medsSnap.exists ? (medsSnap.data().list || []) : [];
-    const inboxSnap = await tryGet(db.collection('config').doc('inbox'));
+    const inboxSnap = await db.collection('config').doc('inbox').get(sv);
     const inbox = inboxSnap.exists ? inboxSnap.data() : null;
-    const remindersSnap = await tryGet(db.collection('config').doc('reminders').collection('items'));
+    const remindersSnap = await db.collection('config').doc('reminders').collection('items').get(sv);
     const reminders = remindersSnap.docs.map(d => ({...d.data(), _id: d.id}));
     return {
       _meta: { version: 1, exportedAt: new Date().toISOString(), app: 'louise-pro' },
@@ -591,13 +590,30 @@ window.FB = {
   // Backup em Firestore (v11.4): salva snapshot num doc \u00fanico `config/backups/latest` que \u00e9
   // sobrescrito a cada backup. Compartilhado entre os 2 devices. Tamanho m\u00e1ximo do doc
   // Firestore \u00e9 1 MiB — enquanto os entries n\u00e3o passarem de ~4000 registros, cabe.
+  // v11.9.124: helpers de compressao nativa (zero dependencia; Safari 16.4+).
+  async _gzip(str) {
+    const s = new Blob([str]).stream().pipeThrough(new CompressionStream('gzip'));
+    return new Uint8Array(await new Response(s).arrayBuffer());
+  },
+  async _gunzip(bytes) {
+    const s = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+    return await new Response(s).text();
+  },
   async saveBackup(data) {
     const payload = JSON.stringify(data);
     const size = payload.length;
-    if (size > 900000) throw new Error('Backup muito grande para salvar no Firestore (' + Math.round(size/1024) + 'KB). Use "Baixar c\u00f3pia local".');
     const updatedAt = new Date().toISOString();
-    // v11.9.0: doc principal carrega o snapshot inteiro (~900KB). Doc separado `backupMeta`
-    // tem s\u00f3 {updatedAt, size}, leitura cheap pra mostrar status no Profile sem baixar 900KB.
+    // v11.9.124: snapshot comprimido (gzip via CompressionStream, ~8-10x menor) guardado como
+    // Bytes no doc. O teto de 1 MiB deixa de ser preocupacao por anos. Fallback raro (browser
+    // sem CompressionStream): formato legado com o guard antigo de 900KB.
+    if (window.CompressionStream) {
+      const gz = await this._gzip(payload);
+      if (gz.length > 950000) throw new Error('Backup muito grande mesmo comprimido (' + Math.round(gz.length/1024) + 'KB). Use "Baixar c\u00f3pia local".');
+      await db.collection('config').doc('backups').set({ snapshotGz: firebase.firestore.Blob.fromUint8Array(gz), format: 'gz1', updatedAt, size, gzSize: gz.length });
+      await db.collection('config').doc('backupMeta').set({ updatedAt, size, gzSize: gz.length });
+      return { size, gzSize: gz.length };
+    }
+    if (size > 900000) throw new Error('Backup muito grande para salvar no Firestore (' + Math.round(size/1024) + 'KB). Use "Baixar c\u00f3pia local".');
     await db.collection('config').doc('backups').set({ snapshot: data, updatedAt, size });
     await db.collection('config').doc('backupMeta').set({ updatedAt, size });
     return { size };
@@ -619,6 +635,12 @@ window.FB = {
     const snap = await db.collection('config').doc('backups').get();
     if (!snap.exists) return null;
     const d = snap.data();
+    // v11.9.124: formato gz1 (Bytes comprimidos) ou legado (objeto plano em `snapshot`).
+    if (d.format === 'gz1' && d.snapshotGz) {
+      if (!window.DecompressionStream) throw new Error('Este navegador n\u00e3o consegue descomprimir o backup.');
+      const json = await this._gunzip(d.snapshotGz.toUint8Array());
+      return { data: JSON.parse(json), updatedAt: d.updatedAt, size: d.size };
+    }
     return { data: d.snapshot, updatedAt: d.updatedAt, size: d.size };
   },
 };
