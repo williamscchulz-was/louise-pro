@@ -54,6 +54,12 @@
     @keyframes sheepBob{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-4px) rotate(4deg)}}
     @keyframes zzzFloat{0%{transform:translateY(0) scale(.6);opacity:0}20%{opacity:1}100%{transform:translateY(-46px) scale(1.05);opacity:0}}
     .zzz-float{animation:zzzFloat 3.2s ease-in infinite}
+    /* v11.9.126: foguetinho do tummy time subindo o arco (fecha a familia patinho/ovelhinha).
+       Via CLASSE (mesma regra — o Ring re-renderiza no tick de 5s, inline resetaria). */
+    .rocket-bob{animation:rocketBob 2.2s ease-in-out infinite;transform-origin:50% 80%}
+    @keyframes rocketBob{0%,100%{transform:rotate(6deg) translateY(0)}50%{transform:rotate(12deg) translateY(-4px)}}
+    .rocket-flame{animation:rocketFlick .5s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:50% 0}
+    @keyframes rocketFlick{from{transform:scaleY(.7);opacity:.75}to{transform:scaleY(1.12);opacity:1}}
     /* v11.9.115: água enchendo o miolo durante o banho (onda + maré + bolhas). Via classe. */
     @keyframes rwDrift{to{transform:translateX(-50%)}}
     .rw-wave{animation:rwDrift 7s linear infinite}

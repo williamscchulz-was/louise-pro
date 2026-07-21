@@ -4,6 +4,21 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.126", date: "2026-07-21",
+    pt: {
+      title: "Foguetinho no tummy time 🚀",
+      bullets: [
+        '★ O tummy time ganhou seu próprio companheiro no anel: um **foguetinho subindo o arco** com a chaminha tremulando — fechando a família do patinho (banho) e da ovelhinha (soneca).',
+      ],
+    },
+    en: {
+      title: "A little rocket for tummy time 🚀",
+      bullets: [
+        '★ Tummy time got its own companion on the ring: a **little rocket climbing the arc** with a flickering flame — completing the family of the duck (bath) and the sheep (nap).',
+      ],
+    },
+  },
+  {
     v: "11.9.125", date: "2026-07-21",
     pt: {
       title: "Toda gravação em lote virou atômica",

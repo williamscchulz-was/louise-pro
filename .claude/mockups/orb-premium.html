@@ -1,0 +1,135 @@
+<meta charset="UTF-8">
+<title>Louise Pro — orb premium (3 estilos)</title>
+<style>
+  :root{--bg0:#070b1e;--bg3:#1a1f52;--heading:#f0f2ff;--sub:#a3aac8;--label:#7a80a8;--lilac:#c4b5fd;--accent:#8b7cf6}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Outfit',-apple-system,'Segoe UI',sans-serif;background:radial-gradient(ellipse 140% 55% at 50% 0%,var(--bg3) 0%,transparent 60%),radial-gradient(ellipse at 50% 100%,#10153d 0%,var(--bg0) 65%),var(--bg0);color:var(--heading);padding:36px 20px 80px}
+  .wrap{max-width:460px;margin:0 auto}
+  h1{font-size:22px;font-weight:800;letter-spacing:-.3px;margin:0 0 6px;background:linear-gradient(180deg,#fff,var(--lilac));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .dek{font-size:13px;color:var(--sub);line-height:1.6;margin:0 0 28px}
+  .card{background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.08);border-radius:22px;padding:20px 18px;margin-bottom:26px}
+  .tag{font-size:10px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--lilac);margin-bottom:4px;display:block}
+  .h2{font-size:16px;font-weight:800;letter-spacing:-.2px;margin-bottom:14px}
+  .phone{width:270px;height:330px;margin:0 auto;border-radius:28px;border:5px solid #05060f;background:#0a0e26;position:relative;overflow:hidden;box-shadow:0 18px 44px -12px rgba(0,0,0,.7)}
+  .desc{font-size:12.5px;color:var(--sub);line-height:1.55;margin-top:12px}
+  .desc b{color:var(--heading)}
+  .note{font-size:11px;color:var(--label);margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.06);line-height:1.5}
+  .sky span{position:absolute;width:2px;height:2px;border-radius:50%;background:rgba(180,190,255,.7);animation:tw 3.5s ease-in-out infinite}
+  @keyframes tw{0%,100%{opacity:.15}50%{opacity:.75}}
+  .chips{display:flex;gap:6px;justify-content:center;margin-top:12px}
+  .chip{font-size:10px;font-weight:700;color:var(--sub);border:1px solid rgba(255,255,255,0.14);border-radius:99px;padding:6px 12px;background:rgba(20,26,60,0.55);cursor:pointer;user-select:none;transition:all .2s}
+  .chip.on{color:#050820;background:linear-gradient(180deg,#c4b5fd,#8b7cf6);border-color:transparent;font-weight:800}
+
+  /* ─────────── ORB base ─────────── */
+  .orb{position:absolute;top:46%;left:50%;transform:translate(-50%,-50%);width:186px;height:186px;border-radius:50%;overflow:hidden;
+    background:radial-gradient(circle at 50% 36%,#151b48 0%,#0a0e2e 72%);
+    box-shadow:inset 0 1px 10px rgba(255,255,255,0.10),inset 0 -18px 34px rgba(0,0,0,0.55),0 0 52px var(--glow),0 20px 48px -16px rgba(0,0,0,0.85);
+    transition:box-shadow 1.2s ease}
+  .orb::after{content:"";position:absolute;inset:0;border-radius:50%;background:radial-gradient(ellipse 60% 28% at 50% 10%,rgba(255,255,255,0.20),transparent 60%);pointer-events:none}
+  .orb[data-state="dia"]{--c1:196,181,253;--c2:34,211,238;--c3:244,114,182;--glow:rgba(139,124,246,0.30);--dim:1}
+  .orb[data-state="soneca"]{--c1:139,124,246;--c2:99,102,241;--c3:196,181,253;--glow:rgba(99,102,241,0.26);--dim:.75}
+  .orb[data-state="banho"]{--c1:34,211,238;--c2:45,212,191;--c3:125,211,252;--glow:rgba(34,211,238,0.30);--dim:1}
+  .orb[data-state="noite"]{--c1:79,70,229;--c2:49,46,129;--c3:139,124,246;--glow:rgba(67,56,202,0.22);--dim:.55}
+  .lay{position:absolute;border-radius:50%;pointer-events:none;transition:opacity 1.2s ease}
+
+  /* ── A: Aurora (fitas girando) ── */
+  .aurC{inset:-32%;background:conic-gradient(from 0deg,transparent 0deg,rgba(var(--c1),calc(.52*var(--dim))) 55deg,transparent 135deg,rgba(var(--c2),calc(.42*var(--dim))) 215deg,transparent 295deg,rgba(var(--c3),calc(.30*var(--dim))) 340deg,transparent 360deg);filter:blur(19px);animation:spinSlow 16s linear infinite}
+  .aurB1{width:70%;height:70%;left:-12%;top:8%;background:radial-gradient(circle,rgba(var(--c2),calc(.5*var(--dim))),transparent 65%);filter:blur(14px);animation:driftA 11s ease-in-out infinite alternate}
+  .aurB2{width:64%;height:64%;right:-10%;bottom:2%;background:radial-gradient(circle,rgba(var(--c3),calc(.42*var(--dim))),transparent 65%);filter:blur(14px);animation:driftB 13s ease-in-out 1.5s infinite alternate}
+  @keyframes spinSlow{to{transform:rotate(360deg)}}
+  @keyframes driftA{from{transform:translate(-6%,5%) scale(1)}to{transform:translate(12%,-9%) scale(1.18)}}
+  @keyframes driftB{from{transform:translate(6%,-4%) scale(1.1)}to{transform:translate(-10%,8%) scale(.94)}}
+
+  /* ── B: Nebulosa líquida (plasma lento) ── */
+  .liq1{width:95%;height:95%;left:-18%;top:-14%;background:radial-gradient(circle,rgba(var(--c1),calc(.55*var(--dim))),transparent 62%);filter:blur(17px);animation:liqA 17s ease-in-out infinite alternate}
+  .liq2{width:88%;height:88%;right:-16%;top:16%;background:radial-gradient(circle,rgba(var(--c2),calc(.5*var(--dim))),transparent 62%);filter:blur(17px);animation:liqB 21s ease-in-out 2s infinite alternate}
+  .liq3{width:80%;height:80%;left:8%;bottom:-20%;background:radial-gradient(circle,rgba(var(--c3),calc(.42*var(--dim))),transparent 62%);filter:blur(17px);animation:liqC 19s ease-in-out 4s infinite alternate}
+  @keyframes liqA{from{transform:translate(0,0) scale(1) rotate(0)}to{transform:translate(16%,10%) scale(1.22) rotate(24deg)}}
+  @keyframes liqB{from{transform:translate(0,0) scale(1.15)}to{transform:translate(-14%,-8%) scale(.92)}}
+  @keyframes liqC{from{transform:translate(0,0) scale(.95)}to{transform:translate(8%,-14%) scale(1.2)}}
+
+  /* ── C: Sopro (mínimo) ── */
+  .bre1{inset:6%;background:radial-gradient(circle at 46% 42%,rgba(var(--c1),calc(.4*var(--dim))),rgba(var(--c2),calc(.16*var(--dim))) 55%,transparent 75%);filter:blur(9px);animation:breathe 12s ease-in-out infinite}
+  .bre2{inset:22%;background:radial-gradient(circle at 58% 60%,rgba(var(--c3),calc(.3*var(--dim))),transparent 70%);filter:blur(11px);animation:breathe 12s ease-in-out 6s infinite}
+  @keyframes breathe{0%,100%{transform:scale(.94);opacity:.75}50%{transform:scale(1.07);opacity:1}}
+
+  /* texto central */
+  .ctr{position:absolute;top:46%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;z-index:3;width:100%}
+  .ctr .s{font-size:9px;font-weight:800;letter-spacing:2.6px;color:#b8bfe0;text-shadow:0 1px 8px rgba(0,0,0,.6)}
+  .ctr .b{font-size:26px;font-weight:800;letter-spacing:-.6px;margin-top:2px;background:linear-gradient(180deg,#fff,#d9c9ff);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 2px 10px rgba(0,0,0,.5))}
+</style>
+
+<div class="wrap">
+  <h1>O miolo vira um orb 🔮</h1>
+  <p class="dek">Referência entendida (Thinking Orbs do Antalík): <b style="color:var(--heading)">matéria viva, não decoração</b>. A proposta: o centro do Ring — hoje uma nebulosa tímida — vira um orb de verdade, respirando devagar, que <b style="color:var(--heading)">muda de humor com o estado do dia</b>. Toca nos chips de cada versão pra sentir os humores. Tudo CSS puro (sem WebGL, sem lib): só transform/opacity, pausa em background, respeita reduced-motion — dentro das regras de bateria do app.</p>
+
+  <!-- ══════ A ══════ -->
+  <div class="card">
+    <span class="tag">Opção A</span>
+    <div class="h2">Aurora — fitas de luz girando</div>
+    <div class="phone">
+      <div class="sky"></div>
+      <div class="orb" data-state="soneca"><div class="lay aurC"></div><div class="lay aurB1"></div><div class="lay aurB2"></div></div>
+      <div class="ctr"><div class="s">NAPPING</div><div class="b">1h 18m</div></div>
+    </div>
+    <div class="chips" data-orb><div class="chip">Dia</div><div class="chip on">Soneca</div><div class="chip">Banho</div><div class="chip">Noite</div></div>
+    <div class="desc">Fitas de aurora circulando devagar por dentro da esfera + dois sopros de cor derivando. É a mais próxima da referência — <b>viva o tempo todo, mas nunca agitada</b>.</div>
+  </div>
+
+  <!-- ══════ B ══════ -->
+  <div class="card">
+    <span class="tag">Opção B</span>
+    <div class="h2">Nebulosa líquida — plasma lento</div>
+    <div class="phone">
+      <div class="sky"></div>
+      <div class="orb" data-state="soneca"><div class="lay liq1"></div><div class="lay liq2"></div><div class="lay liq3"></div></div>
+      <div class="ctr"><div class="s">NAPPING</div><div class="b">1h 18m</div></div>
+    </div>
+    <div class="chips" data-orb><div class="chip">Dia</div><div class="chip on">Soneca</div><div class="chip">Banho</div><div class="chip">Noite</div></div>
+    <div class="desc">Três massas de cor se misturando como líquido em câmera lenta (ciclos de 17-21s). Mais <b>denso e profundo</b> que a Aurora — menos movimento aparente, mais matéria.</div>
+  </div>
+
+  <!-- ══════ C ══════ -->
+  <div class="card">
+    <span class="tag">Opção C</span>
+    <div class="h2">Sopro — quase nada, mas vivo</div>
+    <div class="phone">
+      <div class="sky"></div>
+      <div class="orb" data-state="soneca"><div class="lay bre1"></div><div class="lay bre2"></div></div>
+      <div class="ctr"><div class="s">NAPPING</div><div class="b">1h 18m</div></div>
+    </div>
+    <div class="chips" data-orb><div class="chip">Dia</div><div class="chip on">Soneca</div><div class="chip">Banho</div><div class="chip">Noite</div></div>
+    <div class="desc">Um único corpo de luz respirando em ciclo de 12s. A leitura de "premium por contenção" — <b>quando em dúvida, menos</b>. A mais barata em GPU também.</div>
+  </div>
+
+  <div class="card" style="padding:16px 18px">
+    <div class="h2" style="margin-bottom:8px">Como entraria no app</div>
+    <div class="desc" style="margin-top:0">Substitui a nebulosa atual do miolo (<b>ring-neb/neb2 + poeira</b>) — não é camada a mais, é upgrade da que existe. Os riders (ovelhinha, patinho) e a água do banho continuam por cima; o texto central sempre legível acima de tudo. Os humores: <b>dia</b> lilás/ciano acordado · <b>soneca</b> roxo calmo e mais escuro · <b>banho</b> água ciano · <b>noite</b> índigo profundo, quase apagado (bedtime já escurece o app inteiro — o orb acompanha).</div>
+    <div class="note">Custo honesto: blur em 2-3 camadas pequenas (~classe do que a nebulosa atual já faz), animações longas só de transform/opacity, pausadas em background pelo app-hidden que já existe. Zero dependência, zero canvas. Se quiser DEPOIS dá pra evoluir pra WebGL real tipo Antalík — mas eu começaria aqui: 90% do efeito, 10% do risco.</div>
+  </div>
+
+  <div style="text-align:center;font-size:12px;color:var(--sub);line-height:1.6">Me diz o estilo (A/B/C) — e se o orb fica <b style="color:var(--heading)">sempre</b> (inclusive ocioso) ou <b style="color:var(--heading)">só com timer ativo</b>.</div>
+</div>
+
+<script>
+  document.querySelectorAll('.sky').forEach(sky=>{
+    for(let i=0;i<20;i++){const s=document.createElement('span');s.style.left=(Math.random()*96+2)+'%';s.style.top=(Math.random()*96+2)+'%';s.style.animationDelay=(Math.random()*3.5)+'s';s.style.opacity=Math.random()*.5+.15;sky.appendChild(s)}
+  });
+  const LBL={dia:["ACORDADA HÁ","2h 10m"],soneca:["NAPPING","1h 18m"],banho:["BATH","12:44"],noite:["BEDTIME","8h 02m"]};
+  const KEY={"Dia":"dia","Soneca":"soneca","Banho":"banho","Noite":"noite"};
+  document.querySelectorAll('[data-orb]').forEach(chips=>{
+    const phone=chips.previousElementSibling;
+    const orb=phone.querySelector('.orb');
+    const ctr=phone.querySelector('.ctr');
+    chips.querySelectorAll('.chip').forEach(ch=>{
+      ch.addEventListener('click',()=>{
+        chips.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
+        ch.classList.add('on');
+        const k=KEY[ch.textContent.trim()];
+        orb.setAttribute('data-state',k);
+        ctr.querySelector('.s').textContent=LBL[k][0];
+        ctr.querySelector('.b').textContent=LBL[k][1];
+      });
+    });
+  });
+</script>
