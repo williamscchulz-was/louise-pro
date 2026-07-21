@@ -323,13 +323,14 @@ function App(){
         addEntry(newE);
       };
     }
-    showToast(tmsg,async()=>{for(const p of parts) await FB.delEntry(p.id)},repeatFn);
+    showToast(tmsg,async()=>{await FB.deleteEntriesBatch(parts.map(p=>p.id))},repeatFn);
     // Fire-and-forget writes. Se falhar, log mas n\u00e3o bloqueia UI \u2014 offline persistence
     // re-tenta quando voltar a rede.
+    // v11.9.125: batch atomico (parts + timer juntos) \u2014 mesma classe de fix do stopTimer
+    // v11.9.122: sem janela de suspensao do iOS entre escritas sequenciais.
     (async()=>{
       try{
-        if(nwTimerUpdate)await FB.saveTimer(nwTimerUpdate);
-        for(const p of parts) await FB.addEntry(p);
+        await FB.saveEntriesBatch(parts,nwTimerUpdate||undefined);
       }catch(err){console.warn("[addEntry] write failed",err)}
     })();
   },[editEntry,entries,activeTimer]);
@@ -346,9 +347,9 @@ function App(){
     const tmsg=n===1
       ?(_lang==="en"?`${entries[0].name} registered`:`✓ ${entries[0].name}`)
       :`${n} ${_lang==="en"?"medicines logged":"medicamentos registrados"}`;
-    showToast(tmsg,async()=>{for(const e of entries) await FB.delEntry(e.id)});
+    showToast(tmsg,async()=>{await FB.deleteEntriesBatch(entries.map(e=>e.id))});
     (async()=>{
-      try{for(const e of entries) await FB.addEntry(e)}
+      try{await FB.saveEntriesBatch(entries)}
       catch(err){console.warn("[addMedicineBatch] write failed",err)}
     })();
   },[]);
@@ -436,7 +437,8 @@ function App(){
     // v11.9.96: snapshot do timer pro DESFAZER do stop (era a única escrita do app sem undo).
     // Desfazer = apaga as entries criadas + restaura o timer como estava.
     const prevTimer={...activeTimer};
-    const undoStop=ids=>async()=>{for(const id of ids)await FB.delEntry(id);await FB.saveTimer(prevTimer)};
+    // v11.9.125: desfazer tambem e atomico — apagar entries + restaurar timer num commit so.
+    const undoStop=ids=>async()=>{await FB.deleteEntriesBatch(ids,prevTimer)};
     if(activeTimer.type==="nursing"){const now=Date.now();const elapsed=activeTimer.paused?0:(now-new Date(activeTimer.sideStart).getTime());let lMs=(activeTimer.leftMs||0),rMs=(activeTimer.rightMs||0);if(!activeTimer.paused){if(activeTimer.side==="left")lMs+=elapsed;else rMs+=elapsed}const totalMin=Math.max(1,Math.round((lMs+rMs)/60000));const lMin=Math.round(lMs/60000),rMin=Math.round(rMs/60000);const side=lMs>0&&rMs>0?"both":(lMs>0?"left":"right");const entry={type:"nursing",date:`${s.getFullYear()}-${String(s.getMonth()+1).padStart(2,"0")}-${String(s.getDate()).padStart(2,"0")}`,time:`${String(s.getHours()).padStart(2,"0")}:${String(s.getMinutes()).padStart(2,"0")}`,durationMin:totalMin,side,leftMin:lMin,rightMin:rMin,id:uid()};await FB.stopTimerAndLog([entry]);showToast(_lang==="en"?`Nursing ${totalMin}min (L:${lMin} R:${rMin})`:`Amamentação ${totalMin}min (E:${lMin} D:${rMin})`,undoStop([entry.id]))}else{
     // Sleep/nap stop — if sleep has wakings, persist them on the entry
     let wakings=activeTimer.wakings||[];

@@ -463,15 +463,26 @@ window.FB = {
   // se o app fosse suspenso pelo iOS entre uma e outra (ex: usuário trava o celular logo
   // após apertar Parar), a entry salvava mas o timer ativo ficava preso "fantasma" tocando
   // em todos os dispositivos até alguém notar (bug real, reportado pelo William com print).
-  async stopTimerAndLog(entries) {
+  // v11.9.125: generalizacao do fix v11.9.122 — escritas de entries (e opcionalmente o
+  // timer ativo) num UNICO commit atomico. `timer`: undefined = nao mexe no config/active,
+  // null = limpa, objeto = seta. Fecha a classe inteira de bug "iOS suspendeu o app entre
+  // duas escritas sequenciais" (timer fantasma, lote de remedios pela metade, undo parcial).
+  async saveEntriesBatch(entries, timer) {
     const batch = db.batch();
     for (const e of entries) {
       const clean = Object.fromEntries(Object.entries(e).filter(([_,v]) => v !== undefined));
       batch.set(db.collection('entries').doc(e.id), clean);
     }
-    batch.set(db.collection('config').doc('active'), {cleared:true});
+    if (timer !== undefined) batch.set(db.collection('config').doc('active'), timer || {cleared:true});
     await batch.commit();
   },
+  async deleteEntriesBatch(ids, timer) {
+    const batch = db.batch();
+    for (const id of ids) batch.delete(db.collection('entries').doc(id));
+    if (timer !== undefined) batch.set(db.collection('config').doc('active'), timer || {cleared:true});
+    await batch.commit();
+  },
+  async stopTimerAndLog(entries) { return this.saveEntriesBatch(entries, null); },
   subInbox(cb) { return db.collection('config').doc('inbox').onSnapshot(s => cb(s.exists ? s.data() : null)); },
   // MERGE defensivo: mesmo padrão do saveProfile — preserva campos não incluídos em `data`.
   async saveInbox(data) { await db.collection('config').doc('inbox').set(data, {merge:true}); },

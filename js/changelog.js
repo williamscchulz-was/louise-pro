@@ -4,6 +4,21 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.125", date: "2026-07-21",
+    pt: {
+      title: "Toda gravação em lote virou atômica",
+      bullets: [
+        'O mesmo reforço que curou o timer fantasma (v11.9.122) agora cobre tudo: registrar evento que cruza a meia-noite, lote de remédios e os "desfazer" — ou grava tudo, ou nada. Sem risco de metade salvar se o iPhone suspender o app no meio.',
+      ],
+    },
+    en: {
+      title: "Every multi-write is now atomic",
+      bullets: [
+        'The same hardening that cured the phantom timer (v11.9.122) now covers everything: cross-midnight entries, medicine batches, and the "undo" actions — either everything saves, or nothing does. No more half-saved data if the iPhone suspends the app mid-write.',
+      ],
+    },
+  },
+  {
     v: "11.9.124", date: "2026-07-21",
     pt: {
       title: "Backup blindado",
