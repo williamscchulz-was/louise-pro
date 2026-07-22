@@ -4,6 +4,23 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.130", date: "2026-07-22",
+    pt: {
+      title: "O coração do anel virou um orb vivo 🔮",
+      bullets: [
+        '★ O miolo do Ring ganhou **matéria de verdade**: uma esfera com massas de cor se misturando em câmera lenta, como plasma — no espírito dos "thinking orbs". Ela muda de humor com o dia: **lilás acordada, roxo calmo na soneca, índigo quase apagado à noite**.',
+        'No banho o orb dá lugar à aguinha que já existia — ela continua sendo a estrela.',
+      ],
+    },
+    en: {
+      title: "The ring\'s heart is now a living orb 🔮",
+      bullets: [
+        '★ The Ring\'s core got **real matter**: a sphere with colour masses blending in slow motion, like plasma — in the spirit of "thinking orbs". It changes mood with the day: **lilac awake, calm purple during naps, near-dark indigo at night**.',
+        'During baths the orb steps aside for the little water fill — that one stays the star.',
+      ],
+    },
+  },
+  {
     v: "11.9.129", date: "2026-07-21",
     pt: {
       title: "O céu da Louise 🌌",

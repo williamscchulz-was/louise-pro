@@ -147,20 +147,18 @@
         #040616;
       transition:background 0.8s ease;
     }
-    /* v11.9.82: miolo do Ring — nebulosa suave + micro-interações (preenche o vazio
-       atrás do tempo). Tudo por classe (não reseta no tick de 5s). */
-    @keyframes ringNebBreathe{0%,100%{opacity:.6;transform:translate(-50%,-50%) scale(0.9)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}}
-    @keyframes ringNeb2Breathe{0%,100%{opacity:.45;transform:translate(-50%,-50%) scale(1.06)}50%{opacity:.8;transform:translate(-50%,-50%) scale(0.92)}}
+    /* v11.9.130: orb "nebulosa liquida" no miolo do Ring (opcao B do mockup orb-premium) —
+       substitui ring-neb/neb2 + poeira da v11.9.82. 3 blobs transform/opacity-only em
+       ciclos longos (17-21s), blur moderado em elementos pequenos. Halo do timer mantido. */
     @keyframes ringPulseHalo{0%{opacity:.4;transform:translate(-50%,-50%) scale(0.65)}70%{opacity:0}100%{opacity:0;transform:translate(-50%,-50%) scale(1.85)}}
-    @keyframes ringDustA{0%,100%{transform:translate(0,0)}50%{transform:translate(7px,-11px)}}
-    @keyframes ringDustB{0%,100%{transform:translate(0,0)}50%{transform:translate(-9px,-7px)}}
-    @keyframes ringDustC{0%,100%{transform:translate(0,0)}50%{transform:translate(5px,10px)}}
-    .ring-neb{animation:ringNebBreathe 6s ease-in-out infinite}
-    .ring-neb2{animation:ringNeb2Breathe 5s ease-in-out 0.6s infinite}
     .ring-pulse{animation:ringPulseHalo 4.5s ease-out infinite}
-    .ring-dust-a{animation:ringDustA 7s ease-in-out infinite}
-    .ring-dust-b{animation:ringDustB 9s ease-in-out infinite}
-    .ring-dust-c{animation:ringDustC 8s ease-in-out infinite}
+    .orb-liq{position:absolute;border-radius:50%;filter:blur(12px);pointer-events:none}
+    .orb-liqA{animation:orbLiqA 17s ease-in-out infinite alternate}
+    .orb-liqB{animation:orbLiqB 21s ease-in-out 2s infinite alternate}
+    .orb-liqC{animation:orbLiqC 19s ease-in-out 4s infinite alternate}
+    @keyframes orbLiqA{from{transform:translate(0,0) scale(1) rotate(0)}to{transform:translate(16%,10%) scale(1.22) rotate(24deg)}}
+    @keyframes orbLiqB{from{transform:translate(0,0) scale(1.15)}to{transform:translate(-14%,-8%) scale(.92)}}
+    @keyframes orbLiqC{from{transform:translate(0,0) scale(.95)}to{transform:translate(8%,-14%) scale(1.2)}}
     /* v11.9.83: quick buttons adaptativos — só os recém-surgidos animam (montam com key nova). */
     @keyframes qbtnPop{0%{transform:scale(0.82);opacity:0}100%{transform:scale(1);opacity:1}}
     .qbtn-appear{animation:qbtnPop .38s cubic-bezier(0.34,1.56,0.64,1)}
