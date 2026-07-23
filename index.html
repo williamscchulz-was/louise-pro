@@ -295,9 +295,9 @@
         ov.style.cssText='position:fixed;inset:0;z-index:999999;background:linear-gradient(180deg,#0e0825,#070b1e 70%,#070b1e);display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,"Outfit",system-ui,sans-serif;overflow:hidden';
         ov.innerHTML=
           '<div style="position:absolute;inset:0;pointer-events:none">'+stars+'</div>'+
-          '<div style="position:relative;width:120px;height:140px;display:flex;align-items:center;justify-content:center">'+
-            '<div style="position:absolute;width:190px;height:190px;border-radius:50%;background:radial-gradient(circle,rgba(167,139,250,0.32),rgba(139,124,246,0.10) 40%,transparent 70%);filter:blur(12px);animation:splashHaloBreathe 2.8s ease-in-out infinite"></div>'+
-            '<svg width="96" height="137" viewBox="340 245 372 530" style="position:relative">'+
+          '<div style="position:relative;width:140px;height:185px;display:flex;align-items:center;justify-content:center">'+
+            '<div style="position:absolute;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(167,139,250,0.32),rgba(139,124,246,0.10) 40%,transparent 70%);filter:blur(12px);animation:splashHaloBreathe 2.8s ease-in-out infinite"></div>'+
+            '<svg width="122" height="174" viewBox="340 245 372 530" style="position:relative">'+
               '<defs><linearGradient id="updG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e7deff"/><stop offset="1" stop-color="#8b7cf6"/></linearGradient></defs>'+
               '<path d="'+_sil+'" fill-rule="evenodd" fill="url(#updG)" style="opacity:0;animation:splFill .5s cubic-bezier(0.22,1,0.36,1) .9s forwards"></path>'+
               '<path d="'+_sil+'" pathLength="1" fill="none" stroke="url(#updG)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="stroke-dasharray:1;stroke-dashoffset:1;animation:splDraw 1.3s cubic-bezier(0.4,0,0.2,1) forwards"></path>'+
@@ -306,7 +306,12 @@
           '<div style="margin-top:22px;font-size:14px;color:rgba(228,230,245,0.75);letter-spacing:0.3px;opacity:0;animation:splashText .9s ease .5s forwards">'+_txt+'</div>';
         document.body.appendChild(ov);
       }catch(e){}
-      setTimeout(function(){window.location.reload()},1600);
+      // v11.9.133: (1) reload aos 2600ms — antes 1600ms cortava a animacao no meio ("fica
+      // tudo piscando"); agora o desenho completa (~1.4s) e o quadro respira antes do reload.
+      // (2) flag de sessao pro boot pos-reload PULAR o splash — o overlay ja foi a transicao;
+      // sem isso a cadeia era overlay -> reload -> splash de novo -> app, 3 telas piscando.
+      try{sessionStorage.setItem('lp_upd_reload','1')}catch(e){}
+      setTimeout(function(){window.location.reload()},2600);
     });
   }
   </script>

@@ -108,12 +108,14 @@ function App(){
   const[showNursingPicker,setShowNursingPicker]=useState(false);
   const lang=profile.lang||"en";_lang=lang;
   const[toast,setToast]=useState(null);const[tick,setTick]=useState(0);const undoRef=useRef(null);const repeatRef=useRef(null);
-  const[splash,setSplash]=useState(true);
-  // v11.9.98: splash COMPLETO (traço que se desenha, 3s) só na 1ª abertura do dia — nas
-  // outras ~20 aberturas/dia, versão curta (~900ms, logo preenchida + fade). Raridade
-  // preserva o ritual. Flag per-device em localStorage (lp_splash_date).
-  const[splashFull]=useState(()=>{try{return localStorage.getItem("lp_splash_date")!==todayStr()}catch(e){return true}});
-  useEffect(()=>{try{localStorage.setItem("lp_splash_date",todayStr())}catch(e){}const t=setTimeout(()=>setSplash(false),splashFull?4600:900);return()=>clearTimeout(t)},[]);
+  // v11.9.133: o splash da família DESENHA em toda abertura (pedido do William: "tem que
+  // desenhar e dar um tempo") — supera a regra v11.9.98 de full-1×/dia. Draw termina ~3.1s
+  // e o quadro completo segura ~0.8s antes de entrar. Flag lp_splash_date aposentada.
+  // EXCEÇÃO anti-pisca: se este boot veio do reload do overlay de atualização (sessionStorage
+  // lp_upd_reload, setado no controllerchange do index.html), o overlay JÁ foi a transição —
+  // pular o splash evita a cadeia "overlay → splash → app" piscando 3 telas.
+  const[splash,setSplash]=useState(()=>{try{if(sessionStorage.getItem("lp_upd_reload")==="1"){sessionStorage.removeItem("lp_upd_reload");return false}}catch(e){}return true});
+  useEffect(()=>{if(!splash)return;const t=setTimeout(()=>setSplash(false),3900);return()=>clearTimeout(t)},[]);
 
   // lastSeenVersion per-device via localStorage (v11.1). Firestore profile é compartilhado
   // entre os 2 dispositivos (William + esposa). Antes, marcar update como visto num device
@@ -951,20 +953,21 @@ function App(){
       <div style={{position:"absolute",top:0,left:0,right:0,height:"50%",background:"radial-gradient(ellipse at 50% 30%,rgba(50,25,100,0.15),transparent 70%)",pointerEvents:"none"}}/>
       <div style={{position:"fixed",inset:0,pointerEvents:"none"}}>{Array.from({length:25}).map((_,i)=><div key={i} style={{position:"absolute",width:Math.random()*2+0.5,height:Math.random()*2+0.5,background:`rgba(160,170,255,${Math.random()*0.25+0.05})`,borderRadius:"50%",top:Math.random()*100+"%",left:Math.random()*100+"%"}}/>)}</div>
       <div style={{position:"relative",display:"flex",flexDirection:"column",alignItems:"center",zIndex:1}}>
-        <div style={{position:"relative",marginBottom:24,width:160,height:222}}>
+        <div style={{position:"relative",marginBottom:24,width:200,height:279}}>
           {/* Halo roxo respirando atras da logo */}
-          <div style={{position:"absolute",top:"50%",left:"50%",width:250,height:250,borderRadius:"50%",background:"radial-gradient(circle,rgba(167,139,250,0.32),rgba(139,124,246,0.10) 40%,transparent 70%)",filter:"blur(12px)",pointerEvents:"none",animation:"splashHaloBreathe 2.8s ease-in-out 0.6s infinite",transform:"translate(-50%,-50%) scale(0.85)",opacity:0}}/>
+          <div style={{position:"absolute",top:"50%",left:"50%",width:290,height:290,borderRadius:"50%",background:"radial-gradient(circle,rgba(167,139,250,0.32),rgba(139,124,246,0.10) 40%,transparent 70%)",filter:"blur(12px)",pointerEvents:"none",animation:"splashHaloBreathe 2.8s ease-in-out 0.6s infinite",transform:"translate(-50%,-50%) scale(0.85)",opacity:0}}/>
           {/* v11.9.132: splash "a família" (arte escolhida pelo William, vetorizada) — mãe+Louise
-              se desenham primeiro, o pai é o ÚLTIMO a se traçar, chegando pro abraço. */}
-          <svg width="156" height="222" viewBox="340 245 372 530" style={{position:"relative",display:"block",margin:"0 auto"}}>
+              se desenham primeiro, o pai é o ÚLTIMO a se traçar, chegando pro abraço.
+              v11.9.133: ~25% maior (feedback: "ficou pequeno"). */}
+          <svg width="196" height="279" viewBox="340 245 372 530" style={{position:"relative",display:"block",margin:"0 auto"}}>
             <defs>
               <linearGradient id="splDrawG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#e7deff"/><stop offset="0.55" stopColor="#b9a6f7"/><stop offset="1" stopColor="#8b7cf6"/></linearGradient>
               <linearGradient id="splFillG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#ffffff"/><stop offset="1" stopColor="#e3dcff"/></linearGradient>
             </defs>
-            <path d={LOUISE_FAM_MOM} fillRule="evenodd" fill="url(#splFillG)" className={splashFull?"spl2-mom-fill":"spl-fill-quick"}/>
-            <path d={LOUISE_FAM_DAD} fillRule="evenodd" fill="url(#splFillG)" className={splashFull?"spl2-dad-fill":"spl-fill-quick"}/>
-            {splashFull&&<path d={LOUISE_FAM_MOM} pathLength="1" fill="none" stroke="url(#splDrawG)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="spl2-mom-draw"/>}
-            {splashFull&&<path d={LOUISE_FAM_DAD} pathLength="1" fill="none" stroke="url(#splDrawG)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="spl2-dad-draw"/>}
+            <path d={LOUISE_FAM_MOM} fillRule="evenodd" fill="url(#splFillG)" className="spl2-mom-fill"/>
+            <path d={LOUISE_FAM_DAD} fillRule="evenodd" fill="url(#splFillG)" className="spl2-dad-fill"/>
+            <path d={LOUISE_FAM_MOM} pathLength="1" fill="none" stroke="url(#splDrawG)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="spl2-mom-draw"/>
+            <path d={LOUISE_FAM_DAD} pathLength="1" fill="none" stroke="url(#splDrawG)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="spl2-dad-draw"/>
           </svg>
         </div>
         <div style={{animation:"splashText 1.2s ease both",display:"flex",flexDirection:"column",alignItems:"center"}}>

@@ -4,6 +4,25 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.133", date: "2026-07-23",
+    pt: {
+      title: "Splash: desenha sempre, maior, e sem piscar ao atualizar",
+      bullets: [
+        '★ O desenho da família agora **se traça em toda abertura** (não só na 1ª do dia), em ritmo mais ágil — e o quadro completo **segura um instante** antes de entrar no app.',
+        'O desenho ficou **~25% maior**.',
+        'Fim do pisca-pisca ao atualizar: a tela "Deixando tudo prontinho" completa o desenho com calma e o app entra **direto, sem repetir o splash**. (Vale a partir da próxima atualização.)',
+      ],
+    },
+    en: {
+      title: "Splash: always draws, bigger, no more update flicker",
+      bullets: [
+        '★ The family drawing now **traces itself on every open** (not just the first of the day), at a brisker pace — and the finished frame **holds for a beat** before entering the app.',
+        'The drawing is **~25% bigger**.',
+        'No more flicker when updating: the "Getting everything ready" screen finishes the drawing calmly and the app enters **directly, without replaying the splash**. (Takes effect from the next update on.)',
+      ],
+    },
+  },
+  {
     v: "11.9.132", date: "2026-07-23",
     pt: {
       title: "A abertura agora é a família 🤍",
