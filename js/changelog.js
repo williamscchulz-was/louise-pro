@@ -4,6 +4,23 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.132", date: "2026-07-23",
+    pt: {
+      title: "A abertura agora é a família 🤍",
+      bullets: [
+        '★ O splash ganhou um desenho novo: **a família inteira** — a mãe e a Louise se desenham primeiro, se acendem… e **o pai é o último a se traçar**, chegando pro abraço. Arte escolhida pelo William, vetorizada com o mesmo processo da logo original.',
+        'A transição de atualização (tela cheia) também usa o desenho novo.',
+      ],
+    },
+    en: {
+      title: "The opening is now the family 🤍",
+      bullets: [
+        '★ The splash got a new drawing: **the whole family** — mom and Louise draw themselves first and light up… and **dad is the last one to be traced**, arriving for the embrace. Artwork chosen by William, vectorized with the same process as the original logo.',
+        'The full-screen update transition uses the new drawing too.',
+      ],
+    },
+  },
+  {
     v: "11.9.131", date: "2026-07-22",
     pt: {
       title: "Orb removido — miolo de volta ao normal",

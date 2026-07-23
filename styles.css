@@ -111,6 +111,12 @@
     .spl-fill{opacity:0;animation:splFill .7s cubic-bezier(0.22,1,0.36,1) 2.0s forwards}
     /* v11.9.98: splash curto (aberturas seguintes do dia) — logo preenchida direto, sem traço. */
     .spl-fill-quick{opacity:0;animation:splFill .45s ease .05s forwards}
+    /* v11.9.132: splash "a família" em dois tempos — mãe+Louise traçam e acendem primeiro,
+       o pai é o último a se desenhar (ordem pedida pelo William). Reusa splDraw/splFill. */
+    .spl2-mom-draw{stroke-dasharray:1;stroke-dashoffset:1;animation:splDraw 1.9s cubic-bezier(0.45,0,0.2,1) .15s forwards}
+    .spl2-mom-fill{opacity:0;animation:splFill .5s cubic-bezier(0.22,1,0.36,1) 1.9s forwards}
+    .spl2-dad-draw{stroke-dasharray:1;stroke-dashoffset:1;animation:splDraw 1.6s cubic-bezier(0.45,0,0.2,1) 2.3s forwards}
+    .spl2-dad-fill{opacity:0;animation:splFill .6s ease 3.8s forwards}
     @keyframes splashText{0%{opacity:0;transform:translateY(8px)}50%{opacity:0}100%{opacity:1;transform:translateY(0)}}
     @keyframes splashFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
     @keyframes splashHeartbeat{0%,55%,100%{transform:scale(1)}8%{transform:scale(1.06)}16%{transform:scale(0.99)}24%{transform:scale(1.04)}32%{transform:scale(1)}}
