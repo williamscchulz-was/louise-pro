@@ -4,6 +4,21 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.131", date: "2026-07-22",
+    pt: {
+      title: "Orb removido — miolo de volta ao normal",
+      bullets: [
+        'O orb da versão anterior não agradou no uso real — removido. O centro do anel voltou exatamente ao visual de antes (nebulosa suave + poeira estelar).',
+      ],
+    },
+    en: {
+      title: "Orb removed — core back to normal",
+      bullets: [
+        'The previous version\'s orb didn\'t feel right in real use — removed. The ring\'s core is back to exactly the previous look (soft nebula + stardust).',
+      ],
+    },
+  },
+  {
     v: "11.9.130", date: "2026-07-22",
     pt: {
       title: "O coração do anel virou um orb vivo 🔮",
