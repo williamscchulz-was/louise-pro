@@ -4,6 +4,21 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.134", date: "2026-07-23",
+    pt: {
+      title: "Correção: retângulo sem névoa em volta do número",
+      bullets: [
+        '★ No centro do anel aparecia um **retângulo apagado** em volta do número — a névoa roxa sumia ali dentro, com bordas retas. Era o brilho do número criando uma camada opaca por cima da nebulosa (só acontecia no iPhone). Agora a névoa passa por trás do número inteirinha.',
+      ],
+    },
+    en: {
+      title: "Fix: haze-free rectangle around the number",
+      bullets: [
+        '★ A **dull rectangle** showed up around the number at the ring\'s center — the purple haze vanished inside it, with straight edges. The number\'s glow was creating an opaque layer on top of the nebula (iPhone-only). The haze now flows behind the number without a gap.',
+      ],
+    },
+  },
+  {
     v: "11.9.133", date: "2026-07-23",
     pt: {
       title: "Splash: desenha sempre, maior, e sem piscar ao atualizar",
