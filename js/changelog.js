@@ -4,6 +4,21 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.137", date: "2026-07-29",
+    pt: {
+      title: "Fix: salvar o relatório agora funciona no iPhone",
+      bullets: [
+        '★ O botão do relatório virou **Salvar**: gera o documento como imagem e abre o menu de compartilhar do iPhone — dá pra mandar no **WhatsApp**, **Salvar em Arquivos** ou **Imprimir** dali mesmo. (O caminho antigo dependia do diálogo de impressão, que o iPhone ignora quando o app está instalado na tela de início.)',
+      ],
+    },
+    en: {
+      title: "Fix: saving the report now works on iPhone",
+      bullets: [
+        '★ The report button is now **Save**: it renders the document as an image and opens the iPhone share sheet — send it on **WhatsApp**, **Save to Files** or **Print** right from there. (The old path relied on the print dialog, which the iPhone ignores when the app is installed on the Home Screen.)',
+      ],
+    },
+  },
+  {
     v: "11.9.136", date: "2026-07-29",
     pt: {
       title: "O relatório virou documento (com mapa de sono)",
