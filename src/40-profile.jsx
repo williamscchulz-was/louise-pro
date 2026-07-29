@@ -316,6 +316,9 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onOpenReport,onShow
           <Icon name="ruler" size={16} color="#a3e635"/><span style={{fontSize:T.fLG,fontWeight:700,color:"#a3e635"}}>{L("viewGrowth")}</span>
         </button>
       </div>
+      {/* v11.9.138: relatório de 30 dias PROMOVIDO pro topo (logo abaixo do Perfil) — pedido
+          do William; é o export mais usado (esposa → pediatra) e ficava enterrado em Dados. */}
+      <ReportSection entries={entries} babyName={name} onOpenReport={onOpenReport}/>
       {/* ── GROUP: ROTINA ── toggle + hora alvo de cada evento + count de mamadas */}
       <div style={{background:"linear-gradient(180deg,rgba(22,28,60,0.55),rgba(20,26,60,0.32))",border:`1px solid ${T.gBSoft}`,borderRadius:18,padding:"15px 16px",marginBottom:13,boxShadow:T.cardShadow}}>
         <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:13}}>
@@ -594,9 +597,6 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onOpenReport,onShow
         <span style={{fontSize:T.fXS,fontWeight:800,letterSpacing:1,textTransform:"uppercase",color:T.green}}>{_lang==="en"?"Data":"Dados"}</span>
       </div>
       <BackupSection/>
-      {/* v11.9.135: relatório de 30 dias — mora aqui em Dados (mesmo grupo do backup, é um
-          export), logo abaixo do backup. Recebe `entries` que a ProfilePage já tem. */}
-      <ReportSection entries={entries} babyName={name} onOpenReport={onOpenReport}/>
       {/* ── GROUP: SOBRE ── version/changelog + streak */}
       <div style={{background:"linear-gradient(180deg,rgba(22,28,60,0.55),rgba(20,26,60,0.32))",border:`1px solid ${T.gBSoft}`,borderRadius:18,padding:"15px 16px",marginBottom:13,marginTop:14,boxShadow:T.cardShadow}}>
         <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:13}}>

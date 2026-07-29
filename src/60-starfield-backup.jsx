@@ -194,7 +194,7 @@ function ReportSection({entries,babyName,onOpenReport}){
     }catch(e){if(e&&e.name!=="AbortError"){flash((_lang==="en"?"Error: ":"Erro: ")+e.message);Haptic.warning()}}
     setBusy(false);
   };
-  return(<div style={{marginTop:12,padding:"16px 18px",borderRadius:14,background:"rgba(22,28,60,0.4)",border:`1px solid ${T.gB}`,boxShadow:T.insetTop}}>
+  return(<div style={{marginBottom:13,padding:"16px 18px",borderRadius:14,background:"rgba(22,28,60,0.4)",border:`1px solid ${T.gB}`,boxShadow:T.insetTop}}>
     <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
       <div style={{width:32,height:32,borderRadius:9,background:"rgba(139,124,246,0.12)",border:"1px solid rgba(139,124,246,0.28)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={T.lilac} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>

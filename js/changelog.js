@@ -4,6 +4,23 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.138", date: "2026-07-29",
+    pt: {
+      title: "Agora sim: PDF de verdade",
+      bullets: [
+        '★ O botão **PDF** do relatório gera um **arquivo .pdf real** e abre o menu de compartilhar — manda no WhatsApp, salva em Arquivos ou imprime, e a pediatra recebe um PDF de verdade.',
+        'O card do relatório **subiu pro topo dos Ajustes** (logo abaixo do Perfil) — sem precisar rolar até o fim.',
+      ],
+    },
+    en: {
+      title: "Now for real: an actual PDF",
+      bullets: [
+        '★ The report\'s **PDF** button now generates a **real .pdf file** and opens the share sheet — send it on WhatsApp, save to Files or print, and the pediatrician gets an actual PDF.',
+        'The report card **moved to the top of Settings** (right below Profile) — no more scrolling to the bottom.',
+      ],
+    },
+  },
+  {
     v: "11.9.137", date: "2026-07-29",
     pt: {
       title: "Fix: salvar o relatório agora funciona no iPhone",

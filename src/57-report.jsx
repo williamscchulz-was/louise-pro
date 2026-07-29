@@ -13,7 +13,7 @@
 
 // Desenha o relatório inteiro num canvas 2x (data-driven a partir do `rep` — não lê o DOM).
 // Layout espelha a página: cabeçalho, 4 KPIs, mapa (actograma), tabela 11 colunas, rodapé.
-function renderReportPNG(rep,opts){
+function renderReportCanvas(rep,opts){
   const en=opts.lang==="en";
   const loc=en?"en-US":"pt-BR";
   const dShort=d=>new Date(d+"T12:00:00").toLocaleDateString(loc,{day:"2-digit",month:"2-digit"});
@@ -137,7 +137,43 @@ function renderReportPNG(rep,opts){
     :["Registros feitos manualmente pelos pais no app Louise Pro — períodos não registrados aparecem como acordada no mapa.","Documento de acompanhamento, não substitui avaliação profissional."];
   ctx.fillText(foot[0],PAD,footY+15);
   ctx.fillText(foot[1],PAD,footY+28);
-  return new Promise((res,rej)=>canvas.toBlob(b=>b?res(b):rej(new Error("canvas.toBlob falhou")),"image/png"));
+  return canvas;
+}
+
+// v11.9.138: PDF DE VERDADE, escrito à mão (zero dependência). O truque: PDF aceita JPEG
+// embutido cru (filtro DCTDecode) — então o canvas do documento vira JPEG e este builder
+// monta o arquivo binário em volta (catalog/pages/page/imagem/conteúdo + xref com offsets
+// em bytes). Página única com o tamanho exato do documento (~190 DPI). O que quebra PDFs
+// feitos à mão são os offsets do xref — o harness confere cada um contra a posição real.
+function _reportPdfBytes(jpeg,imgW,imgH){
+  const pageW=595.28,pageH=Math.round(pageW*imgH/imgW*100)/100;
+  const te=new TextEncoder();
+  const chunks=[];let offset=0;const xref=[];
+  const put=u8=>{chunks.push(u8);offset+=u8.length};
+  const puts=s=>put(te.encode(s));
+  puts("%PDF-1.4\n");
+  put(new Uint8Array([0x25,0xE2,0xE3,0xCF,0xD3,0x0A]));
+  const mark=n=>{xref[n]=offset};
+  mark(1);puts("1 0 obj\n<</Type/Catalog/Pages 2 0 R>>\nendobj\n");
+  mark(2);puts("2 0 obj\n<</Type/Pages/Kids[3 0 R]/Count 1>>\nendobj\n");
+  mark(3);puts("3 0 obj\n<</Type/Page/Parent 2 0 R/MediaBox[0 0 "+pageW+" "+pageH+"]/Resources<</XObject<</Im1 4 0 R>>/ProcSet[/PDF/ImageC]>>/Contents 5 0 R>>\nendobj\n");
+  mark(4);puts("4 0 obj\n<</Type/XObject/Subtype/Image/Width "+imgW+"/Height "+imgH+"/ColorSpace/DeviceRGB/BitsPerComponent 8/Filter/DCTDecode/Length "+jpeg.length+">>\nstream\n");
+  put(jpeg);puts("\nendstream\nendobj\n");
+  const content="q\n"+pageW+" 0 0 "+pageH+" 0 0 cm\n/Im1 Do\nQ";
+  mark(5);puts("5 0 obj\n<</Length "+content.length+">>\nstream\n"+content+"\nendstream\nendobj\n");
+  const xrefStart=offset;
+  let x="xref\n0 6\n0000000000 65535 f \n";
+  for(let i=1;i<=5;i++)x+=String(xref[i]).padStart(10,"0")+" 00000 n \n";
+  x+="trailer\n<</Size 6/Root 1 0 R>>\nstartxref\n"+xrefStart+"\n%%EOF";
+  puts(x);
+  const total=new Uint8Array(offset);let p=0;for(const c of chunks){total.set(c,p);p+=c.length}
+  return total;
+}
+async function renderReportPDF(rep,opts){
+  const canvas=renderReportCanvas(rep,opts);
+  const jblob=await new Promise((res,rej)=>canvas.toBlob(b=>b?res(b):rej(new Error("toBlob falhou")),"image/jpeg",0.92));
+  const jpeg=new Uint8Array(await jblob.arrayBuffer());
+  return new Blob([_reportPdfBytes(jpeg,canvas.width,canvas.height)],{type:"application/pdf"});
 }
 
 const ReportPage = React.memo(function ReportPage({entries,birthDate,babyName,onBack,lang}){
@@ -164,25 +200,25 @@ const ReportPage = React.memo(function ReportPage({entries,birthDate,babyName,on
       setTimeout(()=>{window.print();setTimeout(done,2000)},80);
     }catch(e){}
   };
-  // v11.9.137: caminho principal — documento em PNG (canvas) pro share sheet nativo.
-  // No standalone iOS window.print é no-op; do share sheet saem WhatsApp, Salvar em
-  // Arquivos e Imprimir. Fallbacks: print (desktop, PDF real) → download do PNG.
+  // v11.9.138: PDF DE VERDADE — canvas do documento → JPEG → arquivo .pdf montado à mão
+  // (renderReportPDF acima). Share sheet com o .pdf no iOS (funciona no standalone);
+  // fallback: download direto do arquivo (desktop). Nada depende de window.print.
   const[saving,setSaving]=useState(false);
   const onSave=async()=>{
     if(saving)return;setSaving(true);
     try{
-      const blob=await renderReportPNG(rep,{lang,babyName,birthDate,ageStr});
-      const fname=`${(babyName||"louise").toLowerCase().replace(/[^a-z0-9]/g,"")||"louise"}-30d-${todayStr()}.png`;
-      const file=new File([blob],fname,{type:"image/png"});
+      const blob=await renderReportPDF(rep,{lang,babyName,birthDate,ageStr});
+      const fname=`${(babyName||"louise").toLowerCase().replace(/[^a-z0-9]/g,"")||"louise"}-30d-${todayStr()}.pdf`;
+      const file=new File([blob],fname,{type:"application/pdf"});
       if(navigator.canShare&&navigator.canShare({files:[file]})){
-        await navigator.share({files:[file],title:en?"30-day report":"Relatório de 30 dias"});
+        await navigator.share({files:[file],title:fname});
         Haptic.success();setSaving(false);return;
       }
-      if(!navigator.standalone){onPrint();setSaving(false);return}
       const url=URL.createObjectURL(blob);
       const a=document.createElement("a");a.href=url;a.download=fname;document.body.appendChild(a);a.click();
       setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url)},1000);
-    }catch(e){if(!e||e.name!=="AbortError"){if(!navigator.standalone)onPrint()}}
+      Haptic.success();
+    }catch(e){/* AbortError = usuário fechou o share sheet */}
     setSaving(false);
   };
   const onShare=async()=>{
@@ -213,7 +249,7 @@ const ReportPage = React.memo(function ReportPage({entries,birthDate,babyName,on
       </button>
       <button onClick={onSave} disabled={saving} style={{padding:"8px 12px",borderRadius:9,background:"#5b4fc4",border:"none",fontSize:12,fontWeight:700,color:"#fff",display:"flex",alignItems:"center",gap:5,opacity:saving?0.6:1}}>
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        {saving?(en?"Generating…":"Gerando…"):(en?"Save":"Salvar")}
+        {saving?(en?"Generating…":"Gerando…"):"PDF"}
       </button>
     </div>
 
