@@ -4,6 +4,23 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.135", date: "2026-07-29",
+    pt: {
+      title: "Relatório de 30 dias pra enviar à pediatra",
+      bullets: [
+        '★ Em **Ajustes › Dados**, o app agora exporta os últimos 30 dias: **horário de acordar, sonecas com duração, janelas de tempo acordada, mamadas e sono noturno** (duração, despertares e sono real, descontando os despertares).',
+        '**Compartilhar** manda um resumo pronto pra ler (com as médias do período) direto no WhatsApp; **Planilha** gera um CSV dia a dia pra abrir no Numbers/Excel.',
+      ],
+    },
+    en: {
+      title: "30-day report to send to the pediatrician",
+      bullets: [
+        '★ Under **Settings › Data**, the app now exports the last 30 days: **wake-up time, naps with durations, awake windows, feeds and night sleep** (duration, wakings and real sleep, minus the wakings).',
+        '**Share** sends a ready-to-read summary (with the period\'s averages) straight to WhatsApp; **Spreadsheet** generates a day-by-day CSV for Numbers/Excel.',
+      ],
+    },
+  },
+  {
     v: "11.9.134", date: "2026-07-23",
     pt: {
       title: "Correção: retângulo sem névoa em volta do número",
