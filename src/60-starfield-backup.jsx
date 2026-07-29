@@ -169,21 +169,10 @@ function BackupSection(){
 // já com as médias) e CSV (abre em planilha pra analisar dia a dia). No iPhone tenta o share
 // sheet nativo — inclusive com ARQUIVO; se o browser não suportar, cai pro download.
 // O motor (sleepReport/CSV/Text) é puro e mora no 00-core, com harness de 26 asserts.
-function ReportSection({entries,babyName}){
+function ReportSection({entries,babyName,onOpenReport}){
   const[msg,setMsg]=useState("");
   const[busy,setBusy]=useState(false);
   const flash=t=>{setMsg(t);setTimeout(()=>setMsg(""),3500)};
-  const onShareText=async()=>{
-    if(busy)return;setBusy(true);
-    try{
-      const txt=sleepReportText(sleepReport(entries,30),_lang,babyName);
-      const title=_lang==="en"?"Sleep & routine report":"Relatório de sono e rotina";
-      if(navigator.share){await navigator.share({title,text:txt})}
-      else{await navigator.clipboard.writeText(txt);flash(_lang==="en"?"Copied to clipboard":"Copiado pra área de transferência")}
-      Haptic.success();
-    }catch(e){if(e&&e.name!=="AbortError"){flash((_lang==="en"?"Error: ":"Erro: ")+e.message);Haptic.warning()}}
-    setBusy(false);
-  };
   const onCSV=async()=>{
     if(busy)return;setBusy(true);
     try{
@@ -215,11 +204,11 @@ function ReportSection({entries,babyName}){
         <div style={{fontSize:T.fSM,color:T.sub,fontWeight:600,marginTop:1}}>{_lang==="en"?"To send to the pediatrician":"Pra enviar à pediatra"}</div>
       </div>
     </div>
-    <div style={{fontSize:T.fSM,color:T.sub,lineHeight:1.5,marginBottom:12}}>{_lang==="en"?"Day by day: wake-up time, naps with durations, awake windows, feeds and night sleep (duration, wakings and real sleep). Averages included.":"Dia a dia: horário de acordar, sonecas com duração, janelas de tempo acordada, mamadas e sono noturno (duração, despertares e sono real). Com médias no topo."}</div>
+    <div style={{fontSize:T.fSM,color:T.sub,lineHeight:1.5,marginBottom:12}}>{_lang==="en"?"A document with averages, a 30-day sleep map and a day-by-day table — wake-up time, naps with durations, awake windows, feeds and night sleep. Save as PDF or send it.":"Um documento com médias, o mapa de sono dos 30 dias e a tabela dia a dia — horário de acordar, sonecas com duração, janelas acordada, mamadas e sono noturno. Dá pra salvar em PDF ou enviar."}</div>
     <div style={{display:"flex",gap:8}}>
-      <button onClick={onShareText} disabled={busy} style={{flex:1,padding:"11px 12px",borderRadius:11,background:busy?"rgba(139,124,246,0.1)":"linear-gradient(180deg,rgba(139,124,246,0.22),rgba(124,58,237,0.12))",border:"1px solid rgba(139,124,246,0.35)",color:T.lilac,fontSize:T.fMD,fontWeight:700,letterSpacing:-0.1,display:"flex",alignItems:"center",justifyContent:"center",gap:6,opacity:busy?0.6:1}}>
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
-        {_lang==="en"?"Share":"Compartilhar"}
+      <button onClick={onOpenReport} disabled={busy} style={{flex:1,padding:"11px 12px",borderRadius:11,background:busy?"rgba(139,124,246,0.1)":"linear-gradient(180deg,rgba(139,124,246,0.22),rgba(124,58,237,0.12))",border:"1px solid rgba(139,124,246,0.35)",color:T.lilac,fontSize:T.fMD,fontWeight:700,letterSpacing:-0.1,display:"flex",alignItems:"center",justifyContent:"center",gap:6,opacity:busy?0.6:1}}>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/></svg>
+        {_lang==="en"?"Open report":"Ver relatório"}
       </button>
       <button onClick={onCSV} disabled={busy} style={{flex:1,padding:"11px 12px",borderRadius:11,background:"rgba(22,28,60,0.6)",border:`1px solid ${T.gBSoft}`,color:T.text,fontSize:T.fMD,fontWeight:700,letterSpacing:-0.1,display:"flex",alignItems:"center",justifyContent:"center",gap:6,opacity:busy?0.5:1}}>
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>

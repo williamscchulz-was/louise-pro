@@ -1,0 +1,506 @@
+<meta charset="UTF-8">
+<title>Louise Pro — relatório de 30 dias (mockup)</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#eceef5;font-family:-apple-system,'Segoe UI',system-ui,sans-serif;padding:26px 16px 60px;color:#23263f}
+  .intro{max-width:794px;margin:0 auto 20px;font-size:13px;line-height:1.6;color:#4a4f70}
+  .intro b{color:#23263f}
+  .intro h1{font-size:20px;margin-bottom:6px;color:#23263f;letter-spacing:-.3px}
+  .paper{width:794px;margin:0 auto;background:#fff;padding:34px 38px 40px;box-shadow:0 8px 30px -10px rgba(20,22,50,.28);border-radius:3px}
+  .hd{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #5b4fc4;padding-bottom:12px;margin-bottom:4px}
+  .hd h2{font-size:21px;letter-spacing:-.4px}
+  .hd .sub{font-size:12px;color:#6b7090;margin-top:3px}
+  .hd .meta{font-size:11px;color:#8b90ad;text-align:right;line-height:1.5}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:18px 0 8px}
+  .kpi{border:1px solid #e2e3ef;border-radius:8px;padding:11px 12px;background:#fafaff}
+  .kpi .k{font-size:9.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#7b80a0}
+  .kpi .v{font-size:19px;font-weight:700;letter-spacing:-.5px;margin-top:3px;color:#2d2f57}
+  .kpi .s{font-size:10.5px;color:#7b80a0;margin-top:1px}
+  h3{font-size:13px;margin:22px 0 4px;letter-spacing:-.2px}
+  .hint{font-size:10.5px;color:#7b80a0;margin-bottom:10px}
+  .legend{display:flex;gap:14px;font-size:10.5px;color:#5a5f80;margin-bottom:8px;align-items:center}
+  .legend i{display:inline-block;width:15px;height:9px;border-radius:2px;vertical-align:-1px;margin-right:5px}
+  .chart{position:relative}
+  .hours{position:relative;height:13px;margin-left:74px;width:560px}
+  .hours span{position:absolute;transform:translateX(-50%);font-size:9px;color:#9a9fbb}
+  .row{display:flex;align-items:center;height:13px}
+  .rl{width:74px;font-size:9px;color:#7b80a0;font-variant-numeric:tabular-nums}
+  .track{position:relative;width:560px;height:10px;background:#f4f5fa;border-radius:2px;
+    background-image:repeating-linear-gradient(to right,#e6e7f1 0 1px,transparent 1px 70.0px)}
+  .b{position:absolute;top:0;height:10px;border-radius:2px}
+  .b.n{background:#4c4f8f}
+  .b.p{background:#9b8df8}
+  .f{position:absolute;top:-3px;width:1.5px;height:4px;background:#e08a1e;border-radius:1px}
+  table{width:100%;border-collapse:collapse;font-size:9.5px;margin-top:6px;font-variant-numeric:tabular-nums}
+  th{text-align:left;font-size:8.5px;text-transform:uppercase;letter-spacing:.4px;color:#7b80a0;border-bottom:1.5px solid #d8dae8;padding:5px 4px;font-weight:700}
+  td{padding:4px;border-bottom:1px solid #eff0f6;color:#3a3d60}
+  td.d{font-weight:600;color:#23263f;white-space:nowrap}
+  td.num{text-align:right}
+  tr:nth-child(even) td{background:#fafaff}
+  .foot{margin-top:16px;padding-top:10px;border-top:1px solid #e8e9f2;font-size:9.5px;color:#8b90ad;line-height:1.5}
+  .btn{display:block;margin:0 auto 18px;font-size:12px;font-weight:700;color:#fff;background:#5b4fc4;border:none;border-radius:99px;padding:10px 22px;cursor:pointer;font-family:inherit}
+  @media print{body{background:#fff;padding:0}.intro,.btn{display:none}.paper{box-shadow:none;width:auto;padding:0}}
+</style>
+
+<div class="intro">
+  <h1>Relatório de 30 dias — proposta</h1>
+  <p>Em vez do texto corrido, um <b>documento organizado</b>: médias no topo, o <b>mapa de 30 dias</b> (a linha de cada dia mostra quando ela dormiu e quando ficou acordada — é o gráfico que consultora de sono lê de relance) e a tabela dia a dia embaixo. <b>Dados reais da Louise</b>, não exemplo.</p>
+  <p style="margin-top:8px">Vira PDF pelo próprio iPhone: botão <b>Imprimir / Salvar em PDF</b> → no menu, "Salvar em Arquivos". Aí é só anexar no WhatsApp ou levar impresso.</p>
+</div>
+<button class="btn" onclick="window.print()">Imprimir / Salvar em PDF</button>
+
+<div class="paper">
+  <div class="hd">
+    <div>
+      <h2>Louise · Sono e rotina</h2>
+      <div class="sub">30 de junho a 29 de julho · 30 dias</div>
+    </div>
+    <div class="meta">Idade no período: 4 meses e 21 dias<br>Nascimento: 8 de março de 2026<br>Gerado pelo Louise Pro</div>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi"><div class="k">Sono noturno</div><div class="v">11h16m</div><div class="s">real 11h5m · 0,7 despertares</div></div>
+    <div class="kpi"><div class="k">Sonecas</div><div class="v">4,2/dia</div><div class="s">2h47m no total</div></div>
+    <div class="kpi"><div class="k">Janela acordada</div><div class="v">2h58m</div><div class="s">maior do dia (média)</div></div>
+    <div class="kpi"><div class="k">Mamadas</div><div class="v">6,5/dia</div><div class="s">832ml por dia</div></div>
+  </div>
+
+  <h3>Mapa dos 30 dias</h3>
+  <div class="legend">
+    <span><i style="background:#4c4f8f"></i>Sono noturno</span>
+    <span><i style="background:#9b8df8"></i>Soneca</span>
+    <span><i style="background:#f4f5fa;border:1px solid #e2e3ef"></i>Acordada</span>
+    <span><i style="background:#e08a1e;width:2px;height:9px"></i>Mamada</span>
+  </div>
+  <div class="chart">
+    <div class="hours"><span style="left:0.0px">00h</span><span style="left:70.0px">03h</span><span style="left:140.0px">06h</span><span style="left:210.0px">09h</span><span style="left:280.0px">12h</span><span style="left:350.0px">15h</span><span style="left:420.0px">18h</span><span style="left:490.0px">21h</span><span style="left:560.0px">24h</span></div>
+    <div class="row"><span class="rl">qua 29/07</span><div class="track"><i class="b n" style="left:0.0px;width:167.2px"></i><i class="b p" style="left:195.6px;width:15.2px"></i><i class="b p" style="left:252.4px;width:18.3px"></i><i class="b p" style="left:313.1px;width:14.4px"></i><i class="f" style="left:92.2px"></i><i class="f" style="left:169.2px"></i><i class="f" style="left:224.8px"></i><i class="f" style="left:281.2px"></i><i class="f" style="left:339.5px"></i></div></div>
+<div class="row"><span class="rl">ter 28/07</span><div class="track"><i class="b n" style="left:0.0px;width:164.9px"></i><i class="b n" style="left:447.2px;width:112.8px"></i><i class="b p" style="left:191.7px;width:17.1px"></i><i class="b p" style="left:234.1px;width:24.1px"></i><i class="b p" style="left:304.5px;width:14.0px"></i><i class="b p" style="left:374.5px;width:12.1px"></i><i class="f" style="left:166.8px"></i><i class="f" style="left:218.6px"></i><i class="f" style="left:274.2px"></i><i class="f" style="left:331.3px"></i><i class="f" style="left:389.7px"></i><i class="f" style="left:428.6px"></i></div></div>
+<div class="row"><span class="rl">seg 27/07</span><div class="track"><i class="b n" style="left:0.0px;width:150.5px"></i><i class="b n" style="left:455.0px;width:105.0px"></i><i class="b p" style="left:178.9px;width:17.5px"></i><i class="b p" style="left:233.3px;width:14.4px"></i><i class="b p" style="left:297.5px;width:12.4px"></i><i class="b p" style="left:359.7px;width:3.9px"></i><i class="b p" style="left:387.7px;width:18.7px"></i><i class="f" style="left:156.3px"></i><i class="f" style="left:215.8px"></i><i class="f" style="left:268.3px"></i><i class="f" style="left:326.7px"></i><i class="f" style="left:354.3px"></i><i class="f" style="left:406.8px"></i><i class="f" style="left:439.8px"></i></div></div>
+<div class="row"><span class="rl">dom 26/07</span><div class="track"><i class="b n" style="left:0.0px;width:164.9px"></i><i class="b n" style="left:453.8px;width:106.2px"></i><i class="b p" style="left:198.3px;width:19.8px"></i><i class="b p" style="left:253.6px;width:18.3px"></i><i class="b p" style="left:318.9px;width:12.8px"></i><i class="b p" style="left:375.3px;width:12.8px"></i><i class="f" style="left:53.3px"></i><i class="f" style="left:167.2px"></i><i class="f" style="left:222.1px"></i><i class="f" style="left:281.2px"></i><i class="f" style="left:341.8px"></i><i class="f" style="left:366.7px"></i><i class="f" style="left:392.8px"></i><i class="f" style="left:432.4px"></i></div></div>
+<div class="row"><span class="rl">sáb 25/07</span><div class="track"><i class="b n" style="left:0.0px;width:140.0px"></i><i class="b n" style="left:464.7px;width:95.3px"></i><i class="b p" style="left:173.8px;width:17.9px"></i><i class="b p" style="left:232.6px;width:15.6px"></i><i class="b p" style="left:309.2px;width:14.4px"></i><i class="b p" style="left:367.9px;width:16.7px"></i><i class="f" style="left:143.9px"></i><i class="f" style="left:198.3px"></i><i class="f" style="left:260.6px"></i><i class="f" style="left:330.6px"></i><i class="f" style="left:389.7px"></i><i class="f" style="left:446.4px"></i></div></div>
+<div class="row"><span class="rl">sex 24/07</span><div class="track"><i class="b n" style="left:0.0px;width:165.3px"></i><i class="b n" style="left:452.3px;width:107.7px"></i><i class="b p" style="left:197.6px;width:17.5px"></i><i class="b p" style="left:252.0px;width:14.8px"></i><i class="b p" style="left:309.2px;width:16.3px"></i><i class="b p" style="left:374.5px;width:14.8px"></i><i class="f" style="left:107.3px"></i><i class="f" style="left:168.8px"></i><i class="f" style="left:223.6px"></i><i class="f" style="left:285.8px"></i><i class="f" style="left:339.1px"></i><i class="f" style="left:391.2px"></i><i class="f" style="left:435.9px"></i><i class="f" style="left:496.2px"></i></div></div>
+<div class="row"><span class="rl">qui 23/07</span><div class="track"><i class="b n" style="left:0.0px;width:155.6px"></i><i class="b n" style="left:458.9px;width:101.1px"></i><i class="b p" style="left:186.3px;width:12.8px"></i><i class="b p" style="left:260.6px;width:13.2px"></i><i class="b p" style="left:359.7px;width:37.7px"></i><i class="f" style="left:162.6px"></i><i class="f" style="left:221.7px"></i><i class="f" style="left:280.0px"></i><i class="f" style="left:333.7px"></i><i class="f" style="left:399.4px"></i><i class="f" style="left:442.2px"></i></div></div>
+<div class="row"><span class="rl">qua 22/07</span><div class="track"><i class="b n" style="left:0.0px;width:166.8px"></i><i class="b n" style="left:478.3px;width:81.7px"></i><i class="b p" style="left:197.6px;width:17.5px"></i><i class="b p" style="left:251.6px;width:11.3px"></i><i class="b p" style="left:309.9px;width:14.4px"></i><i class="b p" style="left:372.2px;width:15.9px"></i><i class="f" style="left:59.1px"></i><i class="f" style="left:168.4px"></i><i class="f" style="left:227.5px"></i><i class="f" style="left:284.3px"></i><i class="f" style="left:339.9px"></i><i class="f" style="left:394.7px"></i><i class="f" style="left:433.2px"></i></div></div>
+<div class="row"><span class="rl">ter 21/07</span><div class="track"><i class="b n" style="left:0.0px;width:159.1px"></i><i class="b n" style="left:466.3px;width:93.7px"></i><i class="b p" style="left:192.5px;width:16.7px"></i><i class="b p" style="left:245.8px;width:17.9px"></i><i class="b p" style="left:334.4px;width:10.9px"></i><i class="b p" style="left:389.3px;width:15.6px"></i><i class="f" style="left:129.5px"></i><i class="f" style="left:165.7px"></i><i class="f" style="left:221.7px"></i><i class="f" style="left:280.0px"></i><i class="f" style="left:346.1px"></i><i class="f" style="left:405.6px"></i><i class="f" style="left:440.6px"></i></div></div>
+<div class="row"><span class="rl">seg 20/07</span><div class="track"><i class="b n" style="left:0.0px;width:154.0px"></i><i class="b n" style="left:461.6px;width:98.4px"></i><i class="b p" style="left:189.8px;width:10.1px"></i><i class="b p" style="left:230.2px;width:15.6px"></i><i class="b p" style="left:316.9px;width:17.5px"></i><i class="b p" style="left:381.1px;width:15.6px"></i><i class="f" style="left:107.7px"></i><i class="f" style="left:161.4px"></i><i class="f" style="left:218.9px"></i><i class="f" style="left:272.6px"></i><i class="f" style="left:335.6px"></i><i class="f" style="left:404.1px"></i><i class="f" style="left:437.1px"></i></div></div>
+<div class="row"><span class="rl">dom 19/07</span><div class="track"><i class="b n" style="left:0.0px;width:159.4px"></i><i class="b n" style="left:463.6px;width:96.4px"></i><i class="b p" style="left:187.4px;width:12.8px"></i><i class="b p" style="left:236.1px;width:22.2px"></i><i class="b p" style="left:288.2px;width:6.6px"></i><i class="b p" style="left:335.2px;width:12.4px"></i><i class="b p" style="left:408.3px;width:12.1px"></i><i class="f" style="left:163.7px"></i><i class="f" style="left:220.9px"></i><i class="f" style="left:272.6px"></i><i class="f" style="left:322.4px"></i><i class="f" style="left:381.1px"></i><i class="f" style="left:440.6px"></i></div></div>
+<div class="row"><span class="rl">sáb 18/07</span><div class="track"><i class="b n" style="left:0.0px;width:169.6px"></i><i class="b n" style="left:458.9px;width:101.1px"></i><i class="b p" style="left:199.9px;width:12.1px"></i><i class="b p" style="left:252.0px;width:15.6px"></i><i class="b p" style="left:301.4px;width:20.6px"></i><i class="b p" style="left:364.8px;width:20.2px"></i><i class="b p" style="left:364.8px;width:20.6px"></i><i class="f" style="left:171.1px"></i><i class="f" style="left:221.3px"></i><i class="f" style="left:280.0px"></i><i class="f" style="left:336.4px"></i><i class="f" style="left:394.7px"></i><i class="f" style="left:439.8px"></i></div></div>
+<div class="row"><span class="rl">sex 17/07</span><div class="track"><i class="b n" style="left:0.0px;width:167.2px"></i><i class="b n" style="left:458.5px;width:101.5px"></i><i class="b p" style="left:192.9px;width:15.6px"></i><i class="b p" style="left:250.1px;width:15.9px"></i><i class="b p" style="left:306.4px;width:18.3px"></i><i class="b p" style="left:371.4px;width:26.8px"></i><i class="f" style="left:169.2px"></i><i class="f" style="left:221.7px"></i><i class="f" style="left:280.0px"></i><i class="f" style="left:330.9px"></i><i class="f" style="left:355.8px"></i><i class="f" style="left:413.4px"></i><i class="f" style="left:441.0px"></i></div></div>
+<div class="row"><span class="rl">qui 16/07</span><div class="track"><i class="b n" style="left:0.0px;width:162.6px"></i><i class="b n" style="left:458.9px;width:101.1px"></i><i class="b p" style="left:192.5px;width:20.2px"></i><i class="b p" style="left:250.8px;width:14.4px"></i><i class="b p" style="left:308.0px;width:16.7px"></i><i class="b p" style="left:371.4px;width:13.2px"></i><i class="f" style="left:164.5px"></i><i class="f" style="left:221.7px"></i><i class="f" style="left:275.3px"></i><i class="f" style="left:334.4px"></i><i class="f" style="left:390.1px"></i><i class="f" style="left:445.3px"></i></div></div>
+<div class="row"><span class="rl">qua 15/07</span><div class="track"><i class="b n" style="left:0.0px;width:152.8px"></i><i class="b n" style="left:455.0px;width:105.0px"></i><i class="b p" style="left:180.1px;width:31.5px"></i><i class="b p" style="left:251.6px;width:7.8px"></i><i class="b p" style="left:303.3px;width:10.9px"></i><i class="b p" style="left:371.8px;width:15.2px"></i><i class="f" style="left:153.2px"></i><i class="f" style="left:215.8px"></i><i class="f" style="left:274.2px"></i><i class="f" style="left:332.5px"></i><i class="f" style="left:386.9px"></i><i class="f" style="left:438.7px"></i></div></div>
+<div class="row"><span class="rl">ter 14/07</span><div class="track"><i class="b n" style="left:0.0px;width:151.7px"></i><i class="b n" style="left:453.1px;width:106.9px"></i><i class="b p" style="left:183.6px;width:16.3px"></i><i class="b p" style="left:239.2px;width:13.2px"></i><i class="b p" style="left:296.7px;width:14.4px"></i><i class="b p" style="left:371.8px;width:13.2px"></i><i class="f" style="left:156.3px"></i><i class="f" style="left:211.9px"></i><i class="f" style="left:271.4px"></i><i class="f" style="left:333.3px"></i><i class="f" style="left:390.1px"></i><i class="f" style="left:434.0px"></i></div></div>
+<div class="row"><span class="rl">seg 13/07</span><div class="track"><i class="b n" style="left:0.0px;width:135.7px"></i><i class="b n" style="left:472.5px;width:87.5px"></i><i class="b p" style="left:169.6px;width:24.5px"></i><i class="b p" style="left:248.1px;width:11.7px"></i><i class="b p" style="left:311.1px;width:14.8px"></i><i class="b p" style="left:327.8px;width:29.6px"></i><i class="b p" style="left:379.9px;width:2.7px"></i><i class="b p" style="left:421.2px;width:12.8px"></i><i class="f" style="left:141.6px"></i><i class="f" style="left:200.3px"></i><i class="f" style="left:260.6px"></i><i class="f" style="left:325.9px"></i><i class="f" style="left:382.7px"></i><i class="f" style="left:435.6px"></i><i class="f" style="left:507.1px"></i></div></div>
+<div class="row"><span class="rl">dom 12/07</span><div class="track"><i class="b n" style="left:0.0px;width:162.2px"></i><i class="b n" style="left:456.6px;width:103.4px"></i><i class="b p" style="left:195.6px;width:29.9px"></i><i class="b p" style="left:254.3px;width:13.2px"></i><i class="b p" style="left:305.3px;width:15.9px"></i><i class="b p" style="left:337.9px;width:18.3px"></i><i class="f" style="left:129.5px"></i><i class="f" style="left:171.9px"></i><i class="f" style="left:227.5px"></i><i class="f" style="left:280.4px"></i><i class="f" style="left:356.6px"></i><i class="f" style="left:395.1px"></i><i class="f" style="left:430.5px"></i></div></div>
+<div class="row"><span class="rl">sáb 11/07</span><div class="track"><i class="b n" style="left:0.0px;width:165.3px"></i><i class="b n" style="left:456.6px;width:103.4px"></i><i class="b p" style="left:193.3px;width:27.6px"></i><i class="b p" style="left:261.3px;width:10.9px"></i><i class="b p" style="left:312.3px;width:9.3px"></i><i class="b p" style="left:359.7px;width:16.3px"></i><i class="f" style="left:166.4px"></i><i class="f" style="left:223.6px"></i><i class="f" style="left:279.2px"></i><i class="f" style="left:332.5px"></i><i class="f" style="left:396.7px"></i><i class="f" style="left:435.2px"></i></div></div>
+<div class="row"><span class="rl">sex 10/07</span><div class="track"><i class="b n" style="left:0.0px;width:174.2px"></i><i class="b n" style="left:452.7px;width:107.3px"></i><i class="b p" style="left:227.5px;width:14.0px"></i><i class="b p" style="left:286.2px;width:11.7px"></i><i class="b p" style="left:324.7px;width:7.8px"></i><i class="b p" style="left:348.8px;width:13.2px"></i><i class="b p" style="left:385.8px;width:6.2px"></i><i class="f" style="left:175.0px"></i><i class="f" style="left:223.6px"></i><i class="f" style="left:281.6px"></i><i class="f" style="left:340.3px"></i><i class="f" style="left:393.6px"></i><i class="f" style="left:435.6px"></i></div></div>
+<div class="row"><span class="rl">qui 09/07</span><div class="track"><i class="b n" style="left:0.0px;width:166.1px"></i><i class="b n" style="left:460.8px;width:99.2px"></i><i class="b p" style="left:194.4px;width:20.2px"></i><i class="b p" style="left:260.2px;width:12.1px"></i><i class="b p" style="left:326.7px;width:11.7px"></i><i class="b p" style="left:374.5px;width:19.8px"></i><i class="f" style="left:168.4px"></i><i class="f" style="left:223.6px"></i><i class="f" style="left:281.2px"></i><i class="f" style="left:344.2px"></i><i class="f" style="left:399.4px"></i><i class="f" style="left:434.8px"></i></div></div>
+<div class="row"><span class="rl">qua 08/07</span><div class="track"><i class="b n" style="left:0.0px;width:164.9px"></i><i class="b n" style="left:460.8px;width:99.2px"></i><i class="b p" style="left:196.0px;width:13.6px"></i><i class="b p" style="left:250.8px;width:11.3px"></i><i class="b p" style="left:296.3px;width:10.9px"></i><i class="b p" style="left:324.7px;width:20.6px"></i><i class="b p" style="left:379.2px;width:11.7px"></i><i class="f" style="left:168.0px"></i><i class="f" style="left:223.2px"></i><i class="f" style="left:280.0px"></i><i class="f" style="left:344.9px"></i><i class="f" style="left:392.0px"></i><i class="f" style="left:439.4px"></i></div></div>
+<div class="row"><span class="rl">ter 07/07</span><div class="track"><i class="b n" style="left:0.0px;width:148.6px"></i><i class="b n" style="left:454.6px;width:105.4px"></i><i class="b p" style="left:175.4px;width:19.1px"></i><i class="b p" style="left:233.3px;width:21.0px"></i><i class="b p" style="left:309.2px;width:18.7px"></i><i class="b p" style="left:377.2px;width:11.3px"></i><i class="f" style="left:152.1px"></i><i class="f" style="left:212.7px"></i><i class="f" style="left:268.3px"></i><i class="f" style="left:330.6px"></i><i class="f" style="left:390.1px"></i><i class="f" style="left:432.4px"></i></div></div>
+<div class="row"><span class="rl">seg 06/07</span><div class="track"><i class="b n" style="left:0.0px;width:150.5px"></i><i class="b n" style="left:453.1px;width:106.9px"></i><i class="b p" style="left:183.2px;width:15.6px"></i><i class="b p" style="left:231.4px;width:23.3px"></i><i class="b p" style="left:317.3px;width:14.0px"></i><i class="b p" style="left:375.3px;width:13.2px"></i><i class="f" style="left:153.6px"></i><i class="f" style="left:210.8px"></i><i class="f" style="left:268.3px"></i><i class="f" style="left:289.3px"></i><i class="f" style="left:348.8px"></i><i class="f" style="left:397.1px"></i><i class="f" style="left:433.2px"></i></div></div>
+<div class="row"><span class="rl">dom 05/07</span><div class="track"><i class="b n" style="left:0.0px;width:185.1px"></i><i class="b n" style="left:452.3px;width:107.7px"></i><i class="b p" style="left:232.9px;width:15.9px"></i><i class="b p" style="left:305.3px;width:17.1px"></i><i class="b p" style="left:360.5px;width:22.6px"></i><i class="f" style="left:123.3px"></i><i class="f" style="left:187.4px"></i><i class="f" style="left:230.2px"></i><i class="f" style="left:279.2px"></i><i class="f" style="left:339.5px"></i><i class="f" style="left:394.7px"></i><i class="f" style="left:435.6px"></i></div></div>
+<div class="row"><span class="rl">sáb 04/07</span><div class="track"><i class="b n" style="left:0.0px;width:180.1px"></i><i class="b n" style="left:468.2px;width:91.8px"></i><i class="b p" style="left:217.0px;width:17.1px"></i><i class="b p" style="left:266.8px;width:4.7px"></i><i class="b p" style="left:278.1px;width:9.7px"></i><i class="b p" style="left:321.2px;width:13.6px"></i><i class="b p" style="left:406.4px;width:11.7px"></i><i class="f" style="left:138.8px"></i><i class="f" style="left:200.3px"></i><i class="f" style="left:246.9px"></i><i class="f" style="left:299.4px"></i><i class="f" style="left:353.5px"></i><i class="f" style="left:404.8px"></i><i class="f" style="left:441.0px"></i></div></div>
+<div class="row"><span class="rl">sex 03/07</span><div class="track"><i class="b n" style="left:0.0px;width:167.2px"></i><i class="b n" style="left:446.4px;width:113.6px"></i><i class="b p" style="left:194.1px;width:17.9px"></i><i class="b p" style="left:246.9px;width:13.6px"></i><i class="b p" style="left:301.8px;width:22.9px"></i><i class="b p" style="left:364.8px;width:15.2px"></i><i class="f" style="left:168.4px"></i><i class="f" style="left:220.5px"></i><i class="f" style="left:280.0px"></i><i class="f" style="left:338.3px"></i><i class="f" style="left:386.6px"></i><i class="f" style="left:428.6px"></i></div></div>
+<div class="row"><span class="rl">qui 02/07</span><div class="track"><i class="b n" style="left:0.0px;width:143.9px"></i><i class="b n" style="left:458.1px;width:101.9px"></i><i class="b p" style="left:194.1px;width:17.1px"></i><i class="b p" style="left:254.7px;width:12.1px"></i><i class="b p" style="left:308.8px;width:23.3px"></i><i class="b p" style="left:373.3px;width:12.1px"></i><i class="f" style="left:90.6px"></i><i class="f" style="left:166.4px"></i><i class="f" style="left:225.2px"></i><i class="f" style="left:280.0px"></i><i class="f" style="left:342.2px"></i><i class="f" style="left:394.3px"></i><i class="f" style="left:437.9px"></i></div></div>
+<div class="row"><span class="rl">qua 01/07</span><div class="track"><i class="b n" style="left:0.0px;width:166.1px"></i><i class="b n" style="left:452.7px;width:107.3px"></i><i class="b p" style="left:198.3px;width:14.8px"></i><i class="b p" style="left:246.9px;width:14.4px"></i><i class="b p" style="left:299.4px;width:11.7px"></i><i class="b p" style="left:386.9px;width:11.3px"></i><i class="f" style="left:167.2px"></i><i class="f" style="left:220.9px"></i><i class="f" style="left:280.8px"></i><i class="f" style="left:340.3px"></i><i class="f" style="left:386.6px"></i><i class="f" style="left:435.6px"></i></div></div>
+<div class="row"><span class="rl">ter 30/06</span><div class="track"><i class="b n" style="left:0.0px;width:164.9px"></i><i class="b n" style="left:452.7px;width:107.3px"></i><i class="b p" style="left:195.2px;width:7.8px"></i><i class="b p" style="left:246.6px;width:15.9px"></i><i class="b p" style="left:310.7px;width:20.2px"></i><i class="b p" style="left:369.4px;width:12.8px"></i><i class="f" style="left:166.1px"></i><i class="f" style="left:222.8px"></i><i class="f" style="left:277.3px"></i><i class="f" style="left:340.3px"></i><i class="f" style="left:388.9px"></i><i class="f" style="left:434.4px"></i></div></div>
+  </div>
+
+  <h3>Dia a dia</h3>
+  <div class="hint">Sono real = duração da noite menos o tempo acordada nos despertares. Janela = maior período acordada entre uma soneca e outra.</div>
+  <table>
+    <thead><tr><th>Dia</th><th>Acordou</th><th>Noite</th><th style="text-align:right">Duração</th><th style="text-align:right">Desp.</th><th style="text-align:right">Sono real</th><th style="text-align:right">Sonecas</th><th style="text-align:right">Total</th><th style="text-align:right">Maior janela</th><th style="text-align:right">Mamadas</th><th style="text-align:right">Leite</th></tr></thead>
+    <tbody><tr>
+  <td class="d">qua 29/07</td>
+  <td>07:10</td>
+  <td>19:10→07:10</td>
+  <td class="num">12h</td>
+  <td class="num">1</td>
+  <td class="num">11h40m</td>
+  <td class="num">3</td>
+  <td class="num">2h3m</td>
+  <td class="num">1h49m</td>
+  <td class="num">5</td>
+  <td class="num">650ml</td>
+</tr>
+<tr>
+  <td class="d">ter 28/07</td>
+  <td>07:04</td>
+  <td>19:30→07:04</td>
+  <td class="num">11h34m</td>
+  <td class="num">0</td>
+  <td class="num">11h34m</td>
+  <td class="num">4</td>
+  <td class="num">2h53m</td>
+  <td class="num">2h36m</td>
+  <td class="num">6</td>
+  <td class="num">840ml</td>
+</tr>
+<tr>
+  <td class="d">seg 27/07</td>
+  <td>06:27</td>
+  <td>19:27→06:27</td>
+  <td class="num">11h</td>
+  <td class="num">0</td>
+  <td class="num">11h</td>
+  <td class="num">5</td>
+  <td class="num">2h52m</td>
+  <td class="num">2h8m</td>
+  <td class="num">7</td>
+  <td class="num">880ml</td>
+</tr>
+<tr>
+  <td class="d">dom 26/07</td>
+  <td>07:03</td>
+  <td>19:55→07:04</td>
+  <td class="num">11h9m</td>
+  <td class="num">1</td>
+  <td class="num">10h56m</td>
+  <td class="num">4</td>
+  <td class="num">2h44m</td>
+  <td class="num">2h49m</td>
+  <td class="num">8</td>
+  <td class="num">925ml</td>
+</tr>
+<tr>
+  <td class="d">sáb 25/07</td>
+  <td>06:00</td>
+  <td>19:23→06:00</td>
+  <td class="num">10h37m</td>
+  <td class="num">1</td>
+  <td class="num">10h30m</td>
+  <td class="num">4</td>
+  <td class="num">2h46m</td>
+  <td class="num">3h26m</td>
+  <td class="num">6</td>
+  <td class="num">730ml</td>
+</tr>
+<tr>
+  <td class="d">sex 24/07</td>
+  <td>07:04</td>
+  <td>19:40→07:05</td>
+  <td class="num">11h25m</td>
+  <td class="num">1</td>
+  <td class="num">10h56m</td>
+  <td class="num">4</td>
+  <td class="num">2h43m</td>
+  <td class="num">2h42m</td>
+  <td class="num">8</td>
+  <td class="num">880ml</td>
+</tr>
+<tr>
+  <td class="d">qui 23/07</td>
+  <td>06:40</td>
+  <td>20:30→06:40</td>
+  <td class="num">10h10m</td>
+  <td class="num">0</td>
+  <td class="num">10h10m</td>
+  <td class="num">3</td>
+  <td class="num">2h44m</td>
+  <td class="num">3h41m</td>
+  <td class="num">6</td>
+  <td class="num">790ml</td>
+</tr>
+<tr>
+  <td class="d">qua 22/07</td>
+  <td>07:08</td>
+  <td>19:59→07:09</td>
+  <td class="num">11h10m</td>
+  <td class="num">1</td>
+  <td class="num">10h31m</td>
+  <td class="num">4</td>
+  <td class="num">2h32m</td>
+  <td class="num">3h52m</td>
+  <td class="num">7</td>
+  <td class="num">870ml</td>
+</tr>
+<tr>
+  <td class="d">ter 21/07</td>
+  <td>06:49</td>
+  <td>19:47→06:49</td>
+  <td class="num">11h2m</td>
+  <td class="num">1</td>
+  <td class="num">10h20m</td>
+  <td class="num">4</td>
+  <td class="num">2h37m</td>
+  <td class="num">3h2m</td>
+  <td class="num">7</td>
+  <td class="num">850ml</td>
+</tr>
+<tr>
+  <td class="d">seg 20/07</td>
+  <td>06:36</td>
+  <td>19:52→06:36</td>
+  <td class="num">10h44m</td>
+  <td class="num">2</td>
+  <td class="num">9h47m</td>
+  <td class="num">4</td>
+  <td class="num">2h31m</td>
+  <td class="num">3h3m</td>
+  <td class="num">7</td>
+  <td class="num">915ml</td>
+</tr>
+<tr>
+  <td class="d">dom 19/07</td>
+  <td>06:50</td>
+  <td>19:40→06:50</td>
+  <td class="num">11h10m</td>
+  <td class="num">0</td>
+  <td class="num">11h10m</td>
+  <td class="num">5</td>
+  <td class="num">2h50m</td>
+  <td class="num">2h36m</td>
+  <td class="num">6</td>
+  <td class="num">810ml</td>
+</tr>
+<tr>
+  <td class="d">sáb 18/07</td>
+  <td>07:16</td>
+  <td>19:39→07:16</td>
+  <td class="num">11h37m</td>
+  <td class="num">0</td>
+  <td class="num">11h37m</td>
+  <td class="num">5</td>
+  <td class="num">3h49m</td>
+  <td class="num">3h9m</td>
+  <td class="num">6</td>
+  <td class="num">830ml</td>
+</tr>
+<tr>
+  <td class="d">sex 17/07</td>
+  <td>07:09</td>
+  <td>19:40→07:10</td>
+  <td class="num">11h30m</td>
+  <td class="num">0</td>
+  <td class="num">11h30m</td>
+  <td class="num">4</td>
+  <td class="num">3h17m</td>
+  <td class="num">2h35m</td>
+  <td class="num">7</td>
+  <td class="num">890ml</td>
+</tr>
+<tr>
+  <td class="d">qui 16/07</td>
+  <td>06:58</td>
+  <td>19:30→06:58</td>
+  <td class="num">11h28m</td>
+  <td class="num">1</td>
+  <td class="num">11h23m</td>
+  <td class="num">4</td>
+  <td class="num">2h46m</td>
+  <td class="num">3h11m</td>
+  <td class="num">6</td>
+  <td class="num">840ml</td>
+</tr>
+<tr>
+  <td class="d">qua 15/07</td>
+  <td>06:33</td>
+  <td>19:25→06:33</td>
+  <td class="num">11h8m</td>
+  <td class="num">2</td>
+  <td class="num">10h51m</td>
+  <td class="num">4</td>
+  <td class="num">2h48m</td>
+  <td class="num">2h55m</td>
+  <td class="num">6</td>
+  <td class="num">815ml</td>
+</tr>
+<tr>
+  <td class="d">ter 14/07</td>
+  <td>06:30</td>
+  <td>20:15→06:30</td>
+  <td class="num">10h15m</td>
+  <td class="num">0</td>
+  <td class="num">10h15m</td>
+  <td class="num">4</td>
+  <td class="num">2h27m</td>
+  <td class="num">2h55m</td>
+  <td class="num">6</td>
+  <td class="num">805ml</td>
+</tr>
+<tr>
+  <td class="d">seg 13/07</td>
+  <td>05:49</td>
+  <td>19:34→05:49</td>
+  <td class="num">10h15m</td>
+  <td class="num">1</td>
+  <td class="num">10h5m</td>
+  <td class="num">6</td>
+  <td class="num">4h7m</td>
+  <td class="num">2h19m</td>
+  <td class="num">7</td>
+  <td class="num">890ml</td>
+</tr>
+<tr>
+  <td class="d">dom 12/07</td>
+  <td>06:58</td>
+  <td>19:34→06:57</td>
+  <td class="num">11h23m</td>
+  <td class="num">1</td>
+  <td class="num">11h3m</td>
+  <td class="num">4</td>
+  <td class="num">3h19m</td>
+  <td class="num">4h18m</td>
+  <td class="num">7</td>
+  <td class="num">850ml</td>
+</tr>
+<tr>
+  <td class="d">sáb 11/07</td>
+  <td>07:05</td>
+  <td>19:24→07:05</td>
+  <td class="num">11h41m</td>
+  <td class="num">1</td>
+  <td class="num">11h35m</td>
+  <td class="num">4</td>
+  <td class="num">2h45m</td>
+  <td class="num">3h27m</td>
+  <td class="num">6</td>
+  <td class="num">805ml</td>
+</tr>
+<tr>
+  <td class="d">sex 10/07</td>
+  <td>07:28</td>
+  <td>19:45→07:28</td>
+  <td class="num">11h43m</td>
+  <td class="num">0</td>
+  <td class="num">11h43m</td>
+  <td class="num">5</td>
+  <td class="num">2h16m</td>
+  <td class="num">2h36m</td>
+  <td class="num">6</td>
+  <td class="num">800ml</td>
+</tr>
+<tr>
+  <td class="d">qui 09/07</td>
+  <td>07:07</td>
+  <td>19:45→07:07</td>
+  <td class="num">11h22m</td>
+  <td class="num">0</td>
+  <td class="num">11h22m</td>
+  <td class="num">4</td>
+  <td class="num">2h44m</td>
+  <td class="num">2h51m</td>
+  <td class="num">6</td>
+  <td class="num">810ml</td>
+</tr>
+<tr>
+  <td class="d">qua 08/07</td>
+  <td>07:04</td>
+  <td>19:29→07:04</td>
+  <td class="num">11h35m</td>
+  <td class="num">1</td>
+  <td class="num">11h25m</td>
+  <td class="num">5</td>
+  <td class="num">2h55m</td>
+  <td class="num">3h</td>
+  <td class="num">6</td>
+  <td class="num">795ml</td>
+</tr>
+<tr>
+  <td class="d">ter 07/07</td>
+  <td>06:22</td>
+  <td>19:25→06:22</td>
+  <td class="num">10h57m</td>
+  <td class="num">0</td>
+  <td class="num">10h57m</td>
+  <td class="num">4</td>
+  <td class="num">3h</td>
+  <td class="num">2h50m</td>
+  <td class="num">6</td>
+  <td class="num">770ml</td>
+</tr>
+<tr>
+  <td class="d">seg 06/07</td>
+  <td>06:27</td>
+  <td>19:23→06:27</td>
+  <td class="num">11h4m</td>
+  <td class="num">0</td>
+  <td class="num">11h4m</td>
+  <td class="num">4</td>
+  <td class="num">2h50m</td>
+  <td class="num">2h46m</td>
+  <td class="num">7</td>
+  <td class="num">910ml</td>
+</tr>
+<tr>
+  <td class="d">dom 05/07</td>
+  <td>07:57</td>
+  <td>20:04→07:56</td>
+  <td class="num">11h52m</td>
+  <td class="num">3</td>
+  <td class="num">11h33m</td>
+  <td class="num">3</td>
+  <td class="num">2h23m</td>
+  <td class="num">2h58m</td>
+  <td class="num">7</td>
+  <td class="num">895ml</td>
+</tr>
+<tr>
+  <td class="d">sáb 04/07</td>
+  <td>07:43</td>
+  <td>19:08→07:43</td>
+  <td class="num">12h35m</td>
+  <td class="num">1</td>
+  <td class="num">11h55m</td>
+  <td class="num">5</td>
+  <td class="num">2h26m</td>
+  <td class="num">3h4m</td>
+  <td class="num">7</td>
+  <td class="num">865ml</td>
+</tr>
+<tr>
+  <td class="d">sex 03/07</td>
+  <td>07:10</td>
+  <td>19:38→07:10</td>
+  <td class="num">11h32m</td>
+  <td class="num">1</td>
+  <td class="num">11h31m</td>
+  <td class="num">4</td>
+  <td class="num">2h59m</td>
+  <td class="num">2h51m</td>
+  <td class="num">6</td>
+  <td class="num">790ml</td>
+</tr>
+<tr>
+  <td class="d">qui 02/07</td>
+  <td>06:55</td>
+  <td>19:24→06:10</td>
+  <td class="num">10h46m</td>
+  <td class="num">0</td>
+  <td class="num">10h46m</td>
+  <td class="num">4</td>
+  <td class="num">2h46m</td>
+  <td class="num">3h7m</td>
+  <td class="num">7</td>
+  <td class="num">900ml</td>
+</tr>
+<tr>
+  <td class="d">qua 01/07</td>
+  <td>07:06</td>
+  <td>19:24→07:07</td>
+  <td class="num">11h43m</td>
+  <td class="num">0</td>
+  <td class="num">11h43m</td>
+  <td class="num">4</td>
+  <td class="num">2h14m</td>
+  <td class="num">3h15m</td>
+  <td class="num">6</td>
+  <td class="num">770ml</td>
+</tr>
+<tr>
+  <td class="d">ter 30/06</td>
+  <td>07:04</td>
+  <td>19:33→07:04</td>
+  <td class="num">11h31m</td>
+  <td class="num">0</td>
+  <td class="num">11h31m</td>
+  <td class="num">4</td>
+  <td class="num">2h26m</td>
+  <td class="num">3h1m</td>
+  <td class="num">6</td>
+  <td class="num">790ml</td>
+</tr></tbody>
+  </table>
+
+  <div class="foot">Registros feitos manualmente pelos pais no app Louise Pro — períodos não registrados aparecem como acordada no mapa. Documento de acompanhamento, não substitui avaliação profissional.</div>
+</div>

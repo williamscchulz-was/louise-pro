@@ -262,6 +262,19 @@
       #nav-host{display:none !important}
       body{overflow:hidden !important}
     }
+    /* v11.9.136: impressão do relatório → "Salvar em PDF" pelo menu do iPhone. Truque
+       clássico de visibility: esconde a árvore inteira e reexibe só a subárvore do
+       documento, soltando-a do overlay fixo pra ela fluir por várias páginas. */
+    @media print{
+      body.print-report #root{visibility:hidden}
+      body.print-report #nav-host{display:none !important}
+      body.print-report #lp-report{visibility:visible;position:absolute;inset:auto;left:0;top:0;width:100%;height:auto;overflow:visible;background:#fff;padding:0;z-index:99999}
+      body.print-report #lp-report *{visibility:visible}
+      body.print-report #lp-report .no-print{display:none !important}
+      body.print-report #lp-report .rep-paper{margin:0;padding:0;box-shadow:none;border-radius:0}
+      body.print-report #lp-report .rep-scroll{overflow:visible !important}
+      @page{margin:12mm}
+    }
     /* Focus-visible outline for keyboard nav (desktop + iPad bluetooth kb).
        Only shows when user arrived via keyboard, not mouse/touch. */
     button:focus-visible,input:focus-visible,textarea:focus-visible,a:focus-visible,[tabindex]:focus-visible{

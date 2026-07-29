@@ -1,4 +1,4 @@
-function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,hasUnreadChangelog,reminders,onAddReminder,onDelReminder,onDirtyChange,cancelSignal,saveSignal}){
+function ProfilePage({profile,entries,onSave,onBack,onGrowth,onOpenReport,onShowChangelog,hasUnreadChangelog,reminders,onAddReminder,onDelReminder,onDirtyChange,cancelSignal,saveSignal}){
   const[name,setName]=useState(profile.name||"");
   const[birth,setBirth]=useState(profile.birthDate||"");
   const[photo,setPhoto]=useState(profile.photo||"");
@@ -596,7 +596,7 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onShowChangelog,has
       <BackupSection/>
       {/* v11.9.135: relatório de 30 dias — mora aqui em Dados (mesmo grupo do backup, é um
           export), logo abaixo do backup. Recebe `entries` que a ProfilePage já tem. */}
-      <ReportSection entries={entries} babyName={name}/>
+      <ReportSection entries={entries} babyName={name} onOpenReport={onOpenReport}/>
       {/* ── GROUP: SOBRE ── version/changelog + streak */}
       <div style={{background:"linear-gradient(180deg,rgba(22,28,60,0.55),rgba(20,26,60,0.32))",border:`1px solid ${T.gBSoft}`,borderRadius:18,padding:"15px 16px",marginBottom:13,marginTop:14,boxShadow:T.cardShadow}}>
         <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:13}}>

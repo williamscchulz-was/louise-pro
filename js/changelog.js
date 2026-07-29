@@ -4,6 +4,25 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.136", date: "2026-07-29",
+    pt: {
+      title: "O relatório virou documento (com mapa de sono)",
+      bullets: [
+        '★ Em **Ajustes › Dados › Ver relatório**: médias no topo, o **mapa dos 30 dias** — cada linha é um dia das 00h às 24h, mostrando sono noturno, sonecas, tempo acordada e mamadas — e a tabela dia a dia.',
+        'Botão **PDF** salva pelo próprio iPhone ("Salvar em Arquivos"), pronto pra levar na consulta ou anexar no WhatsApp. **Enviar** manda o resumo em texto.',
+        'A planilha (CSV) continua ali pra quem quiser mexer nos números.',
+      ],
+    },
+    en: {
+      title: "The report is now a document (with a sleep map)",
+      bullets: [
+        '★ Under **Settings › Data › Open report**: averages at the top, the **30-day map** — each row is one day from 00h to 24h, showing night sleep, naps, awake time and feeds — plus the day-by-day table.',
+        'The **PDF** button saves through the iPhone itself ("Save to Files"), ready for the appointment or to attach on WhatsApp. **Send** shares the text summary.',
+        'The spreadsheet (CSV) is still there for anyone who wants to crunch the numbers.',
+      ],
+    },
+  },
+  {
     v: "11.9.135", date: "2026-07-29",
     pt: {
       title: "Relatório de 30 dias pra enviar à pediatra",

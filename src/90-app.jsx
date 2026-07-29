@@ -38,6 +38,10 @@ function App(){
   const swipeRef=useRef(null);
   const swipeGestureRef=useRef({startX:0,startY:0,lastX:0,lastT:0,velocity:0,active:false,locked:null,sw:0});
   const[showProfile,setShowProfile]=useState(false);const[showSleepInfo,setShowSleepInfo]=useState(false);
+  // v11.9.136: relatório-documento de 30 dias. Overlay próprio (zIndex 250, ACIMA da
+  // ProfilePage) em vez de entrar no roteamento de `page` — abre e fecha por cima dos
+  // Ajustes, que continuam montados atrás.
+  const[showReport,setShowReport]=useState(false);
   // Profile contextual navbar state — when editing Profile fields, navbar swaps to Save/Cancel
   const[profileIsDirty,setProfileIsDirty]=useState(false);
   const[profileCancelSignal,setProfileCancelSignal]=useState(0);
@@ -1393,7 +1397,8 @@ function App(){
       {formType&&<AddForm type={formType} onSave={addEntry} onSaveBatch={addMedicineBatch} savedMeds={savedMeds} onSaveMeds={async m=>await FB.saveMeds(m)} editEntry={editEntry} lastBottleMl={lastBottleMl} lastBottleEntry={lastBottleEntry} feedingIntervalMin={feedingIntervalMin} topMl={topMl} suggestedMl={routineState?.nextBottleMl} allEntries={entries} onStartTimer={type=>{setFormType(null);setShowAdd(false);if(type==="nursing")setShowNursingPicker(true);else startTimer(type)}}/>}
     </Modal>
 
-    {showProfile&&<ProfilePage profile={profile} entries={entries} onSave={async p=>await FB.saveProfile(p)} onBack={()=>{setShowProfile(false);setProfileIsDirty(false)}} onGrowth={()=>{growthFromRef.current={page,profile:true};setShowProfile(false);setProfileIsDirty(false);goTo("growth")}} onShowChangelog={()=>setShowChangelog(true)} hasUnreadChangelog={hasUnreadChangelog} reminders={reminders} onAddReminder={async r=>await FB.addReminder(r)} onDelReminder={async id=>await FB.delReminder(id)} onDirtyChange={setProfileIsDirty} cancelSignal={profileCancelSignal} saveSignal={profileSaveSignal}/>}
+    {showReport&&<ReportPage entries={entries} birthDate={profile.birthDate} babyName={profile.name} lang={lang} onBack={()=>setShowReport(false)}/>}
+    {showProfile&&<ProfilePage onOpenReport={()=>setShowReport(true)} profile={profile} entries={entries} onSave={async p=>await FB.saveProfile(p)} onBack={()=>{setShowProfile(false);setProfileIsDirty(false)}} onGrowth={()=>{growthFromRef.current={page,profile:true};setShowProfile(false);setProfileIsDirty(false);goTo("growth")}} onShowChangelog={()=>setShowChangelog(true)} hasUnreadChangelog={hasUnreadChangelog} reminders={reminders} onAddReminder={async r=>await FB.addReminder(r)} onDelReminder={async id=>await FB.delReminder(id)} onDirtyChange={setProfileIsDirty} cancelSignal={profileCancelSignal} saveSignal={profileSaveSignal}/>}
     {showInbox&&<InboxPanel inbox={inbox} onClose={()=>setShowInbox(false)} onMarkRead={markInboxRead} onMarkAllRead={markAllInboxRead} lang={lang} isRead={isRead}/>}
     {showChangelog&&<ChangelogModal onClose={closeChangelog} lang={lang}/>}
     {showUpdateToast&&!showChangelog&&<UpdateToast fromVersion={profile.lastSeenVersion} toVersion={APP_VERSION} onView={openChangelog} onDismiss={dismissUpdateToast} lang={lang}/>}
