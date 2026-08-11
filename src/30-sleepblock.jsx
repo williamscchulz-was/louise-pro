@@ -223,7 +223,7 @@ const SleepBlock = React.memo(function SleepBlock({entry,onDelete,onEdit,entries
                         await onSaveTimer({...activeTimer,wakings:nw});
                       }else{
                         const nw=(entry.wakings||[]).filter((_,k)=>k!==i);
-                        await onSaveEntry({...entry,wakings:nw});
+                        await onSaveEntry({...entry,_docId:undefined,wakings:nw});
                       }
                       setEditingIdx(null);Haptic.success()
                     }catch(err){Haptic.warning()}
@@ -247,7 +247,7 @@ const SleepBlock = React.memo(function SleepBlock({entry,onDelete,onEdit,entries
                       // Historical bedtime: update wakings[idx] of the sleep entry
                       const nw=[...(entry.wakings||[])];
                       nw[i]={...nw[i],time:editStart,durationMin:dur};
-                      await onSaveEntry({...entry,wakings:nw});
+                      await onSaveEntry({...entry,_docId:undefined,wakings:nw});
                     }
                     setEditingIdx(null);Haptic.success()
                   }catch(err){Haptic.warning()}setEditBusy(false)}} style={{flex:1,padding:"9px 10px",borderRadius:9,background:valid?"linear-gradient(180deg,#9b8df8,#7c3aed)":"rgba(14,18,48,0.6)",color:valid?"#fff":"#555a80",fontSize:T.fMD,fontWeight:700,border:`1px solid ${valid?"rgba(139,124,246,0.5)":"rgba(255,255,255,0.06)"}`,boxShadow:valid?"0 4px 12px -4px rgba(139,124,246,0.4)":"none",cursor:valid&&!editBusy?"pointer":"not-allowed",opacity:editBusy?0.6:1}}>{isActive?(_lang==="en"?"End waking":"Encerrar"):(_lang==="en"?"Save":"Salvar")}</button>

@@ -4,6 +4,23 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.139", date: "2026-07-30",
+    pt: {
+      title: "Fix grave: editar um bedtime apagava os despertares",
+      bullets: [
+        '★ Achado investigando o relato de "não dá pra editar o bedtime direito": editar a hora/duração de uma noite com despertares registrados **apagava silenciosamente os despertares** (o formulário salvava o documento inteiro de novo, sem eles). Agora a edição preserva tudo que ela não gerencia diretamente.',
+        'Mesmo tipo de correção nos ajustes de despertar direto no cartão do sono, que também podiam gravar lixo no registro.',
+      ],
+    },
+    en: {
+      title: "Serious fix: editing a bedtime deleted its wakings",
+      bullets: [
+        '★ Found while investigating the "can\'t edit bedtime correctly" report: editing a night\'s time/duration when it had recorded wakings **silently deleted those wakings** (the form re-saved the whole record without them). Editing now preserves everything it doesn\'t directly manage.',
+        'Same class of fix applied to editing a waking directly from the sleep card, which could also write stray data into the record.',
+      ],
+    },
+  },
+  {
     v: "11.9.138", date: "2026-07-29",
     pt: {
       title: "Agora sim: PDF de verdade",

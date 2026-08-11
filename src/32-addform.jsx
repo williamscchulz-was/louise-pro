@@ -68,7 +68,16 @@ function AddForm({type,onSave,onSaveBatch,savedMeds,onSaveMeds,editEntry,lastBot
   const invalid=(msg)=>{Haptic.warning();setShakeFlash(n=>n+1)};
   const doSave=async()=>{
     if(savingRef.current||saving)return;
-    const b={type,date,time,notes:notes.trim()||undefined,id:isEdit?ed.id:uid()};
+    // v11.9.139: ⚠️ FIX de perda de dado — editar uma entry reescrevia o documento inteiro
+    // (FB.addEntry faz .set() SEM merge) só com os campos que este form gerencia. Pra sono/
+    // soneca isso APAGAVA `wakings[]` (os despertares registrados ao vivo durante a noite) —
+    // "editar o bedtime depois que acaba" corrompia silenciosamente os dados. Em edição,
+    // parte de TODOS os campos da entry original (`ed`) e só sobrescreve os que este form
+    // realmente gerencia — campos que o form não toca (wakings, leftMin/rightMin da
+    // amamentação, nightSleepMin/_autoFromBedtime do wakeup) sobrevivem. `_docId` é
+    // metadado de UI (adicionado ao carregar do Firestore) e nunca deve ser persistido —
+    // mesmo padrão já usado em `duplicateLast`/`repeatFn` (90-app.jsx).
+    const b=isEdit?{...ed,_docId:undefined,type,date,time,notes:notes.trim()||undefined,id:ed.id}:{type,date,time,notes:notes.trim()||undefined,id:uid()};
     let payload=null;
     if(type==="bottle"){if(!ml){invalid();return}payload={...b,ml:parseInt(ml)}}
     else if(type==="nursing")payload={...b,side,durationMin:nurseM?parseInt(nurseM):undefined};
