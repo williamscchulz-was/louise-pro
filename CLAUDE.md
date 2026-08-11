@@ -286,12 +286,35 @@ Filtro complexo que já gerou vários bugs. Estado atual (v10.4.6+):
 
 -----
 
-## Hierarquia de modelos e orquestração multi-agente (v11.9.117, sem bump de versão)
+## Sistema multiagente de engenharia (v11.9.138, sem bump de versão)
+
+Protocolo permanente de como este projeto executa tarefa não-trivial — formalizado a pedido do William em 30/jul/2026. A hierarquia de modelos (subseção abaixo) já seguia o espírito disso; esta seção é o processo em volta dela.
+
+**Papéis:** Sonnet 5 (o loop principal) é o **OPERADOR** — arquiteta, executa o que não delega, e é o responsável final por tudo que é entregue, inclusive o que veio de subagente. Haiku e Sonnet também atuam como **executores delegados** via `Agent` (subagentes). Opus e Fable são **consultores sob demanda**, nunca executores de rotina — a escada linear Sonnet→Opus→Fable da subseção abaixo continua valendo tal como está.
+
+**Classificação de tarefa** (antes de executar):
+- **Classe A (mecânica)** → `model:"haiku"`: busca em massa, boilerplate, renomeação, formatação, coleta repetitiva.
+- **Classe B (convencional bem especificada)** → subagente `model:"sonnet"` quando compensa paralelizar ou isolar contexto (telas, CRUD, testes, refatoração delimitada); senão, o Operador mesmo executa.
+- **Classes C e D** (arquitetura, segurança, dado sensível, migração, bug difícil, integração crítica) → o Operador executa direto, com atenção redobrada; consulta o conselheiro (Opus — que por sua vez decide se aciona o Fable) só em impasse real.
+
+**Delegação:** toda tarefa delegada leva escopo fechado, proibições explícitas e critério de aceitação verificável. Todo retorno de subagente é revisado pelo Operador antes de integrar — nada entra no código sem essa revisão.
+
+**Fluxo por tarefa relevante:** entender o pedido (perguntar se ambíguo, não inventar) → inspecionar o repo/estado real → planejar → **revisão adversarial do próprio plano** (procurar ativamente por que falharia; declarar PLANO APROVADO / COM AJUSTES / REFORMULADO) → delegar (Classe A/B) ou executar (B/C/D) → revisar, integrar, testar → **auditoria independente antes de entregar** (procurando motivo pra REJEITAR — pode ser um subagente auditor) → corrigir o que a auditoria achou → entregar com status explícito: APROVADO / COM RESSALVAS / BLOQUEADO. Proporcional à tarefa — um typo não pede os 9 passos; uma migração de dado ou bug de arquitetura pede.
+
+**Escalação além do Operador:** quando os critérios batem (2 abordagens já falharam, causa raiz desconhecida, risco de perda de dado, operação ampla multi-arquivo, segurança sensível sem conselheiro disponível), o Operador para com segurança e pede explicitamente ao William: **"AÇÃO NECESSÁRIA — ALTERAR O LOOP PARA OPUS/FABLE"**, com um prompt de continuação autocontido pra retomar depois da troca. Isso é diferente de escalar uma SUBTAREFA pro Opus via `Agent` (caminho normal do dia a dia, ver subseção abaixo) — é pedir a troca do modelo do LOOP PRINCIPAL em si, último recurso. Nunca fingir que trocou de nível/modelo sem essa troca real ter acontecido.
+
+**Orquestração pesada (`Workflow`/Ultra):** só com opt-in explícito do William — já reforçado pela própria ferramenta (exige a palavra "ultracode", sessão com o flag ligado, ou pedido direto nas palavras dele).
+
+**Escopo:** melhoria fora do pedido vira tarefa anotada à parte, não implementada junto — exceto bloqueante de segurança diretamente relacionado, que pode ser corrigido na hora.
+
+**Comunicação:** resposta direta começando pelo resultado; explicar o PORQUÊ de decisão técnica; reportar falha com honestidade e evidência (teste falhou = dizer que falhou).
+
+### Hierarquia de modelos e custo
 
 Plano fixo (Max), não API por token: Opus 4.8, Sonnet 5 e Haiku 4.5 estão TODOS incluídos na assinatura — custo por token entre eles é irrelevante. O ÚNICO recurso que consome crédito pago (usage credits, por cima da assinatura) é o **Fable 5** (~2x o custo do Opus) — por isso ele é escalação cirúrgica, nunca rotina.
 
 **Hierarquia** (o projeto não é complexo o bastante pra Opus ser o padrão — Sonnet dá conta do loop):
-- **Sonnet 5** (`claude-sonnet-5`) = loop principal / executor padrão. Recebe o pedido, planeja, implementa o trabalho comum, reconhece quando algo exige mais capacidade e delega.
+- **Sonnet 5** (`claude-sonnet-5`) = loop principal / Operador. Recebe o pedido, planeja, implementa o trabalho comum, reconhece quando algo exige mais capacidade e delega.
 - **Opus 4.8** (`claude-opus-4-8`) = escalação pra trabalho substantivo/difícil — decisão de arquitetura não-trivial, bug que resistiu à 1ª tentativa do Sonnet, qualquer coisa onde o raciocínio está claramente na superfície. Chamado via `Agent`/`Workflow` com `model:"opus"` — sem arquivo de subagente dedicado, override inline é suficiente pro tamanho deste projeto.
 - **Haiku 4.5** (`claude-haiku-4-5-20251001`) = mecânico e rápido (renomear, edits triviais, rodar comando, boilerplate repetitivo). Chamado com `model:"haiku"` quando o trabalho é bem definido e não exige julgamento.
 - **Fable 5** (`claude-fable-5`) = conselheiro sob demanda, ver `.claude/agents/conselheiro-fable.md`.
