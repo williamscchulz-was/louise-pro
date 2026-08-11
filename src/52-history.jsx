@@ -1,4 +1,4 @@
-const HistoryPage = React.memo(function HistoryPage({entries,onDelete,onEdit,activeTimer,lang}){
+const HistoryPage = React.memo(function HistoryPage({entries,onDelete,onEdit,activeTimer,lang,showToast}){
   const[dateIdx,setDateIdx]=useState(0);
   const[filter,setFilter]=useState("all");
   // v11.9.19: search no historico. searchOpen toggla a barra; query string filtra entries.
@@ -45,8 +45,17 @@ const HistoryPage = React.memo(function HistoryPage({entries,onDelete,onEdit,act
         const renderedHere=cb.date===viewDate&&cb.wakings&&cb.wakings.length>0;
         if(renderedHere)return false;
       }
+      // v11.9.140: metade "de início" de uma noite/soneca partida por splitMidnight (sem
+      // despertar em nenhuma metade) some do dia em que começou — reaparece mesclada, como
+      // um cartão só, no dia em que terminou (achado #1 da auditoria de usabilidade).
+      if((e.type==="sleep"||e.type==="nap")&&e.id&&!e.id.endsWith("_b")&&findMidnightPair(e,entries))return false;
       return true;
-    }).map(e=>(e.type==="sleep"&&e.wakings&&e.wakings.length>0)?<SleepBlock key={e.id} entry={e} lang={lang} onDelete={onDelete} onEdit={onEdit} entries={entries} activeTimer={activeTimer} onSaveTimer={FB.saveTimer} onSaveEntry={FB.addEntry}/>:<EntryRow key={e.id} entry={e} lang={lang} onDelete={onDelete} onEdit={onEdit}/>);
+    }).map(e=>{
+      if(e.type==="sleep"&&e.wakings&&e.wakings.length>0)return<SleepBlock key={e.id} entry={e} lang={lang} onDelete={onDelete} onEdit={onEdit} entries={entries} activeTimer={activeTimer} onSaveTimer={FB.saveTimer} onSaveEntry={FB.addEntry} showToast={showToast}/>;
+      const pair=(e.type==="sleep"||e.type==="nap")&&e.id&&e.id.endsWith("_b")?findMidnightPair(e,entries):null;
+      if(pair)return<MidnightMergeCard key={e.id} part1={pair.part1} part2={pair.part2} onDelete={onDelete} onEdit={onEdit}/>;
+      return<EntryRow key={e.id} entry={e} lang={lang} onDelete={onDelete} onEdit={onEdit}/>;
+    });
   // v11.9.19: search results agregados por dia, ordenados desc.
   const searchResults=searchActive?(()=>{
     const q=searchQuery.trim().toLowerCase();
@@ -88,7 +97,7 @@ const HistoryPage = React.memo(function HistoryPage({entries,onDelete,onEdit,act
         <button onClick={()=>setSearchQuery("")} className="hit44" style={{marginTop:14,background:"none",border:"none",color:T.accent,fontSize:T.fSM,fontWeight:700,padding:"6px 10px"}}>{_lang==="en"?"Clear search":"Limpar busca"}</button>
       </div>:searchResults.map(g=>(<div key={g.date} style={{marginBottom:18}}>
         <div style={{fontSize:T.fSM,fontWeight:700,color:T.dim,letterSpacing:0.6,textTransform:"uppercase",marginBottom:8,padding:"0 4px"}}>{fmtRelDate(g.date)} <span style={{color:T.sub,fontWeight:500,letterSpacing:0,textTransform:"none",marginLeft:4}}>· {g.items.length} {_lang==="en"?(g.items.length===1?"item":"items"):(g.items.length===1?"item":"itens")}</span></div>
-        {g.items.map(e=>(e.type==="sleep"&&e.wakings&&e.wakings.length>0)?<SleepBlock key={e.id} entry={e} lang={lang} onDelete={onDelete} onEdit={onEdit} entries={entries} activeTimer={activeTimer} onSaveTimer={FB.saveTimer} onSaveEntry={FB.addEntry}/>:<EntryRow key={e.id} entry={e} lang={lang} onDelete={onDelete} onEdit={onEdit}/>)}
+        {g.items.map(e=>(e.type==="sleep"&&e.wakings&&e.wakings.length>0)?<SleepBlock key={e.id} entry={e} lang={lang} onDelete={onDelete} onEdit={onEdit} entries={entries} activeTimer={activeTimer} onSaveTimer={FB.saveTimer} onSaveEntry={FB.addEntry} showToast={showToast}/>:<EntryRow key={e.id} entry={e} lang={lang} onDelete={onDelete} onEdit={onEdit}/>)}
       </div>))}
     </div>):(<>
     {/* Date navigator card */}

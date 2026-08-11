@@ -1,4 +1,4 @@
-function AddForm({type,onSave,onSaveBatch,savedMeds,onSaveMeds,editEntry,lastBottleMl,lastBottleEntry,feedingIntervalMin,topMl,onStartTimer,suggestedMl,allEntries}){const cfg=TYPES[type];const ed=editEntry||{};
+function AddForm({type,onSave,onSaveBatch,savedMeds,onSaveMeds,editEntry,lastBottleMl,lastBottleEntry,feedingIntervalMin,topMl,onStartTimer,suggestedMl,allEntries,onDelete}){const cfg=TYPES[type];const ed=editEntry||{};
   const[date,setDate]=useState(ed.date||todayStr());
   // v11.9.3: Bottle volta a usar nowTime (revertido o smart default da v11.9.1 — usuário
   // prefere registrar no horário real, não no horário esperado).
@@ -64,6 +64,10 @@ function AddForm({type,onSave,onSaveBatch,savedMeds,onSaveMeds,editEntry,lastBot
   // v11.9.107: aviso suave (anti-dose-dupla / outlier). guardMsg!=null → o botão pede um
   // 2º toque pra confirmar; muda de valor → re-arma (limpa o aviso).
   const[guardMsg,setGuardMsg]=useState(null);
+  // v11.9.140: 2-step confirm pra excluir a entry inteira em modo edição (achado #5 da
+  // auditoria — editar não tinha excluir; precisava fechar o form e caçar a entry na lista).
+  const[confirmDelEntry,setConfirmDelEntry]=useState(false);
+  const[deleting,setDeleting]=useState(false);
   useEffect(()=>{setGuardMsg(null)},[ml,tempV,weightKg,lengthCm,headCm,durH,durM,endTime,tumM,tumS,medN,selectedMeds,diaperT,nurseM,side,time,date]);
   const invalid=(msg)=>{Haptic.warning();setShakeFlash(n=>n+1)};
   const doSave=async()=>{
@@ -273,7 +277,16 @@ function AddForm({type,onSave,onSaveBatch,savedMeds,onSaveMeds,editEntry,lastBot
         <span style={{flexShrink:0,width:18,height:18,borderRadius:"50%",background:T.amber,color:T.bg1,fontSize:12,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center",marginTop:1}}>!</span>
         <span style={{fontSize:T.fSM,color:"#fcd9a0",lineHeight:1.4,fontWeight:600}}>{guardMsg}</span>
       </div>}
-      <button onClick={doSave} disabled={saving} key={shakeFlash} style={{width:"100%",padding:18,borderRadius:18,background:guardMsg?`linear-gradient(180deg,${T.amber},${T.amber}dd)`:`linear-gradient(180deg,${cfg.color},${cfg.color}dd)`,color:T.bg1,fontSize:T.fXL,fontWeight:700,letterSpacing:-0.3,border:"none",boxShadow:`0 1px 0 0 rgba(255,255,255,0.25) inset, 0 0 0 1px rgba(255,255,255,0.06), 0 12px 32px -8px ${cfg.color}55, 0 4px 8px -4px ${cfg.color}33`,transition:"transform 0.2s cubic-bezier(0.22,1,0.36,1)",cursor:saving?"wait":"pointer",opacity:saving?0.75:1,animation:shakeFlash?"shakeX 0.35s ease":"none",display:"flex",alignItems:"center",justifyContent:"center",gap:10}}>{saving&&<span style={{width:14,height:14,borderRadius:"50%",border:"2px solid rgba(7,11,30,0.25)",borderTopColor:T.bg1,animation:"spin 0.7s linear infinite"}}/>}{saving?(_lang==="en"?"Saving\u2026":"Salvando\u2026"):(guardMsg?(_lang==="en"?"Save anyway":"Salvar assim mesmo"):(isEdit?L("update"):(type==="medicine"&&!isEdit&&selectedMeds.size>0?`${L("save")} (${selectedMeds.size})`:L("save"))))}</button>
+      <div style={{display:"flex",gap:8}}>
+        {isEdit&&onDelete&&<button disabled={saving||deleting} onClick={async()=>{
+          if(!confirmDelEntry){setConfirmDelEntry(true);Haptic.warning();setTimeout(()=>setConfirmDelEntry(false),3000);return}
+          setConfirmDelEntry(false);setDeleting(true);Haptic.medium();
+          try{await onDelete()}catch(e){}
+        }} style={{flex:"0 0 auto",padding:"0 18px",borderRadius:18,background:confirmDelEntry?"rgba(248,113,113,0.32)":"rgba(248,113,113,0.1)",border:`1px solid ${confirmDelEntry?"rgba(248,113,113,0.7)":"rgba(248,113,113,0.28)"}`,color:confirmDelEntry?"#fff":"#f87171",fontSize:T.fMD,fontWeight:700,cursor:saving||deleting?"wait":"pointer",transition:"all .2s",whiteSpace:"nowrap",display:"flex",alignItems:"center",justifyContent:"center"}}>
+          {confirmDelEntry?(_lang==="en"?"Confirm?":"Confirmar?"):<Icon name="trash" size={16} color="#f87171"/>}
+        </button>}
+        <button onClick={doSave} disabled={saving} key={shakeFlash} style={{flex:1,padding:18,borderRadius:18,background:guardMsg?`linear-gradient(180deg,${T.amber},${T.amber}dd)`:`linear-gradient(180deg,${cfg.color},${cfg.color}dd)`,color:T.bg1,fontSize:T.fXL,fontWeight:700,letterSpacing:-0.3,border:"none",boxShadow:`0 1px 0 0 rgba(255,255,255,0.25) inset, 0 0 0 1px rgba(255,255,255,0.06), 0 12px 32px -8px ${cfg.color}55, 0 4px 8px -4px ${cfg.color}33`,transition:"transform 0.2s cubic-bezier(0.22,1,0.36,1)",cursor:saving?"wait":"pointer",opacity:saving?0.75:1,animation:shakeFlash?"shakeX 0.35s ease":"none",display:"flex",alignItems:"center",justifyContent:"center",gap:10}}>{saving&&<span style={{width:14,height:14,borderRadius:"50%",border:"2px solid rgba(7,11,30,0.25)",borderTopColor:T.bg1,animation:"spin 0.7s linear infinite"}}/>}{saving?(_lang==="en"?"Saving\u2026":"Salvando\u2026"):(guardMsg?(_lang==="en"?"Save anyway":"Salvar assim mesmo"):(isEdit?L("update"):(type==="medicine"&&!isEdit&&selectedMeds.size>0?`${L("save")} (${selectedMeds.size})`:L("save"))))}</button>
+      </div>
     </div>
   </div>);
 }

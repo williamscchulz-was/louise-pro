@@ -1,4 +1,4 @@
-const SleepBlock = React.memo(function SleepBlock({entry,onDelete,onEdit,entries,isLive,activeTimer,onSaveTimer,onSaveEntry}){
+const SleepBlock = React.memo(function SleepBlock({entry,onDelete,onEdit,entries,isLive,activeTimer,onSaveTimer,onSaveEntry,showToast}){
   const[expanded,setExpanded]=useState(true); // default OPEN
   const[editingIdx,setEditingIdx]=useState(null); // waking index being edited
   const[editStart,setEditStart]=useState("");
@@ -7,6 +7,9 @@ const SleepBlock = React.memo(function SleepBlock({entry,onDelete,onEdit,entries
   // v11.9.38: 2-step inline confirm (substitui confirm() nativo no SleepBlock — mesma logica da v11.9.35 do med delete)
   const[confirmDelEventId,setConfirmDelEventId]=useState(null); // event id pendente de confirmacao
   const[confirmRemoveWaking,setConfirmRemoveWaking]=useState(false); // waking edit-modal pendente
+  // v11.9.140: mesmo padrão 2-step pro botão "Excluir bedtime" do rodapé (achado #3 da
+  // auditoria — era 1 toque só, sem confirmação, apagando a noite inteira com despertares).
+  const[confirmDelBedtime,setConfirmDelBedtime]=useState(false);
   // Quando troca de waking no editor, reseta o confirm pra evitar "estado fantasma"
   useEffect(()=>{setConfirmRemoveWaking(false)},[editingIdx]);
   const wakings=entry.wakings||[];
@@ -218,12 +221,18 @@ const SleepBlock = React.memo(function SleepBlock({entry,onDelete,onEdit,entries
                     setConfirmRemoveWaking(false);
                     setEditBusy(true);Haptic.medium();
                     try{
+                      // v11.9.140: toast+undo (achado #4 — remover despertar era permanente e
+                      // mudo, o único ponto de escrita do app sem essa rede de segurança).
                       if(isLive){
-                        const nw=((activeTimer?.wakings)||[]).filter((_,k)=>k!==i);
+                        const prevWakings=(activeTimer?.wakings)||[];
+                        const nw=prevWakings.filter((_,k)=>k!==i);
                         await onSaveTimer({...activeTimer,wakings:nw});
+                        showToast&&showToast(_lang==="en"?"Waking removed":"Despertar removido",async()=>{await onSaveTimer({...activeTimer,wakings:prevWakings})});
                       }else{
-                        const nw=(entry.wakings||[]).filter((_,k)=>k!==i);
+                        const prevWakings=entry.wakings||[];
+                        const nw=prevWakings.filter((_,k)=>k!==i);
                         await onSaveEntry({...entry,_docId:undefined,wakings:nw});
+                        showToast&&showToast(_lang==="en"?"Waking removed":"Despertar removido",async()=>{await onSaveEntry({...entry,_docId:undefined,wakings:prevWakings})});
                       }
                       setEditingIdx(null);Haptic.success()
                     }catch(err){Haptic.warning()}
@@ -233,21 +242,29 @@ const SleepBlock = React.memo(function SleepBlock({entry,onDelete,onEdit,entries
                   </button>}
                   <button onClick={e=>{e.stopPropagation();setEditingIdx(null)}} style={{flex:1,padding:"9px 10px",borderRadius:9,background:"rgba(14,18,48,0.7)",color:"#8b90b8",fontSize:T.fMD,fontWeight:700,border:"1px solid rgba(255,255,255,0.08)",cursor:"pointer"}}>{_lang==="en"?"Cancel":"Cancelar"}</button>
                   <button disabled={!valid||editBusy} onClick={async e=>{e.stopPropagation();if(!valid)return;setEditBusy(true);Haptic.medium();try{
+                    // v11.9.140: toast (+undo quando dá pra restaurar com segurança — achado #4).
                     if(isActive){
-                      // Live waking (currently open): close it by pushing to wakings[] and clearing nightWake
+                      // Live waking (currently open): close it by pushing to wakings[] and clearing nightWake.
+                      // Sem undo aqui — reabrir um waking "ao vivo" reconstruindo o nightWake original
+                      // é frágil (perderia o tempo real decorrido); toast avisa, sem oferecer desfazer.
                       const newWaking={time:editStart,durationMin:dur,events:(activeTimer?.nightWake?.events)||[]};
                       const newWakings=[...((activeTimer?.wakings)||[]),newWaking];
                       await onSaveTimer({...activeTimer,nightWake:null,wakings:newWakings});
+                      showToast&&showToast(_lang==="en"?"Waking ended":"Despertar encerrado",null);
                     }else if(isLive){
                       // Waking already closed but inside the live bedtime — edit activeTimer.wakings[i]
-                      const nw=[...((activeTimer?.wakings)||[])];
+                      const prevWakings=[...((activeTimer?.wakings)||[])];
+                      const nw=[...prevWakings];
                       nw[i]={...nw[i],time:editStart,durationMin:dur};
                       await onSaveTimer({...activeTimer,wakings:nw});
+                      showToast&&showToast(_lang==="en"?"Waking updated":"Despertar atualizado",async()=>{await onSaveTimer({...activeTimer,wakings:prevWakings})});
                     }else{
                       // Historical bedtime: update wakings[idx] of the sleep entry
-                      const nw=[...(entry.wakings||[])];
+                      const prevWakings=[...(entry.wakings||[])];
+                      const nw=[...prevWakings];
                       nw[i]={...nw[i],time:editStart,durationMin:dur};
                       await onSaveEntry({...entry,_docId:undefined,wakings:nw});
+                      showToast&&showToast(_lang==="en"?"Waking updated":"Despertar atualizado",async()=>{await onSaveEntry({...entry,_docId:undefined,wakings:prevWakings})});
                     }
                     setEditingIdx(null);Haptic.success()
                   }catch(err){Haptic.warning()}setEditBusy(false)}} style={{flex:1,padding:"9px 10px",borderRadius:9,background:valid?"linear-gradient(180deg,#9b8df8,#7c3aed)":"rgba(14,18,48,0.6)",color:valid?"#fff":"#555a80",fontSize:T.fMD,fontWeight:700,border:`1px solid ${valid?"rgba(139,124,246,0.5)":"rgba(255,255,255,0.06)"}`,boxShadow:valid?"0 4px 12px -4px rgba(139,124,246,0.4)":"none",cursor:valid&&!editBusy?"pointer":"not-allowed",opacity:editBusy?0.6:1}}>{isActive?(_lang==="en"?"End waking":"Encerrar"):(_lang==="en"?"Save":"Salvar")}</button>
@@ -279,7 +296,71 @@ const SleepBlock = React.memo(function SleepBlock({entry,onDelete,onEdit,entries
     {/* Actions (only when expanded AND not live) — refinado */}
     {expanded&&!isLive&&<div style={{padding:"10px 14px 12px",display:"flex",gap:8,borderTop:"1px solid rgba(139,124,246,0.10)"}}>
       <button onClick={e=>{e.stopPropagation();onEdit&&onEdit(entry)}} style={{flex:1,padding:"8px 10px",borderRadius:9,background:"rgba(167,139,250,0.07)",fontSize:T.fSM,fontWeight:600,color:T.purple,border:"none",cursor:"pointer",letterSpacing:0.1}}>{_lang==="en"?"Edit":"Editar"}</button>
-      <button aria-label={_lang==="en"?"Delete bedtime":"Excluir bedtime"} onClick={e=>{e.stopPropagation();onDelete&&onDelete(entry.id)}} style={{padding:"8px 14px",borderRadius:9,background:"rgba(248,113,113,0.07)",fontSize:T.fSM,fontWeight:600,color:T.red,border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="trash" size={12} color={T.red}/></button>
+      {/* v11.9.140: 2-step inline confirm (era 1 toque só — achado #3 da auditoria) */}
+      <button aria-label={confirmDelBedtime?(_lang==="en"?"Confirm delete":"Confirmar exclusão"):(_lang==="en"?"Delete bedtime":"Excluir bedtime")} onClick={e=>{
+        e.stopPropagation();
+        if(!confirmDelBedtime){setConfirmDelBedtime(true);Haptic.warning();setTimeout(()=>setConfirmDelBedtime(false),3000);return}
+        setConfirmDelBedtime(false);onDelete&&onDelete(entry.id);
+      }} style={{padding:confirmDelBedtime?"8px 14px":"8px 14px",borderRadius:9,background:confirmDelBedtime?"rgba(248,113,113,0.30)":"rgba(248,113,113,0.07)",border:confirmDelBedtime?"1px solid rgba(248,113,113,0.6)":"none",fontSize:T.fSM,fontWeight:700,color:confirmDelBedtime?"#fff":T.red,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6,transition:"all .2s"}}>
+        {confirmDelBedtime?(_lang==="en"?"Sure?":"Certo?"):<Icon name="trash" size={12} color={T.red}/>}
+      </button>
+    </div>}
+  </div>);
+});
+
+// v11.9.140: card de noite/soneca partida por splitMidnight, sem despertar em nenhuma
+// metade (achado #1 da auditoria de usabilidade — as 2 metades ficavam soltas, sem
+// vínculo visual; editar/apagar uma não avisava sobre a outra). Mostra as 2 entries como
+// UM cartão contínuo; expandir revela cada metade com seu próprio editar/excluir — reusa
+// onEdit/onDelete já existentes por entry (sem payload novo, sem risco de perda de dado).
+const MidnightMergeCard = React.memo(function MidnightMergeCard({part1,part2,onDelete,onEdit}){
+  const[expanded,setExpanded]=useState(false);
+  const[confirmDelId,setConfirmDelId]=useState(null);
+  const totalMin=(part1.durationMin||0)+(part2.durationMin||0);
+  const endMs=new Date(`${part2.date}T${part2.time}`).getTime()+(part2.durationMin||0)*60000;
+  const endD=new Date(endMs);
+  const endT=`${String(endD.getHours()).padStart(2,"0")}:${String(endD.getMinutes()).padStart(2,"0")}`;
+  const cfg=TYPES[part1.type]||{icon:"bed",color:"#c4b5fd"};
+  const FragRow=({p})=>{
+    const fEndMs=new Date(`${p.date}T${p.time}`).getTime()+(p.durationMin||0)*60000;
+    const fEndD=new Date(fEndMs);
+    const fEndT=`${String(fEndD.getHours()).padStart(2,"0")}:${String(fEndD.getMinutes()).padStart(2,"0")}`;
+    return(<div style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0"}}>
+      <span style={{fontSize:T.fXS,fontWeight:700,color:T.label,textTransform:"uppercase",letterSpacing:0.4,width:48,flexShrink:0}}>{fmtRelDate(p.date)}</span>
+      <button onClick={()=>onEdit&&onEdit(p)} style={{flex:1,textAlign:"left",background:"transparent",border:"none",cursor:"pointer",padding:0}}>
+        <div style={{fontSize:T.fMD,fontWeight:600,color:T.heading,fontVariantNumeric:"tabular-nums"}}>{p.time} → {fEndT}</div>
+        <div style={{fontSize:T.fSM,color:T.sub,marginTop:1}}>{fmtDur(p.durationMin)}</div>
+      </button>
+      {/* 2-step inline confirm, mesmo padrão do EventMini acima (sem confirm() nativo) */}
+      <button aria-label={confirmDelId===p.id?(_lang==="en"?"Confirm delete":"Confirmar exclusão"):(_lang==="en"?"Delete":"Excluir")} onClick={()=>{
+        if(confirmDelId!==p.id){setConfirmDelId(p.id);Haptic.warning();setTimeout(()=>setConfirmDelId(prev=>prev===p.id?null:prev),3000);return}
+        setConfirmDelId(null);onDelete&&onDelete(p.id);
+      }} className="hit44" style={{padding:confirmDelId===p.id?"6px 12px":"6px 9px",borderRadius:9,background:confirmDelId===p.id?"rgba(248,113,113,0.30)":"rgba(248,113,113,0.08)",border:confirmDelId===p.id?"1px solid rgba(248,113,113,0.6)":"none",color:"#fca5a5",fontSize:T.fSM,fontWeight:700,flexShrink:0,transition:"all .2s"}}>
+        {confirmDelId===p.id?(_lang==="en"?"Sure?":"Certo?"):<Icon name="trash" size={12} color={T.red}/>}
+      </button>
+    </div>);
+  };
+  return(<div style={{position:"relative",marginBottom:8,borderRadius:18,background:"rgba(20,26,60,0.32)",border:`1px solid ${T.gBSoft}`,overflow:"hidden",contain:"layout paint"}}>
+    <button onClick={()=>setExpanded(!expanded)} style={{width:"100%",padding:"14px 18px",display:"flex",alignItems:"center",gap:13,textAlign:"left",background:"transparent",border:"none",position:"relative",cursor:"pointer"}}>
+      <div style={{width:42,height:42,borderRadius:13,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,...T.iconTile(cfg.color)}}>
+        <Icon name={cfg.icon} size={20} color={cfg.color}/>
+      </div>
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{fontSize:T.f2XL,fontWeight:800,color:T.heading,letterSpacing:-0.5,fontVariantNumeric:"tabular-nums",lineHeight:1.1}}>{fmtDur(totalMin)}</div>
+        <div style={{fontSize:T.fMD,color:T.sub,marginTop:3,fontVariantNumeric:"tabular-nums",fontWeight:500,display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
+          <span>{part1.time} → {endT}</span>
+          {/* mesma paleta do nightBadge (EntryRow) — anotação de "atravessa a virada" */}
+          <span style={{display:"inline-flex",alignItems:"center",gap:3,fontSize:T.fXS,fontWeight:700,color:"#60a5fa",background:"rgba(96,165,250,0.14)",border:"1px solid rgba(96,165,250,0.32)",borderRadius:8,padding:"2px 7px"}}><Icon name="moon" size={8} color="#60a5fa"/>{_lang==="en"?"began yesterday":"começou ontem"}</span>
+        </div>
+      </div>
+      <div style={{width:22,height:22,display:"flex",alignItems:"center",justifyContent:"center",color:T.dim,flexShrink:0,transform:expanded?"rotate(180deg)":"rotate(0deg)",transition:"transform .2s"}}>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+    </button>
+    {expanded&&<div style={{padding:"0 18px 12px",borderTop:`1px solid ${T.gBSoft}`}}>
+      <FragRow p={part1}/>
+      <div style={{height:1,background:T.gBSoft}}/>
+      <FragRow p={part2}/>
     </div>}
   </div>);
 });

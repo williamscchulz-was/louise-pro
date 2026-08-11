@@ -4,6 +4,29 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.140", date: "2026-08-11",
+    pt: {
+      title: "Rodada de polimento: 5 achados de usabilidade corrigidos",
+      bullets: [
+        '★ **Noite partida na virada da meia-noite agora aparece como um cartão só** — era 2 registros soltos sem nenhum vínculo; editar ou apagar um podia deixar o outro órfão sem avisar.',
+        'Apagar a noite inteira pelo cartão de sono agora pede confirmação (2 toques), igual o resto do app.',
+        'Editar ou remover um despertar mostra confirmação — com **desfazer**, quando dá pra restaurar com segurança.',
+        'O formulário de edição ganhou um botão de excluir — não precisa mais fechar e caçar a entry na lista pra apagar.',
+        'Mamadeira e fralda ficam **sempre nos mesmos 2 botões rápidos** — só o 3º continua se adaptando ao contexto — evita registrar a coisa errada num toque no escuro sem olhar.',
+      ],
+    },
+    en: {
+      title: "Polish round: 5 usability findings fixed",
+      bullets: [
+        '★ **A night split at midnight now shows as one card** — it used to be 2 disconnected entries; editing or deleting one could silently orphan the other.',
+        'Deleting a whole bedtime from the sleep card now asks for confirmation (2 taps), matching the rest of the app.',
+        'Editing or removing a waking now shows a confirmation — with **undo**, when it can be restored safely.',
+        'The edit form got a delete button — no more closing it and hunting the entry down in the list to delete it.',
+        'Bottle and diaper now **always sit in the same 2 quick-action slots** — only the 3rd keeps adapting to context — avoiding a wrong log on a blind tap in the dark.',
+      ],
+    },
+  },
+  {
     v: "11.9.139", date: "2026-07-30",
     pt: {
       title: "Fix grave: editar um bedtime apagava os despertares",
