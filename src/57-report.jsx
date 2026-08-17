@@ -23,7 +23,11 @@ function renderReportCanvas(rep,opts){
         withF=rep.rows.filter(r=>r.feedCount>0),withW=rep.rows.filter(r=>r.maxWindowMin>0);
   const avg=(a,f)=>a.length?Math.round(a.reduce((s,x)=>s+f(x),0)/a.length):0;
   const avg1=(a,f)=>a.length?(a.reduce((s,x)=>s+f(x),0)/a.length).toFixed(1).replace(".",en?".":","):"0";
-  const S=2,W=780,PAD=28;
+  // v11.9.141: mesmo critério de outlier da tela (não redraw de gráfico novo — só dobra a
+  // linha de subtítulo do KPI de sono noturno quando existe alguma noite atípica de verdade).
+  const withNClean=withN.filter(r=>!r.nightOutlier);
+  const outlierCount=withN.length-withNClean.length;
+  const S=2,W=830,PAD=28;
   const mapRowH=13,tblRowH=13.5;
   const mapY=224,mapH=rows.length*mapRowH;
   const tblTitleY=mapY+mapH+30,theadY=tblTitleY+32,tbodyY=theadY+14;
@@ -52,7 +56,7 @@ function renderReportCanvas(rep,opts){
   // ── KPIs ──
   const kw=(W-2*PAD-3*10)/4,ky=90;
   const kpis=[
-    [en?"NIGHT SLEEP":"SONO NOTURNO",fmtDur(avg(withN,r=>r.night.durationMin)),(en?"real ":"real ")+fmtDur(avg(withN,r=>r.night.realMin))+" · "+avg1(withN,r=>r.night.wakings)+(en?" wakings":" despertares")],
+    [en?"NIGHT SLEEP":"SONO NOTURNO",fmtDur(avg(withN,r=>r.night.durationMin)),(en?"real ":"real ")+fmtDur(avg(withN,r=>r.night.realMin))+" · "+avg1(withN,r=>r.night.wakings)+(en?" wakings":" despertares")+(outlierCount>0?(en?` · excl. ${outlierCount}: ${fmtDur(avg(withNClean,r=>r.night.durationMin))}`:` · sem ${outlierCount} atíp.: ${fmtDur(avg(withNClean,r=>r.night.durationMin))}`):"")],
     [en?"NAPS":"SONECAS",avg1(withNap,r=>r.napCount)+(en?"/day":"/dia"),fmtDur(avg(withNap,r=>r.napTotalMin))+(en?" total":" no total")],
     [en?"AWAKE WINDOW":"JANELA ACORDADA",fmtDur(avg(withW,r=>r.maxWindowMin)),en?"longest of the day (avg)":"maior do dia (média)"],
     [en?"FEEDS":"MAMADAS",avg1(withF,r=>r.feedCount)+(en?"/day":"/dia"),avg(withF,r=>r.mlTotal)+(en?"ml per day":"ml por dia")]
@@ -99,33 +103,44 @@ function renderReportCanvas(rep,opts){
   ctx.fillStyle="#23263f";ctx.font=F("700 12.5px");
   ctx.fillText(en?"Day by day":"Dia a dia",PAD,tblTitleY);
   ctx.fillStyle="#7b80a0";ctx.font=F("400 9px");
-  ctx.fillText(en?"Real sleep = night minus wakings. Window = longest awake stretch between naps.":"Sono real = noite menos os despertares. Janela = maior período acordada entre sonecas.",PAD,tblTitleY+14);
-  const cols=[
-    {x:PAD,a:"left",h:en?"DAY":"DIA",f:r=>_rpWd(r.date,en)+" "+dShort(r.date)},
-    {x:96,a:"left",h:en?"WOKE":"ACORDOU",f:r=>r.wake||"—"},
-    {x:150,a:"left",h:en?"NIGHT":"NOITE",f:r=>r.night?r.night.start+"→"+r.night.end:"—"},
-    {x:330,a:"right",h:en?"DUR.":"DURAÇÃO",f:r=>r.night?fmtDur(r.night.durationMin):"—"},
-    {x:372,a:"right",h:"DESP.",he:"WAK.",f:r=>r.night?String(r.night.wakings):"—"},
-    {x:430,a:"right",h:en?"REAL":"SONO REAL",f:r=>r.night?fmtDur(r.night.realMin):"—"},
-    {x:472,a:"right",h:en?"NAPS":"SONECAS",f:r=>r.napCount?String(r.napCount):"—"},
-    {x:528,a:"right",h:"TOTAL",f:r=>r.napTotalMin?fmtDur(r.napTotalMin):"—"},
-    {x:596,a:"right",h:en?"WINDOW":"JANELA",f:r=>r.maxWindowMin?fmtDur(r.maxWindowMin):"—"},
-    {x:652,a:"right",h:en?"FEEDS":"MAMADAS",f:r=>r.feedCount?String(r.feedCount):"—"},
-    {x:W-PAD,a:"right",h:en?"MILK":"LEITE",f:r=>r.mlTotal?r.mlTotal+"ml":"—"}
+  ctx.fillText(en?"Real sleep = night minus wakings. Pre-sleep window = the one right before bedtime. Amber row = atypical night (<6h or started ≥23h).":"Sono real = noite menos os despertares. Janela pré-sono = a que vem antes do bedtime. Linha âmbar = noite atípica (<6h ou começou às 23h+).",PAD,tblTitleY+14);
+  // v11.9.141: colunas por ORÇAMENTO DE LARGURA (não mais x hardcoded coluna a coluna) —
+  // mais fácil de ajustar/adicionar coluna sem recalcular tudo a mão. x é derivado: coluna
+  // left-aligned desenha na borda esquerda do slot, right-aligned na borda direita.
+  const GAP=7;
+  const colDefs=[
+    {w:62,a:"left",h:en?"DAY":"DIA",f:r=>_rpWd(r.date,en)+" "+dShort(r.date)},
+    {w:36,a:"left",h:en?"WOKE":"ACORDOU",f:r=>r.wake||"—"},
+    {w:72,a:"left",h:en?"NIGHT":"NOITE",f:r=>r.night?r.night.start+"→"+r.night.end:"—"},
+    {w:44,a:"right",h:en?"DUR.":"DURAÇÃO",f:r=>r.night?fmtDur(r.night.durationMin):"—"},
+    {w:24,a:"right",h:"DESP.",he:"WAK.",f:r=>r.night?String(r.night.wakings):"—"},
+    {w:50,a:"right",h:en?"WAK.(m)":"DESP.(m)",f:r=>r.wakingDurations.length?r.wakingDurations.join(","):"—"},
+    {w:38,a:"right",h:en?"REAL":"SONO REAL",f:r=>r.night?fmtDur(r.night.realMin):"—"},
+    {w:44,a:"right",h:en?"DAY TOT.":"S.TOTAL",f:r=>r.totalSleepMin?fmtDur(r.totalSleepMin):"—"},
+    {w:24,a:"right",h:en?"NAPS":"SONEC.",f:r=>r.napCount?String(r.napCount):"—"},
+    {w:36,a:"right",h:"TOTAL",f:r=>r.napTotalMin?fmtDur(r.napTotalMin):"—"},
+    {w:54,a:"right",h:en?"NAPS(m)":"SONEC.(m)",f:r=>r.napDurations.length?r.napDurations.join(","):"—"},
+    {w:36,a:"right",h:en?"WINDOW":"JANELA",f:r=>r.maxWindowMin?fmtDur(r.maxWindowMin):"—"},
+    {w:40,a:"right",h:en?"PRE-SLP":"PRÉ-SONO",f:r=>r.preBedWindowMin?fmtDur(r.preBedWindowMin):"—"},
+    {w:24,a:"right",h:en?"FEEDS":"MAMAD.",f:r=>r.feedCount?String(r.feedCount):"—"},
+    {w:38,a:"right",h:en?"MILK":"LEITE",f:r=>r.mlTotal?r.mlTotal+"ml":"—"}
   ];
-  ctx.font=F("700 8px");ctx.fillStyle="#7b80a0";
+  let cx=PAD;
+  const cols=colDefs.map(c=>{const x=c.a==="left"?cx:cx+c.w;cx+=c.w+GAP;return{...c,x}});
+  ctx.font=F("700 7.3px");ctx.fillStyle="#7b80a0";
   cols.forEach(c=>{ctx.textAlign=c.a;ctx.fillText(en&&c.he?c.he:c.h,c.x,theadY)});
   ctx.fillStyle="#d8dae8";ctx.fillRect(PAD,theadY+4,W-2*PAD,1.5);
   rows.forEach((r,i)=>{
     const y=tbodyY+i*tblRowH;
-    if(i%2){ctx.fillStyle="#fafaff";ctx.fillRect(PAD,y,W-2*PAD,tblRowH)}
-    ctx.font=F("400 9px");
+    if(r.nightOutlier){ctx.fillStyle="#fbf1de";ctx.fillRect(PAD,y,W-2*PAD,tblRowH)}
+    else if(i%2){ctx.fillStyle="#fafaff";ctx.fillRect(PAD,y,W-2*PAD,tblRowH)}
+    ctx.font=F("400 8.5px");
     cols.forEach((c,ci)=>{
       ctx.textAlign=c.a;
       ctx.fillStyle=ci===0?"#23263f":"#3a3d60";
-      if(ci===0)ctx.font=F("600 9px");
+      if(ci===0)ctx.font=F("600 8.5px");
       ctx.fillText(c.f(r),c.x,y+10);
-      if(ci===0)ctx.font=F("400 9px");
+      if(ci===0)ctx.font=F("400 8.5px");
     });
   });
   ctx.textAlign="left";
@@ -179,6 +194,7 @@ async function renderReportPDF(rep,opts){
 const ReportPage = React.memo(function ReportPage({entries,birthDate,babyName,onBack,lang}){
   const en=lang==="en";
   const rep=useMemo(()=>sleepReport(entries,30),[entries]);
+  const corr=useMemo(()=>sleepCorrelations(rep),[rep]);
   const rows=rep.rows.slice().reverse();
   const withN=rep.rows.filter(r=>r.night),withNap=rep.rows.filter(r=>r.napCount>0),
         withF=rep.rows.filter(r=>r.feedCount>0),withW=rep.rows.filter(r=>r.maxWindowMin>0);
@@ -229,11 +245,54 @@ const ReportPage = React.memo(function ReportPage({entries,birthDate,babyName,on
       Haptic.success();
     }catch(e){}
   };
-  const K=({k,v,s})=><div style={{border:"1px solid #e2e3ef",borderRadius:8,padding:"10px 11px",background:"#fafaff"}}>
+  const K=({k,v,s,extra})=><div style={{border:"1px solid #e2e3ef",borderRadius:8,padding:"10px 11px",background:"#fafaff"}}>
     <div style={{fontSize:9,fontWeight:700,letterSpacing:.6,textTransform:"uppercase",color:"#7b80a0"}}>{k}</div>
     <div style={{fontSize:18,fontWeight:700,letterSpacing:-.5,marginTop:3,color:"#2d2f57"}}>{v}</div>
     <div style={{fontSize:10,color:"#7b80a0",marginTop:1}}>{s}</div>
+    {extra}
   </div>;
+  // v11.9.142: card de comparação de 2 grupos. "ok:false" = amostra pequena demais (<n
+  // mínimo) — mostra isso explicitamente em vez de forçar uma média enganosa. `data.primary`
+  // escolhe qual métrica vira o número grande (a que a comparação realmente pediu); "solid"
+  // (revisão Opus+Fable) é um selo neutro/destacado — nunca um p-valor/correlação numérica,
+  // que seria falsa precisão pra quem não é estatístico. `dayGap` expõe (não corrige) quando
+  // os 2 grupos estão concentrados em semanas diferentes do mês — sinal de confundimento por
+  // tendência (a Louise muda ao longo do próprio mês medido), não defeito da comparação.
+  const Corr=({title,data,showNapAvg})=>{
+    const[gA,gB]=data.groups;
+    const val=g=>data.primary==="wake"?_rpHHMM(g.wakeMin):data.primary==="wakings"?`${g.wakings} ${en?"wakings":"despertares"}`:fmtDur(g.nightMin);
+    const sub=g=>data.primary==="wakings"?fmtDur(g.nightMin):`${g.wakings} ${en?"wakings":"despertares"}`;
+    const bothOk=gA.ok&&gB.ok;
+    return(<div style={{marginBottom:10}}>
+    <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4,flexWrap:"wrap"}}>
+      <div style={{fontSize:10.5,fontWeight:700,color:"#4a4f70"}}>{title}</div>
+      {bothOk&&<span style={{fontSize:8,fontWeight:800,padding:"2px 6px",borderRadius:5,textTransform:"uppercase",letterSpacing:.4,background:data.solid?"#fdecc8":"#eef0f7",color:data.solid?"#a3792e":"#8b90ad"}}>
+        {data.solid?(en?"worth watching":"vale observar"):(en?"normal range":"dentro do normal")}
+      </span>}
+    </div>
+    <div style={{display:"flex",gap:8}}>
+      {[gA,gB].map((g,i)=><div key={i} style={{flex:1,border:"1px solid #e2e3ef",borderRadius:8,padding:"8px 10px",background:"#fafaff"}}>
+        <div style={{fontSize:9.5,fontWeight:700,color:"#7b80a0",textTransform:"uppercase",letterSpacing:.3}}>{g.label}{g.ok?` · n=${g.n}`:""}</div>
+        {g.ok?<>
+          <div style={{fontSize:14,fontWeight:700,color:"#2d2f57",marginTop:2}}>{val(g)}</div>
+          <div style={{fontSize:9.5,color:"#7b80a0"}}>{sub(g)}</div>
+          {showNapAvg&&g.avgNapMin!=null&&<div style={{fontSize:9.5,color:"#7b80a0"}}>{fmtDur(g.avgNapMin)} {en?"avg/nap":"média/soneca"}</div>}
+        </>:<div style={{fontSize:9.5,color:"#b0b4c8",fontStyle:"italic",marginTop:2}}>{en?`not enough data (${g.n}/${corr.minN} days)`:`dado insuficiente (${g.n}/${corr.minN} dias)`}</div>}
+      </div>)}
+    </div>
+    {bothOk&&data.dayGap>=5&&<div style={{fontSize:8.5,color:"#b0851f",marginTop:3,fontStyle:"italic"}}>{en?`Note: groups are ~${data.dayGap} days apart within the month — could reflect the month's own trend, not just this variable.`:`Nota: os grupos estão a ~${data.dayGap} dias de distância dentro do mês — pode refletir a tendência do próprio mês, não só essa variável.`}</div>}
+    </div>);
+  };
+  // v11.9.141: noites atípicas (achado: 1 noite curtíssima ou que começou tarde demais puxa
+  // a média do mês inteiro pra baixo). Critério literal pedido: <6h OU início ≥23h. KPI
+  // mostra as 2 médias lado a lado só quando existe outlier de fato (senão são iguais e a
+  // linha extra só ocupa espaço à toa).
+  const withNClean=withN.filter(r=>!r.nightOutlier);
+  const outlierCount=withN.length-withNClean.length;
+  // v11.9.141: tendência de despertares em 7 dias — compara a média móvel de HOJE com a de
+  // 7 dias atrás (mesma métrica, 2 pontos), pra ver direção sem o ruído dia-a-dia.
+  const maNow=rep.rows[rep.rows.length-1]?.wakingsMA7;
+  const maPrior=rep.rows[rep.rows.length-8]?.wakingsMA7;
   const th={textAlign:"right",fontSize:8,textTransform:"uppercase",letterSpacing:.4,color:"#7b80a0",borderBottom:"1.5px solid #d8dae8",padding:"5px 4px",fontWeight:700,whiteSpace:"nowrap"};
   const td={padding:"4px",borderBottom:"1px solid #eff0f6",color:"#3a3d60",textAlign:"right",whiteSpace:"nowrap"};
   return(<div id="lp-report" className="page-switch" style={{position:"fixed",inset:0,zIndex:250,background:"#eceef5",overflowY:"auto",overflowX:"hidden",overscrollBehavior:"none",WebkitOverflowScrolling:"touch",paddingTop:"env(safe-area-inset-top)",paddingBottom:"calc(40px + env(safe-area-inset-bottom))"}}>
@@ -266,11 +325,20 @@ const ReportPage = React.memo(function ReportPage({entries,birthDate,babyName,on
       </div>
 
       <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:9,margin:"16px 0 6px"}}>
-        <K k={en?"Night sleep":"Sono noturno"} v={fmtDur(avg(withN,r=>r.night.durationMin))} s={(en?"real ":"real ")+fmtDur(avg(withN,r=>r.night.realMin))+" · "+avg1(withN,r=>r.night.wakings)+(en?" wakings":" despertares")}/>
+        <K k={en?"Night sleep":"Sono noturno"} v={fmtDur(avg(withN,r=>r.night.durationMin))} s={(en?"real ":"real ")+fmtDur(avg(withN,r=>r.night.realMin))+" · "+avg1(withN,r=>r.night.wakings)+(en?" wakings":" despertares")}
+          extra={outlierCount>0?<div style={{fontSize:9.5,color:"#a3792e",marginTop:3,fontWeight:600}}>{en?`Excl. ${outlierCount} outlier${outlierCount>1?"s":""}: ${fmtDur(avg(withNClean,r=>r.night.durationMin))}`:`Sem ${outlierCount} atípica${outlierCount>1?"s":""}: ${fmtDur(avg(withNClean,r=>r.night.durationMin))}`}</div>:null}/>
         <K k={en?"Naps":"Sonecas"} v={avg1(withNap,r=>r.napCount)+(en?"/day":"/dia")} s={fmtDur(avg(withNap,r=>r.napTotalMin))+(en?" total":" no total")}/>
         <K k={en?"Awake window":"Janela acordada"} v={fmtDur(avg(withW,r=>r.maxWindowMin))} s={en?"longest of the day (avg)":"maior do dia (média)"}/>
         <K k={en?"Feeds":"Mamadas"} v={avg1(withF,r=>r.feedCount)+(en?"/day":"/dia")} s={avg(withF,r=>r.mlTotal)+(en?"ml per day":"ml por dia")}/>
       </div>
+      {/* v11.9.141: tendência de 7 dias dos despertares — pedido explícito ("ver sem ruído
+          diário"), 2 pontos (agora vs 7 dias atrás) em vez de gráfico novo. */}
+      {maNow!=null&&maPrior!=null&&<div style={{fontSize:10.5,color:"#5a5f80",margin:"0 0 4px",padding:"7px 10px",background:"#f7f7fc",borderRadius:7,border:"1px solid #e8e9f2"}}>
+        {en?"Wakings trend (7d avg): ":"Tendência de despertares (média 7d): "}
+        <b style={{color:"#2d2f57"}}>{maNow.toFixed(1)}/{en?"night":"noite"}</b>
+        {" "}{maNow<maPrior?(en?"↓ down from ":"↓ caindo de "):maNow>maPrior?(en?"↑ up from ":"↑ subindo de "):(en?"· same as ":"· igual a ")}
+        {maPrior.toFixed(1)} {en?"7 days ago":"há 7 dias"}
+      </div>}
 
       <div style={{fontSize:12.5,fontWeight:700,margin:"20px 0 5px",letterSpacing:-.2}}>{en?"30-day map":"Mapa dos 30 dias"}</div>
       <div style={{display:"flex",flexWrap:"wrap",gap:11,fontSize:10,color:"#5a5f80",marginBottom:8,alignItems:"center"}}>
@@ -290,19 +358,23 @@ const ReportPage = React.memo(function ReportPage({entries,birthDate,babyName,on
       </div>)}
 
       <div style={{fontSize:12.5,fontWeight:700,margin:"20px 0 4px",letterSpacing:-.2}}>{en?"Day by day":"Dia a dia"}</div>
-      <div style={{fontSize:10,color:"#7b80a0",marginBottom:8,lineHeight:1.5}}>{en?"Real sleep = night duration minus time awake during wakings. Window = longest awake stretch between naps.":"Sono real = duração da noite menos o tempo acordada nos despertares. Janela = maior período acordada entre uma soneca e outra."}</div>
+      <div style={{fontSize:10,color:"#7b80a0",marginBottom:8,lineHeight:1.5}}>{en?"Real sleep = night duration minus time awake during wakings. Window = longest awake stretch between naps. Pre-sleep window = the one right before bedtime. * = atypical night (<6h or started ≥23h), excluded from the \"excl. outliers\" average above.":"Sono real = duração da noite menos o tempo acordada nos despertares. Janela = maior período acordada entre uma soneca e outra. Janela pré-sono = a que vem logo antes do bedtime. * = noite atípica (<6h ou começou às 23h+), excluída da média \"sem atípicas\" acima."}</div>
       <div className="rep-scroll" style={{overflowX:"auto",WebkitOverflowScrolling:"touch"}}>
-        <table style={{width:"100%",minWidth:600,borderCollapse:"collapse",fontSize:9.5,fontVariantNumeric:"tabular-nums"}}>
+        <table style={{width:"100%",minWidth:900,borderCollapse:"collapse",fontSize:9.5,fontVariantNumeric:"tabular-nums"}}>
           <thead><tr>
             <th style={{...th,textAlign:"left"}}>{en?"Day":"Dia"}</th>
             <th style={{...th,textAlign:"left"}}>{en?"Woke":"Acordou"}</th>
             <th style={{...th,textAlign:"left"}}>{en?"Night":"Noite"}</th>
             <th style={th}>{en?"Duration":"Duração"}</th>
             <th style={th}>{en?"Wak.":"Desp."}</th>
+            <th style={th}>{en?"Wak. (min)":"Desp. (min)"}</th>
             <th style={th}>{en?"Real":"Sono real"}</th>
+            <th style={th}>{en?"Day total":"Sono total"}</th>
             <th style={th}>{en?"Naps":"Sonecas"}</th>
             <th style={th}>{en?"Total":"Total"}</th>
+            <th style={th}>{en?"Naps (min)":"Sonecas (min)"}</th>
             <th style={th}>{en?"Window":"Maior janela"}</th>
+            <th style={th}>{en?"Pre-sleep":"Pré-sono"}</th>
             <th style={th}>{en?"Feeds":"Mamadas"}</th>
             <th style={th}>{en?"Milk":"Leite"}</th>
           </tr></thead>
@@ -310,17 +382,33 @@ const ReportPage = React.memo(function ReportPage({entries,birthDate,babyName,on
             <td style={{...td,textAlign:"left",fontWeight:600,color:"#23263f"}}>{_rpWd(r.date,en)} {dShort(r.date)}</td>
             <td style={{...td,textAlign:"left"}}>{r.wake||"—"}</td>
             <td style={{...td,textAlign:"left"}}>{r.night?r.night.start+"→"+r.night.end:"—"}</td>
-            <td style={td}>{r.night?fmtDur(r.night.durationMin):"—"}</td>
+            <td style={td}>{r.night?fmtDur(r.night.durationMin):"—"}{r.nightOutlier&&<span style={{color:"#c2872b",fontWeight:800}}>{" *"}</span>}</td>
             <td style={td}>{r.night?r.night.wakings:"—"}</td>
+            <td style={td}>{r.wakingDurations.length?r.wakingDurations.join(","):"—"}</td>
             <td style={td}>{r.night?fmtDur(r.night.realMin):"—"}</td>
+            <td style={td}>{r.totalSleepMin?fmtDur(r.totalSleepMin):"—"}</td>
             <td style={td}>{r.napCount||"—"}</td>
             <td style={td}>{r.napTotalMin?fmtDur(r.napTotalMin):"—"}</td>
+            <td style={td}>{r.napDurations.length?r.napDurations.join(","):"—"}</td>
             <td style={td}>{r.maxWindowMin?fmtDur(r.maxWindowMin):"—"}</td>
+            <td style={td}>{r.preBedWindowMin?fmtDur(r.preBedWindowMin):"—"}</td>
             <td style={td}>{r.feedCount||"—"}</td>
             <td style={td}>{r.mlTotal?r.mlTotal+"ml":"—"}</td>
           </tr>)}</tbody>
         </table>
       </div>
+
+      {/* v11.9.142: comparações — só na tela (não no PDF), mesmo raciocínio de escopo da
+          tendência de 7d: útil pros pais investigarem, não é o tipo de coisa que precisa ir
+          pro documento estático da pediatra. Renomeado de "Correlações" pra "Comparações"
+          na revisão Opus+Fable — o que é mostrado é diferença descritiva de médias entre 2
+          grupos, não correlação estatística de verdade (que exigiria expor r/p-valor). */}
+      <div style={{fontSize:12.5,fontWeight:700,margin:"20px 0 4px",letterSpacing:-.2}}>{en?"Comparisons":"Comparações"}</div>
+      <div style={{fontSize:9.5,color:"#8b90ad",marginBottom:10,lineHeight:1.5,fontStyle:"italic"}}>{en?"Descriptive comparisons, not proof of cause and effect. Louise changes over the month itself, so groups may reflect different weeks, not the effect of the variable. \"n\" = how many days support each average.":"Comparações descritivas — não provam causa e efeito. A Louise muda ao longo do próprio mês, então os grupos podem refletir semanas diferentes, não o efeito da variável. \"n\" = quantos dias sustentam cada média."}</div>
+      <Corr title={en?"Naps: 3 vs 4 → the following night's sleep":"Sonecas: 3 vs 4 → o sono da noite seguinte"} data={corr.naps} showNapAvg/>
+      <Corr title={en?"Awake window before bed → same night's wakings":"Janela acordada antes de dormir → despertares da mesma noite"} data={corr.preBedWindow}/>
+      {corr.milk&&<Corr title={en?`Daily milk (split at ${corr.milk.medianMl}ml median) → wakings that night`:`Leite do dia (corte na mediana, ${corr.milk.medianMl}ml) → despertares daquela noite`} data={corr.milk}/>}
+      <Corr title={en?"Bedtime before/after 19:30 → wake-up time":"Bedtime antes/depois de 19h30 → horário de acordar"} data={corr.bedtime}/>
 
       <div style={{marginTop:14,paddingTop:9,borderTop:"1px solid #e8e9f2",fontSize:9.5,color:"#8b90ad",lineHeight:1.5}}>
         {en?"Entries logged manually by the parents in the Louise Pro app — unlogged periods show as awake on the map. Tracking document; does not replace professional evaluation.":"Registros feitos manualmente pelos pais no app Louise Pro — períodos não registrados aparecem como acordada no mapa. Documento de acompanhamento, não substitui avaliação profissional."}

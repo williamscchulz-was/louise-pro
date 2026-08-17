@@ -4,6 +4,50 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.142", date: "2026-08-16",
+    pt: {
+      title: "Relatório: 4 comparações revisadas a fundo (sonecas, janela, leite, bedtime)",
+      bullets: [
+        '★ Nova seção **"Comparações"** no relatório: sonecas (3 vs 4), janela acordada antes de dormir, leite do dia e horário de dormir — cada uma comparando 2 grupos de dias, sempre mostrando quantos dias sustentam a média.',
+        'Passou por revisão estatística dedicada antes de ir ao ar — achou e corrigiu um erro real (a mediana do leite incluía o dia de hoje ainda incompleto, o que inflava artificialmente a diferença mostrada).',
+        'Cada comparação mostra um selo — "dentro do normal" ou "vale observar" — em vez de um número de correlação que seria falsa precisão; grupo com menos de 7 dias não mostra número, mostra que faltou dado.',
+        'O card de sonecas ganhou a **duração média por soneca** de cada grupo (não só o sono da noite seguinte).',
+      ],
+    },
+    en: {
+      title: "Report: 4 comparisons reviewed thoroughly (naps, window, milk, bedtime)",
+      bullets: [
+        '★ New **"Comparisons"** section in the report: naps (3 vs 4), awake window before bed, daily milk and bedtime — each comparing 2 groups of days, always showing how many days back each average.',
+        'Went through a dedicated statistical review before shipping — caught and fixed a real bug (the milk median included today, still incomplete, which artificially inflated the shown difference).',
+        'Each comparison shows a badge — "normal range" or "worth watching" — instead of a correlation number that would be false precision; a group under 7 days shows that data is missing instead of a number.',
+        'The naps card now also shows **average duration per nap** for each group (not just the following night\'s sleep).',
+      ],
+    },
+  },
+  {
+    v: "11.9.141", date: "2026-08-16",
+    pt: {
+      title: "Relatório: outliers, detalhe de sonecas/despertares e tendência",
+      bullets: [
+        '★ Noites atípicas (menos de 6h ou que começaram às 23h+) agora ficam marcadas na tabela e no PDF, e a média de sono noturno mostra o valor **com e sem elas** — evita que 1 noite ruim distorça o mês inteiro.',
+        'Nova coluna com o **sono total do dia** (noite + sonecas somadas).',
+        'Sonecas e despertares agora mostram a duração de **cada um individualmente**, não só o total agregado.',
+        'Nova coluna com a **janela acordada logo antes do bedtime** — a mais relevante pro sono noturno — ao lado da janela mais longa do dia que já existia.',
+        'Tendência de despertares em **média móvel de 7 dias**, pra ver se está subindo ou caindo sem o ruído dia a dia.',
+      ],
+    },
+    en: {
+      title: "Report: outliers, nap/waking detail and trend",
+      bullets: [
+        '★ Atypical nights (under 6h or that started at 23h+) are now flagged in the table and the PDF, and the night-sleep average shows the value **with and without them** — so one bad night doesn\'t skew the whole month.',
+        'New column with the **total sleep for the day** (night + naps combined).',
+        'Naps and wakings now show **each one\'s duration individually**, not just the aggregated total.',
+        'New column with the **awake window right before bedtime** — the one that matters most for night sleep — alongside the existing longest-of-the-day window.',
+        'Wakings trend as a **7-day moving average**, to see whether it\'s rising or falling without the day-to-day noise.',
+      ],
+    },
+  },
+  {
     v: "11.9.140", date: "2026-08-11",
     pt: {
       title: "Rodada de polimento: 5 achados de usabilidade corrigidos",
