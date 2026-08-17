@@ -194,16 +194,23 @@ for (const rel of copies) {
   console.log("[build] copied " + rel);
 }
 
-// v11.9.61: copy `.claude/mockups/` → `dist/preview/` pro William ver os mockups
-// no live URL ao invés de localhost (que ele não consegue acessar do iPhone).
-// PATH SEM UNDERSCORE: o GitHub Pages com fallback Jekyll ignora dirs `_*`.
-// Adicionado `.nojekyll` no root como defesa adicional.
-const mockupSrc = join(ROOT, ".claude", "mockups");
-const mockupDst = join(DIST, "preview");
-if (existsSync(mockupSrc)) {
-  cpSync(mockupSrc, mockupDst, { recursive: true });
-  console.log("[build] copied .claude/mockups → preview/");
-}
+// ⚠️ v11.9.143 — REMOVIDO: a cópia `.claude/mockups/` → `dist/preview/` (existia desde a
+// v11.9.61). Motivo duplo, um de privacidade e um de utilidade:
+//
+// 1. VAZAMENTO REAL (achado da auditoria de 17/ago/2026): a cópia era do diretório INTEIRO,
+//    sem filtro. `relatorio-30d.html` — que o próprio CLAUDE.md registra como "gerado com os
+//    DADOS REAIS via Firestore REST, não exemplo" — ficou servido publicamente em
+//    https://.../preview/relatorio-30d.html com HTTP 200: nome completo da Louise, data de
+//    nascimento exata e 30 dias de rotina de sono/alimentação, indexável por buscador.
+// 2. A FEATURE NÃO ERA USADA: a v11.9.61 criou isso pro William revisar mockup no iPhone,
+//    mas a v11.9.67 (posterior) documentou que /preview/ "apesar de tecnicamente live, HTTP
+//    200, não chega até ele na prática" — a superfície de revisão real dele é o app live
+//    deployado ou um Artifact (link HTTPS que abre no iPhone). Ou seja: risco permanente
+//    de privacidade em troca de zero utilidade.
+//
+// REGRA NOVA: mockup NUNCA vai pro domínio público. Pra revisão, publicar como Artifact
+// (privado por padrão). E mockup nunca deve conter dado de produção — quando precisar
+// parecer real, usar dado sintético ou datas relativas (D-1, D-2), sem nome e sem nascimento.
 // Cria .nojekyll vazio no root pra forçar Pages a servir tudo sem Jekyll
 writeFileSync(join(DIST, ".nojekyll"), "");
 console.log("[build] wrote .nojekyll");
