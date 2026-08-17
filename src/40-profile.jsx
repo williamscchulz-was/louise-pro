@@ -134,29 +134,92 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onOpenReport,onShow
   // Assinatura curta = length + primeiros 24 + últimos 24 chars. useMemo garante que o
   // hash só recalcula quando a string muda de referência. O isDirty vira O(1) por render.
   const photoSig = useMemo(()=>photo?`${photo.length}:${photo.slice(0,24)}:${photo.slice(-24)}`:"",[photo]);
-  const remotePhotoSig = useMemo(()=>{const p=profile.photo||"";return p?`${p.length}:${p.slice(0,24)}:${p.slice(-24)}`:""},[profile.photo]);
+  // ⚠️ v11.9.143 (FIX de perda de dado, achado em auditoria): o `isDirty` comparava os campos
+  // locais contra o prop `profile` VIVO. Com 2 devices, isso revertia a esposa sozinho:
+  // Ajustes aberto no iPhone A (sem ninguém tocar em nada) + ela muda o bedtime no iPhone B
+  // -> o onSnapshot atualiza `profile` no A -> o campo local do A continua com o valor antigo
+  // -> `isDirty` vira true SOZINHO -> o autosave de 900ms (que não tem botão Salvar desde a
+  // v11.7.2) grava o valor velho por cima. A mudança dela sumia sem ninguém salvar nada.
+  // O mesmo mecanismo revertia `photo` e `name` — exatamente o par que sumiu na v10.4.7.
+  // FIX: comparar contra um BASELINE CONGELADO no mount (useRef), não contra o prop vivo.
+  // Assim mudança remota nunca dispara dirty; só edição de verdade do usuário dispara.
+  const baseRef=useRef(null);
+  if(baseRef.current===null){
+    baseRef.current={
+      name:profile.name||"",birthDate:profile.birthDate||"",
+      photoSig:(()=>{const p=profile.photo||"";return p?`${p.length}:${p.slice(0,24)}:${p.slice(-24)}`:""})(),
+      mlGoal:String(profile.mlGoal||""),birthWeight:String(profile.birthWeight||""),
+      birthLength:String(profile.birthLength||""),birthHead:String(profile.birthHead||""),
+      routineEnabled:profile.routine?.enabled===true,
+      wakeTime:_r0.wakeTime||"07:00",bathTime:_r0.bathTime||"18:00",bedtime:_r0.bedtime||"19:30",
+      bottlesPerDay:String(_r0.bottlesPerDay||7),
+      nap1:_naps0[0]?.time||"08:15",nap2:_naps0[1]?.time||"10:45",
+      nap3:_naps0[2]?.time||"13:30",nap4:_naps0[3]?.time||"16:00",
+      postBathBottleTime:_r0.postBathBottleTime||_pbDef,
+    };
+  }
+  const _b=baseRef.current;
   const isDirty=(
-    name!==(profile.name||"")||
-    birth!==(profile.birthDate||"")||
-    photoSig!==remotePhotoSig||
-    mlGoal!==String(profile.mlGoal||"")||
-    birthWeight!==String(profile.birthWeight||"")||
-    birthLength!==String(profile.birthLength||"")||
-    birthHead!==String(profile.birthHead||"")||
+    name!==_b.name||
+    birth!==_b.birthDate||
+    photoSig!==_b.photoSig||
+    mlGoal!==_b.mlGoal||
+    birthWeight!==_b.birthWeight||
+    birthLength!==_b.birthLength||
+    birthHead!==_b.birthHead||
     fdPushMinutes!==(feedReminder?.intervalMin||120)||
     fdMinutes!==(feedReminder?.barIntervalMin||feedReminder?.intervalMin||120)||
     // v11.9.40: rotina
-    routineEnabled!==(profile.routine?.enabled===true)||
-    wakeTime!==(_r0.wakeTime||"07:00")||
-    bathTime!==(_r0.bathTime||"18:00")||
-    bedtime!==(_r0.bedtime||"19:30")||
-    bottlesPerDay!==String(_r0.bottlesPerDay||7)||
-    nap1!==(_naps0[0]?.time||"08:15")||
-    nap2!==(_naps0[1]?.time||"10:45")||
-    nap3!==(_naps0[2]?.time||"13:30")||
-    nap4!==(_naps0[3]?.time||"16:00")||
-    postBathBottleTime!==(_r0.postBathBottleTime||_pbDef)
+    routineEnabled!==_b.routineEnabled||
+    wakeTime!==_b.wakeTime||
+    bathTime!==_b.bathTime||
+    bedtime!==_b.bedtime||
+    bottlesPerDay!==_b.bottlesPerDay||
+    nap1!==_b.nap1||
+    nap2!==_b.nap2||
+    nap3!==_b.nap3||
+    nap4!==_b.nap4||
+    postBathBottleTime!==_b.postBathBottleTime
   );
+  // v11.9.143: depois de um save bem-sucedido o baseline avança pro que acabou de ser
+  // gravado — senão `isDirty` ficaria true pra sempre e o autosave entraria em loop.
+  const commitBaseline=useCallback(()=>{
+    baseRef.current={...baseRef.current,
+      name,birthDate:birth,photoSig,mlGoal,birthWeight,birthLength,birthHead,
+      routineEnabled,wakeTime,bathTime,bedtime,bottlesPerDay,nap1,nap2,nap3,nap4,postBathBottleTime};
+  },[name,birth,photoSig,mlGoal,birthWeight,birthLength,birthHead,routineEnabled,wakeTime,bathTime,bedtime,bottlesPerDay,nap1,nap2,nap3,nap4,postBathBottleTime]);
+  // v11.9.143 (2ª metade do fix): RE-SYNC por campo. O baseline congelado impede que uma
+  // mudança remota reverta o que está aqui — mas sozinho ele também faria a tela ignorar
+  // pra sempre o que o outro device mudou. Então: campo que NÃO está sujo (local === baseline)
+  // adota o valor remoto e avança o baseline junto; campo sujo mantém o valor local (a edição
+  // em curso vence, e o autosave dela grava normalmente). Sem risco de loop: só escreve quando
+  // remoto !== baseline, e o próprio baseline avança na mesma passada.
+  useEffect(()=>{
+    const b=baseRef.current;if(!b)return;
+    const r={name:profile.name||"",birthDate:profile.birthDate||"",
+      mlGoal:String(profile.mlGoal||""),birthWeight:String(profile.birthWeight||""),
+      birthLength:String(profile.birthLength||""),birthHead:String(profile.birthHead||""),
+      routineEnabled:profile.routine?.enabled===true,
+      wakeTime:_r0.wakeTime||"07:00",bathTime:_r0.bathTime||"18:00",bedtime:_r0.bedtime||"19:30",
+      bottlesPerDay:String(_r0.bottlesPerDay||7),
+      nap1:_naps0[0]?.time||"08:15",nap2:_naps0[1]?.time||"10:45",
+      nap3:_naps0[2]?.time||"13:30",nap4:_naps0[3]?.time||"16:00",
+      postBathBottleTime:_r0.postBathBottleTime||_pbDef};
+    const adopt=(key,local,setter)=>{
+      if(r[key]===b[key])return;        // remoto não mudou desde o baseline
+      if(local!==b[key])return;         // campo sujo: a edição local vence
+      setter(r[key]);b[key]=r[key];
+    };
+    adopt("name",name,setName);adopt("birthDate",birth,setBirth);
+    adopt("mlGoal",mlGoal,setMlGoal);adopt("birthWeight",birthWeight,setBirthWeight);
+    adopt("birthLength",birthLength,setBirthLength);adopt("birthHead",birthHead,setBirthHead);
+    adopt("routineEnabled",routineEnabled,setRoutineEnabled);
+    adopt("wakeTime",wakeTime,setWakeTime);adopt("bathTime",bathTime,setBathTime);
+    adopt("bedtime",bedtime,setBedtime);adopt("bottlesPerDay",bottlesPerDay,setBottlesPerDay);
+    adopt("nap1",nap1,setNap1);adopt("nap2",nap2,setNap2);
+    adopt("nap3",nap3,setNap3);adopt("nap4",nap4,setNap4);
+    adopt("postBathBottleTime",postBathBottleTime,setPostBathBottleTime);
+  },[profile]);
   useEffect(()=>{if(onDirtyChange)onDirtyChange(isDirty)},[isDirty]);
   // Populate revertAllRef with function that resets all tracked fields
   revertAllRef.current=()=>{
@@ -180,6 +243,19 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onOpenReport,onShow
     setNap3(_naps0[2]?.time||"13:30");
     setNap4(_naps0[3]?.time||"16:00");
     setPostBathBottleTime(_r0.postBathBottleTime||_pbDef);
+    // v11.9.143: descartar edições = adotar o que está no servidor, então o baseline
+    // acompanha. Sem isso o isDirty ficaria preso em true depois de um Cancelar.
+    baseRef.current={...baseRef.current,
+      name:profile.name||"",birthDate:profile.birthDate||"",
+      photoSig:(()=>{const p=profile.photo||"";return p?`${p.length}:${p.slice(0,24)}:${p.slice(-24)}`:""})(),
+      mlGoal:String(profile.mlGoal||""),birthWeight:String(profile.birthWeight||""),
+      birthLength:String(profile.birthLength||""),birthHead:String(profile.birthHead||""),
+      routineEnabled:profile.routine?.enabled===true,
+      wakeTime:_r0.wakeTime||"07:00",bathTime:_r0.bathTime||"18:00",bedtime:_r0.bedtime||"19:30",
+      bottlesPerDay:String(_r0.bottlesPerDay||7),
+      nap1:_naps0[0]?.time||"08:15",nap2:_naps0[1]?.time||"10:45",
+      nap3:_naps0[2]?.time||"13:30",nap4:_naps0[3]?.time||"16:00",
+      postBathBottleTime:_r0.postBathBottleTime||_pbDef};
     Haptic.medium();
   };
   // Persists a single toggle change immediately to Firestore (no need to tap Save).
@@ -264,6 +340,7 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onOpenReport,onShow
       setAutoState("saving");
       try{
         await doSave();
+        commitBaseline(); // v11.9.143: baseline avança pro que foi gravado (evita dirty preso)
         setAutoState("saved");
         if(savedFlashRef.current)clearTimeout(savedFlashRef.current);
         savedFlashRef.current=setTimeout(()=>setAutoState("idle"),1400);

@@ -293,6 +293,11 @@ function App(){
     // offline persistence garante que o write commita no cache local instantaneamente,
     // e a listener real-time re-hidrata a UI quando o round-trip completar.
     const wasEdit=!!editEntry;
+    // v11.9.143: snapshot da entry ORIGINAL, capturado antes de qualquer mutação — é o que
+    // o "Desfazer" de uma EDIÇÃO restaura (ver o showToast lá embaixo). `editEntry` é
+    // variável de closure, então continua valendo o valor antigo mesmo depois do
+    // setEditEntry(null) da linha seguinte; o snapshot é só pra deixar isso explícito.
+    const beforeEdit=wasEdit?{...editEntry}:null;
     setFormType(null);setShowAdd(false);setEditEntry(null);
     setShowOrbit(true);setTimeout(()=>setShowOrbit(false),1200);
     // Nightwake linking (precisa rodar antes da persist\u00eancia da entry).
@@ -309,7 +314,18 @@ function App(){
         nwTimerUpdate={...activeTimer,nightWake:updatedNw};
       }
     }
-    const parts=splitMidnight(e);
+    // ⚠️ v11.9.143 (FIX CRÍTICO de perda de dado, achado em auditoria): em EDIÇÃO, nunca
+    // deixar o splitMidnight RECONSTRUIR o par. A 2ª metade (`id+"_b"`) já existe no
+    // Firestore com dados PRÓPRIOS que este payload não conhece — principalmente os
+    // `wakings` registrados ao vivo durante a madrugada. Como `saveEntriesBatch` usa
+    // `set()` sem merge, regravar a metade derivada apagava tudo dela em silêncio:
+    // editar "21:00→00:00 · 3h" destruía as 7h e o despertar das 03:15 do outro documento.
+    // O `MidnightMergeCard` (v11.9.140) é justamente quem convida esse gesto, com um botão
+    // de editar em cada metade. Mesma família do bug da v11.9.139, um nível acima: lá o
+    // payload de edição perdia campos DELE, aqui ele reescrevia OUTRA entry inteira.
+    // Criação normal segue partindo na meia-noite como sempre.
+    const pairExists=wasEdit&&e.id&&(e.id.endsWith("_b")||entries.some(x=>x.id===e.id+"_b"));
+    const parts=pairExists?[e]:splitMidnight(e);
     let tmsg=`${TL(e.type)||e.type} ${wasEdit?flexed(e.type,"updated"):flexed(e.type,"registered")}`;
     if(!wasEdit){
       const td=todayStr();const ta=entries.filter(x=>x.date===td);
@@ -329,7 +345,17 @@ function App(){
         addEntry(newE);
       };
     }
-    showToast(tmsg,async()=>{await FB.deleteEntriesBatch(parts.map(p=>p.id))},repeatFn);
+    // ⚠️ v11.9.143 (FIX de perda de dado, achado em auditoria): o undo era SEMPRE delete,
+    // mesmo quando o toast dizia "atualizada". Corrigir uma mamadeira de 120→150 e tocar em
+    // "Desfazer" esperando voltar pros 120 APAGAVA a mamadeira inteira — e essa exclusão não
+    // tinha undo próprio (o toast já tinha sido consumido). Agora: edição RESTAURA o
+    // snapshot original; criação continua apagando; e quando não dá pra restaurar com
+    // segurança o undo vira null (o toast simplesmente não mostra o botão, que é
+    // infinitamente melhor que um botão "Desfazer" que destrói).
+    const undoFn=wasEdit
+      ?(beforeEdit?async()=>{await FB.saveEntriesBatch([{...beforeEdit,_docId:undefined}])}:null)
+      :async()=>{await FB.deleteEntriesBatch(parts.map(p=>p.id))};
+    showToast(tmsg,undoFn,repeatFn);
     // Fire-and-forget writes. Se falhar, log mas n\u00e3o bloqueia UI \u2014 offline persistence
     // re-tenta quando voltar a rede.
     // v11.9.125: batch atomico (parts + timer juntos) \u2014 mesma classe de fix do stopTimer

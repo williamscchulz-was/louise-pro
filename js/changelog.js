@@ -4,6 +4,27 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.143", date: "2026-08-17",
+    pt: {
+      title: "Três correções de perda de dados + privacidade",
+      bullets: [
+        '★ **Editar uma noite que virou a meia-noite não apaga mais a outra metade.** Corrigir a parte de antes da meia-noite estava destruindo as horas e os despertares registrados depois dela, sem nenhum aviso.',
+        '★ **O "Desfazer" depois de editar agora restaura**, em vez de apagar o registro inteiro. Corrigir uma mamadeira e tocar em Desfazer apagava a mamadeira.',
+        '★ **Os Ajustes não revertem mais o que foi mudado no outro celular.** Com a tela de Ajustes aberta, uma alteração feita no outro aparelho era desfeita sozinha, sem ninguém salvar nada — agora ela aparece na tela.',
+        'Um mockup antigo com dados reais estava acessível publicamente e foi removido; o site não publica mais nenhum mockup.',
+      ],
+    },
+    en: {
+      title: "Three data-loss fixes + privacy",
+      bullets: [
+        '★ **Editing a night that crossed midnight no longer wipes the other half.** Fixing the before-midnight part was destroying the hours and wakings recorded after it, with no warning at all.',
+        '★ **"Undo" after an edit now restores** instead of deleting the whole record. Correcting a bottle and tapping Undo used to delete the bottle.',
+        '★ **Settings no longer reverts what was changed on the other phone.** With Settings open, a change made on the other device was silently undone without anyone saving — now it shows up on screen instead.',
+        'An old mockup containing real data was publicly reachable and has been removed; the site no longer publishes any mockups.',
+      ],
+    },
+  },
+  {
     v: "11.9.142", date: "2026-08-16",
     pt: {
       title: "Relatório: 4 comparações revisadas a fundo (sonecas, janela, leite, bedtime)",
