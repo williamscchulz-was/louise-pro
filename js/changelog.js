@@ -4,6 +4,29 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.144", date: "2026-08-17",
+    pt: {
+      title: "Evento do dia: vacina, dente, doença, alimento novo, co-sleeping",
+      bullets: [
+        '★ Novo registro **Evento do dia** — marque vacina, dente, doença, alimento novo ou co-sleeping. Vacina e alimento novo marcam sozinhos os dias seguintes (a reação costuma aparecer depois); dente e doença você marca até quando durou, sem precisar registrar de novo toda manhã.',
+        '★ O relatório passa a mostrar **duas médias: com tudo e só nos dias normais** — assim dá pra separar "dormiu diferente" de "dormiu diferente porque tomou vacina ontem".',
+        'O dia de hoje **não entra mais nas médias** — ele ainda está acontecendo, e estava puxando tudo pra baixo. Aparece marcado como parcial.',
+        'Nova coluna com a **1ª soneca da manhã** (duração e horário) — é o melhor sinal de que a rotina está se consolidando.',
+        'A coluna de contexto e a legenda também vão no PDF que você manda pra pediatra.',
+      ],
+    },
+    en: {
+      title: "Day event: vaccine, teething, illness, new food, co-sleeping",
+      bullets: [
+        '★ New **Day event** entry — log vaccine, teething, illness, new food or co-sleeping. Vaccine and new food automatically mark the following days (reactions usually show up later); for teething and illness you set how long it lasted, no need to log it again every morning.',
+        '★ The report now shows **two averages: everything, and normal days only** — so you can tell "slept differently" apart from "slept differently because of yesterday\'s vaccine".',
+        'Today no longer counts toward any average — it is still in progress and was dragging everything down. It shows up flagged as partial.',
+        'New column for the **first nap of the morning** (duration and time) — the clearest sign that the routine is consolidating.',
+        'The context column and its legend also go into the PDF you send to the pediatrician.',
+      ],
+    },
+  },
+  {
     v: "11.9.143", date: "2026-08-17",
     pt: {
       title: "Três correções de perda de dados + privacidade",

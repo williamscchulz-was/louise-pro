@@ -8,6 +8,9 @@ function AddForm({type,onSave,onSaveBatch,savedMeds,onSaveMeds,editEntry,lastBot
   const _nm0=new Date(),_nowMin=_nm0.getHours()*60+_nm0.getMinutes();
   const[ml,setMl]=useState(ed.ml?String(ed.ml):(type==="bottle"&&!editEntry?String(hourlyTypicalMl(allEntries,_nowMin)||suggestedMl||lastBottleMl||""):""));const[durH,setDurH]=useState(ed.durationMin?String(Math.floor(ed.durationMin/60)):"");const[durM,setDurM]=useState(ed.durationMin?String(ed.durationMin%60):"");
   const[diaperT,setDiaperT]=useState(ed.subtype||(type==="diaper"&&!editEntry?(likelyDiaperSubtype(allEntries,_nowMin)||"wet"):"wet"));const[medN,setMedN]=useState(ed.name||"");const[medD,setMedD]=useState(ed.dose||"");
+  // v11.9.144: evento do dia (vacina/dente/doença/alimento novo/co-sleeping)
+  const[evTag,setEvTag]=useState(ed.tag||"");
+  const[evUntil,setEvUntil]=useState(ed.untilDate||"");
   const[tempV,setTempV]=useState(ed.value?String(ed.value):"");const[side,setSide]=useState(ed.side||"left");const[nurseM,setNurseM]=useState(ed.durationMin&&type==="nursing"?String(ed.durationMin):"");
   const[tumM,setTumM]=useState(ed.durationMin&&type==="tummytime"?String(Math.floor(ed.durationMin)):"");
   const[tumS,setTumS]=useState(ed.durationMin&&type==="tummytime"?String(Math.round((ed.durationMin-Math.floor(ed.durationMin))*60)):"");
@@ -95,6 +98,13 @@ function AddForm({type,onSave,onSaveBatch,savedMeds,onSaveMeds,editEntry,lastBot
     else if(type==="wakeup"||type==="nightwaking"||type==="bath")payload=b;
     else if(type==="tummytime"){const m=parseInt(tumM)||0;const s=parseInt(tumS)||0;const total=m+s/60;if(total<=0){invalid();return}payload={...b,durationMin:total}}
     else if(type==="diaper")payload={...b,subtype:diaperT};
+    // v11.9.144: evento do dia (contexto). `untilDate` só é gravado pras tags que duram
+    // dias (dente/doença) e apenas quando o usuário marcou "ainda está acontecendo".
+    else if(type==="dayevent"){
+      if(!evTag){invalid();return}
+      payload={...b,tag:evTag};
+      if(EVENT_TAGS[evTag]&&EVENT_TAGS[evTag].spans&&evUntil)payload.untilDate=evUntil;
+    }
     else if(type==="medicine"){
       // Edit mode: comportamento single-med (mant\u00e9m compat com entries existentes).
       if(isEdit){if(!medN.trim()){invalid();return}payload={...b,name:medN.trim(),dose:medD.trim()||undefined}}
@@ -168,6 +178,36 @@ function AddForm({type,onSave,onSaveBatch,savedMeds,onSaveMeds,editEntry,lastBot
         {durMode==="end"&&endTime&&time&&<div style={{fontSize:T.fSM,color:T.sub,marginBottom:12,textAlign:"center"}}>{(()=>{const[sh,sm]=time.split(":").map(Number);const[eh,em]=endTime.split(":").map(Number);let d=(eh*60+em)-(sh*60+sm);if(d<=0)d+=1440;const lbl=_lang==="en"?"Duration":"Duração";const nextDay=_lang==="en"?" (next day)":" (próximo dia)";return`${lbl}: ${fmtDur(d)}${d>720?nextDay:""}`})()}</div>}
       </>}
       {type==="diaper"&&<Fld label={_lang==="en"?"Type":"Tipo"}><Seg opts={[{v:"wet",l:L("wet")},{v:"dirty",l:L("dirty")},{v:"both",l:L("both")}]} val={diaperT} set={setDiaperT} color={cfg.color}/></Fld>}
+      {/* v11.9.144: evento do dia. Serve pra explicar noites atípicas E pra limpar as
+          comparações do relatório (que passam a mostrar "com tudo" e "só dias normais"). */}
+      {type==="dayevent"&&<>
+        <div style={{fontSize:T.fSM,fontWeight:700,color:T.label,letterSpacing:0.4,margin:"0 0 8px 4px",textTransform:"uppercase"}}>{_lang==="en"?"What happened?":"O que aconteceu?"}</div>
+        <div style={{display:"flex",flexWrap:"wrap",gap:8,marginBottom:14}}>
+          {Object.keys(EVENT_TAGS).map(k=>{
+            const t=EVENT_TAGS[k],on=evTag===k;
+            return(<button key={k} onClick={()=>{setEvTag(k);if(!EVENT_TAGS[k].spans)setEvUntil("")}} style={{flex:"1 1 calc(50% - 4px)",padding:"12px 14px",borderRadius:12,background:on?`${cfg.color}24`:T.glass,border:`1px solid ${on?`${cfg.color}88`:T.gB}`,textAlign:"left",display:"flex",alignItems:"center",gap:9,boxShadow:on?`0 0 12px ${cfg.color}15`:"none",transition:"all .2s"}}>
+              <span style={{fontSize:18,lineHeight:1}}>{t.emoji}</span>
+              <span style={{fontSize:T.fMD,fontWeight:700,color:on?cfg.color:T.text,letterSpacing:-0.1}}>{_lang==="en"?t.en:t.pt}</span>
+            </button>);
+          })}
+        </div>
+        {/* tags que duram dias: em vez de remarcar todo dia, marca até quando durou */}
+        {evTag&&EVENT_TAGS[evTag]&&EVENT_TAGS[evTag].spans&&<div style={{padding:12,borderRadius:12,background:"rgba(20,26,60,0.4)",border:`1px solid ${T.gBSoft}`,marginBottom:14}}>
+          <div style={{fontSize:T.fSM,color:T.label,marginBottom:8,lineHeight:1.45}}>
+            {_lang==="en"?"Lasted more than one day? Set the last day — no need to log it again each morning.":"Durou mais de um dia? Marque o último dia — não precisa registrar de novo toda manhã."}
+          </div>
+          <div style={{display:"flex",gap:8,alignItems:"center"}}>
+            <input type="date" value={evUntil} min={date} onChange={e=>setEvUntil(e.target.value)} style={{...inp,colorScheme:"dark",flex:1}}/>
+            {evUntil&&<button onClick={()=>setEvUntil("")} className="hit44" style={{padding:"10px 12px",borderRadius:10,background:"rgba(14,18,48,0.6)",border:`1px solid ${T.gBSoft}`,color:T.sub,fontSize:T.fSM,fontWeight:700}}>{_lang==="en"?"Clear":"Limpar"}</button>}
+          </div>
+        </div>}
+        {evTag&&<div style={{fontSize:T.fSM,color:T.dim,margin:"0 4px 14px",lineHeight:1.45}}>
+          {(()=>{const t=EVENT_TAGS[evTag];if(!t)return null;
+            if(t.spans&&evUntil)return _lang==="en"?`Marks every day from ${date} through ${evUntil}.`:`Marca todos os dias de ${date} até ${evUntil}.`;
+            if(t.effect>1)return _lang==="en"?`Also marks the next ${t.effect-1} day(s) — reactions usually show up later.`:`Marca também ${t.effect-1} dia(s) seguinte(s) — a reação costuma aparecer depois.`;
+            return _lang==="en"?"Marks this day only.":"Marca só este dia.";})()}
+        </div>}
+      </>}
       {type==="medicine"&&isEdit&&<>
         {/* Edit mode: mantem o layout antigo single-med (compat com entries existentes). */}
         <div style={{display:"flex",flexWrap:"wrap",gap:8,marginBottom:18}}>

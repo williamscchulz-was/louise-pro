@@ -5,7 +5,7 @@ const {useState, useEffect, useCallback, useRef, useMemo} = React;
 // ║  LOUISE PRO — Baby Tracker                    ║
 // ║  v2.0.0                                       ║
 // ╚═══════════════════════════════════════════════╝
-const APP_VERSION = "11.9.143";
+const APP_VERSION = "11.9.144";
 // v11.9.78: silhueta mãe+bebê vetorizada (potrace do assets/icons/icon-512.png) pro splash
 // que se desenha (efeito traço -> preenche). Mesma logo de sempre, agora em vetor.
 const LOUISE_SIL="M 251.500 82.468 C 235.776 85.897, 226.386 91.743, 207.976 109.561 C 200.537 116.760, 190.187 125.805, 184.976 129.660 C 169.740 140.932, 164.231 148.366, 163.271 158.950 C 161.899 174.074, 171.303 192.232, 185.602 202.070 L 189.899 205.027 187.773 200.263 C 185.328 194.785, 184.013 179.587, 185.827 177.773 C 186.607 176.993, 188.695 178.348, 193.255 182.594 C 208.520 196.807, 229.709 203.970, 261 205.494 C 290.767 206.944, 296.365 210.624, 297.195 229.285 C 298.209 252.073, 310.558 265.347, 336.430 271.461 C 358.051 276.569, 369.241 287.034, 377.365 309.739 C 381.748 321.989, 381.971 348.244, 377.807 361.829 L 375.255 370.157 379.086 366.416 C 381.193 364.359, 382.746 362.399, 382.538 362.061 C 382.329 361.724, 384.200 359.209, 386.695 356.474 C 389.191 353.738, 390.842 352.196, 390.366 353.047 C 389.888 353.902, 390.281 353.743, 391.245 352.693 C 392.204 351.647, 392.733 350.377, 392.420 349.871 C 392.107 349.365, 392.447 349.074, 393.176 349.225 C 393.927 349.381, 394.435 348.714, 394.350 347.683 C 394.267 346.684, 394.452 346.119, 394.760 346.427 C 395.697 347.364, 398.167 343.080, 397.403 341.844 C 396.972 341.146, 397.130 340.962, 397.802 341.377 C 399.397 342.363, 406.479 327.011, 409.604 315.794 C 413.319 302.459, 414.088 277.794, 411.217 264 C 407.403 245.665, 400.295 231.180, 386.379 213.379 C 371.896 194.852, 368.533 187.974, 364.475 168.581 C 361.439 154.074, 359.684 148.435, 355.737 140.500 C 345.047 119.010, 322.901 97.177, 302.330 87.850 C 288.140 81.416, 266.720 79.148, 251.500 82.468 M 188.202 189.559 C 188.850 198.574, 192.162 205.524, 200.034 214.382 C 208.861 224.316, 209.320 226.328, 206.395 242.268 C 204.366 253.320, 204.694 253.814, 214.300 254.208 L 221.424 254.500 222.096 257.801 C 222.920 261.849, 223.298 262.250, 226.286 262.250 C 227.963 262.250, 228.965 263.068, 229.712 265.047 C 230.473 267.064, 231.567 267.936, 233.634 268.172 C 235.891 268.430, 237.052 269.524, 239.101 273.323 C 245.949 286.021, 252.592 285.757, 268.500 272.155 C 279.704 262.575, 282.113 261.604, 282.533 266.500 C 282.580 267.050, 283.702 269.750, 285.025 272.500 C 293.960 291.063, 278.597 315.916, 244.309 338.370 C 238.704 342.041, 232.456 346.946, 230.424 349.272 C 227.295 352.852, 226.826 353.117, 227.361 351 C 227.709 349.625, 228.272 346.025, 228.611 343 C 228.961 339.888, 230.214 335.981, 231.499 334 C 237.406 324.895, 234.368 318.061, 223.060 315.016 C 218.319 313.739, 215 315.451, 215 319.174 C 215 320.643, 214.491 320.910, 212.597 320.435 C 208.215 319.335, 207.550 323.926, 210.879 332.306 C 212.129 335.453, 210.993 338.338, 206.571 343.250 C 203.412 346.760, 204.120 347.014, 196.799 339.750 C 193.335 336.313, 188.813 332.243, 186.750 330.707 C 182.602 327.618, 181.983 326, 184.951 326 C 194.327 326, 202 321.386, 202 315.748 C 202 313.906, 202.486 311.914, 203.079 311.321 C 204.912 309.488, 206.145 302.140, 204.984 299.969 C 204.203 298.510, 204.352 297.219, 205.578 294.850 L 207.216 291.681 203.468 288.534 L 199.720 285.387 199.908 276.859 C 200.236 261.955, 194.622 251.892, 182.708 246.029 C 164.536 237.087, 139.947 240.523, 126.344 253.905 C 115.658 264.417, 111.100 284.730, 116.517 297.696 C 117.758 300.665, 117.651 301.669, 115.392 308.239 C 111.455 319.689, 108.813 331.926, 108.752 338.996 C 108.696 345.434, 114.348 370.142, 116.026 370.798 C 116.445 370.962, 116.540 372.045, 116.236 373.204 C 115.827 374.768, 116.024 375.103, 116.997 374.502 C 117.888 373.951, 118.069 374.080, 117.560 374.902 C 116.501 376.616, 117.820 381.229, 119.136 380.416 C 119.856 379.971, 119.977 380.498, 119.500 382 C 119.052 383.413, 119.159 384.020, 119.788 383.631 C 121.013 382.874, 122.262 385.767, 121.349 387.245 C 120.987 387.830, 121.144 388.029, 121.699 387.686 C 122.663 387.090, 128.639 394.422, 128.883 396.500 C 128.947 397.050, 129.338 397.510, 129.750 397.521 C 130.614 397.546, 161.021 428, 160.181 428 C 159.876 428, 160.904 429.334, 162.466 430.964 C 164.028 432.595, 165.660 433.710, 166.093 433.443 C 166.526 433.175, 168.144 434.541, 169.690 436.478 L 172.500 440 230.089 440 L 287.678 440 296.158 431.750 C 300.822 427.212, 310.947 416.300, 318.659 407.500 C 326.370 398.700, 333.520 390.825, 334.547 390 C 337.953 387.266, 318.346 412.279, 306.576 425.683 C 300.209 432.934, 295 439.092, 295 439.368 C 295 440.112, 343.405 440.165, 345.336 439.424 C 346.245 439.076, 346.740 438.388, 346.435 437.895 C 346.131 437.403, 346.331 437, 346.879 437 C 347.427 437, 347.820 436.212, 347.751 435.250 C 347.554 432.483, 351.152 423.976, 352.235 424.645 C 352.837 425.017, 352.939 424.382, 352.500 423 C 352.017 421.479, 352.141 420.969, 352.881 421.427 C 353.568 421.851, 353.755 421.525, 353.382 420.552 C 353.054 419.698, 353.270 419, 353.862 419 C 354.454 419, 354.650 418.252, 354.299 417.336 C 353.901 416.299, 354.058 415.918, 354.717 416.325 C 355.299 416.684, 355.754 416.421, 355.730 415.739 C 355.614 412.530, 356.087 410.936, 356.989 411.493 C 357.555 411.843, 357.723 411.442, 357.382 410.552 C 357.054 409.698, 357.270 409, 357.862 409 C 358.454 409, 358.650 408.252, 358.299 407.336 C 357.895 406.283, 358.056 405.916, 358.737 406.337 C 359.434 406.768, 359.614 406.241, 359.249 404.845 C 358.893 403.485, 359.071 402.926, 359.730 403.333 C 360.304 403.688, 360.754 403.421, 360.730 402.739 C 360.614 399.530, 361.087 397.936, 361.989 398.493 C 362.555 398.843, 362.723 398.442, 362.382 397.552 C 362.054 396.698, 362.270 396, 362.862 396 C 363.453 396, 363.678 395.325, 363.362 394.500 C 363.045 393.675, 363.270 393, 363.862 393 C 364.454 393, 364.650 392.252, 364.299 391.336 C 363.872 390.225, 364.045 389.910, 364.819 390.388 C 365.575 390.856, 365.771 390.566, 365.382 389.552 C 365.054 388.698, 365.270 388, 365.862 388 C 366.453 388, 366.678 387.325, 366.362 386.500 C 366.045 385.675, 366.311 385, 366.952 385 C 367.593 385, 367.874 384.606, 367.576 384.124 C 367.022 383.227, 370.905 370.896, 373.441 365.500 C 375.677 360.741, 377.993 345.339, 377.997 335.208 C 378.003 316.444, 372.105 299.628, 361.499 288.172 C 354.722 280.852, 347.202 276.842, 335.114 274.100 C 307.682 267.880, 294.032 251.793, 294.006 225.654 C 293.993 212.789, 287.851 209.911, 256.500 208.075 C 227.061 206.352, 211.547 200.881, 190.602 184.837 L 187.704 182.617 188.202 189.559 M 122.849 317.595 C 122.670 327.002, 122.806 330.027, 123.680 336 C 124.315 340.338, 124.364 340.392, 125.051 337.500 C 125.443 335.850, 125.817 332.163, 125.882 329.307 C 125.976 325.153, 126.445 323.802, 128.223 322.557 C 134.037 318.484, 138.540 323.367, 139.441 334.722 C 139.781 339, 141.264 346.294, 142.737 350.932 C 144.946 357.884, 145.389 361.039, 145.263 368.913 L 145.110 378.463 149.454 382.508 C 158.932 391.334, 221.097 422.651, 227.472 421.811 C 229.249 421.577, 233.705 416.197, 245.537 400 C 261.952 377.530, 278.600 353.322, 275.797 356 C 273.883 357.829, 259.515 376.316, 248.207 391.500 C 240.834 401.400, 234.624 409.685, 234.407 409.911 C 233.509 410.845, 229.598 406.138, 227.003 401 C 222.687 392.456, 221 385.481, 221 376.184 L 221 367.730 218.920 370.375 C 217.776 371.829, 216.356 372.720, 215.765 372.355 C 215.170 371.987, 214.978 372.155, 215.334 372.732 C 215.688 373.305, 215.357 374.289, 214.598 374.919 C 213.455 375.867, 213.684 376.531, 215.932 378.782 C 217.836 380.689, 219.012 383.364, 219.873 387.747 C 221.373 395.389, 223.166 399.793, 227.597 406.718 C 235.085 418.425, 231.328 420.973, 216.237 414.425 C 189.780 402.946, 157.176 385.769, 151.138 380.129 C 148.264 377.444, 148.165 377.051, 148.191 368.425 C 148.213 361.370, 147.644 357.719, 145.473 351 C 143.820 345.880, 142.473 338.968, 142.087 333.618 C 141.468 325.022, 141.335 324.643, 137.973 321.837 C 136.063 320.242, 134.500 318.542, 134.500 318.059 C 134.500 316.858, 129.482 313, 127.921 313 C 127.226 313, 125.835 312.255, 124.829 311.345 C 123.073 309.756, 122.994 310.004, 122.849 317.595";
@@ -266,12 +266,47 @@ function _rpMergeSessions(entries,byDate,type){
   }
   return out;
 }
+// ── EVENTOS DO DIA / TAGS DE CONTEXTO (v11.9.144) ──
+// Pedido a partir de feedback externo: sem contexto, comparar "leite vs despertares" confunde
+// coincidência com causa. Uma noite ruim depois da vacina não é sobre leite — é sobre a vacina.
+// Cada tag tem uma JANELA DE EFEITO em dias, porque o efeito raramente cabe no dia do registro:
+// a reação à vacina aparece nas 24-48h seguintes, e alimento novo pode reagir no dia seguinte.
+// `effect` = quantos dias a partir do registro (1 = só aquele dia). `spans` = tag que costuma
+// durar dias e por isso aceita `untilDate` no registro (o pai marca começo e fim em vez de
+// remarcar todo dia — atrito baixo o suficiente pra ser usado de verdade às 3h da manhã).
+const EVENT_TAGS={
+  vaccine:  {pt:"Vacina",        en:"Vaccine",   emoji:"💉", effect:3, spans:false},
+  teething: {pt:"Dente",         en:"Teething",  emoji:"🦷", effect:1, spans:true},
+  illness:  {pt:"Doença",        en:"Illness",   emoji:"🤒", effect:1, spans:true},
+  newfood:  {pt:"Alimento novo", en:"New food",  emoji:"🥄", effect:2, spans:false},
+  cosleep:  {pt:"Co-sleeping",   en:"Co-sleeping",emoji:"🛏️", effect:1, spans:false},
+};
+// Devolve {date -> [tagKey]} cobrindo TODOS os dias afetados (registro + janela + untilDate).
+// Puro: só lê entries. Usado pelo sleepReport pra marcar cada linha.
+function _eventDaysByDate(entries){
+  const out={};
+  const add=(d,k)=>{(out[d]=out[d]||[]);if(out[d].indexOf(k)<0)out[d].push(k)};
+  (entries||[]).forEach(e=>{
+    if(!e||e.type!=="dayevent"||!e.tag||!e.date)return;
+    const cfg=EVENT_TAGS[e.tag];if(!cfg)return;
+    add(e.date,e.tag);
+    // spans: o pai marcou até quando durou → cobre o intervalo inteiro (cap de 60d por segurança)
+    if(cfg.spans&&e.untilDate&&e.untilDate>e.date){
+      for(let i=1;i<=60;i++){const d=dateOffset(e.date,i);add(d,e.tag);if(d>=e.untilDate)break}
+    }else{
+      // janela de efeito automática (effect=1 significa só o próprio dia)
+      for(let i=1;i<cfg.effect;i++)add(dateOffset(e.date,i),e.tag);
+    }
+  });
+  return out;
+}
 // Uma linha por dia do calendário. A noite fica na linha da MANHÃ em que terminou
 // (dia = "acordou às X depois de dormir Y, fez as sonecas Z, deitou às W").
 function sleepReport(entries,days){
   days=days||30;entries=entries||[];
   const today=todayStr();
   const byDate={};entries.forEach(e=>{if(e&&e.date)(byDate[e.date]=byDate[e.date]||[]).push(e)});
+  const eventDays=_eventDaysByDate(entries); // v11.9.144: tags de contexto por dia (com janela)
   const nights=_rpMergeSessions(entries,byDate,"sleep");
   const naps=_rpMergeSessions(entries,byDate,"nap");
   const endedOn={},startedOn={},napsOn={};
@@ -335,6 +370,17 @@ function sleepReport(entries,days){
       totalSleepMin:(night?night.durationMin:0)+napTotalMin,
       napDurations:dayNaps.map(n=>n.min),wakingDurations:night?night.wakingsDetail.map(w=>w.durationMin):[],
       nightOutlier,
+      // v11.9.144: 1ª soneca da manhã em destaque — é o indicador de consolidação do ritmo
+      // (a duração cresce e o horário estabiliza conforme a rotina amadurece). O dado já
+      // existia em dayNaps[0], só não era exposto.
+      firstNapMin:dayNaps.length?dayNaps[0].min:null,
+      firstNapStart:dayNaps.length?dayNaps[0].start:null,
+      // v11.9.144: tags de contexto que afetam ESTE dia (registro + janela de efeito).
+      tags:eventDays[date]||[],
+      // v11.9.144: hoje é um dia INCOMPLETO — ainda está acontecendo. Incluí-lo numa média
+      // puxa tudo pra baixo (às 14h a Louise fez 2 das 4 sonecas). Quem consome decide o que
+      // fazer, mas a flag deixa impossível incluir sem perceber.
+      partial:date===today,
       hasData:!!(wake||night||bed||dayNaps.length||feeds.length)});
   }
   // v11.9.141: médias móveis de 7 dias (janela à esquerda, incluindo o próprio dia) —
@@ -342,14 +388,23 @@ function sleepReport(entries,days){
   // junto por ser a métrica-irmã de qualidade de noite. Exige >=2 noites rastreadas na
   // janela de 7 (mesmo piso de dado mínimo que `behaviorWeekly` já usa em outra tela do
   // app) — janela com muito buraco de registro não vira média, fica null.
+  // v11.9.144: a janela EXCLUI o dia parcial de hoje — senão a última média móvel (que é
+  // justamente a que se lê pra saber "como estamos agora") viria puxada pra baixo por um
+  // dia que ainda não terminou.
   for(let i=0;i<rows.length;i++){
-    const win=rows.slice(Math.max(0,i-6),i+1).filter(r=>r.night);
+    const win0=rows.slice(Math.max(0,i-6),i+1).filter(r=>!r.partial);
+    const win=win0.filter(r=>r.night);
     if(win.length>=2){
       rows[i].wakingsMA7=win.reduce((s,r)=>s+r.night.wakings,0)/win.length;
       rows[i].realSleepMA7=Math.round(win.reduce((s,r)=>s+r.night.realMin,0)/win.length);
     }else{
       rows[i].wakingsMA7=null;rows[i].realSleepMA7=null;
     }
+    // Sono total do dia e 1ª soneca: base própria (não dependem de ter noite rastreada)
+    const winT=win0.filter(r=>r.totalSleepMin>0);
+    rows[i].totalSleepMA7=winT.length>=2?Math.round(winT.reduce((s,r)=>s+r.totalSleepMin,0)/winT.length):null;
+    const winF=win0.filter(r=>r.firstNapMin>0);
+    rows[i].firstNapMA7=winF.length>=2?Math.round(winF.reduce((s,r)=>s+r.firstNapMin,0)/winF.length):null;
   }
   return{days,from:rows[0]?rows[0].date:today,to:rows[rows.length-1]?rows[rows.length-1].date:today,rows};
 }
@@ -376,9 +431,15 @@ function sleepReport(entries,days){
 // - bedtime compara HORÁRIO DE ACORDAR, não duração — duração≈acordar−bedtime é quase uma
 //   identidade aritmética com o próprio bedtime, ia sempre "achar" diferença artificial;
 // - devolve dado cru, a UI decide a linguagem — nunca "X causa Y", só comparação descritiva.
-function sleepCorrelations(rep){
+// v11.9.144: `opts.cleanOnly` roda a MESMA comparação só sobre os dias sem tag de contexto
+// (vacina/dente/doença/alimento novo/co-sleeping e suas janelas de efeito). A UI mostra as
+// duas versões lado a lado — mesmo espírito do "excl. noites atípicas" que o KPI de sono já
+// usava. É o ganho principal das tags: separar "a Louise dormiu diferente" de "a Louise
+// dormiu diferente PORQUE tomou vacina ontem".
+function sleepCorrelations(rep,opts){
   const MIN_N=7,EVENING=12*60;
-  const rows=rep.rows.filter(r=>r.date!==todayStr());
+  const cleanOnly=!!(opts&&opts.cleanOnly);
+  const rows=rep.rows.filter(r=>r.date!==todayStr()&&(!cleanOnly||!(r.tags&&r.tags.length)));
   const nsh=r=>(r.nightStartingHere&&r.nightStartingHere.startAbs>=EVENING)?r.nightStartingHere:null;
   const mean=(a,f)=>a.reduce((s,x)=>s+f(x),0)/a.length;
   const sdev=(a,f)=>{if(a.length<2)return 0;const m=mean(a,f);return Math.sqrt(a.reduce((s,x)=>s+(f(x)-m)*(f(x)-m),0)/(a.length-1))};

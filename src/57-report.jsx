@@ -27,12 +27,20 @@ function renderReportCanvas(rep,opts){
   // linha de subtítulo do KPI de sono noturno quando existe alguma noite atípica de verdade).
   const withNClean=withN.filter(r=>!r.nightOutlier);
   const outlierCount=withN.length-withNClean.length;
-  const S=2,W=830,PAD=28;
+  // v11.9.144: no canvas as tags viram sigla de 3 letras em vez de emoji — emoji em canvas 2D
+  // depende de fonte do sistema e imprime mal em P&B; a pediatra recebe isto impresso.
+  const TAG_ABBR={vaccine:en?"VAC":"VAC",teething:en?"TTH":"DEN",illness:en?"ILL":"DOE",newfood:en?"FOD":"ALI",cosleep:en?"CSL":"C-S"};
+  // W=920: soma das 17 colunas + gaps + 2×PAD dá 902px de mínimo (medido com measureText
+  // sobre os 30 dias reais); os ~18px de folga evitam que um valor mais longo que os atuais
+  // (ex: 3 tags no mesmo dia) encoste na margem direita.
+  const S=2,W=920,PAD=28;
   const mapRowH=13,tblRowH=13.5;
   const mapY=224,mapH=rows.length*mapRowH;
   const tblTitleY=mapY+mapH+30,theadY=tblTitleY+32,tbodyY=theadY+14;
   const footY=tbodyY+rows.length*tblRowH+16;
-  const H=footY+44;
+  // v11.9.144: +13px de folga pra linha de legenda de contexto quando ela existir.
+  const _hasTagRow=rep.rows.some(r=>r.tags&&r.tags.length);
+  const H=footY+(_hasTagRow?57:44);
   const canvas=document.createElement("canvas");
   canvas.width=W*S;canvas.height=Math.ceil(H)*S;
   const ctx=canvas.getContext("2d");
@@ -119,11 +127,13 @@ function renderReportCanvas(rep,opts){
     {w:44,a:"right",h:en?"DAY TOT.":"S.TOTAL",f:r=>r.totalSleepMin?fmtDur(r.totalSleepMin):"—"},
     {w:24,a:"right",h:en?"NAPS":"SONEC.",f:r=>r.napCount?String(r.napCount):"—"},
     {w:36,a:"right",h:"TOTAL",f:r=>r.napTotalMin?fmtDur(r.napTotalMin):"—"},
+    {w:52,a:"right",h:en?"1ST NAP":"1a SONECA",f:r=>r.firstNapMin?`${fmtDur(r.firstNapMin)} ${r.firstNapStart}`:"—"},
     {w:54,a:"right",h:en?"NAPS(m)":"SONEC.(m)",f:r=>r.napDurations.length?r.napDurations.join(","):"—"},
     {w:36,a:"right",h:en?"WINDOW":"JANELA",f:r=>r.maxWindowMin?fmtDur(r.maxWindowMin):"—"},
     {w:40,a:"right",h:en?"PRE-SLP":"PRÉ-SONO",f:r=>r.preBedWindowMin?fmtDur(r.preBedWindowMin):"—"},
     {w:24,a:"right",h:en?"FEEDS":"MAMAD.",f:r=>r.feedCount?String(r.feedCount):"—"},
-    {w:38,a:"right",h:en?"MILK":"LEITE",f:r=>r.mlTotal?r.mlTotal+"ml":"—"}
+    {w:38,a:"right",h:en?"MILK":"LEITE",f:r=>r.mlTotal?r.mlTotal+"ml":"—"},
+    {w:60,a:"left",h:en?"CONTEXT":"CONTEXTO",f:r=>(r.tags&&r.tags.length)?r.tags.map(k=>TAG_ABBR[k]||k).join(" "):""}
   ];
   let cx=PAD;
   const cols=colDefs.map(c=>{const x=c.a==="left"?cx:cx+c.w;cx+=c.w+GAP;return{...c,x}});
@@ -132,7 +142,9 @@ function renderReportCanvas(rep,opts){
   ctx.fillStyle="#d8dae8";ctx.fillRect(PAD,theadY+4,W-2*PAD,1.5);
   rows.forEach((r,i)=>{
     const y=tbodyY+i*tblRowH;
-    if(r.nightOutlier){ctx.fillStyle="#fbf1de";ctx.fillRect(PAD,y,W-2*PAD,tblRowH)}
+    // v11.9.144: dia de hoje (incompleto) em cinza — não entra em nenhuma média
+    if(r.partial){ctx.fillStyle="#efeef8";ctx.fillRect(PAD,y,W-2*PAD,tblRowH)}
+    else if(r.nightOutlier){ctx.fillStyle="#fbf1de";ctx.fillRect(PAD,y,W-2*PAD,tblRowH)}
     else if(i%2){ctx.fillStyle="#fafaff";ctx.fillRect(PAD,y,W-2*PAD,tblRowH)}
     ctx.font=F("400 8.5px");
     cols.forEach((c,ci)=>{
@@ -147,11 +159,17 @@ function renderReportCanvas(rep,opts){
   // ── rodapé ──
   ctx.fillStyle="#e8e9f2";ctx.fillRect(PAD,footY,W-2*PAD,1);
   ctx.fillStyle="#8b90ad";ctx.font=F("400 9px");
+  // v11.9.144: legenda das siglas de contexto — só aparece se houver tag no período
+  const usedTags=Object.keys(EVENT_TAGS).filter(k=>rows.some(r=>r.tags&&r.tags.indexOf(k)>=0));
+  const legend=usedTags.length
+    ?(en?"Context: ":"Contexto: ")+usedTags.map(k=>`${TAG_ABBR[k]}=${en?EVENT_TAGS[k].en:EVENT_TAGS[k].pt}`).join(" · ")
+    :"";
   const foot=en
     ?["Entries logged manually by the parents in the Louise Pro app — unlogged periods show as awake on the map.","Tracking document; does not replace professional evaluation."]
     :["Registros feitos manualmente pelos pais no app Louise Pro — períodos não registrados aparecem como acordada no mapa.","Documento de acompanhamento, não substitui avaliação profissional."];
-  ctx.fillText(foot[0],PAD,footY+15);
-  ctx.fillText(foot[1],PAD,footY+28);
+  if(legend){ctx.fillStyle="#5a5f80";ctx.fillText(legend,PAD,footY+15);ctx.fillStyle="#8b90ad"}
+  ctx.fillText(foot[0],PAD,footY+(legend?28:15));
+  ctx.fillText(foot[1],PAD,footY+(legend?41:28));
   return canvas;
 }
 
@@ -195,9 +213,18 @@ const ReportPage = React.memo(function ReportPage({entries,birthDate,babyName,on
   const en=lang==="en";
   const rep=useMemo(()=>sleepReport(entries,30),[entries]);
   const corr=useMemo(()=>sleepCorrelations(rep),[rep]);
+  // v11.9.144: mesma comparação, só nos dias sem tag de contexto — mostrada lado a lado.
+  const corrClean=useMemo(()=>sleepCorrelations(rep,{cleanOnly:true}),[rep]);
   const rows=rep.rows.slice().reverse();
-  const withN=rep.rows.filter(r=>r.night),withNap=rep.rows.filter(r=>r.napCount>0),
-        withF=rep.rows.filter(r=>r.feedCount>0),withW=rep.rows.filter(r=>r.maxWindowMin>0);
+  // v11.9.144: hoje é um dia INCOMPLETO e não entra em NENHUMA média (ele ainda está
+  // acontecendo — às 14h a Louise fez 2 das 4 sonecas). Antes ele contaminava todos os KPIs.
+  const done=rep.rows.filter(r=>!r.partial);
+  const withN=done.filter(r=>r.night),withNap=done.filter(r=>r.napCount>0),
+        withF=done.filter(r=>r.feedCount>0),withW=done.filter(r=>r.maxWindowMin>0),
+        withFN=done.filter(r=>r.firstNapMin>0);
+  // v11.9.144: dias marcados com alguma tag de contexto (vacina/dente/doença/etc)
+  const tagged=done.filter(r=>r.tags&&r.tags.length);
+  const cleanN=withN.filter(r=>!(r.tags&&r.tags.length));
   const avg=(a,f)=>a.length?Math.round(a.reduce((s,x)=>s+f(x),0)/a.length):0;
   const avg1=(a,f)=>a.length?(a.reduce((s,x)=>s+f(x),0)/a.length).toFixed(1).replace(".",en?".":","):"0";
   const loc=en?"en-US":"pt-BR";
@@ -258,7 +285,7 @@ const ReportPage = React.memo(function ReportPage({entries,birthDate,babyName,on
   // que seria falsa precisão pra quem não é estatístico. `dayGap` expõe (não corrige) quando
   // os 2 grupos estão concentrados em semanas diferentes do mês — sinal de confundimento por
   // tendência (a Louise muda ao longo do próprio mês medido), não defeito da comparação.
-  const Corr=({title,data,showNapAvg})=>{
+  const Corr=({title,data,showNapAvg,clean})=>{
     const[gA,gB]=data.groups;
     const val=g=>data.primary==="wake"?_rpHHMM(g.wakeMin):data.primary==="wakings"?`${g.wakings} ${en?"wakings":"despertares"}`:fmtDur(g.nightMin);
     const sub=g=>data.primary==="wakings"?fmtDur(g.nightMin):`${g.wakings} ${en?"wakings":"despertares"}`;
@@ -281,6 +308,15 @@ const ReportPage = React.memo(function ReportPage({entries,birthDate,babyName,on
       </div>)}
     </div>
     {bothOk&&data.dayGap>=5&&<div style={{fontSize:8.5,color:"#b0851f",marginTop:3,fontStyle:"italic"}}>{en?`Note: groups are ~${data.dayGap} days apart within the month — could reflect the month's own trend, not just this variable.`:`Nota: os grupos estão a ~${data.dayGap} dias de distância dentro do mês — pode refletir a tendência do próprio mês, não só essa variável.`}</div>}
+    {/* v11.9.144: a MESMA comparação, só nos dias sem nada anormal marcado. Só aparece se
+        os 2 grupos limpos tiverem N suficiente — senão seria número frágil disfarçado. */}
+    {clean&&clean.groups[0].ok&&clean.groups[1].ok&&<div style={{fontSize:9,color:"#4a4f70",marginTop:4,padding:"6px 9px",background:"#f4f3fb",borderRadius:7,border:"1px solid #e0dcf3"}}>
+      <b style={{color:"#5b4fc4"}}>{en?"Only normal days:":"Só dias normais:"}</b>{" "}
+      {clean.groups[0].label} {clean.primary==="wake"?_rpHHMM(clean.groups[0].wakeMin):clean.primary==="wakings"?clean.groups[0].wakings:fmtDur(clean.groups[0].nightMin)}
+      {" (n="+clean.groups[0].n+") · "}
+      {clean.groups[1].label} {clean.primary==="wake"?_rpHHMM(clean.groups[1].wakeMin):clean.primary==="wakings"?clean.groups[1].wakings:fmtDur(clean.groups[1].nightMin)}
+      {" (n="+clean.groups[1].n+")"}
+    </div>}
     </div>);
   };
   // v11.9.141: noites atípicas (achado: 1 noite curtíssima ou que começou tarde demais puxa
@@ -326,8 +362,14 @@ const ReportPage = React.memo(function ReportPage({entries,birthDate,babyName,on
 
       <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:9,margin:"16px 0 6px"}}>
         <K k={en?"Night sleep":"Sono noturno"} v={fmtDur(avg(withN,r=>r.night.durationMin))} s={(en?"real ":"real ")+fmtDur(avg(withN,r=>r.night.realMin))+" · "+avg1(withN,r=>r.night.wakings)+(en?" wakings":" despertares")}
-          extra={outlierCount>0?<div style={{fontSize:9.5,color:"#a3792e",marginTop:3,fontWeight:600}}>{en?`Excl. ${outlierCount} outlier${outlierCount>1?"s":""}: ${fmtDur(avg(withNClean,r=>r.night.durationMin))}`:`Sem ${outlierCount} atípica${outlierCount>1?"s":""}: ${fmtDur(avg(withNClean,r=>r.night.durationMin))}`}</div>:null}/>
-        <K k={en?"Naps":"Sonecas"} v={avg1(withNap,r=>r.napCount)+(en?"/day":"/dia")} s={fmtDur(avg(withNap,r=>r.napTotalMin))+(en?" total":" no total")}/>
+          extra={<>
+            {outlierCount>0&&<div style={{fontSize:9.5,color:"#a3792e",marginTop:3,fontWeight:600}}>{en?`Excl. ${outlierCount} outlier${outlierCount>1?"s":""}: ${fmtDur(avg(withNClean,r=>r.night.durationMin))}`:`Sem ${outlierCount} atípica${outlierCount>1?"s":""}: ${fmtDur(avg(withNClean,r=>r.night.durationMin))}`}</div>}
+            {/* v11.9.144: a média só das noites SEM contexto marcado — separa "dormiu
+                diferente" de "dormiu diferente PORQUE tomou vacina ontem". */}
+            {tagged.length>0&&cleanN.length>=3&&<div style={{fontSize:9.5,color:"#5b4fc4",marginTop:2,fontWeight:600}}>{en?`Only normal days (${cleanN.length}): ${fmtDur(avg(cleanN,r=>r.night.durationMin))} · ${avg1(cleanN,r=>r.night.wakings)} wak.`:`Só dias normais (${cleanN.length}): ${fmtDur(avg(cleanN,r=>r.night.durationMin))} · ${avg1(cleanN,r=>r.night.wakings)} desp.`}</div>}
+          </>}/>
+        <K k={en?"Naps":"Sonecas"} v={avg1(withNap,r=>r.napCount)+(en?"/day":"/dia")} s={fmtDur(avg(withNap,r=>r.napTotalMin))+(en?" total":" no total")}
+          extra={withFN.length?<div style={{fontSize:9.5,color:"#5b4fc4",marginTop:3,fontWeight:600}}>{en?`1st nap: ${fmtDur(avg(withFN,r=>r.firstNapMin))} avg`:`1ª soneca: ${fmtDur(avg(withFN,r=>r.firstNapMin))} de média`}</div>:null}/>
         <K k={en?"Awake window":"Janela acordada"} v={fmtDur(avg(withW,r=>r.maxWindowMin))} s={en?"longest of the day (avg)":"maior do dia (média)"}/>
         <K k={en?"Feeds":"Mamadas"} v={avg1(withF,r=>r.feedCount)+(en?"/day":"/dia")} s={avg(withF,r=>r.mlTotal)+(en?"ml per day":"ml por dia")}/>
       </div>
@@ -372,14 +414,18 @@ const ReportPage = React.memo(function ReportPage({entries,birthDate,babyName,on
             <th style={th}>{en?"Day total":"Sono total"}</th>
             <th style={th}>{en?"Naps":"Sonecas"}</th>
             <th style={th}>{en?"Total":"Total"}</th>
+            <th style={th}>{en?"1st nap":"1ª soneca"}</th>
             <th style={th}>{en?"Naps (min)":"Sonecas (min)"}</th>
             <th style={th}>{en?"Window":"Maior janela"}</th>
             <th style={th}>{en?"Pre-sleep":"Pré-sono"}</th>
             <th style={th}>{en?"Feeds":"Mamadas"}</th>
             <th style={th}>{en?"Milk":"Leite"}</th>
+            <th style={{...th,textAlign:"left"}}>{en?"Context":"Contexto"}</th>
           </tr></thead>
-          <tbody>{rows.map((r,i)=><tr key={r.date} style={i%2?{background:"#fafaff"}:null}>
-            <td style={{...td,textAlign:"left",fontWeight:600,color:"#23263f"}}>{_rpWd(r.date,en)} {dShort(r.date)}</td>
+          <tbody>{rows.map((r,i)=><tr key={r.date} style={r.partial?{background:"#f3f2fb",opacity:.72}:(i%2?{background:"#fafaff"}:null)}>
+            <td style={{...td,textAlign:"left",fontWeight:600,color:"#23263f"}}>{_rpWd(r.date,en)} {dShort(r.date)}
+              {/* v11.9.144: hoje ainda está acontecendo — marcado e fora de todas as médias */}
+              {r.partial&&<span style={{fontSize:8,fontWeight:800,color:"#5b4fc4",marginLeft:4,letterSpacing:.4}}>{en?"PARTIAL":"PARCIAL"}</span>}</td>
             <td style={{...td,textAlign:"left"}}>{r.wake||"—"}</td>
             <td style={{...td,textAlign:"left"}}>{r.night?r.night.start+"→"+r.night.end:"—"}</td>
             <td style={td}>{r.night?fmtDur(r.night.durationMin):"—"}{r.nightOutlier&&<span style={{color:"#c2872b",fontWeight:800}}>{" *"}</span>}</td>
@@ -389,14 +435,28 @@ const ReportPage = React.memo(function ReportPage({entries,birthDate,babyName,on
             <td style={td}>{r.totalSleepMin?fmtDur(r.totalSleepMin):"—"}</td>
             <td style={td}>{r.napCount||"—"}</td>
             <td style={td}>{r.napTotalMin?fmtDur(r.napTotalMin):"—"}</td>
+            <td style={td}>{r.firstNapMin?<span>{fmtDur(r.firstNapMin)}<span style={{color:"#a0a5bd"}}> ·{r.firstNapStart}</span></span>:"—"}</td>
             <td style={td}>{r.napDurations.length?r.napDurations.join(","):"—"}</td>
             <td style={td}>{r.maxWindowMin?fmtDur(r.maxWindowMin):"—"}</td>
             <td style={td}>{r.preBedWindowMin?fmtDur(r.preBedWindowMin):"—"}</td>
             <td style={td}>{r.feedCount||"—"}</td>
             <td style={td}>{r.mlTotal?r.mlTotal+"ml":"—"}</td>
+            <td style={{...td,textAlign:"left",whiteSpace:"nowrap"}}>{r.tags&&r.tags.length
+              ?r.tags.map(k=>EVENT_TAGS[k]?EVENT_TAGS[k].emoji:"").join(" ")
+              :<span style={{color:"#c9ccdb"}}>—</span>}</td>
           </tr>)}</tbody>
         </table>
       </div>
+
+      {/* v11.9.144: legenda das tags — sem isso os emojis da coluna Contexto não significam
+          nada pra quem recebe o relatório (a pediatra). Só aparece se houver tag registrada. */}
+      {tagged.length>0&&<div style={{marginTop:9,padding:"9px 11px",background:"#f7f7fc",border:"1px solid #e8e9f2",borderRadius:8,fontSize:9.5,color:"#5a5f80",lineHeight:1.6}}>
+        <b style={{color:"#23263f"}}>{en?"Context: ":"Contexto: "}</b>
+        {Object.keys(EVENT_TAGS).map(k=>`${EVENT_TAGS[k].emoji} ${en?EVENT_TAGS[k].en:EVENT_TAGS[k].pt}`).join(" · ")}
+        <div style={{marginTop:3,fontStyle:"italic",color:"#8b90ad"}}>
+          {en?"Vaccine and new food also mark the following days, since reactions usually show up later.":"Vacina e alimento novo marcam também os dias seguintes, já que a reação costuma aparecer depois."}
+        </div>
+      </div>}
 
       {/* v11.9.142: comparações — só na tela (não no PDF), mesmo raciocínio de escopo da
           tendência de 7d: útil pros pais investigarem, não é o tipo de coisa que precisa ir
@@ -405,10 +465,10 @@ const ReportPage = React.memo(function ReportPage({entries,birthDate,babyName,on
           grupos, não correlação estatística de verdade (que exigiria expor r/p-valor). */}
       <div style={{fontSize:12.5,fontWeight:700,margin:"20px 0 4px",letterSpacing:-.2}}>{en?"Comparisons":"Comparações"}</div>
       <div style={{fontSize:9.5,color:"#8b90ad",marginBottom:10,lineHeight:1.5,fontStyle:"italic"}}>{en?"Descriptive comparisons, not proof of cause and effect. Louise changes over the month itself, so groups may reflect different weeks, not the effect of the variable. \"n\" = how many days support each average.":"Comparações descritivas — não provam causa e efeito. A Louise muda ao longo do próprio mês, então os grupos podem refletir semanas diferentes, não o efeito da variável. \"n\" = quantos dias sustentam cada média."}</div>
-      <Corr title={en?"Naps: 3 vs 4 → the following night's sleep":"Sonecas: 3 vs 4 → o sono da noite seguinte"} data={corr.naps} showNapAvg/>
-      <Corr title={en?"Awake window before bed → same night's wakings":"Janela acordada antes de dormir → despertares da mesma noite"} data={corr.preBedWindow}/>
-      {corr.milk&&<Corr title={en?`Daily milk (split at ${corr.milk.medianMl}ml median) → wakings that night`:`Leite do dia (corte na mediana, ${corr.milk.medianMl}ml) → despertares daquela noite`} data={corr.milk}/>}
-      <Corr title={en?"Bedtime before/after 19:30 → wake-up time":"Bedtime antes/depois de 19h30 → horário de acordar"} data={corr.bedtime}/>
+      <Corr title={en?"Naps: 3 vs 4 → the following night's sleep":"Sonecas: 3 vs 4 → o sono da noite seguinte"} data={corr.naps} clean={corrClean.naps} showNapAvg/>
+      <Corr title={en?"Awake window before bed → same night's wakings":"Janela acordada antes de dormir → despertares da mesma noite"} data={corr.preBedWindow} clean={corrClean.preBedWindow}/>
+      {corr.milk&&<Corr title={en?`Daily milk (split at ${corr.milk.medianMl}ml median) → wakings that night`:`Leite do dia (corte na mediana, ${corr.milk.medianMl}ml) → despertares daquela noite`} data={corr.milk} clean={corrClean.milk}/>}
+      <Corr title={en?"Bedtime before/after 19:30 → wake-up time":"Bedtime antes/depois de 19h30 → horário de acordar"} data={corr.bedtime} clean={corrClean.bedtime}/>
 
       <div style={{marginTop:14,paddingTop:9,borderTop:"1px solid #e8e9f2",fontSize:9.5,color:"#8b90ad",lineHeight:1.5}}>
         {en?"Entries logged manually by the parents in the Louise Pro app — unlogged periods show as awake on the map. Tracking document; does not replace professional evaluation.":"Registros feitos manualmente pelos pais no app Louise Pro — períodos não registrados aparecem como acordada no mapa. Documento de acompanhamento, não substitui avaliação profissional."}
