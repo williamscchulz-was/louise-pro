@@ -53,7 +53,7 @@ const HistoryPage = React.memo(function HistoryPage({entries,onDelete,onEdit,act
     }).map(e=>{
       if(e.type==="sleep"&&e.wakings&&e.wakings.length>0)return<SleepBlock key={e.id} entry={e} lang={lang} onDelete={onDelete} onEdit={onEdit} entries={entries} activeTimer={activeTimer} onSaveTimer={FB.saveTimer} onSaveEntry={FB.addEntry} showToast={showToast}/>;
       const pair=(e.type==="sleep"||e.type==="nap")&&e.id&&e.id.endsWith("_b")?findMidnightPair(e,entries):null;
-      if(pair)return<MidnightMergeCard key={e.id} part1={pair.part1} part2={pair.part2} onDelete={onDelete} onEdit={onEdit}/>;
+      if(pair)return<MidnightMergeCard key={e.id} lang={lang} part1={pair.part1} part2={pair.part2} onDelete={onDelete} onEdit={onEdit}/>;
       return<EntryRow key={e.id} entry={e} lang={lang} onDelete={onDelete} onEdit={onEdit}/>;
     });
   // v11.9.19: search results agregados por dia, ordenados desc.

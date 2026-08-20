@@ -632,10 +632,30 @@ window.FB = {
     const s = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
     return await new Response(s).text();
   },
+  // ⚠️ v11.9.146: GUARDA DE ENCOLHIMENTO (achado em auditoria). O backup era um snapshot
+  // ÚNICO, sobrescrito todo dia. Qualquer perda — um delete acidental, um bug de escrita —
+  // entrava no snapshot na manhã seguinte, quando quem abrisse o app primeiro disparava o
+  // auto-backup. O snapshot íntegro era substituído pelo danificado E o app exibia
+  // "✓ Backup automático salvo" no exato momento em que a rede de segurança foi destruída,
+  // sem caminho de volta. Agora: se a contagem de registros CAIU, o snapshot anterior é
+  // preservado em `backupsPrev` antes de sobrescrever, e devolvemos `shrank` pra UI avisar.
+  // Custo: 1 leitura + 1 escrita a mais, 1x/dia. O gzip da v11.9.124 já tornou o teto
+  // de 1 MiB irrelevante, então guardar 2 snapshots é barato.
   async saveBackup(data) {
     const payload = JSON.stringify(data);
     const size = payload.length;
     const updatedAt = new Date().toISOString();
+    const count = (data && Array.isArray(data.entries)) ? data.entries.length : null;
+    let shrank = null;
+    try {
+      const metaSnap = await db.collection('config').doc('backupMeta').get();
+      const prevCount = metaSnap.exists ? metaSnap.data().entryCount : undefined;
+      if (count != null && typeof prevCount === 'number' && count < prevCount) {
+        shrank = { before: prevCount, after: count };
+        const cur = await db.collection('config').doc('backups').get();
+        if (cur.exists) await db.collection('config').doc('backupsPrev').set(cur.data());
+      }
+    } catch (e) { console.warn('[LP] shrink guard skipped:', e && e.message); }
     // v11.9.124: snapshot comprimido (gzip via CompressionStream, ~8-10x menor) guardado como
     // Bytes no doc. O teto de 1 MiB deixa de ser preocupacao por anos. Fallback raro (browser
     // sem CompressionStream): formato legado com o guard antigo de 900KB.
@@ -643,13 +663,25 @@ window.FB = {
       const gz = await this._gzip(payload);
       if (gz.length > 950000) throw new Error('Backup muito grande mesmo comprimido (' + Math.round(gz.length/1024) + 'KB). Use "Baixar c\u00f3pia local".');
       await db.collection('config').doc('backups').set({ snapshotGz: firebase.firestore.Blob.fromUint8Array(gz), format: 'gz1', updatedAt, size, gzSize: gz.length });
-      await db.collection('config').doc('backupMeta').set({ updatedAt, size, gzSize: gz.length });
-      return { size, gzSize: gz.length };
+      await db.collection('config').doc('backupMeta').set({ updatedAt, size, gzSize: gz.length, entryCount: count });
+      return { size, gzSize: gz.length, shrank };
     }
     if (size > 900000) throw new Error('Backup muito grande para salvar no Firestore (' + Math.round(size/1024) + 'KB). Use "Baixar c\u00f3pia local".');
     await db.collection('config').doc('backups').set({ snapshot: data, updatedAt, size });
-    await db.collection('config').doc('backupMeta').set({ updatedAt, size });
-    return { size };
+    await db.collection('config').doc('backupMeta').set({ updatedAt, size, entryCount: count });
+    return { size, shrank };
+  },
+  // v11.9.146: restaura o snapshot ANTERIOR (preservado pela guarda de encolhimento).
+  // Mesmo parsing do loadBackup, s\u00f3 que do doc backupsPrev.
+  async loadBackupPrev() {
+    const d = await db.collection('config').doc('backupsPrev').get();
+    if (!d.exists) return null;
+    const raw = d.data();
+    if (raw.format === 'gz1' && raw.snapshotGz) {
+      const bytes = raw.snapshotGz.toUint8Array ? raw.snapshotGz.toUint8Array() : raw.snapshotGz;
+      return JSON.parse(await this._gunzip(bytes));
+    }
+    return raw.snapshot || null;
   },
   // Metadata-only \u2014 pra mostrar "\u00faltima backup: X horas atr\u00e1s" sem baixar o snapshot inteiro.
   // Caso o doc backupMeta n\u00e3o exista (backup antigo pr\u00e9-v11.9.0), faz fallback pro doc full

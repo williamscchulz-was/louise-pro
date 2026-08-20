@@ -106,7 +106,10 @@ function Confetti({trigger,onDone}){
   </div>);
 }
 
-const InsightCards = React.memo(function InsightCards({insights,phase}){
+// v11.9.146: `lang` entra na assinatura (era passado no call site mas ignorado aqui) —
+// invariante i18n: React.memo que mostra texto precisa do prop pra re-renderizar na troca
+// de idioma, senão congela no idioma anterior (`_lang` é global de módulo, não state).
+const InsightCards = React.memo(function InsightCards({insights,phase,lang}){
   // v11.9.95: fim do auto-sumiço (13,5s) + capado em 1 — os 2 cards montando/desmontando
   // sozinhos empurravam a Home no pico de registro. O card fica; muda quando o dado muda.
   if(!insights||insights.length===0||phase!==2)return null;

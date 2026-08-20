@@ -4,6 +4,29 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.146", date: "2026-08-20",
+    pt: {
+      title: "Rede de segurança do backup + acabamento dos Marcos",
+      bullets: [
+        '★ **O backup não sobrescreve mais em silêncio.** Se o backup de hoje tiver menos registros que o de ontem, o anterior é preservado e você é avisado — antes ele dizia "✓ salvo" justamente quando algo tinha sumido.',
+        '★ Duas formas de o app ir pro ar quebrado **agora travam a publicação** em vez de passar batido: sem estilo nenhum, ou com as bibliotecas todas em 404.',
+        'Nos Marcos: cada próximo marco mostra a **janela real** ("janela 4,1–7,4 meses") em vez de um prazo seco, e abre no lugar pra você ler o que observar — sem precisar entrar na tela de registro.',
+        'As conquistas que só mudam daqui a um ano saíram da frente (ficam em "Ver todas").',
+        'Crescimento não recalcula mais os 3 gráficos a cada 5 segundos, e os botões de voltar ficaram mais fáceis de acertar.',
+      ],
+    },
+    en: {
+      title: "Backup safety net + Milestones polish",
+      bullets: [
+        '★ **Backups no longer overwrite silently.** If today\'s backup has fewer records than yesterday\'s, the previous one is kept and you get told — before it said "✓ saved" precisely when something had gone missing.',
+        '★ Two ways the app could ship broken **now block the release** instead of slipping through: with no styling at all, or with every library 404ing.',
+        'In Milestones: each upcoming milestone shows the **real window** ("window 4.1–7.4 months") instead of a flat deadline, and expands in place so you can read what to watch for — without entering the logging screen.',
+        'Achievements that only change a year from now moved out of the way (under "Show all").',
+        'Growth no longer recomputes its 3 charts every 5 seconds, and the back buttons got easier to hit.',
+      ],
+    },
+  },
+  {
     v: "11.9.145", date: "2026-08-20",
     pt: {
       title: "Metade dos marcos da Louise estava invisível — voltou",

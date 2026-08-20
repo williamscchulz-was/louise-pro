@@ -313,7 +313,7 @@ const SleepBlock = React.memo(function SleepBlock({entry,onDelete,onEdit,entries
 // vínculo visual; editar/apagar uma não avisava sobre a outra). Mostra as 2 entries como
 // UM cartão contínuo; expandir revela cada metade com seu próprio editar/excluir — reusa
 // onEdit/onDelete já existentes por entry (sem payload novo, sem risco de perda de dado).
-const MidnightMergeCard = React.memo(function MidnightMergeCard({part1,part2,onDelete,onEdit}){
+const MidnightMergeCard = React.memo(function MidnightMergeCard({part1,part2,onDelete,onEdit,lang}){
   const[expanded,setExpanded]=useState(false);
   const[confirmDelId,setConfirmDelId]=useState(null);
   const totalMin=(part1.durationMin||0)+(part2.durationMin||0);

@@ -1,4 +1,7 @@
-function GrowthPage({entries,birthDate,profile,onBack,onAddEntry,onDeleteEntry}){
+// v11.9.146: React.memo + prop `lang` — era a única das páginas-gráfico sem memo (o clone
+// BehaviorPage já tinha desde a v11.9.116), então re-filtrava as entries e re-renderizava os
+// 3 gráficos a cada tick de 5s do App, mesmo com a tela parada.
+const GrowthPage = React.memo(function GrowthPage({entries,birthDate,profile,onBack,onAddEntry,onDeleteEntry,lang}){
   const growthEntries=entries.filter(e=>e.type==="growth").sort((a,b)=>`${a.date}T${a.time}`.localeCompare(`${b.date}T${b.time}`));
   const age=calcAge(birthDate);
   const ageMonths=age?(age.months+(age.days/30)):0;
@@ -204,7 +207,7 @@ function GrowthPage({entries,birthDate,profile,onBack,onAddEntry,onDeleteEntry})
     <Starfield/>
     {/* Header */}
     <div style={{display:"flex",alignItems:"center",gap:12,padding:"16px 14px 14px 20px"}}>
-      <button aria-label={_lang==="en"?"Back":"Voltar"} onClick={onBack} style={{width:40,height:40,borderRadius:13,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name="back" size={18} color={T.sub}/></button>
+      <button className="hit44" aria-label={_lang==="en"?"Back":"Voltar"} onClick={onBack} style={{width:40,height:40,borderRadius:13,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name="back" size={18} color={T.sub}/></button>
       <div style={{flex:1,minWidth:0}}>
         <div style={{fontSize:T.fXL,fontWeight:800,letterSpacing:-0.3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",background:"linear-gradient(180deg,#ffffff,#c4b5fd)",WebkitBackgroundClip:"text",backgroundClip:"text",WebkitTextFillColor:"transparent",color:"transparent"}}>{L("growth")}</div>
         <div style={{fontSize:T.fSM,color:T.sub,marginTop:1,fontVariantNumeric:"tabular-nums"}}>{growthEntries.length} {_lang==="en"?(growthEntries.length===1?"measurement":"measurements"):(growthEntries.length===1?"medição":"medições")} · {ageMonths.toFixed(1)}m</div>
@@ -297,7 +300,7 @@ function GrowthPage({entries,birthDate,profile,onBack,onAddEntry,onDeleteEntry})
     </>}
     </div>
   </div>);
-}
+});
 
 // v11.9.61: 12 badges/conquistas pra dar vibe colecionável.
 // Cada badge tem check(stats) e progress(stats) — stats agregadas dos entries.

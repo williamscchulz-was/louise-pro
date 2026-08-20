@@ -361,7 +361,7 @@ function ProfilePage({profile,entries,onSave,onBack,onGrowth,onOpenReport,onShow
     {/* v11.9.75: header com identidade — título em gradiente (igual o nome na Home),
         back de 44pt. Parte do redesign "Ajustes deixa de parecer outro app". */}
     <div style={{display:"flex",alignItems:"center",gap:12,padding:"16px 14px 8px 20px"}}>
-      <button aria-label={_lang==="en"?"Back":"Voltar"} onClick={onBack} style={{width:40,height:40,borderRadius:13,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name="back" size={18} color={T.sub}/></button>
+      <button className="hit44" aria-label={_lang==="en"?"Back":"Voltar"} onClick={onBack} style={{width:40,height:40,borderRadius:13,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name="back" size={18} color={T.sub}/></button>
       <span style={{flex:1,fontSize:T.fXL,fontWeight:800,letterSpacing:-0.3,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",background:"linear-gradient(180deg,#ffffff,#c4b5fd)",WebkitBackgroundClip:"text",backgroundClip:"text",WebkitTextFillColor:"transparent",color:"transparent"}}>{_lang==="en"?"Settings":"Ajustes"}</span>
     </div>
     {/* v11.7.5: pill flutuante do auto-save. Fica em position:fixed centered-top,

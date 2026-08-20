@@ -175,13 +175,23 @@ function App(){
     const t=setTimeout(async()=>{
       try{
         const data=await FB.exportAll();
-        await FB.saveBackup(data);
+        const res=await FB.saveBackup(data);
         const now=Date.now();
         try{
           localStorage.setItem("lp_last_backup_date",today);
           localStorage.setItem("lp_last_backup_at",String(now)); // timestamp p/ display
         }catch(_){}
-        setToast(_lang==="en"?"\u2713 Auto-backup saved":"\u2713 Backup autom\u00e1tico salvo");
+        // v11.9.146: se o backup de hoje tem MENOS registros que o de ontem, alguma coisa
+        // sumiu. O snapshot anterior foi preservado em backupsPrev pela guarda; aqui o
+        // usu\u00e1rio PRECISA saber \u2014 dizer "\u2713 salvo" nesse caso \u00e9 o pior desfecho poss\u00edvel.
+        if(res&&res.shrank){
+          const d=res.shrank.before-res.shrank.after;
+          setToast(_lang==="en"
+            ?`\u26a0\ufe0f Backup has ${d} fewer records than yesterday \u2014 the previous one was kept`
+            :`\u26a0\ufe0f Backup com ${d} registro${d>1?"s":""} a menos que ontem \u2014 o anterior foi preservado`);
+        }else{
+          setToast(_lang==="en"?"\u2713 Auto-backup saved":"\u2713 Backup autom\u00e1tico salvo");
+        }
       }catch(e){
         // v11.9.124: falha de backup era SILENCIOSA (so console.warn) — se o saveBackup
         // passasse a falhar todo dia (teto de tamanho, rules, rede), ninguem saberia e o
@@ -1376,7 +1386,7 @@ function App(){
         // sem despertar — a metade "de início" nunca aparece em todayE (data é de ontem), então
         // aqui só precisa checar a metade que ESTÁ na lista de hoje. Achado #1 da auditoria.
         const pair=!useBlock&&(e.type==="sleep"||e.type==="nap")&&e.id&&e.id.endsWith("_b")?findMidnightPair(e,entries):null;
-        return<div key={e.id} className="home-rise-in" style={{animationDelay:`${Math.min(i,10)*45}ms`}}>{gap}{useBlock?<SleepBlock entry={e} lang={lang} onDelete={deleteEntry} onEdit={startEdit} entries={entries} activeTimer={activeTimer} onSaveTimer={FB.saveTimer} onSaveEntry={FB.addEntry} showToast={showToast}/>:pair?<MidnightMergeCard part1={pair.part1} part2={pair.part2} onDelete={deleteEntry} onEdit={startEdit}/>:<EntryRow entry={e} lang={lang} onDelete={deleteEntry} onEdit={startEdit} napNum={napNums[e.id]||null}/>}</div>})}</div>
+        return<div key={e.id} className="home-rise-in" style={{animationDelay:`${Math.min(i,10)*45}ms`}}>{gap}{useBlock?<SleepBlock entry={e} lang={lang} onDelete={deleteEntry} onEdit={startEdit} entries={entries} activeTimer={activeTimer} onSaveTimer={FB.saveTimer} onSaveEntry={FB.addEntry} showToast={showToast}/>:pair?<MidnightMergeCard lang={lang} part1={pair.part1} part2={pair.part2} onDelete={deleteEntry} onEdit={startEdit}/>:<EntryRow entry={e} lang={lang} onDelete={deleteEntry} onEdit={startEdit} napNum={napNums[e.id]||null}/>}</div>})}</div>
       </div>
           </div>
           <div style={{width:`${100/3}%`,flexShrink:0,minWidth:0,contentVisibility:"auto",containIntrinsicSize:"auto 100vh"}}>
@@ -1387,7 +1397,7 @@ function App(){
           </div>
         </div>
       </div>:null}
-      {page==="growth"&&<GrowthPage entries={entries} birthDate={profile.birthDate} profile={profile} onBack={()=>{const f=growthFromRef.current||{page:"stats"};goTo(f.page||"stats");if(f.profile)setShowProfile(true)}} onAddEntry={addEntry} onDeleteEntry={deleteEntry}/>}
+      {page==="growth"&&<GrowthPage lang={lang} entries={entries} birthDate={profile.birthDate} profile={profile} onBack={()=>{const f=growthFromRef.current||{page:"stats"};goTo(f.page||"stats");if(f.profile)setShowProfile(true)}} onAddEntry={addEntry} onDeleteEntry={deleteEntry}/>}
       {page==="behavior"&&<BehaviorPage entries={entries} birthDate={profile.birthDate} onBack={()=>{const f=behaviorFromRef.current||{page:"stats"};goTo(f.page||"stats")}} lang={lang}/>}
       {page==="milestones"&&<MilestonesPage milestones={allMilestones} birthDate={profile.birthDate} profile={profile} onBack={()=>goTo("home")} onAddEntry={addEntry} onDeleteEntry={deleteEntry} lang={lang}/>}
       {/* Bottom spacer so content clears nav bar + timer (dynamic w/ safe-area) */}

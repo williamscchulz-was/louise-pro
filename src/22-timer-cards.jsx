@@ -143,7 +143,7 @@ function NursingSidePicker({open,onClose,onSelect}){
 
 // v11.9.0: TimerBar memoizado. Tem tick interno (state local), props mudam raramente
 // (activeTimer doc, handlers). Pula re-render quando o App re-renderiza por outras razoes.
-const TimerBar = React.memo(function TimerBar({activeTimer,onStop,onSwitch,onPause,onEditStart,hidden}){const[tick,setTick]=useState(0);useEffect(()=>{if(!activeTimer)return;const iv=setInterval(()=>setTick(k=>k+1),1000);return()=>clearInterval(iv)},[activeTimer]);if(!activeTimer)return null;
+const TimerBar = React.memo(function TimerBar({activeTimer,onStop,onSwitch,onPause,onEditStart,hidden,lang}){const[tick,setTick]=useState(0);useEffect(()=>{if(!activeTimer)return;const iv=setInterval(()=>setTick(k=>k+1),1000);return()=>clearInterval(iv)},[activeTimer]);if(!activeTimer)return null;
   // hidden=true: unmount the bar when an overlay (Sheet/Modal/etc) is open, so it stops covering
   // form save buttons and stops tinting via backdrop-filter. Fix for v10.3.2. No fade because the
   // tick interval (1s) kept restarting any CSS transition — unmounting is cleaner anyway.

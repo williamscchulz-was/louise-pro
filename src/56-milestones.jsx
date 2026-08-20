@@ -21,24 +21,29 @@ const MILESTONE_BADGES = [
 const MilestonesPage = React.memo(function MilestonesPage({milestones,birthDate,profile,onBack,onAddEntry,onDeleteEntry,lang}){
   const[confirmDelKey,setConfirmDelKey]=useState(null); // v11.9.65: 2-step inline delete (substitui confirm() nativo)
   const[selStar,setSelStar]=useState(null); // v11.9.129: estrela selecionada no céu (tap-to-inspect, padrão dos gráficos)
+  const[openUpcoming,setOpenUpcoming]=useState(null); // v11.9.146: card de próximo marco expandido
   const all=window.DEV_MILESTONES||[];
   const allSigns=window.CONCERNING_SIGNS||[];
   // v11.9.145: recebe a lista completa de marcos (sem a janela de 90d) do App. Antes filtrava
   // `entries`, que é cortado em 90 dias — e isso escondia metade da vida da Louise. Ver a nota
   // longa em FB.subMilestones (index.html) pra cadeia completa do bug.
-  const milestoneEntries=(milestones||[]).slice()
-    .sort((a,b)=>`${b.date}T${b.time||"00:00"}`.localeCompare(`${a.date}T${a.time||"00:00"}`));
+  // v11.9.146: memoizados. Antes eram recriados a cada render (`.slice().sort()` e
+  // `.filter()` devolvem arrays novos), o que fazia os useMemo de `skyData` e `badgeStats`
+  // NUNCA aproveitarem o cache — recalculavam a serpentina inteira e as agregações a cada
+  // tick. Agora as deps são estáveis enquanto o dado não muda.
+  const milestoneEntries=useMemo(()=>(milestones||[]).slice()
+    .sort((a,b)=>`${b.date}T${b.time||"00:00"}`.localeCompare(`${a.date}T${a.time||"00:00"}`)),[milestones]);
   const age=calcAge(birthDate);
   const ageMonths=age?.months||0;
   const checkups=[0,2,4,6,9,12,15,18,24];
   const currentCheckup=checkups.filter(c=>c<=ageMonths+1).slice(-1)[0]||2;
   const nextCheckup=checkups.find(c=>c>ageMonths);
-  const doneKeys=new Set(milestoneEntries.map(e=>e.key));
-  const upcoming=all.filter(m=>
+  const doneKeys=useMemo(()=>new Set(milestoneEntries.map(e=>e.key)),[milestoneEntries]);
+  const upcoming=useMemo(()=>all.filter(m=>
     m.checkupAge>=Math.max(2,currentCheckup-2)&&
     m.checkupAge<=(nextCheckup||currentCheckup+3)&&
     !doneKeys.has(m.key)
-  );
+  ),[all,currentCheckup,nextCheckup,doneKeys]);
   const signs=allSigns.filter(s=>s.checkupAge<=ageMonths+2);
   // v11.9.129: O céu da Louise (mais-vida ideia C, integrada NA seção de conquistas que já
   // existe — pedido do William). Cada marco registrado vira estrela acesa; os próximos, uma
@@ -104,8 +109,18 @@ const MilestonesPage = React.memo(function MilestonesPage({milestones,birthDate,
     });
     return{total:milestoneEntries.length,byCat,byCheckup,totalsByCat,totalsByCheckup,allTotal:all.length};
   },[milestoneEntries,all]);
-  const badges=MILESTONE_BADGES.map(b=>({...b,earned:b.check(badgeStats),progress:b.progress?b.progress(badgeStats):null}));
+  // v11.9.146: `reachable` = dá pra mexer nesse badge HOJE. Os de consulta (checkup_Nm) só
+  // são alcançáveis quando a Louise já chegou perto daquela idade; os de contagem e de
+  // categoria são sempre alcançáveis (basta registrar mais um marco).
+  const CHECKUP_BADGE={newborn_pro:0,checkup_6m:6,checkup_12m:12,checkup_24m:24};
+  const badges=MILESTONE_BADGES.map(b=>{
+    const idade=CHECKUP_BADGE[b.key];
+    return{...b,earned:b.check(badgeStats),progress:b.progress?b.progress(badgeStats):null,
+      reachable:idade===undefined?true:idade<=ageMonths+1};
+  });
   const earnedBadges=badges.filter(b=>b.earned).length;
+  const[showAllBadges,setShowAllBadges]=useState(false);
+  const hiddenBadges=badges.filter(b=>!b.earned&&!b.reachable).length;
   const[showAdd,setShowAdd]=useState(false);
   const[showSigns,setShowSigns]=useState(false);
   const[pickedKey,setPickedKey]=useState(null);
@@ -247,8 +262,12 @@ const MilestonesPage = React.memo(function MilestonesPage({milestones,birthDate,
         </span>
         <span style={{fontSize:T.fXS,color:"#fcd34d",fontWeight:800,fontVariantNumeric:"tabular-nums",letterSpacing:0.3,textTransform:"uppercase"}}>{earnedBadges}/{badges.length} {L("earnedCount")}</span>
       </div>
+      {/* v11.9.146: 7 dos 12 badges não podiam mudar por 7 a 19 meses e ocupavam ~470px como
+          "0/N" permanente — visualmente idênticos aos acionáveis, então não dava pra
+          distinguir "posso fazer algo hoje" de "volte em 2027". Agora: conquistados +
+          alcançáveis na faixa etária atual sempre visíveis; o resto atrás de um toque. */}
       <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
-        {badges.map(b=>{
+        {(showAllBadges?badges:badges.filter(b=>b.earned||b.reachable)).map(b=>{
           const isEarned=b.earned;
           return<div key={b.key} style={{aspectRatio:"1",borderRadius:14,background:isEarned?"radial-gradient(circle at 50% 30%,rgba(250,204,21,0.22),rgba(245,158,11,0.04))":"rgba(20,26,60,0.42)",border:`1px solid ${isEarned?"rgba(250,204,21,0.45)":"rgba(139,124,246,0.12)"}`,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"8px 4px",position:"relative",opacity:isEarned?1:0.35,boxShadow:isEarned?"0 0 14px -2px rgba(250,204,21,0.30)":"none",transition:"opacity .3s ease, box-shadow .3s ease"}}>
             <div style={{fontSize:26,marginBottom:5,filter:isEarned?"drop-shadow(0 0 6px rgba(250,204,21,0.5))":"none",lineHeight:1}}>{b.emoji}</div>
@@ -257,6 +276,9 @@ const MilestonesPage = React.memo(function MilestonesPage({milestones,birthDate,
           </div>
         })}
       </div>
+      {hiddenBadges>0&&<button className="hit44" onClick={()=>setShowAllBadges(!showAllBadges)} style={{width:"100%",marginTop:9,padding:"9px 12px",borderRadius:11,background:"rgba(20,26,60,0.42)",border:`1px solid ${T.gBSoft}`,color:T.label,fontSize:T.fSM,fontWeight:700,cursor:"pointer"}}>
+        {showAllBadges?(_lang==="en"?"Show fewer":"Mostrar menos"):(_lang==="en"?`Show all ${badges.length}`:`Ver todas as ${badges.length}`)}
+      </button>}
     </div>
     {/* Upcoming */}
     {upcoming.length>0&&<div style={{padding:"0 20px 14px"}}>
@@ -271,24 +293,49 @@ const MilestonesPage = React.memo(function MilestonesPage({milestones,birthDate,
           // chegou; o resto diz explicitamente em qual consulta é esperado.
           const isExpected=m.checkupAge<=ageMonths;
           const col=catColors[m.category]||T.accent;
-          return<button key={m.key} onClick={()=>{setPickedKey(m.key);setShowAdd(true)}} style={{padding:"10px 12px",borderRadius:12,background:`linear-gradient(135deg,${col}14,${col}06)`,border:`1px solid ${col}28`,display:"flex",alignItems:"center",gap:11,textAlign:"left",cursor:"pointer"}}>
+          const open=openUpcoming===m.key;
+          // v11.9.146: JANELA de aquisição (`ageRange`, presente nos 85 marcos e nunca
+          // renderizada). O CDC atribui o marco ao percentil 75 — é faixa, não prazo.
+          // Mostrar "5–8 meses" é MENOS assertivo que um mês seco e responde melhor
+          // "ela está no caminho?" sem virar veredito sobre a bebê.
+          const wk2m=w=>Math.round(w/4.345*10)/10;
+          const faixa=m.ageRange?`${_lang==="en"?"window":"janela"} ${wk2m(m.ageRange.minWeeks)}–${wk2m(m.ageRange.maxWeeks)} ${_lang==="en"?"mo":"meses"}`:null;
+          return<div key={m.key} style={{borderRadius:12,background:`linear-gradient(135deg,${col}14,${col}06)`,border:`1px solid ${col}28`,overflow:"hidden"}}>
+            {/* v11.9.146: tocar ABRE a descrição, em vez de pular direto pro formulário.
+                Antes, ler "o que observar" custava entrar no fluxo de registro com a data de
+                hoje pré-preenchida — consultar era quase-registrar, e um toque a mais gravava
+                um marco com data errada num histórico que vai pra pediatra. */}
+            <button className="hit44" aria-expanded={open} onClick={()=>setOpenUpcoming(open?null:m.key)} style={{width:"100%",padding:"10px 12px",background:"transparent",border:"none",display:"flex",alignItems:"center",gap:11,textAlign:"left",cursor:"pointer"}}>
             <div style={{width:32,height:32,borderRadius:9,background:`${col}1a`,border:`1px solid ${col}30`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
               <Icon name="star" size={15} color={col}/>
             </div>
             <div style={{flex:1,minWidth:0}}>
               <div style={{fontSize:T.fMD,fontWeight:700,color:T.text,letterSpacing:-0.1}}>{m.label[_lang]||m.label.en}</div>
               {/* v11.9.145: T.dim -> T.label (T.dim mede ~2.9:1, abaixo do minimo legivel) */}
-              <div style={{fontSize:T.fXS,color:T.label,marginTop:2}}>{isExpected?L("expectedNow"):(_lang==="en"?`at the ${m.checkupAge}-month checkup`:`na consulta de ${m.checkupAge}m`)}</div>
+              <div style={{fontSize:T.fXS,color:T.label,marginTop:2,display:"flex",gap:6,flexWrap:"wrap"}}>
+                <span>{isExpected?L("expectedNow"):(_lang==="en"?`at the ${m.checkupAge}-month checkup`:`na consulta de ${m.checkupAge}m`)}</span>
+                {faixa&&<span style={{opacity:0.72}}>· {faixa}</span>}
+              </div>
             </div>
-            <div style={{fontSize:T.fXL,color:col,fontWeight:700,opacity:0.6}}>+</div>
+            <div style={{color:T.label,flexShrink:0,transform:open?"rotate(180deg)":"none",transition:"transform .2s"}}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="M6 9l6 6 6-6"/></svg>
+            </div>
           </button>
+          {open&&<div style={{padding:"0 12px 11px 55px"}}>
+            <div style={{fontSize:T.fSM,color:T.sub,lineHeight:1.5}}>{m.description?(m.description[_lang]||m.description.en):""}</div>
+            {m.tip&&<div style={{fontSize:T.fSM,color:T.label,lineHeight:1.5,marginTop:6,fontStyle:"italic"}}>{m.tip[_lang]||m.tip.en}</div>}
+            <button onClick={()=>{setPickedKey(m.key);setShowAdd(true)}} style={{marginTop:10,padding:"9px 14px",borderRadius:10,background:`${col}22`,border:`1px solid ${col}55`,color:col,fontSize:T.fSM,fontWeight:700,cursor:"pointer"}}>
+              {_lang==="en"?"✓ She does this":"✓ Ela já faz isso"}
+            </button>
+          </div>}
+          </div>
         })}
       </div>
     </div>}
     {/* Done timeline */}
     <div style={{padding:"0 20px 14px"}}>
       <div style={{fontSize:T.fSM,fontWeight:800,color:T.accent,textTransform:"uppercase",letterSpacing:1,marginBottom:14}}>{_lang==="en"?"Achieved":"Conquistados"}</div>
-      {milestoneEntries.length===0?<div style={{padding:"30px 20px",textAlign:"center",color:T.dim,fontSize:T.fMD,lineHeight:1.5}}>{L("noMilestonesYet")}</div>:
+      {milestoneEntries.length===0?<div style={{padding:"30px 20px",textAlign:"center",color:T.label,fontSize:T.fMD,lineHeight:1.5}}>{L("noMilestonesYet")}</div>:
         <div style={{position:"relative",paddingLeft:24}}>
           <div style={{position:"absolute",left:9,top:0,bottom:0,width:1,background:`linear-gradient(180deg,${T.accent}88,${T.accent}11)`}}/>
           {milestoneEntries.map(e=>{
@@ -299,7 +346,9 @@ const MilestonesPage = React.memo(function MilestonesPage({milestones,birthDate,
               <div style={{position:"absolute",left:-19,top:4,width:11,height:11,borderRadius:"50%",background:col,border:"2px solid #070b1e",boxShadow:`0 0 0 1px ${col}88`}}/>
               <div style={{fontSize:T.fXS,fontWeight:800,color:T.accent,textTransform:"uppercase",letterSpacing:0.8,marginBottom:3,fontVariantNumeric:"tabular-nums"}}>{new Date(e.date+"T12:00").toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{day:"numeric",month:"short",year:"numeric"})}</div>
               <div style={{fontSize:T.fMD,fontWeight:700,color:T.text,letterSpacing:-0.1,display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
-                <span>{m?(m.label[_lang]||m.label.en):e.key}</span>
+                {/* v11.9.146: marco cujo `key` saiu do catálogo (dado legado) vazava o slug
+                    cru na tela, tipo "brings_hands_to_mouth". Vira texto legível. */}
+                <span>{m?(m.label[_lang]||m.label.en):String(e.key||"").replace(/_/g," ").replace(/^./,c=>c.toUpperCase())}</span>
                 <span style={{fontSize:T.fXS,fontWeight:700,color:col,padding:"1px 6px",borderRadius:5,background:`${col}1a`,letterSpacing:0.3,textTransform:"uppercase"}}>{catLabels[cat]||""}</span>
               </div>
               {e.note&&<div style={{fontSize:T.fSM,color:T.sub,lineHeight:1.45,marginTop:3}}>{e.note}</div>}
@@ -315,14 +364,14 @@ const MilestonesPage = React.memo(function MilestonesPage({milestones,birthDate,
         <Icon name="zap" size={16} color="#fb923c"/>
         <div style={{flex:1,minWidth:0}}>
           <div style={{fontSize:T.fSM,fontWeight:700,color:T.text}}>{L("concerningSigns")}</div>
-          <div style={{fontSize:T.fXS,color:T.dim,marginTop:1}}>{signs.length} {_lang==="en"?"items":"itens"}</div>
+          <div style={{fontSize:T.fXS,color:T.label,marginTop:1}}>{signs.length} {_lang==="en"?"items":"itens"}</div>
         </div>
         <div style={{transform:showSigns?"rotate(180deg)":"rotate(0)",transition:"transform .2s",color:T.dim,flexShrink:0}}>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M6 9l6 6 6-6"/></svg>
         </div>
       </button>
       {showSigns&&<div style={{marginTop:8,padding:"12px 14px",borderRadius:12,background:"rgba(251,146,60,0.06)",border:"1px solid rgba(251,146,60,0.18)"}}>
-        <div style={{fontSize:T.fXS,color:T.dim,lineHeight:1.5,marginBottom:10,fontStyle:"italic"}}>{L("concerningSignsHelp")}</div>
+        <div style={{fontSize:T.fXS,color:T.label,lineHeight:1.5,marginBottom:10,fontStyle:"italic"}}>{L("concerningSignsHelp")}</div>
         {signs.map(s=><div key={s.key} style={{display:"flex",alignItems:"flex-start",gap:8,padding:"6px 0",borderTop:"1px solid rgba(251,146,60,0.10)"}}>
           <span style={{color:"#fb923c",fontSize:T.fSM,fontWeight:800,marginTop:0}}>•</span>
           <span style={{fontSize:T.fSM,color:T.text,lineHeight:1.45,flex:1}}>{s.label[_lang]||s.label.en}</span>
@@ -356,7 +405,7 @@ const MilestonesPage = React.memo(function MilestonesPage({milestones,birthDate,
                   <div style={{width:6,height:32,borderRadius:3,background:col,flexShrink:0}}/>
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{fontSize:T.fMD,fontWeight:700,color:T.text,letterSpacing:-0.1}}>{m.label[_lang]||m.label.en}</div>
-                    <div style={{fontSize:T.fXS,color:T.dim,marginTop:1}}>{m.checkupAge}m · {catLabels[m.category]}</div>
+                    <div style={{fontSize:T.fXS,color:T.label,marginTop:1}}>{m.checkupAge}m · {catLabels[m.category]}</div>
                   </div>
                 </button>
               })

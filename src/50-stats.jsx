@@ -1,4 +1,5 @@
-const StatsPage = React.memo(function StatsPage({entries,onGrowth,onBehavior}){
+// v11.9.146: `lang` na assinatura — ver nota do invariante i18n em 24-widgets.jsx.
+const StatsPage = React.memo(function StatsPage({entries,onGrowth,onBehavior,lang}){
   const[period,setPeriod]=useState(7);
   // v11.9.81: tocar numa barra mostra o valor+data (essencial em 14d+, onde os números
   // somem). selBar = chave da barra tocada ("campo:data"). A COLUNA inteira é o alvo de

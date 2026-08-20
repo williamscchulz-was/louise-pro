@@ -44,7 +44,22 @@ let html = readFileSync(SRC, "utf8");
 // (keeps cold start fast: no extra render-blocking request; byte-identical to inline).
 // Anchored on the indented tag so the "<style>" inside the boot-script comment isn't matched.
 const cssSource = readFileSync(join(ROOT, "styles.css"), "utf8");
-html = html.replace(/(\n[ \t]*<style>)[\s\S]*?(<\/style>)/, (mm, p1, p2) => p1 + cssSource + p2);
+// ⚠️ v11.9.146: FALHA SILENCIOSA (achado em auditoria). Se o placeholder mudar de formato
+// (espaço a mais, atributo novo tipo nonce pra CSP, quebra de linha diferente), o .replace
+// devolve a string ORIGINAL sem lançar erro. O build seguia, o syntax guard só valida JS, o
+// CI só testa que o arquivo existe — e ia pro ar um app vivo e 100% SEM ESTILO. Aborta.
+const STYLE_RE = /(\n[ \t]*<style>)[\s\S]*?(<\/style>)/;
+if (!STYLE_RE.test(html)) {
+  console.error("[build] FATAL: placeholder <style></style> não encontrado no index.html.");
+  console.error("[build] Sem isso o app iria pro ar sem NENHUM CSS. Abortando.");
+  process.exit(1);
+}
+html = html.replace(STYLE_RE, (mm, p1, p2) => p1 + cssSource + p2);
+// confirma que o conteúdo entrou de verdade, não só que a regex casou
+if (!html.includes(cssSource.slice(0, 120))) {
+  console.error("[build] FATAL: o CSS não foi injetado apesar do placeholder existir. Abortando.");
+  process.exit(1);
+}
 console.log("[build] inlined styles.css (" + cssSource.length + " chars)");
 
 // v11.9.85: the app source lives in src/*.jsx (split out of the old inline block).
@@ -131,12 +146,20 @@ console.log("[build] bundled js/ into app-libs.js (" + bundle.length + " chars)"
 // Regex matches the first tag through the last, including blank lines between.
 // (v11.9.56: era 6, agora 7 com milestones.js)
 const BUNDLE_SCRIPT_RE = /<script src="js\/who-growth\.js"><\/script>[\s\S]*?<script src="js\/routine-engine\.js"><\/script>/;
-if (BUNDLE_SCRIPT_RE.test(html)) {
-  html = html.replace(BUNDLE_SCRIPT_RE, '<script src="js/app-libs.js"></script>');
-  console.log("[build] collapsed 7 <script> tags into 1 bundle reference");
-} else {
-  console.warn("[build] WARN: could not find 7-script block to bundle, HTML unchanged");
+// ⚠️ v11.9.146: era `console.warn` e o build seguia (achado em auditoria). Se a lista de
+// tags mudar de ordem/formato — como já aconteceu na v11.9.56, quando milestones.js virou a
+// 7ª lib — a regex para de casar e o HTML publicado referencia arquivos que NÃO EXISTEM em
+// produção: who-growth, changelog, curiosities, milestones, wake-lock, device-features e
+// routine-engine todos 404. Isso quebra gráfico de crescimento, changelog, curiosidades,
+// marcos, wake lock e o motor de rotina inteiro — com o deploy VERDE, porque o syntax guard
+// só valida JS (o HTML com src quebrado é JS válido) e o CI só testa `test -d dist/js`.
+if (!BUNDLE_SCRIPT_RE.test(html)) {
+  console.error("[build] FATAL: não consegui achar o bloco das 7 tags <script src=\"js/*.js\">.");
+  console.error("[build] Publicar assim deixaria as 7 libs em 404 em produção. Abortando.");
+  process.exit(1);
 }
+html = html.replace(BUNDLE_SCRIPT_RE, '<script src="js/app-libs.js"></script>');
+console.log("[build] collapsed 7 <script> tags into 1 bundle reference");
 
 writeFileSync(join(DIST, "index.html"), html);
 console.log("[build] wrote dist/index.html (" + html.length + " chars)");
