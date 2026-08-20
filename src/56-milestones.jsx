@@ -18,12 +18,15 @@ const MILESTONE_BADGES = [
 // Note: window.MILESTONES (sem DEV_) ja existe em curiosities.js — sao curiosidades
 // mensais (2-12m). Namespaces separados pra evitar collision.
 // Entries com type:"milestone" guardam: key (chave do DEV_MILESTONES), category, date, note.
-const MilestonesPage = React.memo(function MilestonesPage({entries,birthDate,profile,onBack,onAddEntry,onDeleteEntry,lang}){
+const MilestonesPage = React.memo(function MilestonesPage({milestones,birthDate,profile,onBack,onAddEntry,onDeleteEntry,lang}){
   const[confirmDelKey,setConfirmDelKey]=useState(null); // v11.9.65: 2-step inline delete (substitui confirm() nativo)
   const[selStar,setSelStar]=useState(null); // v11.9.129: estrela selecionada no céu (tap-to-inspect, padrão dos gráficos)
   const all=window.DEV_MILESTONES||[];
   const allSigns=window.CONCERNING_SIGNS||[];
-  const milestoneEntries=entries.filter(e=>e.type==="milestone")
+  // v11.9.145: recebe a lista completa de marcos (sem a janela de 90d) do App. Antes filtrava
+  // `entries`, que é cortado em 90 dias — e isso escondia metade da vida da Louise. Ver a nota
+  // longa em FB.subMilestones (index.html) pra cadeia completa do bug.
+  const milestoneEntries=(milestones||[]).slice()
     .sort((a,b)=>`${b.date}T${b.time||"00:00"}`.localeCompare(`${a.date}T${a.time||"00:00"}`));
   const age=calcAge(birthDate);
   const ageMonths=age?.months||0;
@@ -41,32 +44,47 @@ const MilestonesPage = React.memo(function MilestonesPage({entries,birthDate,pro
   // existe — pedido do William). Cada marco registrado vira estrela acesa; os próximos, uma
   // estrela apagada. Posições DETERMINÍSTICAS (hash da key, nada de Math.random no render)
   // com anti-colisão por nudge; marcos próximos no tempo (≤14d) se ligam em constelação.
+  // ⚠️ v11.9.145 REESCRITO. A versão anterior posicionava por `hash(key)` (aleatório no
+  // espaço) mas ligava vizinhos no TEMPO — as linhas conectavam pontos sem nenhuma relação
+  // espacial, e o resultado era rabisco: 20 linhas com 36 cruzamentos no caso real. Pior,
+  // piorava com o uso (registrar vários marcos numa sentada gera o máximo de linhas), e a
+  // anti-colisão gulosa desistia em 6 de 26 estrelas, sobrepondo pares a 10,7px.
+  // AGORA: a POSIÇÃO carrega o tempo. X = ordem cronológica (nasceu à esquerda, hoje à
+  // direita), Y = onda suave determinística. Assim vizinho no tempo É vizinho no espaço, a
+  // linha vira uma trilha contínua que nunca se cruza, e não há colisão por construção.
+  // A cor passa a carregar a categoria — informação que a tela já tinha e desperdiçava.
   const skyData=useMemo(()=>{
-    const hash=s=>{let h=7;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;return Math.abs(h)};
-    const placed=[];
-    const place=key=>{
-      let x=10+(hash(key)%80),y=14+(hash(key+"~")%68),tries=0;
-      while(tries<24&&placed.some(p=>{const dx=p.x-x,dy=(p.y-y)*0.9;return dx*dx+dy*dy<190})){
-        x=10+((x+23)%80);y=14+((y+17)%68);tries++;
-      }
-      placed.push({x,y});
-      return{x,y};
-    };
     const seenK=new Set();
-    const lit=milestoneEntries.slice().reverse()
-      .map(e=>{const m=all.find(x=>x.key===e.key);return m?{key:e.key,date:e.date,label:m.label}:null})
-      .filter(s=>s&&!seenK.has(s.key)&&seenK.add(s.key))
-      .map(s=>({...s,...place(s.key)}));
-    const dim=upcoming.slice(0,5).map(m=>({key:m.key,label:m.label,...place("dim:"+m.key)}));
+    const uniq=milestoneEntries.slice().reverse()
+      .map(e=>{const m=all.find(x=>x.key===e.key);return m?{key:e.key,date:e.date,label:m.label,category:m.category}:null})
+      .filter(s=>s&&!seenK.has(s.key)&&seenK.add(s.key));
+    const n=uniq.length;
+    // SERPENTINA: uma faixa só não escala — com 38 marcos as estrelas ficariam a 2,3 unidades
+    // uma da outra e se encostariam (e o catálogo tem 85). Então a trilha desce de faixa e
+    // volta, tipo boustrofédon: a leitura cronológica continua contínua, mas usa a altura.
+    const PER=13;                                   // estrelas por faixa (folga confortável)
+    const bands=Math.max(1,Math.min(4,Math.ceil(n/PER)));
+    const perBand=Math.ceil(n/bands);
+    const bandY=b=>bands===1?50:18+b*(64/(bands-1));  // faixas distribuídas na altura
+    const pos=i=>{
+      const b=Math.floor(i/perBand),k=i%perBand;
+      const cnt=Math.min(perBand,n-b*perBand);
+      const t=cnt<=1?0.5:k/(cnt-1);
+      const fwd=b%2===0;                            // faixa ímpar volta pra esquerda
+      return{x:8+(fwd?t:1-t)*80,y:bandY(b)+Math.sin(i*1.1)*(bands>1?5:16)};
+    };
+    const lit=uniq.map((s,i)=>({...s,...pos(i)}));
+    // as próximas ficam depois da última acesa, seguindo a mesma trilha
+    const dim=upcoming.slice(0,4).map((m,i)=>({key:m.key,label:m.label,...pos(n+i)}));
+    // liga cada estrela à seguinte. Dentro da faixa o x é monotônico (nunca cruza); a
+    // virada de faixa acontece na borda, onde a curva é visualmente clara.
     const lines=[];
-    for(let i=1;i<lit.length;i++){
-      const a=lit[i-1],b=lit[i];
-      const gap=Math.abs(new Date(b.date+"T12:00:00")-new Date(a.date+"T12:00:00"))/864e5;
-      if(gap<=14)lines.push({x1:a.x,y1:a.y,x2:b.x,y2:b.y});
-    }
-    return{lit,dim,lines};
+    for(let i=1;i<lit.length;i++)lines.push({x1:lit[i-1].x,y1:lit[i-1].y,x2:lit[i].x,y2:lit[i].y});
+    return{lit,dim,lines,bands};
   },[milestoneEntries,upcoming,all]);
-  const skyH=Math.max(190,Math.min(300,120+(skyData.lit.length+skyData.dim.length)*10));
+  // v11.9.145: a altura acompanha o nº de FAIXAS da serpentina, não a contagem crua de
+  // estrelas (que saturava o teto de 300px já aos 18 marcos e depois só apertava tudo).
+  const skyH=skyData.bands<=1?200:Math.min(330,150+skyData.bands*52);
   const fmtStarDate=d=>new Date(d+"T12:00:00").toLocaleDateString(_lang==="pt"?"pt-BR":"en-US",{day:"numeric",month:"short"});
   // v11.9.61: stats agregadas pros badges (count por categoria + checkupAge)
   const badgeStats=useMemo(()=>{
@@ -133,10 +151,55 @@ const MilestonesPage = React.memo(function MilestonesPage({entries,birthDate,pro
       <button className="hit44" aria-label={_lang==="en"?"Back":"Voltar"} onClick={onBack} style={{width:36,height:36,borderRadius:10,background:T.glass,border:`1px solid ${T.gB}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name="back" size={18} color={T.sub}/></button>
       <div style={{flex:1,minWidth:0}}>
         <div style={{fontSize:T.fXL,fontWeight:800,letterSpacing:-0.2}}>{L("milestonesTitle")}</div>
-        <div style={{fontSize:T.fSM,color:T.sub,marginTop:1,fontVariantNumeric:"tabular-nums"}}>{milestoneEntries.length} {L("milestonesDone")} · {ageMonths}m</div>
+        {/* v11.9.145: "5m" era ambíguo num app onde todo "m" é minuto (o timer usa m o tempo
+            todo). Escrito por extenso. E a contagem passa a ser de marcos ÚNICOS — com as
+            duplicatas do dado real, o número cru contava a mesma conquista 2x. */}
+        <div style={{fontSize:T.fSM,color:T.sub,marginTop:1,fontVariantNumeric:"tabular-nums"}}>{new Set(milestoneEntries.map(e=>e.key)).size} {L("milestonesDone")} · {ageMonths} {_lang==="en"?(ageMonths===1?"month":"months"):(ageMonths===1?"mês":"meses")}</div>
       </div>
       <button onClick={()=>{setPickedKey(null);setShowAdd(true)}} aria-label={_lang==="en"?"Add milestone":"Adicionar marco"} style={{width:40,height:40,borderRadius:12,background:"linear-gradient(135deg,#facc15,#f59e0b)",border:"none",display:"flex",alignItems:"center",justifyContent:"center",color:"#1a1f2e",fontSize:24,fontWeight:800,boxShadow:"0 4px 14px -4px rgba(250,204,21,0.5)",cursor:"pointer"}}>+</button>
     </div>
+    {/* v11.9.145: contexto ANTES do decorativo. A tela já calculava `nextCheckup` e nunca
+        contava — a consulta de 6 meses está a ~3 semanas e o pai não sabia. Tudo aqui é
+        contagem do que foi REGISTRADO, nunca avaliação da bebê. */}
+    {nextCheckup!=null&&(()=>{
+      const feitos=badgeStats.byCheckup[nextCheckup]||0,totalC=badgeStats.totalsByCheckup[nextCheckup]||0;
+      if(!totalC)return null;
+      const pct=Math.round(feitos/totalC*100);
+      // semanas até a bebê completar a idade da próxima consulta
+      let semanas=null;
+      if(birthDate){const alvo=new Date(birthDate+"T12:00");alvo.setMonth(alvo.getMonth()+nextCheckup);
+        semanas=Math.max(0,Math.round((alvo-new Date())/6048e5))}
+      return(<div style={{padding:"0 20px 12px"}}>
+        <div style={{background:"linear-gradient(180deg,rgba(22,28,60,0.6),rgba(20,26,60,0.35))",border:"1px solid rgba(167,139,250,0.34)",borderRadius:16,padding:"13px 15px",boxShadow:T.cardShadow}}>
+          <div style={{display:"flex",alignItems:"center",gap:11}}>
+            <div style={{width:34,height:34,borderRadius:11,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,...T.iconTile(T.purple)}}><Icon name="star" size={16} color={T.lilac}/></div>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontSize:T.fMD,fontWeight:700,color:T.heading,letterSpacing:-0.1}}>{_lang==="en"?`${nextCheckup}-month checkup`:`Consulta de ${nextCheckup} meses`}</div>
+              <div style={{fontSize:T.fSM,color:T.label,marginTop:1,fontVariantNumeric:"tabular-nums"}}>
+                {semanas!=null&&semanas>0?(_lang==="en"?`in ~${semanas} week${semanas>1?"s":""} · `:`em ~${semanas} semana${semanas>1?"s":""} · `):""}
+                {_lang==="en"?`${feitos} of ${totalC} milestones logged`:`${feitos} de ${totalC} marcos registrados`}
+              </div>
+            </div>
+          </div>
+          <div style={{height:5,borderRadius:3,background:"rgba(139,124,246,0.15)",marginTop:11,overflow:"hidden"}}>
+            <div style={{width:pct+"%",height:"100%",background:"linear-gradient(90deg,#9b8df8,#c4b5fd)",borderRadius:3}}/>
+          </div>
+        </div>
+      </div>);
+    })()}
+    {/* v11.9.145: os 10 marcos de recém-nascida ficavam invisíveis em TODA idade (o
+        `Math.max(2,...)` do filtro de upcoming os excluía pra sempre), e o badge cobrava
+        "0/10" sem oferecer nenhum caminho. Vira convite, não pendência. */}
+    {(badgeStats.byCheckup[0]||0)<(badgeStats.totalsByCheckup[0]||0)&&<div style={{padding:"0 20px 12px"}}>
+      <button onClick={()=>{setPickedKey(null);setPickedCategory("all");setShowAdd(true)}} style={{width:"100%",padding:"12px 14px",borderRadius:14,background:"linear-gradient(135deg,rgba(251,191,36,0.10),rgba(251,191,36,0.03))",border:"1px solid rgba(251,191,36,0.30)",display:"flex",alignItems:"center",gap:11,textAlign:"left",cursor:"pointer"}}>
+        <div style={{width:32,height:32,borderRadius:10,background:"rgba(251,191,36,0.14)",border:"1px solid rgba(251,191,36,0.3)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontSize:15}}>✨</div>
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{fontSize:T.fMD,fontWeight:700,color:T.heading}}>{_lang==="en"?"First moments":"Primeiros momentos"}</div>
+          <div style={{fontSize:T.fXS,color:T.label,marginTop:1}}>{(badgeStats.totalsByCheckup[0]||0)-(badgeStats.byCheckup[0]||0)} {_lang==="en"?"memories to log":"memórias pra registrar"}</div>
+        </div>
+        <span style={{color:"#fbbf24",fontSize:T.fLG,flexShrink:0}}>›</span>
+      </button>
+    </div>}
     {/* v11.9.129: O céu da Louise — cada marco é uma estrela acesa no dia em que aconteceu. */}
     <div style={{padding:"0 20px 16px"}}>
       <div style={{display:"flex",alignItems:"baseline",justifyContent:"space-between",marginBottom:10}}>
@@ -148,11 +211,26 @@ const MilestonesPage = React.memo(function MilestonesPage({entries,birthDate,pro
         <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{position:"absolute",inset:0,width:"100%",height:"100%",pointerEvents:"none"}}>
           {skyData.lines.map((l,i)=><line key={"cl"+i} x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} stroke="rgba(196,181,253,0.28)" strokeWidth="1" strokeDasharray="2 3" vectorEffect="non-scaling-stroke"/>)}
         </svg>
-        {skyData.dim.map(s=><div key={"d"+s.key} style={{position:"absolute",left:s.x+"%",top:s.y+"%",transform:"translate(-50%,-50%)",fontSize:12,opacity:0.28,pointerEvents:"none"}}>☆</div>)}
-        {skyData.lit.map((s,i)=><button key={s.key} className="sky-star hit44" aria-label={s.label[_lang]||s.label.en} onClick={e=>{e.stopPropagation();setSelStar(selStar===s.key?null:s.key)}} style={{position:"absolute",left:s.x+"%",top:s.y+"%",transform:"translate(-50%,-50%)",fontSize:15,filter:"drop-shadow(0 0 6px rgba(251,191,36,0.6))",animationDelay:(i%5)*0.7+"s",padding:4,zIndex:2}}>⭐</button>)}
-        {selStar&&(()=>{const s=skyData.lit.find(x=>x.key===selStar);if(!s)return null;const below=s.y<55;return(<div className="chart-tip" style={{position:"absolute",left:Math.min(Math.max(s.x,24),76)+"%",top:(s.y+(below?8:-8))+"%",transform:below?"translate(-50%,0)":"translate(-50%,-100%)",background:T.tooltipBg,border:"1px solid rgba(251,191,36,0.35)",borderRadius:10,padding:"7px 11px",whiteSpace:"nowrap",boxShadow:T.tooltipShadow,pointerEvents:"none",zIndex:5}}>
+        {/* v11.9.145: as próximas ficam tocáveis e rotuladas — antes eram inertes
+            (pointerEvents:none), então o usuário via algo apagado sem como descobrir o quê. */}
+        {skyData.dim.map(s=><button key={"d"+s.key} className="hit44" aria-label={s.label[_lang]||s.label.en} onClick={e=>{e.stopPropagation();setSelStar(selStar===("dim:"+s.key)?null:"dim:"+s.key)}} style={{position:"absolute",left:s.x+"%",top:s.y+"%",transform:"translate(-50%,-50%)",fontSize:12,opacity:0.4,background:"none",border:"none",padding:4,color:"#c4b5fd",zIndex:2}}>☆</button>)}
+        {/* v11.9.145: cor da estrela = categoria do marco (a mesma paleta que o resto da tela
+            já usa). Antes eram 21 estrelas douradas idênticas, jogando fora essa informação. */}
+        {skyData.lit.map((s,i)=>{const col=catColors[s.category]||"#fbbf24";return<button key={s.key} className="sky-star hit44" aria-label={s.label[_lang]||s.label.en} onClick={e=>{e.stopPropagation();setSelStar(selStar===s.key?null:s.key)}} style={{position:"absolute",left:s.x+"%",top:s.y+"%",transform:"translate(-50%,-50%)",fontSize:13,filter:`drop-shadow(0 0 5px ${col})`,animationDelay:(i%5)*0.7+"s",padding:4,zIndex:2,background:"none",border:"none",lineHeight:1}}>⭐</button>})}
+        {/* âncoras temporais: sem elas o eixo não se explica sozinho */}
+        {/* v11.9.145: âncoras ancoradas nas posições REAIS da 1ª e da última estrela — com a
+            serpentina, "hoje" pode terminar na esquerda ou na direita conforme a paridade da
+            faixa, então posição fixa mentiria. */}
+        {skyData.lit.length>1&&(()=>{const a=skyData.lit[0],z=skyData.lit[skyData.lit.length-1];
+          const tag=(s,txt)=>(<span style={{position:"absolute",left:Math.min(Math.max(s.x,10),90)+"%",top:`calc(${s.y}% + 13px)`,transform:"translateX(-50%)",fontSize:8,color:"#6b7099",pointerEvents:"none",whiteSpace:"nowrap",letterSpacing:0.3}}>{txt}</span>);
+          return(<>{tag(a,_lang==="en"?"born":"nasceu")}{tag(z,_lang==="en"?"now":"hoje")}</>)})()}
+        {selStar&&(()=>{
+          const isDim=selStar.indexOf("dim:")===0;
+          const s=isDim?skyData.dim.find(x=>("dim:"+x.key)===selStar):skyData.lit.find(x=>x.key===selStar);
+          if(!s)return null;const below=s.y<55;
+          return(<div className="chart-tip" style={{position:"absolute",left:Math.min(Math.max(s.x,24),76)+"%",top:(s.y+(below?8:-8))+"%",transform:below?"translate(-50%,0)":"translate(-50%,-100%)",background:T.tooltipBg,border:`1px solid ${isDim?"rgba(196,181,253,0.35)":"rgba(251,191,36,0.35)"}`,borderRadius:10,padding:"7px 11px",whiteSpace:"nowrap",boxShadow:T.tooltipShadow,pointerEvents:"none",zIndex:5}}>
           <div style={{fontSize:T.fSM,fontWeight:800,color:T.heading}}>{s.label[_lang]||s.label.en}</div>
-          <div style={{fontSize:T.fXS,color:"#fcd34d",fontWeight:700,marginTop:2,fontVariantNumeric:"tabular-nums"}}>{fmtStarDate(s.date)}</div>
+          <div style={{fontSize:T.fXS,color:isDim?T.lilac:"#fcd34d",fontWeight:700,marginTop:2,fontVariantNumeric:"tabular-nums"}}>{isDim?(_lang==="en"?"still to come":"ainda por vir"):fmtStarDate(s.date)}</div>
         </div>)})()}
         {skyData.lit.length===0&&<div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:6,padding:20,textAlign:"center"}}>
           <div style={{fontSize:20}}>✨</div>
@@ -185,7 +263,13 @@ const MilestonesPage = React.memo(function MilestonesPage({entries,birthDate,pro
       <div style={{fontSize:T.fSM,fontWeight:800,color:T.accent,textTransform:"uppercase",letterSpacing:1,marginBottom:10}}>{L("upcomingMilestones")}</div>
       <div style={{display:"flex",flexDirection:"column",gap:8}}>
         {upcoming.slice(0,4).map(m=>{
-          const isExpected=m.checkupAge<=ageMonths+1;
+          // ⚠️ v11.9.145: era `m.checkupAge<=ageMonths+1`, que com o filtro de `upcoming`
+          // (que já corta em nextCheckup) dava SEMPRE true — 100% dos cards diziam "esperado
+          // agora", inclusive marcos que o CDC posiciona um mês à frente. Efeito real: o pai
+          // lê "esperado agora" pra algo que a Louise não faz e conclui que ela está atrasada,
+          // quando falta um mês inteiro. Agora "agora" só quando a idade de referência já
+          // chegou; o resto diz explicitamente em qual consulta é esperado.
+          const isExpected=m.checkupAge<=ageMonths;
           const col=catColors[m.category]||T.accent;
           return<button key={m.key} onClick={()=>{setPickedKey(m.key);setShowAdd(true)}} style={{padding:"10px 12px",borderRadius:12,background:`linear-gradient(135deg,${col}14,${col}06)`,border:`1px solid ${col}28`,display:"flex",alignItems:"center",gap:11,textAlign:"left",cursor:"pointer"}}>
             <div style={{width:32,height:32,borderRadius:9,background:`${col}1a`,border:`1px solid ${col}30`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
@@ -193,7 +277,8 @@ const MilestonesPage = React.memo(function MilestonesPage({entries,birthDate,pro
             </div>
             <div style={{flex:1,minWidth:0}}>
               <div style={{fontSize:T.fMD,fontWeight:700,color:T.text,letterSpacing:-0.1}}>{m.label[_lang]||m.label.en}</div>
-              <div style={{fontSize:T.fXS,color:T.dim,marginTop:1}}>{isExpected?L("expectedNow"):`${L("expectedAround")} ${m.checkupAge}m`}</div>
+              {/* v11.9.145: T.dim -> T.label (T.dim mede ~2.9:1, abaixo do minimo legivel) */}
+              <div style={{fontSize:T.fXS,color:T.label,marginTop:2}}>{isExpected?L("expectedNow"):(_lang==="en"?`at the ${m.checkupAge}-month checkup`:`na consulta de ${m.checkupAge}m`)}</div>
             </div>
             <div style={{fontSize:T.fXL,color:col,fontWeight:700,opacity:0.6}}>+</div>
           </button>
@@ -218,7 +303,7 @@ const MilestonesPage = React.memo(function MilestonesPage({entries,birthDate,pro
                 <span style={{fontSize:T.fXS,fontWeight:700,color:col,padding:"1px 6px",borderRadius:5,background:`${col}1a`,letterSpacing:0.3,textTransform:"uppercase"}}>{catLabels[cat]||""}</span>
               </div>
               {e.note&&<div style={{fontSize:T.fSM,color:T.sub,lineHeight:1.45,marginTop:3}}>{e.note}</div>}
-              <button aria-label={confirmDelKey===e.id?(_lang==="en"?"Confirm delete":"Confirmar exclusão"):(_lang==="en"?"Delete":"Excluir")} onClick={()=>{if(confirmDelKey!==e.id){setConfirmDelKey(e.id);if(window.Haptic&&Haptic.warning)Haptic.warning();setTimeout(()=>setConfirmDelKey(prev=>prev===e.id?null:prev),3000);return}setConfirmDelKey(null);onDeleteEntry(e.id)}} style={{fontSize:T.fXS,color:confirmDelKey===e.id?"#fca5a5":T.dim,marginTop:6,padding:"7px 12px",minHeight:36,background:confirmDelKey===e.id?"rgba(248,113,113,0.16)":"transparent",border:confirmDelKey===e.id?"1px solid rgba(248,113,113,0.5)":"1px solid transparent",borderRadius:9,cursor:"pointer",opacity:confirmDelKey===e.id?1:0.6,letterSpacing:0.2,fontWeight:confirmDelKey===e.id?700:500}}>{confirmDelKey===e.id?(_lang==="en"?"Tap to confirm":"Tocar p/ confirmar"):(_lang==="en"?"delete":"excluir")}</button>
+              <button className="hit44" aria-label={confirmDelKey===e.id?(_lang==="en"?"Confirm delete":"Confirmar exclusão"):(_lang==="en"?"Delete":"Excluir")} onClick={()=>{if(confirmDelKey!==e.id){setConfirmDelKey(e.id);if(window.Haptic&&Haptic.warning)Haptic.warning();setTimeout(()=>setConfirmDelKey(prev=>prev===e.id?null:prev),3000);return}setConfirmDelKey(null);onDeleteEntry(e.id)}} style={{fontSize:T.fXS,color:confirmDelKey===e.id?"#fca5a5":T.dim,marginTop:6,padding:"7px 12px",minHeight:36,background:confirmDelKey===e.id?"rgba(248,113,113,0.16)":"transparent",border:confirmDelKey===e.id?"1px solid rgba(248,113,113,0.5)":"1px solid transparent",borderRadius:9,cursor:"pointer",opacity:confirmDelKey===e.id?1:0.6,letterSpacing:0.2,fontWeight:confirmDelKey===e.id?700:500}}>{confirmDelKey===e.id?(_lang==="en"?"Tap to confirm":"Tocar p/ confirmar"):(_lang==="en"?"delete":"excluir")}</button>
             </div>
           })}
         </div>

@@ -445,6 +445,23 @@ window.FB = {
       cb(data);
     });
   },
+  // ⚠️ v11.9.145: MARCOS NÃO PODEM TER JANELA. `subEntries` corta em 90 dias — certo pra
+  // mamadeira/fralda (dado operacional), CATASTRÓFICO pra marco, que é memória permanente.
+  // Achado em auditoria: 23 dos 46 marcos da Louise estavam invisíveis (nascimento, 1ª
+  // mamada, 1º banho, alta da maternidade, 1º sorriso). Pior, em cascata: como `doneKeys`
+  // não continha o registro antigo, o picker OFERECIA o marco de novo → 5 das 6 duplicatas
+  // reais nasceram assim, e o 1º sorriso ficou com a data errada (17/04 → regravado 21/07).
+  // E os badges se DESFAZIAM sozinhos conforme os marcos envelheciam pra fora da janela.
+  // Subscription própria, sem corte de data. Custo: dezenas de docs, não milhares.
+  // Sem `orderBy` de propósito — `where`+`orderBy` em campos diferentes exigiria índice
+  // composto no Firestore; a ordenação é feita aqui no cliente, que é barato neste volume.
+  subMilestones(cb) {
+    return db.collection('entries').where('type','==','milestone').onSnapshot(snap => {
+      const data = snap.docs.map(d => ({...d.data(), _docId: d.id}));
+      data.sort((a,b) => (`${b.date}T${b.time||"00:00"}`).localeCompare(`${a.date}T${a.time||"00:00"}`));
+      cb(data);
+    }, err => { console.warn("[LP] subMilestones failed:", err && err.message); cb(null); });
+  },
   // v11.9.34: loadOlderEntries removido — dead code (auditoria DB v11.9.25). Era idea
   // legítima pra Stats/History antigos, nunca foi conectado na UI. Se um dia precisar,
   // re-adicionar é trivial. Por hora, app mais enxuto.

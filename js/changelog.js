@@ -4,6 +4,31 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.145", date: "2026-08-20",
+    pt: {
+      title: "Metade dos marcos da Louise estava invisível — voltou",
+      bullets: [
+        '★ O app só carregava os últimos 90 dias, e isso escondia **23 dos 46 marcos** dela: o nascimento, a primeira mamada, o primeiro banho, a alta da maternidade, o primeiro sorriso. Agora marcos não têm mais prazo de validade.',
+        '★ Isso também causava **registros duplicados**: como o app não enxergava o registro antigo, ele oferecia o mesmo marco de novo. E fazia conquistas já ganhas voltarem a ficar bloqueadas sozinhas.',
+        '★ **O céu virou linha do tempo.** As estrelas agora ficam em ordem — do nascimento até hoje — e a linha vira uma trilha contínua em vez do emaranhado de riscos. Cada cor é uma área do desenvolvimento (motor, linguagem, social, cognitivo).',
+        'Novo card no topo com a **próxima consulta**: quando é e quantos marcos daquela idade já estão registrados.',
+        '"Esperado agora" só aparece quando é mesmo agora — antes aparecia até em marcos de um mês à frente, o que dava a impressão errada de atraso.',
+        'As estrelas apagadas (o que ainda vem) agora podem ser tocadas pra ver o que são.',
+      ],
+    },
+    en: {
+      title: "Half of Louise's milestones were invisible — they're back",
+      bullets: [
+        '★ The app only loaded the last 90 days, which hid **23 of her 46 milestones**: her birth, first feed, first bath, going home, her first smile. Milestones no longer expire.',
+        '★ This also caused **duplicate entries**: since the app could not see the older record, it offered the same milestone again. And it made already-earned achievements silently lock themselves back up.',
+        '★ **The sky became a timeline.** Stars now sit in order — from birth to today — and the line is a continuous trail instead of a tangle of scribbles. Each color is a developmental area (motor, language, social, cognitive).',
+        'New card at the top with the **next checkup**: when it is and how many milestones for that age are logged.',
+        '"Expected now" only shows when it really is now — before it appeared even for milestones a month ahead, wrongly suggesting delay.',
+        'Dimmed stars (what is still coming) can now be tapped to see what they are.',
+      ],
+    },
+  },
+  {
     v: "11.9.144", date: "2026-08-17",
     pt: {
       title: "Evento do dia: vacina, dente, doença, alimento novo, co-sleeping",

@@ -1,5 +1,8 @@
 function App(){
   const[entries,setEntries]=useState([]);const[savedMeds,setSavedMeds]=useState([]);
+  // v11.9.145: marcos vêm de subscription PRÓPRIA, sem a janela de 90d do `entries` —
+  // marco é memória permanente, não dado operacional. Ver FB.subMilestones (index.html).
+  const[milestones,setMilestones]=useState([]);
   const[profile,setProfile]=useState({name:"",birthDate:"2026-03-08",photo:"",mlGoal:0});
   const[activeTimer,setActiveTimer]=useState(null);const[loading,setLoading]=useState(true);
   // URL hash routing (v11.0): persiste a aba atual no hash pra (1) botão voltar do iPhone
@@ -244,6 +247,10 @@ function App(){
       // nao bloqueiam render path. Idempotente, fast-no-op se ja rodou.
       try{setTimeout(()=>{try{migrateLegacyWakingsOnce(d)}catch(_){}}, 0);}catch(_){}
     });
+    // v11.9.145: marcos sem janela de data. Fora do gate de `ready` de propósito — se esta
+    // query falhar (ex: índice/permissão), o app inteiro NÃO pode ficar preso no loading;
+    // degrada mostrando só os marcos que já vierem por `entries`.
+    const uM=FB.subMilestones(d=>{if(d)setMilestones(d)});
     const u2=FB.subProfile(d=>{if(d)setProfile(d);ready.p=true;check()});
     const u3=FB.subMeds(d=>{
       // v11.8.1: auto-migrate meds variaveis. Simeticona/Paracetamol/Novalgina costumam
@@ -274,7 +281,7 @@ function App(){
     const u4=FB.subTimer(d=>{setActiveTimer(d?.cleared?null:d);ready.a=true;check()});
     const u5=FB.subInbox(d=>{if(d)setInbox({items:d.items||[],lastReset:d.lastReset||""})});
     const u6=FB.subReminders(d=>setReminders(d||[]));
-    return()=>{u1();u2();u3();u4();u5();u6()};
+    return()=>{u1();u2();u3();u4();u5();u6();if(uM)uM()};
   },[]);
 
   // v11.9.27: showToast aceita 3o arg `repeatFn` pra Quick re-log. Toast mostra
@@ -391,7 +398,10 @@ function App(){
     setFormType(entry.type);
     setShowAdd(false);
   },[]);
-  const deleteEntry=useCallback(async id=>{const entry=entries.find(e=>e.id===id);await FB.delEntry(id);showToast(`${TL(entry?.type)||""} ${flexed(entry?.type,"removed")}`,async()=>{if(entry)await FB.addEntry(entry)})},[entries]);
+  // v11.9.145: procura tambem em `milestones` — um marco fora da janela de 90d não está em
+  // `entries`, então o snapshot pro undo vinha undefined e o "Desfazer" não restaurava nada
+  // (em silêncio, com o toast aparecendo normalmente).
+  const deleteEntry=useCallback(async id=>{const entry=entries.find(e=>e.id===id)||milestones.find(e=>e.id===id||e._docId===id);await FB.delEntry(id);showToast(`${TL(entry?.type)||""} ${flexed(entry?.type,"removed")}`,entry?async()=>{await FB.addEntry({...entry,_docId:undefined})}:null)},[entries,milestones]);
   // quickWakeup: creates a wakeup event. If a bedtime ended very recently (within last 30min),
   // computes the total night sleep across both halves (cross-midnight) and stores it on the wakeup
   // for display in the timeline.
@@ -972,6 +982,21 @@ function App(){
   // -> contagem de hooks muda -> React #310 (crash). Hooks sempre antes de qualquer return.
   // v11.9.99: o Crescimento lembra DE ONDE foi aberto (Stats ou Ajustes) — o voltar
   // restaura a origem em vez de despejar sempre no Stats.
+  // v11.9.145: lista ÚNICA de marcos pro app inteiro. Une a subscription sem janela com o
+  // que já vem em `entries` (os dos últimos 90d chegam pelos dois caminhos) e deduplica por
+  // _docId — se ficassem 2 fontes separadas, o contador do header, o céu e o card da Home
+  // divergiriam entre si. Dedupe por key NÃO é feito aqui de propósito: duplicata de key é
+  // dado real que precisa aparecer pro usuário poder apagar, não ser escondida pela UI.
+  const allMilestones=useMemo(()=>{
+    const seen=new Set(),out=[];
+    for(const e of [...milestones,...entries.filter(e=>e&&e.type==="milestone")]){
+      const id=e._docId||e.id;
+      if(id&&seen.has(id))continue;
+      if(id)seen.add(id);
+      out.push(e);
+    }
+    return out.sort((a,b)=>`${b.date}T${b.time||"00:00"}`.localeCompare(`${a.date}T${a.time||"00:00"}`));
+  },[milestones,entries]);
   const growthFromRef=useRef({page:"stats"});
   const goGrowth=useCallback(()=>{growthFromRef.current={page:"stats"};setPage("growth");setShowAdd(false);setFormType(null)},[]);
   // v11.9.110: Comportamento (curva semanal) — mesmo padrão do Crescimento. useCallback ANTES do early-return.
@@ -1316,7 +1341,7 @@ function App(){
           const nextCheckup=checkups.find(c=>c>ageMonths);
           const daysToCheckup=nextCheckup!=null?Math.max(0,Math.round((nextCheckup-ageMonths)*30-(age?.days||0))):null;
           if(daysToCheckup==null||daysToCheckup>14)return null;
-          const doneKeys=new Set(entries.filter(e=>e.type==="milestone").map(e=>e.key));
+          const doneKeys=new Set(allMilestones.map(e=>e.key));
           const upcoming=all.filter(m=>m.checkupAge>=Math.max(2,currentCheckup-1)&&m.checkupAge<=(nextCheckup||currentCheckup+2)&&!doneKeys.has(m.key));
           if(upcoming.length===0)return null;
           const next=upcoming[0];
@@ -1364,7 +1389,7 @@ function App(){
       </div>:null}
       {page==="growth"&&<GrowthPage entries={entries} birthDate={profile.birthDate} profile={profile} onBack={()=>{const f=growthFromRef.current||{page:"stats"};goTo(f.page||"stats");if(f.profile)setShowProfile(true)}} onAddEntry={addEntry} onDeleteEntry={deleteEntry}/>}
       {page==="behavior"&&<BehaviorPage entries={entries} birthDate={profile.birthDate} onBack={()=>{const f=behaviorFromRef.current||{page:"stats"};goTo(f.page||"stats")}} lang={lang}/>}
-      {page==="milestones"&&<MilestonesPage entries={entries} birthDate={profile.birthDate} profile={profile} onBack={()=>goTo("home")} onAddEntry={addEntry} onDeleteEntry={deleteEntry} lang={lang}/>}
+      {page==="milestones"&&<MilestonesPage milestones={allMilestones} birthDate={profile.birthDate} profile={profile} onBack={()=>goTo("home")} onAddEntry={addEntry} onDeleteEntry={deleteEntry} lang={lang}/>}
       {/* Bottom spacer so content clears nav bar + timer (dynamic w/ safe-area) */}
       {/* Sem bottom spacer (v10.2.9) — queremos conteúdo passando ATRÁS da nav
           pill translúcida (Instagram-style: você rola até o fim, o último card
