@@ -30,6 +30,10 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # No nível do JOB pra que o `if` do step de deploy consiga ler (um `env` declarado
+    # dentro do próprio step só existe DEPOIS que a condição já foi avaliada).
+    env:
+      FIREBASE_SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -64,6 +68,19 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: dist
+
+      # v11.9.147: deploy PARALELO pro Firebase Hosting (louise-pro.web.app).
+      # Fase de transição: os 2 endereços servem a mesma versão enquanto o William troca os
+      # atalhos dos 2 iPhones. Depois disso o Pages sai e este vira o único.
+      # O step é CONDICIONAL ao secret existir — sem ele o CI segue verde e só publica no
+      # Pages, em vez de falhar o build inteiro por causa de credencial ausente.
+      - name: Deploy to Firebase Hosting (se o secret estiver configurado)
+        if: ${{ env.FIREBASE_SA != '' }}
+        run: |
+          printf '%s' "$FIREBASE_SA" > "$RUNNER_TEMP/fb-sa.json"
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/fb-sa.json"
+          npx --yes firebase-tools@latest deploy --only hosting --project louise-pro --non-interactive
+          rm -f "$RUNNER_TEMP/fb-sa.json"
 
   deploy:
     needs: build
