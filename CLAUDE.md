@@ -188,6 +188,46 @@ louise-pro/
 - Deploy: push na `main` → GitHub Action roda o build e publica `dist/` via `actions/deploy-pages`
 - Pre-requisito **uma vez só no repo**: Settings → Pages → Source = "GitHub Actions"
 
+## ⚠️ Hospedagem em TRANSIÇÃO: GitHub Pages → Firebase Hosting (ago/2026)
+
+**Estado atual: os DOIS estão no ar servindo a mesma versão.** Todo push na `main` publica nos
+dois — o workflow tem o step do Pages e o do Firebase Hosting.
+
+- **Antigo (ainda ativo):** https://williamscchulz-was.github.io/louise-pro/
+- **Novo:** https://louise-pro.web.app
+
+**Por que migrar:** o William quer **privar o repositório**. No GitHub Pages, repo privado no
+plano Free **despublica o site** — confirmado na doc. O Firebase Hosting separa hospedagem de
+código, e roda no plano **Spark** (10 GB / 360 MB por dia; o app tem ~1,4 MB), então não conflita
+com desativar o Blaze.
+
+**Config:** `firebase.json` (raiz = `dist/`) + `.firebaserc`. Os paths do app já eram todos
+relativos (`js/...`, `assets/...`, `start_url: ./index.html`), então funciona igual na raiz do
+Firebase e no subpath do Pages — nada no código precisou mudar.
+⚠️ `sw.js`, `firebase-messaging-sw.js`, `index.html` e `js/**` são servidos com **no-cache**:
+o `app-libs.js` NÃO tem hash no nome, então cache HTTP longo serviria código velho depois de um
+deploy (é a classe do bug da v10.0.1, "SW servindo HTML antigo").
+
+**CI:** o step do Firebase é **condicional** ao secret `FIREBASE_SERVICE_ACCOUNT` existir, com o
+`env` no nível do JOB (um `env` declarado dentro do próprio step não é visível no `if` dele, que
+é avaliado antes). Sem o secret o CI segue verde e publica só no Pages, em vez de falhar o build.
+O secret já está configurado (service account `firebase-adminsdk-fbsvc@louise-pro`, chave
+`fbae6645...` de 21/ago/2026). Testado por `workflow_dispatch`: step retornou `success`.
+
+**⚠️ O QUE FALTA (passos do William, nesta ordem):**
+1. Instalar `louise-pro.web.app` nos 2 iPhones e **reconceder a permissão de notificação**.
+2. **Confirmar que o lembrete de mamada volta a chegar.** Tokens FCM são vinculados à ORIGEM —
+   os tokens do domínio `github.io` não valem no `web.app`, e o push fica mudo até o app
+   re-registrar. É o único componente que a troca de domínio realmente quebra.
+3. Só então: desativar o Pages (e remover o step do workflow) e privar o repo.
+
+**Efeitos colaterais da troca de domínio (nenhum perde dado):** localStorage zera (flags de
+"já vi a versão", backup do dia, inbox lida, splash); o cache offline do Firestore começa vazio
+e re-baixa ~2.259 docs na 1ª abertura; o PWA precisa ser reinstalado (é outro app pro iOS).
+
+**Sugestão registrada, não decidida:** apontar um **domínio próprio** (custom domain + SSL entram
+no Spark) evitaria passar por essa reinstalação de novo numa futura troca de host.
+
 ## Ambiente local (multi-máquina)
 
 O William trabalha neste repo a partir de **várias máquinas** via Claude Code (PC de casa, PC do trabalho, MacBook). Todas compartilham o mesmo remote (`origin/main`) como fonte da verdade.
