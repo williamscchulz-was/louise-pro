@@ -1,0 +1,26 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash 'C:\\Users\\willi\\Documents\\projects\\louise-pro\\.codex\\hooks\\sync-pull.sh'",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash 'C:\\Users\\willi\\Documents\\projects\\louise-pro\\.codex\\hooks\\sync-push.sh'",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}
