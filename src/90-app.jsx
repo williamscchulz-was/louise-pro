@@ -477,7 +477,20 @@ function App(){
       Haptic.warning();
     }
   },[activeTimer]);
-  const stopTimer=useCallback(async()=>{if(!activeTimer)return;Haptic.heavy();const s=new Date(activeTimer.startTime);
+  // ⚠️ v11.9.147: GUARDA DE DOUBLE-SUBMIT (bug provado no dado real). Sem isso, tocar 2x no
+  // botão Parar do bedtime gravava DOIS documentos gêmeos com 3–4s de diferença — mesma
+  // hora, mesma duração, mesma data. Efeito no gráfico de sono: contava a mesma noite duas
+  // vezes e mostrava 14h+ dormidas em vez das ~7h reais. O `if(!activeTimer)return` já
+  // existia mas só barrava a 2ª chamada DEPOIS que `await FB.stopTimerAndLog` da 1ª
+  // resolvesse — no meio, `activeTimer` continua verdadeiro. O ref bloqueia SÍNCRONO.
+  // Mesmo padrão do `savingRef` do AddForm desde a v11.7.3.
+  const stoppingRef=useRef(false);
+  const stopTimer=useCallback(async()=>{
+    if(!activeTimer||stoppingRef.current)return;
+    stoppingRef.current=true;
+    try{return await _doStop()}finally{stoppingRef.current=false}
+  },[activeTimer]);
+  const _doStop=useCallback(async()=>{if(!activeTimer)return;Haptic.heavy();const s=new Date(activeTimer.startTime);
     // v11.9.96: timer CANCELÁVEL — sono/soneca com <3min é mis-tap, não registro: descarta
     // sem criar entry nem wakeup fantasma (que podia virar âncora do wakeDelta e deslocar
     // a rotina inteira em até ±2h). O botão do TimerBar fica cinza (✕) nesse estado.

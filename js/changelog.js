@@ -4,6 +4,25 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.147", date: "2026-09-02",
+    pt: {
+      title: "Dois toques no botão Parar não geram mais noite duplicada + alerta de volume mais paciente",
+      bullets: [
+        '★ Encerrar o bedtime com dois toques rápidos (comum no escuro/tela bloqueada) gravava a mesma noite duas vezes no Firestore, e o gráfico contava as horas em dobro. Agora o botão bloqueia o segundo toque.',
+        '★ Uma duplicata real da noite de 01/09 foi limpa. As horas mostradas devem cair pro valor certo.',
+        '★ O alerta "abaixo do volume recomendado" não aparece mais de manhã com o dia ainda incompleto — só julga depois que já teve mamadas suficientes pra ser uma comparação justa. Antes ele disparou às 07:06 dizendo "210ml today" (as duas mamadas da madrugada) contra a meta do dia inteiro.',
+      ],
+    },
+    en: {
+      title: "Two taps on Stop no longer create a duplicate night + calmer volume alert",
+      bullets: [
+        '★ Ending a bedtime with two quick taps (common in the dark, with the screen locked) was saving the same night twice in Firestore, and the chart counted the hours twice. The button now blocks the second tap.',
+        '★ One real duplicate for the night of 09/01 was cleaned up. The shown hours should drop back to the right value.',
+        '★ The "below recommended volume" alert no longer fires in the morning with the day still incomplete — it only judges once there have been enough feeds for a fair comparison. Before, it fired at 07:06 saying "210ml today" (just the two dawn feeds) against a full-day target.',
+      ],
+    },
+  },
+  {
     v: "11.9.146", date: "2026-08-20",
     pt: {
       title: "Rede de segurança do backup + acabamento dos Marcos",

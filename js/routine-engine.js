@@ -1862,10 +1862,23 @@
     }
 
     // 16. FEED VOLUME vs WHO GUIDELINE
+    // ⚠️ v11.9.147: guarda REFORÇADA (bug provado no dado real do William, 01/set).
+    // O alerta disparou às 07:06 dizendo "210ml today (WHO: 700-1000ml)". Os 210ml eram
+    // reais — mas eram as DUAS mamadas da madrugada (110+100). O único gate era
+    // `nowM >= 1080` (18h), suficiente pra bloquear geração NOVA de dia, mas insuficiente
+    // pra situação em que o app fica aberto atravessando a meia-noite: o hint capturado
+    // à noite ficava no inbox e, no cruzamento de dia, o cálculo se refazia com o novo
+    // "today" ainda vazio + mudou o `sub`. Agora exige, ALÉM do horário, que a soma
+    // de hoje seja compatível com "dia praticamente completo": ≥5 mamadeiras hoje OU
+    // ≥60% do mínimo da OMS. Assim uma manhã com 2 mamadas nunca dispara "abaixo do
+    // recomendado", mesmo que o horário do relógio esteja errado por algum motivo.
     if (fp && fp.feeds && nowM >= 1080) {
       var bottlesToday = todayE.filter(function(e) { return e.type === "bottle"; });
       var totalMlToday = bottlesToday.reduce(function(s, e) { return s + (e.ml || 0); }, 0);
-      if (totalMlToday > 0) {
+      // v11.9.147: se o dia claramente ainda não terminou (poucas mamadeiras ou volume
+      // baixo demais pra alguém que ficou 18h+ acordada), NÃO julga.
+      var dayLooksComplete = bottlesToday.length >= 5;
+      if (totalMlToday > 0 && dayLooksComplete) {
         var whoVol = null;
         if (guideline) {
           for (var gii = 0; gii < GUIDELINES.length; gii++) {
