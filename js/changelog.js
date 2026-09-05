@@ -4,6 +4,11 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.150", date: "2026-09-05",
+    pt: {title:"Alimentos ficam salvos na sua lista",bullets:['★ **+ Novo alimento → Salvar alimento** cadastra sem precisar lançar uma refeição. A lista fica salva e sincronizada nos dois celulares.','Alimentos não somem ao apagar uma refeição ou sair do histórico recente. Removido o limite de dez opções; catálogo incluído no backup.']},
+    en: {title:"Foods stay saved in your list",bullets:['★ **+ New food → Save food** adds a food without logging a meal. The list is saved and synced across both phones.','Foods remain after deleting a meal or leaving recent history. Removed the ten-option limit; the catalog is included in backups.']},
+  },
+  {
     v: "11.9.149", date: "2026-09-05",
     pt: {title:"Botão para adicionar novos alimentos",bullets:['Em Comida, toque em **+ Novo alimento** para limpar o nome selecionado e digitar outro. Salve o registro para reutilizá-lo depois.']},
     en: {title:"Button to add new foods",bullets:['In Food, tap **+ New food** to clear the selected name and type another. Save the entry to reuse it later.']},

@@ -1,5 +1,6 @@
 function App(){
   const[entries,setEntries]=useState([]);const[savedMeds,setSavedMeds]=useState([]);
+  const[savedFoods,setSavedFoods]=useState([]);
   // v11.9.145: marcos vêm de subscription PRÓPRIA, sem a janela de 90d do `entries` —
   // marco é memória permanente, não dado operacional. Ver FB.subMilestones (index.html).
   const[milestones,setMilestones]=useState([]);
@@ -261,6 +262,8 @@ function App(){
     // query falhar (ex: índice/permissão), o app inteiro NÃO pode ficar preso no loading;
     // degrada mostrando só os marcos que já vierem por `entries`.
     const uM=FB.subMilestones(d=>{if(d)setMilestones(d)});
+    const uF=FB.subFoods(setSavedFoods);
+    FB.migrateFoods().catch(err=>console.warn('[LP] food migration will retry on next opening',err));
     const u2=FB.subProfile(d=>{if(d)setProfile(d);ready.p=true;check()});
     const u3=FB.subMeds(d=>{
       // v11.8.1: auto-migrate meds variaveis. Simeticona/Paracetamol/Novalgina costumam
@@ -291,7 +294,7 @@ function App(){
     const u4=FB.subTimer(d=>{setActiveTimer(d?.cleared?null:d);ready.a=true;check()});
     const u5=FB.subInbox(d=>{if(d)setInbox({items:d.items||[],lastReset:d.lastReset||""})});
     const u6=FB.subReminders(d=>setReminders(d||[]));
-    return()=>{u1();u2();u3();u4();u5();u6();if(uM)uM()};
+    return()=>{u1();u2();u3();u4();u5();u6();if(uM)uM();if(uF)uF()};
   },[]);
 
   // v11.9.27: showToast aceita 3o arg `repeatFn` pra Quick re-log. Toast mostra
@@ -1473,7 +1476,7 @@ function App(){
         popup e resolve o jank de anim\u00e7\u00e3o no iPhone. prop `wide` deixa um pouco mais largo
         pros campos de data/hora caberem confort\u00e1veis. */}
     <Modal open={!!formType} onClose={()=>{setFormType(null);setEditEntry(null)}} wide>
-      {formType&&<AddForm type={formType} onSave={addEntry} onSaveBatch={addMedicineBatch} savedMeds={savedMeds} onSaveMeds={async m=>await FB.saveMeds(m)} editEntry={editEntry} lastBottleMl={lastBottleMl} lastBottleEntry={lastBottleEntry} feedingIntervalMin={feedingIntervalMin} topMl={topMl} suggestedMl={routineState?.nextBottleMl} allEntries={entries} onStartTimer={type=>{setFormType(null);setShowAdd(false);if(type==="nursing")setShowNursingPicker(true);else startTimer(type)}} onDelete={editEntry?async()=>{await deleteEntry(editEntry.id);setFormType(null);setEditEntry(null)}:undefined}/>}
+      {formType&&<AddForm type={formType} onSave={addEntry} onSaveBatch={addMedicineBatch} savedMeds={savedMeds} onSaveMeds={async m=>await FB.saveMeds(m)} savedFoods={savedFoods} onSaveFood={name=>FB.saveFood(name)} editEntry={editEntry} lastBottleMl={lastBottleMl} lastBottleEntry={lastBottleEntry} feedingIntervalMin={feedingIntervalMin} topMl={topMl} suggestedMl={routineState?.nextBottleMl} allEntries={entries} onStartTimer={type=>{setFormType(null);setShowAdd(false);if(type==="nursing")setShowNursingPicker(true);else startTimer(type)}} onDelete={editEntry?async()=>{await deleteEntry(editEntry.id);setFormType(null);setEditEntry(null)}:undefined}/>}
     </Modal>
 
     {showReport&&<ReportPage entries={entries} birthDate={profile.birthDate} babyName={profile.name} lang={lang} onBack={()=>setShowReport(false)}/>}

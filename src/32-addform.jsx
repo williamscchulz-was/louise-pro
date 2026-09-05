@@ -1,4 +1,4 @@
-function AddForm({type,onSave,onSaveBatch,savedMeds,onSaveMeds,editEntry,lastBottleMl,lastBottleEntry,feedingIntervalMin,topMl,onStartTimer,suggestedMl,allEntries,onDelete}){const cfg=TYPES[type];const ed=editEntry||{};
+function AddForm({type,onSave,onSaveBatch,savedMeds,onSaveMeds,savedFoods=[],onSaveFood,editEntry,lastBottleMl,lastBottleEntry,feedingIntervalMin,topMl,onStartTimer,suggestedMl,allEntries,onDelete}){const cfg=TYPES[type];const ed=editEntry||{};
   const[date,setDate]=useState(ed.date||todayStr());
   // v11.9.3: Bottle volta a usar nowTime (revertido o smart default da v11.9.1 — usuário
   // prefere registrar no horário real, não no horário esperado).
@@ -8,11 +8,21 @@ function AddForm({type,onSave,onSaveBatch,savedMeds,onSaveMeds,editEntry,lastBot
   const _nm0=new Date(),_nowMin=_nm0.getHours()*60+_nm0.getMinutes();
   const[ml,setMl]=useState(ed.ml?String(ed.ml):(type==="bottle"&&!editEntry?String(hourlyTypicalMl(allEntries,_nowMin)||suggestedMl||lastBottleMl||""):""));const[durH,setDurH]=useState(ed.durationMin?String(Math.floor(ed.durationMin/60)):"");const[durM,setDurM]=useState(ed.durationMin?String(ed.durationMin%60):"");
   const[diaperT,setDiaperT]=useState(ed.subtype||(type==="diaper"&&!editEntry?(likelyDiaperSubtype(allEntries,_nowMin)||"wet"):"wet"));const[medN,setMedN]=useState(ed.name||"");const[medD,setMedD]=useState(ed.dose||"");
-  // v11.9.148: introdução alimentar. Banana é o primeiro/default; qualquer nome novo
-  // gravado numa entry vira opção reutilizável nas próximas aberturas, sem um segundo
-  // documento de catálogo que poderia sofrer corrida entre os dois iPhones.
+  // v11.9.150: catálogo próprio e persistente, independente dos registros de refeição.
   const[foodName,setFoodName]=useState(ed.name||"Banana");
   const foodInputRef=useRef(null);
+  const foodSavingRef=useRef(false);
+  const[foodSaving,setFoodSaving]=useState(false);
+  const[foodFeedback,setFoodFeedback]=useState("");
+  useEffect(()=>{setFoodFeedback("")},[foodName]);
+  const saveFoodChoice=async()=>{
+    const name=foodName.trim().replace(/\s+/g," ");
+    if(!name||foodSavingRef.current)return;
+    foodSavingRef.current=true;setFoodSaving(true);setFoodFeedback("");
+    try{await onSaveFood(name);setFoodFeedback("saved")}
+    catch(err){setFoodFeedback("error")}
+    finally{foodSavingRef.current=false;setFoodSaving(false)}
+  };
   // v11.9.144: evento do dia (vacina/dente/doença/alimento novo/co-sleeping)
   const[evTag,setEvTag]=useState(ed.tag||"");
   const[evUntil,setEvUntil]=useState(ed.untilDate||"");
@@ -26,10 +36,10 @@ function AddForm({type,onSave,onSaveBatch,savedMeds,onSaveMeds,editEntry,lastBot
   const isEdit=!!editEntry;
   const foodChoices=[];
   const foodSeen=new Set();
-  ["Banana",ed.name,...(allEntries||[]).filter(e=>e&&e.type==="food").map(e=>e.name)].forEach(name=>{
+  ["Banana",ed.name,...savedFoods,...(allEntries||[]).filter(e=>e&&e.type==="food").map(e=>e.name)].forEach(name=>{
     const clean=String(name||"").trim().replace(/\s+/g," ");
     const key=clean.toLocaleLowerCase();
-    if(clean&&!foodSeen.has(key)&&foodChoices.length<10){foodSeen.add(key);foodChoices.push(clean)}
+    if(clean&&!foodSeen.has(key)){foodSeen.add(key);foodChoices.push(clean)}
   });
   // v11.8.0: medicine multi-select + drops picker. Em edit mode mantem single-select
   // (edita s\u00f3 uma entry por vez). No add mode, usu\u00e1rio pode marcar varios meds de
@@ -186,12 +196,14 @@ function AddForm({type,onSave,onSaveBatch,savedMeds,onSaveMeds,editEntry,lastBot
       {type==="nursing"&&<><Fld label={L("side")}><Seg opts={[{v:"left",l:L("left")},{v:"right",l:L("right")},{v:"both",l:L("both")}]} val={side} set={setSide} color={cfg.color}/></Fld><Fld label={`${L("duration")} (min)`}><input type="number" inputMode="numeric" placeholder="15" value={nurseM} onChange={e=>setNurseM(e.target.value)} style={inp}/></Fld></>}
       {type==="food"&&<>
         <div style={{fontSize:T.fSM,fontWeight:700,color:T.label,letterSpacing:0.4,margin:"0 0 8px 4px",textTransform:"uppercase"}}>{_lang==="en"?"Choose again or add a new food":"Escolha de novo ou adicione uma comida"}</div>
-        <div style={{display:"flex",flexWrap:"wrap",gap:8,marginBottom:14}}>
+        <div style={{display:"flex",flexWrap:"wrap",gap:8,marginBottom:14,maxHeight:180,overflowY:"auto"}}>
           {foodChoices.map(name=>{const on=foodName.trim().toLocaleLowerCase()===name.toLocaleLowerCase();return<button key={name.toLocaleLowerCase()} onClick={()=>setFoodName(name)} style={{padding:"10px 14px",borderRadius:T.rMD,background:on?`${cfg.color}24`:T.glass,border:`1px solid ${on?`${cfg.color}88`:T.gB}`,fontSize:T.fMD,fontWeight:700,color:on?cfg.color:T.text,boxShadow:on?`0 0 12px ${cfg.color}15`:"none",transition:"all .2s"}}>{name}</button>})}
         </div>
         <button type="button" onClick={()=>{setFoodName("");foodInputRef.current?.focus()}} style={{minHeight:44,display:"flex",alignItems:"center",gap:6,padding:"10px 14px",marginBottom:14,borderRadius:T.rMD,background:T.glass,border:`1px dashed ${cfg.color}`,color:cfg.color,fontSize:T.fMD,fontWeight:700}}><span aria-hidden="true">+</span>{_lang==="en"?"New food":"Novo alimento"}</button>
         <Fld label={_lang==="en"?"Food":"Alimento"}><input ref={foodInputRef} type="text" autoCapitalize="words" maxLength={60} placeholder={_lang==="en"?"e.g. Avocado":"Ex: Abacate"} value={foodName} onChange={e=>setFoodName(e.target.value)} style={inp}/></Fld>
-        <div style={{fontSize:T.fSM,color:T.label,lineHeight:1.45,margin:"-8px 4px 16px"}}>{_lang==="en"?"A new name is saved with this entry and appears here next time.":"Um nome novo fica salvo neste registro e aparece aqui na próxima vez."}</div>
+        <button type="button" disabled={foodSaving||!foodName.trim()} onClick={saveFoodChoice} style={{minHeight:44,padding:"10px 14px",marginBottom:8,borderRadius:T.rMD,background:cfg.bg,color:cfg.color,border:`1px solid ${cfg.color}`,fontSize:T.fMD,fontWeight:700,opacity:foodSaving||!foodName.trim()?0.5:1}}>{foodSaving?(_lang==="en"?"Saving food…":"Salvando alimento…"):(_lang==="en"?"Save food":"Salvar alimento")}</button>
+        {foodFeedback&&<div role="status" style={{fontSize:T.fSM,color:foodFeedback==="error"?T.red:T.green,marginBottom:8}}>{foodFeedback==="saved"?(_lang==="en"?"Food saved to your list.":"Alimento salvo na sua lista."):(_lang==="en"?"Could not save food. Try again.":"Não foi possível salvar o alimento. Tente novamente.")}</div>}
+        <div style={{fontSize:T.fSM,color:T.label,lineHeight:1.45,margin:"0 4px 16px"}}>{_lang==="en"?"Save food keeps it in your list without logging a meal. Use Save below to log the meal.":"Salvar alimento guarda na sua lista sem lançar uma refeição. Use Salvar abaixo para registrar a refeição."}</div>
       </>}
       {type==="tummytime"&&<Fld label={L("duration")}><div style={{display:"flex",gap:10,alignItems:"center"}}><input type="number" inputMode="numeric" placeholder="0" value={tumM} onChange={e=>setTumM(e.target.value)} style={{...inp,flex:1,textAlign:"center",fontSize:T.f3XL,fontWeight:800}}/><span style={{color:T.dim,fontWeight:700}}>min</span><input type="number" inputMode="numeric" placeholder="0" value={tumS} onChange={e=>setTumS(e.target.value)} style={{...inp,flex:1,textAlign:"center",fontSize:T.f3XL,fontWeight:800}}/><span style={{color:T.dim,fontWeight:700}}>s</span></div></Fld>}
       {(type==="sleep"||type==="nap")&&<>

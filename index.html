@@ -478,6 +478,26 @@ window.FB = {
   async saveProfile(p) { await db.collection('config').doc('profile').set(p, {merge:true}); },
   subMeds(cb) { return db.collection('config').doc('meds').onSnapshot(s => cb(s.exists ? s.data()?.list : null)); },
   async saveMeds(m) { await db.collection('config').doc('meds').set({list:m}); },
+  // v11.9.150: catálogo permanente; união atômica preserva cadastros dos dois devices.
+  foodNames(names) {
+    return [...new Set((Array.isArray(names) ? names : []).filter(n => typeof n === 'string').map(n => n.trim().replace(/\s+/g, ' ').slice(0,60)).filter(Boolean))];
+  },
+  subFoods(cb) {
+    return db.collection('config').doc('foods').onSnapshot(s => cb(s.exists && Array.isArray(s.data().list) ? s.data().list : []), err => console.warn('[LP] subFoods failed', err));
+  },
+  async saveFood(name) {
+    const names = this.foodNames([name]);
+    if (!names.length) throw new Error('Empty food name');
+    await db.collection('config').doc('foods').set({list:firebase.firestore.FieldValue.arrayUnion(...names)}, {merge:true});
+  },
+  async migrateFoods() {
+    const ref = db.collection('config').doc('foods');
+    const catalog = await ref.get({source:'server'});
+    if (catalog.exists && catalog.data().legacyImported) return;
+    const legacy = await db.collection('entries').where('type','==','food').get({source:'server'});
+    const names = this.foodNames(['Banana', ...legacy.docs.map(d => d.data().name)]);
+    await ref.set({list:firebase.firestore.FieldValue.arrayUnion(...names),legacyImported:true}, {merge:true});
+  },
   subTimer(cb) { return db.collection('config').doc('active').onSnapshot(s => cb(s.exists ? s.data() : null)); },
   async saveTimer(t) { await db.collection('config').doc('active').set(t||{cleared:true}); },
   // v11.9.122: escreve 1+ entries E limpa o timer ativo em UM COMMIT atômico — antes eram
@@ -495,6 +515,8 @@ window.FB = {
       const clean = Object.fromEntries(Object.entries(e).filter(([_,v]) => v !== undefined));
       batch.set(db.collection('entries').doc(e.id), clean);
     }
+    const foods = this.foodNames(entries.filter(e => e.type === 'food').map(e => e.name));
+    if (foods.length) batch.set(db.collection('config').doc('foods'), {list:firebase.firestore.FieldValue.arrayUnion(...foods)}, {merge:true});
     if (timer !== undefined) batch.set(db.collection('config').doc('active'), timer || {cleared:true});
     await batch.commit();
   },
@@ -569,13 +591,15 @@ window.FB = {
     const profile = profileSnap.exists ? profileSnap.data() : null;
     const medsSnap = await db.collection('config').doc('meds').get(sv);
     const meds = medsSnap.exists ? (medsSnap.data().list || []) : [];
+    const foodsSnap = await db.collection('config').doc('foods').get(sv);
+    const foods = foodsSnap.exists ? this.foodNames(foodsSnap.data().list) : [];
     const inboxSnap = await db.collection('config').doc('inbox').get(sv);
     const inbox = inboxSnap.exists ? inboxSnap.data() : null;
     const remindersSnap = await db.collection('config').doc('reminders').collection('items').get(sv);
     const reminders = remindersSnap.docs.map(d => ({...d.data(), _id: d.id}));
     return {
       _meta: { version: 1, exportedAt: new Date().toISOString(), app: 'louise-pro' },
-      entries, profile, meds, inbox, reminders
+      entries, profile, meds, foods, inbox, reminders
     };
   },
   async importAll(data) {
@@ -585,6 +609,9 @@ window.FB = {
     // Restore vai de ~80s pra ~5s. Limite Firestore: 500 ops por commit.
     const BATCH_MAX = 500;
     const allOps = [];
+    // Backups antigos também recuperam nomes; importar nunca apaga o catálogo atual.
+    const foods = this.foodNames([...(Array.isArray(data.foods) ? data.foods : []), ...(Array.isArray(data.entries) ? data.entries.filter(e => e.type === 'food').map(e => e.name) : [])]);
+    if (foods.length) allOps.push({ref:db.collection('config').doc('foods'),data:{list:firebase.firestore.FieldValue.arrayUnion(...foods)},opts:{merge:true}});
     if (Array.isArray(data.entries)) {
       for (const e of data.entries) {
         const clean = { ...e }; delete clean._docId;
