@@ -24,7 +24,8 @@ Até setembro/2026 este projeto foi mantido pelo **Claude Code** (Anthropic). O 
 - **Localização**: Blumenau, SC, Brasil (BRT, UTC-3)
 - **Repositório**: https://github.com/williamscchulz-was/louise-pro
 - **Live**: https://williamscchulz-was.github.io/louise-pro/
-- **Versão atual**: v11.9.148 (app) / routine-engine v2.2.4
+- **Versão atual**: v11.9.149 (app) / routine-engine v2.2.4
+- **Botão + Novo alimento (v11.9.149):** ajuste solicitado pelo William no formulário Comida. Botão explícito PT/EN com altura mínima de 44px limpa o nome selecionado e foca o input sincronamente no gesto (teclado iOS). `foodInputRef` declarado junto aos hooks do AddForm. O alimento continua entrando nas opções após salvar o registro, usando a persistência existente.
 - **Introdução alimentar: registro Comida + Banana default (v11.9.148):** pedido urgente do William para começar a lançar sólidos antes dos 6 meses. Novo tipo aditivo `food` em `entries/`, sem migração nem coleção paralela.
   - **Schema:** `{type:"food", name, date, time, notes?, id}`. O AddForm valida `name`, normaliza espaços e limita o input a 60 caracteres. **Banana** vem selecionada em todo registro novo, como primeira opção pronta.
   - **Criar e reutilizar sem corrida entre devices:** as opções são derivadas das próprias entries `food` já sincronizadas; ao digitar e salvar um nome novo, ele reaparece como chip nas próximas aberturas (dedupe case-insensitive, Banana sempre primeiro, até 10 recentes). Não existe `config/foods` separado — isso evita mais um documento compartilhado sujeito a sobrescrita concorrente entre os dois iPhones.

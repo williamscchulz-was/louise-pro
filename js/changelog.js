@@ -4,6 +4,11 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.149", date: "2026-09-05",
+    pt: {title:"Botão para adicionar novos alimentos",bullets:['Em Comida, toque em **+ Novo alimento** para limpar o nome selecionado e digitar outro. Salve o registro para reutilizá-lo depois.']},
+    en: {title:"Button to add new foods",bullets:['In Food, tap **+ New food** to clear the selected name and type another. Save the entry to reuse it later.']},
+  },
+  {
     v: "11.9.148", date: "2026-09-05",
     pt: {
       title: "Introdução alimentar começou: Banana e novos sabores",

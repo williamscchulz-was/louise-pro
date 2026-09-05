@@ -12,6 +12,7 @@ function AddForm({type,onSave,onSaveBatch,savedMeds,onSaveMeds,editEntry,lastBot
   // gravado numa entry vira opção reutilizável nas próximas aberturas, sem um segundo
   // documento de catálogo que poderia sofrer corrida entre os dois iPhones.
   const[foodName,setFoodName]=useState(ed.name||"Banana");
+  const foodInputRef=useRef(null);
   // v11.9.144: evento do dia (vacina/dente/doença/alimento novo/co-sleeping)
   const[evTag,setEvTag]=useState(ed.tag||"");
   const[evUntil,setEvUntil]=useState(ed.untilDate||"");
@@ -188,7 +189,8 @@ function AddForm({type,onSave,onSaveBatch,savedMeds,onSaveMeds,editEntry,lastBot
         <div style={{display:"flex",flexWrap:"wrap",gap:8,marginBottom:14}}>
           {foodChoices.map(name=>{const on=foodName.trim().toLocaleLowerCase()===name.toLocaleLowerCase();return<button key={name.toLocaleLowerCase()} onClick={()=>setFoodName(name)} style={{padding:"10px 14px",borderRadius:T.rMD,background:on?`${cfg.color}24`:T.glass,border:`1px solid ${on?`${cfg.color}88`:T.gB}`,fontSize:T.fMD,fontWeight:700,color:on?cfg.color:T.text,boxShadow:on?`0 0 12px ${cfg.color}15`:"none",transition:"all .2s"}}>{name}</button>})}
         </div>
-        <Fld label={_lang==="en"?"Food":"Alimento"}><input type="text" autoCapitalize="words" maxLength={60} placeholder={_lang==="en"?"e.g. Avocado":"Ex: Abacate"} value={foodName} onChange={e=>setFoodName(e.target.value)} style={inp}/></Fld>
+        <button type="button" onClick={()=>{setFoodName("");foodInputRef.current?.focus()}} style={{minHeight:44,display:"flex",alignItems:"center",gap:6,padding:"10px 14px",marginBottom:14,borderRadius:T.rMD,background:T.glass,border:`1px dashed ${cfg.color}`,color:cfg.color,fontSize:T.fMD,fontWeight:700}}><span aria-hidden="true">+</span>{_lang==="en"?"New food":"Novo alimento"}</button>
+        <Fld label={_lang==="en"?"Food":"Alimento"}><input ref={foodInputRef} type="text" autoCapitalize="words" maxLength={60} placeholder={_lang==="en"?"e.g. Avocado":"Ex: Abacate"} value={foodName} onChange={e=>setFoodName(e.target.value)} style={inp}/></Fld>
         <div style={{fontSize:T.fSM,color:T.label,lineHeight:1.45,margin:"-8px 4px 16px"}}>{_lang==="en"?"A new name is saved with this entry and appears here next time.":"Um nome novo fica salvo neste registro e aparece aqui na próxima vez."}</div>
       </>}
       {type==="tummytime"&&<Fld label={L("duration")}><div style={{display:"flex",gap:10,alignItems:"center"}}><input type="number" inputMode="numeric" placeholder="0" value={tumM} onChange={e=>setTumM(e.target.value)} style={{...inp,flex:1,textAlign:"center",fontSize:T.f3XL,fontWeight:800}}/><span style={{color:T.dim,fontWeight:700}}>min</span><input type="number" inputMode="numeric" placeholder="0" value={tumS} onChange={e=>setTumS(e.target.value)} style={{...inp,flex:1,textAlign:"center",fontSize:T.f3XL,fontWeight:800}}/><span style={{color:T.dim,fontWeight:700}}>s</span></div></Fld>}
