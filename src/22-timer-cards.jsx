@@ -122,7 +122,7 @@ function NursingSidePicker({open,onClose,onSelect}){
   },[open]);
   if(!vis)return null;
   const handleSelect=(side)=>{Haptic.medium();onSelect(side);onClose()};
-  return(<div style={{position:"fixed",inset:0,zIndex:90}} onClick={onClose}>
+  return(<OverlayPortal><div role="dialog" aria-modal="true" style={{position:"fixed",inset:0,zIndex:90,pointerEvents:"auto"}} onClick={onClose}>
     <div style={{position:"absolute",inset:0,background:"rgba(3,6,20,0.6)",backdropFilter:"blur(6px)",WebkitBackdropFilter:"blur(6px)",opacity:show?1:0,transition:"opacity .4s cubic-bezier(0.22,1,0.36,1)"}}/>
     <div onClick={e=>e.stopPropagation()} style={{position:"absolute",left:"50%",bottom:0,transform:show?"translate(-50%,0)":"translate(-50%,100%)",width:"calc(100% - 24px)",maxWidth:440,padding:"24px 22px calc(28px + env(safe-area-inset-bottom))",borderRadius:"28px 28px 0 0",background:"linear-gradient(180deg,rgba(22,28,60,0.97),rgba(14,18,48,0.99))",backdropFilter:"blur(18px)",WebkitBackdropFilter:"blur(18px)",border:`1px solid ${T.blue}33`,borderBottom:"none",boxShadow:`0 1px 0 0 rgba(255,255,255,0.08) inset, 0 -24px 70px -12px ${T.blue}40, 0 -8px 30px -8px rgba(0,0,0,0.6)`,transition:"transform .5s cubic-bezier(0.22,1.1,0.36,1)",willChange:"transform"}}>
       <div style={{width:40,height:4,borderRadius:2,background:"rgba(255,255,255,0.18)",margin:"-10px auto 20px",opacity:show?1:0,transform:show?"scaleX(1)":"scaleX(0.5)",transition:"opacity .3s ease .05s, transform .4s cubic-bezier(0.22,1,0.36,1) .05s"}}/>
@@ -138,7 +138,7 @@ function NursingSidePicker({open,onClose,onSelect}){
         </button>)}
       </div>
     </div>
-  </div>);
+  </div></OverlayPortal>);
 }
 
 // v11.9.0: TimerBar memoizado. Tem tick interno (state local), props mudam raramente

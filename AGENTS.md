@@ -24,7 +24,8 @@ Até setembro/2026 este projeto foi mantido pelo **Claude Code** (Anthropic). O 
 - **Localização**: Blumenau, SC, Brasil (BRT, UTC-3)
 - **Repositório**: https://github.com/williamscchulz-was/louise-pro
 - **Live**: https://williamscchulz-was.github.io/louise-pro/
-- **Versão atual**: v11.9.150 (app) / routine-engine v2.2.4
+- **Versão atual**: v11.9.151 (app) / routine-engine v2.2.4
+- **Overlays sem scroll bleed no iOS PWA (v11.9.151):** William mostrou em vídeo o formulário Food parado na frente enquanto Home/Ring rolava sob o blur. Causa estrutural: `Modal` era `position:fixed`, mas vivia DENTRO do App root `overflowY:auto`; o scroller interno do modal chegava ao limite e o WebKit encadeava o restante do gesto para esse ancestral. `html/body/#root overflow:hidden` não ajudava porque o scroller real era o `<div>` do App. Fix central: `#overlay-host` é irmão de `#root` e `#nav-host`, `position:fixed inset:0 z-index:500`; `OverlayPortal` usa `ReactDOM.createPortal`, trava o App scroller preservando/restaurando exatamente `scrollTop`, e marca `#root` + `#nav-host` como `inert`. Contador global mantém a trava correta durante transições e modal aninhado (dose de medicamento). Scrollers internos usam `overscrollBehaviorY:"contain"`. `Modal`, Changelog, Inbox, picker de Marcos, Memória e `NursingSidePicker` usam a infraestrutura. Overlays têm `role="dialog"` + `aria-modal="true"`; wrappers restauram `pointerEvents:"auto"` porque o host é transparente a ponteiro. Harness `node build/test-overlay-lock.mjs`: 16 asserts com implementação real — lock/unlock, scrollTop, overflow original, inert preexistente, nesting e presença dos invariantes no fonte.
 - **Catálogo permanente de alimentos (v11.9.150):** William reportou que os alimentos adicionados não ficavam salvos. Causa confirmada no código: `+ Novo alimento` só limpava o input; não havia ação de cadastro. Opções eram derivadas das refeições da janela de 90 dias e limitadas a dez. Agora `Salvar alimento` cadastra independentemente da refeição e mostra confirmação/erro; `config/foods.list` guarda os nomes com `arrayUnion` + merge (duas adições concorrentes não se sobrescrevem). Subscription própria no App, fora do gate de loading, com cleanup. Sem limite de dez chips; lista rolável, dedupe visual case-insensitive. Registrar comida também une o nome ao catálogo no MESMO batch da entry; undo/exclusão da refeição não apaga o alimento cadastrado.
   - **Migração aditiva:** `FB.migrateFoods` lê todas as entries `food` do servidor (sem janela), une nomes existentes e Banana, e marca `legacyImported` apenas após sucesso; falha offline retenta na próxima abertura. Não altera refeições. Escrita concorrente usa união. `exportAll` inclui `foods`; `importAll` une nomes do catálogo e das entries (backups legados suportados) sem apagar alimentos atuais. Nenhuma alteração destrutiva no schema.
   - **Validação:** build/syntax guard e `node build/test-foods.mjs` com implementação real do adaptador FB e handlers do formulário, incluindo cadastro sem refeição, reabertura, concorrência, exclusão, falha de batch, feedback de erro/retry, mais de dez opções e backup legado/novo. Test double em memória, sem gravações de teste em produção.
@@ -308,16 +309,18 @@ O William trabalha neste repo a partir de **várias máquinas** via Codex (PC de
 
 Descoberta dolorosa na v10.4.4 que vale tatuar:
 
-- `<body>` tem dois filhos diretos: `#root` (app) e `#nav-host` (portal onde vivem `TimerBar` e a `nav` flutuante).
-- Desde v10.4.4: `#nav-host` é `position:fixed inset:0 pointer-events:none z-index:300`. **Precisa ser maior que qualquer overlay** pra nav não ficar atrás.
+- `<body>` tem três hosts principais diretos: `#root` (app), `#nav-host` (portal de `TimerBar` + nav) e, desde v11.9.151, `#overlay-host` (portals bloqueantes).
+- `#nav-host` é `position:fixed inset:0 pointer-events:none z-index:300`. `#overlay-host` segue o mesmo padrão em `z-index:500`, deliberadamente acima da nav: durante modal a nav também fica `inert` e o X do próprio diálogo é a saída.
 - Mapa de z-index de overlays no app:
   - `Modal` / `UpdateToast`: 150
   - `ProfilePage` / `Sheet`: 200
   - `InboxPanel`: 210
   - `#nav-host` (nav+timer portal): **300**
+  - `#overlay-host` (Modal/Changelog/Inbox/Marcos/Memória): **500**; z-index interno dos filhos é relativo a este stacking context
   - `#load-debug`: 9998
 - `#nav-host` tem `pointer-events:none` pro conteúdo atrás receber clique. Filhos que precisam clicar (a `nav`, o `TimerBar`) restauram com `pointer-events:auto` no próprio estilo.
-- Position:fixed DENTRO de ancestor com `overflow:auto` vira efetivamente absolute em iOS PWA standalone (bug conhecido do WebKit). Por isso nav + TimerBar ficam fora do App root via `ReactDOM.createPortal`.
+- `#overlay-host` também tem `pointer-events:none`; todo wrapper de overlay restaura `pointerEvents:"auto"`. Enquanto existir overlay bloqueante, `OverlayPortal` congela `[data-app-scroll-root]`, preserva o `scrollTop` e aplica `inert` ao app/nav. Nunca implementar um novo overlay bloqueante direto dentro do App root: usar `Modal` ou `OverlayPortal`.
+- Position:fixed DENTRO de ancestor com `overflow:auto` vira efetivamente absolute em iOS PWA standalone (bug conhecido do WebKit). Por isso nav, TimerBar e overlays bloqueantes ficam fora do App root via `ReactDOM.createPortal`.
 - TimerBar tem prop `hidden` que desmonta o bar quando qualquer overlay inferior abre (Sheet/Modal/ProfilePage/InboxPanel/etc) — evita cobrir botões Save e evita `backdrop-filter` pegar cor errada. Não tenta fade (o tick de 1s resetava a transition).
 
 -----

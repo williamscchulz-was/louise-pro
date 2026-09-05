@@ -136,19 +136,63 @@ function Toast({message,onUndo,onRepeat,onClose,lift}){const closeRef=useRef(onC
   </div>)}
 
 
+// v11.9.151: overlays bloqueantes vivem fora do scroll do App. O contador e importante:
+// o fluxo de medicamentos pode abrir um Modal dentro de outro; fechar so o de cima nao pode
+// reativar o fundo. O scrollTop e preservado e restaurado sem salto.
+let _blockingOverlayCount=0;
+let _blockingOverlaySnapshot=null;
+function _setBlockingOverlayLock(locked){
+  if(locked){
+    _blockingOverlayCount++;
+    if(_blockingOverlayCount!==1)return;
+    const scroller=document.querySelector("[data-app-scroll-root]");
+    const inertEls=[document.getElementById("root"),document.getElementById("nav-host")].filter(Boolean);
+    _blockingOverlaySnapshot={
+      scroller,
+      scrollTop:scroller?scroller.scrollTop:0,
+      overflowY:scroller?scroller.style.overflowY:"",
+      inertEls:inertEls.map(el=>({el,had:el.hasAttribute("inert")})),
+    };
+    if(scroller)scroller.style.overflowY="hidden";
+    inertEls.forEach(el=>el.setAttribute("inert",""));
+    document.body.classList.add("blocking-overlay-open");
+    return;
+  }
+  _blockingOverlayCount=Math.max(0,_blockingOverlayCount-1);
+  if(_blockingOverlayCount!==0||!_blockingOverlaySnapshot)return;
+  const snap=_blockingOverlaySnapshot;
+  _blockingOverlaySnapshot=null;
+  if(snap.scroller){
+    snap.scroller.style.overflowY=snap.overflowY;
+    snap.scroller.scrollTop=snap.scrollTop;
+    requestAnimationFrame(()=>{if(_blockingOverlayCount===0&&snap.scroller.isConnected)snap.scroller.scrollTop=snap.scrollTop});
+  }
+  snap.inertEls.forEach(({el,had})=>{if(!had)el.removeAttribute("inert")});
+  document.body.classList.remove("blocking-overlay-open");
+}
+function OverlayPortal({children}){
+  const host=document.getElementById("overlay-host");
+  useEffect(()=>{
+    if(!host)return;
+    _setBlockingOverlayLock(true);
+    return()=>_setBlockingOverlayLock(false);
+  },[host]);
+  return host?ReactDOM.createPortal(children,host):children;
+}
+
 function Modal({open,onClose,children,wide}){const[vis,setVis]=useState(false),[show,setShow]=useState(false);useEffect(()=>{if(open){setVis(true);requestAnimationFrame(()=>requestAnimationFrame(()=>setShow(true)))}else{setShow(false);const t=setTimeout(()=>setVis(false),300);return()=>clearTimeout(t)}},[open]);if(!vis)return null;
   // v10.7.2: prop `wide` pra forms (AddForm edit/new). Aumenta maxWidth pra 400, mant\u00e9m scroll
   // interno pra forms altos (growth com 3 medi\u00e7\u00f5es etc). X button fixo no canto superior direito
   // do frame do modal; conte\u00fado com scroll abaixo dele.
   const mw=wide?400:340;
-  return(<div style={{position:"fixed",inset:0,zIndex:150,display:"flex",alignItems:"center",justifyContent:"center",padding:"calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom))"}} onClick={onClose}>
+  return(<OverlayPortal><div role="dialog" aria-modal="true" style={{position:"fixed",inset:0,zIndex:150,pointerEvents:"auto",display:"flex",alignItems:"center",justifyContent:"center",padding:"calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom))"}} onClick={onClose}>
     <div style={{position:"absolute",inset:0,background:"rgba(2,3,10,0.55)",backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",opacity:show?1:0,transition:"opacity .35s"}}/>
     <div onClick={e=>e.stopPropagation()} style={{position:"relative",width:"100%",maxWidth:mw,maxHeight:"88vh",background:"linear-gradient(180deg,rgba(20,26,60,0.94),rgba(14,18,52,0.93))",backdropFilter:"blur(18px)",WebkitBackdropFilter:"blur(18px)",borderRadius:26,border:"1px solid rgba(255,255,255,0.08)",boxShadow:"0 1px 0 0 rgba(255,255,255,0.08) inset, 0 0 0 1px rgba(255,255,255,0.03), 0 24px 64px -12px rgba(0,0,0,0.65), 0 0 80px -20px rgba(139,124,246,0.18)",transform:show?"scale(1)":"scale(0.92)",opacity:show?1:0,transition:"all .35s cubic-bezier(0.22,1,0.36,1)",overflow:"hidden",display:"flex",flexDirection:"column"}}>
       <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse at 50% 0%,rgba(255,255,255,0.04),transparent 50%)",pointerEvents:"none",borderRadius:26}}/>
       <button aria-label={L("close")} onClick={onClose} style={{position:"absolute",top:12,right:12,width:40,height:40,borderRadius:12,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"center",color:T.dim,boxShadow:T.insetTop,zIndex:3}}><Icon name="x" size={14} color={T.dim}/></button>
-      <div style={{position:"relative",overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch",padding:wide?"22px 14px 18px":"28px 24px 24px"}}>{children}</div>
+      <div style={{position:"relative",overflowY:"auto",overflowX:"hidden",overscrollBehaviorY:"contain",WebkitOverflowScrolling:"touch",padding:wide?"22px 14px 18px":"28px 24px 24px"}}>{children}</div>
     </div>
-  </div>)}
+  </div></OverlayPortal>)}
 
 function Fld({label,children}){return<div style={{marginBottom:18,minWidth:0}}><label style={{fontSize:T.fSM,color:T.label,fontWeight:600,marginBottom:10,display:"block",letterSpacing:-0.05}}>{label}</label>{children}</div>}
 function Seg({opts,val,set,color}){return<div style={{display:"flex",gap:6}}>{opts.map(o=><button key={o.v} onClick={()=>set(o.v)} style={{flex:1,padding:"12px 4px",borderRadius:10,fontSize:T.fMD,fontWeight:600,background:val===o.v?color:T.glass,color:val===o.v?T.bg1:T.text,border:`1px solid ${val===o.v?color:T.gB}`}}>{o.l}</button>)}</div>}

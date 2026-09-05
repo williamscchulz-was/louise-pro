@@ -321,6 +321,9 @@
 </head>
 <body>
 <div id="root"></div>
+<!-- v11.9.151: modais/overlays bloqueantes usam Portal fora do scroll do App. Assim um gesto
+     no conteudo do modal nunca pode encadear scroll para a Home no iOS PWA. -->
+<div id="overlay-host" style="position:fixed;inset:0;pointer-events:none;z-index:500"></div>
 <!-- Host para nav + TimerBar via React Portal. Fora do #root (que tem overflow:hidden)
      e do App root (que tem overflow:auto). Essencial pra position:fixed funcionar
      corretamente em iOS Safari PWA — o bug famoso onde fixed dentro de ancestor com

@@ -383,8 +383,8 @@ const MilestonesPage = React.memo(function MilestonesPage({milestones,birthDate,
       {L("source")}: CDC "Learn the Signs. Act Early." (Fev 2022) · WHO MGRS · SBP
     </div>
     {/* v11.9.60: Add picker — centrado vertical (era bottom sheet em v11.9.56) */}
-    {showAdd&&<div style={{position:"fixed",inset:0,zIndex:300,background:"rgba(4,6,22,0.85)",backdropFilter:"blur(8px)",display:"flex",alignItems:"center",justifyContent:"center",padding:"calc(20px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom))"}} onClick={()=>{setShowAdd(false);setPickedKey(null)}}>
-      <div onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:440,maxHeight:"calc(100vh - 40px - env(safe-area-inset-top) - env(safe-area-inset-bottom))",background:"radial-gradient(ellipse at 50% 0%, #15124a 0%, #080a26 65%), #040616",borderRadius:22,border:`1px solid ${T.gBSoft}`,boxShadow:"0 24px 60px -16px rgba(0,0,0,0.7), 0 0 0 1px rgba(167,139,250,0.08)",padding:"18px 18px 22px",overflowY:"auto",animation:"slideUp .3s cubic-bezier(0.22,1,0.36,1)"}}>
+    {showAdd&&<OverlayPortal><div role="dialog" aria-modal="true" style={{position:"fixed",inset:0,zIndex:300,pointerEvents:"auto",background:"rgba(4,6,22,0.85)",backdropFilter:"blur(8px)",display:"flex",alignItems:"center",justifyContent:"center",padding:"calc(20px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom))"}} onClick={()=>{setShowAdd(false);setPickedKey(null)}}>
+      <div onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:440,maxHeight:"calc(100vh - 40px - env(safe-area-inset-top) - env(safe-area-inset-bottom))",background:"radial-gradient(ellipse at 50% 0%, #15124a 0%, #080a26 65%), #040616",borderRadius:22,border:`1px solid ${T.gBSoft}`,boxShadow:"0 24px 60px -16px rgba(0,0,0,0.7), 0 0 0 1px rgba(167,139,250,0.08)",padding:"18px 18px 22px",overflowY:"auto",overscrollBehaviorY:"contain",WebkitOverflowScrolling:"touch",animation:"slideUp .3s cubic-bezier(0.22,1,0.36,1)"}}>
         <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}>
           <div style={{flex:1,fontSize:T.fLG,fontWeight:800,letterSpacing:-0.2,minWidth:0}}>{picked?(picked.label[_lang]||picked.label.en):L("pickMilestone")}</div>
           <button onClick={()=>{setShowAdd(false);setPickedKey(null)}} style={{width:40,height:40,borderRadius:12,background:T.glass,border:`1px solid ${T.gBSoft}`,color:T.sub,fontSize:T.fXL,fontWeight:600,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>×</button>
@@ -426,7 +426,7 @@ const MilestonesPage = React.memo(function MilestonesPage({milestones,birthDate,
           </div>
         </>}
       </div>
-    </div>}
+    </div></OverlayPortal>}
   </div>);
 });
 

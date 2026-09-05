@@ -4,6 +4,11 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.151", date: "2026-09-05",
+    pt: {title:"Modais não movimentam mais a tela de trás",bullets:['★ **Scroll isolado no iPhone:** arrastar dentro de Comida ou de outro modal não move mais a Home/Ring desfocada por baixo.','Modais agora vivem em uma camada própria fora do scroll do app; o fundo fica bloqueado sem perder sua posição. Changelog, notificações, Marcos, Memória e seletores seguem a mesma proteção.']},
+    en: {title:"Modals no longer move the screen behind them",bullets:['★ **Isolated scrolling on iPhone:** dragging inside Food or another modal no longer moves the blurred Home/Ring underneath.','Modals now live in their own layer outside the app scroller; the background is locked without losing its position. Changelog, notifications, Milestones, Memory, and pickers use the same protection.']},
+  },
+  {
     v: "11.9.150", date: "2026-09-05",
     pt: {title:"Alimentos ficam salvos na sua lista",bullets:['★ **+ Novo alimento → Salvar alimento** cadastra sem precisar lançar uma refeição. A lista fica salva e sincronizada nos dois celulares.','Alimentos não somem ao apagar uma refeição ou sair do histórico recente. Removido o limite de dez opções; catálogo incluído no backup.']},
     en: {title:"Foods stay saved in your list",bullets:['★ **+ New food → Save food** adds a food without logging a meal. The list is saved and synced across both phones.','Foods remain after deleting a meal or leaving recent history. Removed the ten-option limit; the catalog is included in backups.']},

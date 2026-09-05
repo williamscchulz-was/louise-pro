@@ -1111,7 +1111,7 @@ function App(){
     st.active=false;st.locked=null;
   };
 
-  return(<div style={{background:"transparent",height:"var(--phys-h, 100dvh)",overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch",overscrollBehavior:"none",color:T.text,maxWidth:480,margin:"0 auto",position:"relative"}}>
+  return(<div data-app-scroll-root="true" style={{background:"transparent",height:"var(--phys-h, 100dvh)",overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch",overscrollBehavior:"none",color:T.text,maxWidth:480,margin:"0 auto",position:"relative"}}>
     {/* Starfield: componente memoizado, renderiza 1x por sessão (v10.5.3). */}
     <Starfield/>
     {/* v11.9.127: chuva de meteoros 1x quando a rotina do dia fecha — atrás dos cards
@@ -1486,14 +1486,14 @@ function App(){
     {showUpdateToast&&!showChangelog&&<UpdateToast fromVersion={profile.lastSeenVersion} toVersion={APP_VERSION} onView={openChangelog} onDismiss={dismissUpdateToast} lang={lang}/>}
     <EditStartModal open={showEditStart} onClose={()=>setShowEditStart(false)} activeTimer={activeTimer} onSave={handleEditStart}/>
     {/* v11.9.128: revelação da memória do dia — toque em qualquer lugar fecha. */}
-    {showMemory&&memory&&<div onClick={()=>setShowMemory(false)} style={{position:"fixed",inset:0,zIndex:150,background:"rgba(4,6,18,0.72)",backdropFilter:"blur(6px)",display:"flex",alignItems:"center",justifyContent:"center",padding:24,animation:"fadeIn .25s ease"}}>
+    {showMemory&&memory&&<OverlayPortal><div role="dialog" aria-modal="true" onClick={()=>setShowMemory(false)} style={{position:"fixed",inset:0,zIndex:150,pointerEvents:"auto",background:"rgba(4,6,18,0.72)",backdropFilter:"blur(6px)",display:"flex",alignItems:"center",justifyContent:"center",padding:24,animation:"fadeIn .25s ease"}}>
       <div style={{maxWidth:340,width:"100%",borderRadius:T.rXL,background:"linear-gradient(180deg,rgba(28,24,64,0.97),rgba(16,20,50,0.97))",border:"1px solid rgba(251,191,36,0.35)",padding:"26px 22px",textAlign:"center",boxShadow:"0 24px 60px -12px rgba(0,0,0,0.8), 0 0 40px rgba(251,191,36,0.12)",animation:"slideUp .3s cubic-bezier(0.22,1,0.36,1)"}}>
         <div style={{fontSize:26,marginBottom:10}}>✨</div>
         <div style={{fontSize:T.fXS,fontWeight:800,letterSpacing:1.4,textTransform:"uppercase",color:"#fcd34d",marginBottom:8}}>{_lang==="en"?memory.en.head:memory.pt.head}</div>
         <div style={{fontSize:T.fXL,fontWeight:800,letterSpacing:-0.3,lineHeight:1.35,color:T.heading,marginBottom:10}}>{_lang==="en"?memory.en.text:memory.pt.text}</div>
         <div style={{fontSize:T.fSM,color:T.sub}}>{_lang==="en"?memory.en.sub:memory.pt.sub}</div>
       </div>
-    </div>}
+    </div></OverlayPortal>}
     {/* Nursing picker agora \u00e9 Modal central (v11.7), consistente com popup do bot\u00e3o +. */}
     <Modal open={showNursingPicker} onClose={()=>setShowNursingPicker(false)}>
       <div style={{display:"flex",justifyContent:"center",marginBottom:14}}>

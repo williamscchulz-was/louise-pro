@@ -28,7 +28,7 @@ function ChangelogModal({onClose,lang}){
     if(lang==="en")return d.toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});
     return d.toLocaleDateString("pt-BR",{day:"2-digit",month:"short",year:"numeric"}).replace(".","");
   };
-  return(<div style={{position:"fixed",inset:0,zIndex:300,background:"rgba(7,11,30,0.75)",backdropFilter:"blur(6px)",WebkitBackdropFilter:"blur(6px)",display:"flex",alignItems:"stretch",justifyContent:"center",padding:"calc(14px + env(safe-area-inset-top)) 14px calc(14px + env(safe-area-inset-bottom))"}} onClick={onClose}>
+  return(<OverlayPortal><div role="dialog" aria-modal="true" style={{position:"fixed",inset:0,zIndex:300,pointerEvents:"auto",background:"rgba(7,11,30,0.75)",backdropFilter:"blur(6px)",WebkitBackdropFilter:"blur(6px)",display:"flex",alignItems:"stretch",justifyContent:"center",padding:"calc(14px + env(safe-area-inset-top)) 14px calc(14px + env(safe-area-inset-bottom))"}} onClick={onClose}>
     <div onClick={e=>e.stopPropagation()} style={{background:T.bg1,borderRadius:20,border:"1px solid rgba(139,124,246,0.25)",boxShadow:"0 20px 60px rgba(0,0,0,0.6)",display:"flex",flexDirection:"column",width:"100%",maxWidth:460,maxHeight:"100%",overflow:"hidden"}}>
       {/* Header */}
       <div style={{padding:"16px 18px",borderBottom:"1px solid rgba(139,124,246,0.12)",display:"flex",alignItems:"center",gap:12,background:"linear-gradient(180deg,rgba(139,124,246,0.08),transparent)",flexShrink:0}}>
@@ -44,7 +44,7 @@ function ChangelogModal({onClose,lang}){
         </button>
       </div>
       {/* Scroll */}
-      <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch",padding:"16px 18px 20px"}}>
+      <div style={{flex:1,overflowY:"auto",overscrollBehaviorY:"contain",WebkitOverflowScrolling:"touch",padding:"16px 18px 20px"}}>
         {CHANGELOG.map((entry,i)=>{
           const data=entry[lang]||entry.pt;
           const isCurrent=entry.v===APP_VERSION;
@@ -59,7 +59,7 @@ function ChangelogModal({onClose,lang}){
         })}
       </div>
     </div>
-  </div>);
+  </div></OverlayPortal>);
 }
 
 function UpdateToast({fromVersion,toVersion,onView,onDismiss,lang}){

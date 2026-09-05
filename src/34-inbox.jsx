@@ -16,7 +16,7 @@ function InboxPanel({inbox,onClose,onMarkRead,onMarkAllRead,lang,isRead}){
     const h=Math.floor(diff/60),m=diff%60;
     return m>0?`${h}h${m}m`:`${h}h`;
   };
-  return(<div className="page-switch" style={{position:"fixed",inset:0,zIndex:210,maxWidth:480,margin:"0 auto",background:"linear-gradient(180deg,rgba(7,11,30,0.99),rgba(5,8,24,0.98))",backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",display:"flex",flexDirection:"column",paddingTop:"env(safe-area-inset-top)",paddingBottom:"env(safe-area-inset-bottom)"}}>
+  return(<OverlayPortal><div role="dialog" aria-modal="true" className="page-switch" style={{position:"fixed",inset:0,zIndex:210,pointerEvents:"auto",maxWidth:480,margin:"0 auto",background:"linear-gradient(180deg,rgba(7,11,30,0.99),rgba(5,8,24,0.98))",backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",display:"flex",flexDirection:"column",paddingTop:"env(safe-area-inset-top)",paddingBottom:"env(safe-area-inset-bottom)"}}>
     {/* Header */}
     <div style={{display:"flex",alignItems:"center",gap:14,padding:"22px 22px 18px",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
       <div style={{width:42,height:42,borderRadius:13,display:"flex",alignItems:"center",justifyContent:"center",...T.iconTile(T.accent)}}>
@@ -40,7 +40,7 @@ function InboxPanel({inbox,onClose,onMarkRead,onMarkAllRead,lang,isRead}){
     </div>}
 
     {/* List or empty state */}
-    <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch"}}>
+    <div style={{flex:1,overflowY:"auto",overscrollBehaviorY:"contain",WebkitOverflowScrolling:"touch"}}>
       {items.length===0?(
         <div style={{textAlign:"center",padding:"80px 24px 40px",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
           <div style={{width:72,height:72,margin:"0 auto 18px",borderRadius:22,background:"rgba(139,124,246,0.06)",border:"1px solid rgba(139,124,246,0.12)",display:"flex",alignItems:"center",justifyContent:"center"}}>
@@ -73,6 +73,6 @@ function InboxPanel({inbox,onClose,onMarkRead,onMarkAllRead,lang,isRead}){
         </button>);
       })}
     </div>
-  </div>);
+  </div></OverlayPortal>);
 }
 
