@@ -7,6 +7,7 @@ function Icon({name,size=20,color="currentColor",fill="none"}){
   const pu={width:s,height:s,viewBox:v,fill:"none",stroke:color,strokeWidth:2,strokeLinecap:lc,strokeLinejoin:lj};
   const icons={
     bottle:<svg {...p}>{grad}<path d="M20 11c1.1-1.4 1.3-3.3.7-4.9l.8-.8a1.5 1.5 0 0 0-2.8-2.8l-.8.8A5.33 5.33 0 0 0 13 4"/><path d="M11.3 3.7a1 1 0 0 1 1.4 0l7.6 7.6a1 1 0 0 1 0 1.4l-1.6 1.6a1 1 0 0 1-1.4 0L9.7 6.7a1 1 0 0 1 0-1.4Z" fill={gFill}/><path d="m10 7l-7.3 7.3c-.9.9-.9 2.5 0 3.4l3.6 3.6c.9.9 2.5.9 3.4 0L17 14M4 13l2 2m1-5l2 2" strokeWidth="2"/></svg>,
+    spoon:<svg {...p}>{grad}<path d="M8.8 13.2 3 19a1.4 1.4 0 0 0 2 2l5.8-5.8"/><ellipse cx="15" cy="9" rx="4.5" ry="6" transform="rotate(45 15 9)" fill={gFill}/><ellipse cx="15" cy="9" rx="2.4" ry="3.6" transform="rotate(45 15 9)" opacity="0.45"/></svg>,
     breast:<svg {...p}>{grad}<path d="M5 6Q5 2 10 2Q15 2 16 6Q17 10 16 13Q15 16 12 17Q9 16 7 13Q5 10 5 6z" fill={gFill}/><circle cx="16" cy="10" r="1.2" fill={gFill}/><path d="M16 13l1 2.5a1.5 1.5 0 01-3 0L16 13z" fill={gFill}/></svg>,
     moon:<svg {...p}>{grad}<path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z" fill={gFill}/></svg>,
     bed:<svg {...pu}><path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/></svg>,
@@ -88,7 +89,7 @@ T.iconTile=iconTile;
 // v11.9.67: estilo base de input hoisted (era duplicado 3x em Sheet/Profile/Growth).
 // Spread + override pros casos especiais: {...INP_BASE, textAlign:"center"} etc.
 const INP_BASE={width:"100%",maxWidth:"100%",boxSizing:"border-box",WebkitAppearance:"none",appearance:"none",padding:"17px 18px",background:"rgba(20,26,60,0.55)",border:`1px solid ${T.gBSoft}`,borderRadius:16,color:T.text,fontSize:T.fXL,fontWeight:600,letterSpacing:-0.2,outline:"none",boxShadow:T.insetTop};
-const TYPES={bottle:{label:{pt:"Mamadeira",en:"Bottle"},icon:"bottle",color:T.green,bg:T.greenS},nursing:{label:{pt:"Amamentação",en:"Nursing"},icon:"breast",color:T.blue,bg:T.blueS},sleep:{label:{pt:"Sono",en:"Bedtime"},icon:"bed",color:T.purple,bg:T.purpleS},wakeup:{label:{pt:"Acordou",en:"Woke up"},icon:"sun",color:T.amber,bg:T.amberS},nap:{label:{pt:"Soneca",en:"Nap"},icon:"cloud",color:T.purple,bg:T.purpleS},nightwaking:{label:{pt:"Acordou à noite",en:"Night waking"},icon:"zap",color:T.orange,bg:T.orangeS},diaper:{label:{pt:"Fralda",en:"Diaper"},icon:"diaper",color:T.pink,bg:T.pinkS},medicine:{label:{pt:"Medicamento",en:"Medicine"},icon:"pill",color:T.amber,bg:T.amberS},temperature:{label:{pt:"Temperatura",en:"Temperature"},icon:"thermo",color:T.red,bg:T.redS},bath:{label:{pt:"Banho",en:"Bath"},icon:"bath",color:T.cyan,bg:T.cyanS},tummytime:{label:{pt:"Tummy time",en:"Tummy time"},icon:"baby",color:T.amber,bg:T.amberS},growth:{label:{pt:"Crescimento",en:"Growth"},icon:"ruler",color:"#a3e635",bg:"rgba(163,230,53,0.1)"},milestone:{label:{pt:"Marco",en:"Milestone"},icon:"star",color:"#facc15",bg:"rgba(250,204,21,0.10)"},dayevent:{label:{pt:"Evento do dia",en:"Day event"},icon:"zap",color:"#fb923c",bg:"rgba(251,146,60,0.10)"}};
+const TYPES={bottle:{label:{pt:"Mamadeira",en:"Bottle"},icon:"bottle",color:T.green,bg:T.greenS},nursing:{label:{pt:"Amamentação",en:"Nursing"},icon:"breast",color:T.blue,bg:T.blueS},food:{label:{pt:"Comida",en:"Food"},icon:"spoon",color:T.amber,bg:T.amberS},sleep:{label:{pt:"Sono",en:"Bedtime"},icon:"bed",color:T.purple,bg:T.purpleS},wakeup:{label:{pt:"Acordou",en:"Woke up"},icon:"sun",color:T.amber,bg:T.amberS},nap:{label:{pt:"Soneca",en:"Nap"},icon:"cloud",color:T.purple,bg:T.purpleS},nightwaking:{label:{pt:"Acordou à noite",en:"Night waking"},icon:"zap",color:T.orange,bg:T.orangeS},diaper:{label:{pt:"Fralda",en:"Diaper"},icon:"diaper",color:T.pink,bg:T.pinkS},medicine:{label:{pt:"Medicamento",en:"Medicine"},icon:"pill",color:T.amber,bg:T.amberS},temperature:{label:{pt:"Temperatura",en:"Temperature"},icon:"thermo",color:T.red,bg:T.redS},bath:{label:{pt:"Banho",en:"Bath"},icon:"bath",color:T.cyan,bg:T.cyanS},tummytime:{label:{pt:"Tummy time",en:"Tummy time"},icon:"baby",color:T.amber,bg:T.amberS},growth:{label:{pt:"Crescimento",en:"Growth"},icon:"ruler",color:"#a3e635",bg:"rgba(163,230,53,0.1)"},milestone:{label:{pt:"Marco",en:"Milestone"},icon:"star",color:"#facc15",bg:"rgba(250,204,21,0.10)"},dayevent:{label:{pt:"Evento do dia",en:"Day event"},icon:"zap",color:"#fb923c",bg:"rgba(251,146,60,0.10)"}};
 
 // ── i18n ──
 const I={
@@ -206,7 +207,7 @@ function L(key){return I[key]?.[_lang]||I[key]?.en||key}
 function TL(type){return typeLabel(type,_lang)}
 // v11.9.94: flexão de gênero PT pros toasts — "Mamadeira atualizadA", "Sono atualizadO".
 // FEM_TYPES = tipos com label feminino; flexed troca o "-o" final por "-a" quando preciso.
-const FEM_TYPES=["bottle","nursing","diaper","nap","temperature"];
+const FEM_TYPES=["bottle","nursing","food","diaper","nap","temperature"];
 function flexed(type,key){const w=I[key]?.[_lang]||I[key]?.en||key;if(_lang!=="pt")return w;return FEM_TYPES.includes(type)?w.replace(/o$/,"a"):w}
 
 // ── UI COMPONENTS ──

@@ -25,11 +25,11 @@ const HistoryPage = React.memo(function HistoryPage({entries,onDelete,onEdit,act
   const isToday=dateIdx===0;
   // Note: live in-progress bedtime is NOT shown here. It only appears in Home.
   // History is reserved for finalized entries.
-  const filters=[{v:"all",l:L("all"),c:T.accent},{v:"feed",l:L("milk"),c:T.green},{v:"sleep",l:L("sleepLabel"),c:T.purple},{v:"diaper",l:typeLabel("diaper",_lang),c:T.pink},{v:"medicine",l:_lang==="en"?"Meds":"Med.",c:T.amber}];
-  // Specific type filters (feed/diaper/medicine) → flat chronological list, include
+  const filters=[{v:"all",l:L("all"),c:T.accent},{v:"feed",l:L("milk"),c:T.green},{v:"food",l:typeLabel("food",_lang),c:T.amber},{v:"sleep",l:L("sleepLabel"),c:T.purple},{v:"diaper",l:typeLabel("diaper",_lang),c:T.pink},{v:"medicine",l:_lang==="en"?"Meds":"Med.",c:T.amber}];
+  // Specific type filters (feed/food/diaper/medicine) → flat chronological list, include
   // events inside bedtimes and tag them with a subtle "night" badge.
   // All/sleep → keep the bedtime grouping via SleepBlock (summary view).
-  const isSpecificFilter=filter==="feed"||filter==="diaper"||filter==="medicine";
+  const isSpecificFilter=filter==="feed"||filter==="food"||filter==="diaper"||filter==="medicine";
   const listItems=isSpecificFilter
     ?filtered.map(e=>{
       const bedtime=findContainingBedtime(e,entries);
@@ -157,4 +157,3 @@ const formatGrowthVal=(v)=>{
   const s=String(v);
   return _lang==="pt"?s.replace(".",","):s;
 };
-

@@ -4,6 +4,25 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.148", date: "2026-09-05",
+    pt: {
+      title: "Introdução alimentar começou: Banana e novos sabores",
+      bullets: [
+        '★ Novo registro **Comida** — a Banana já vem selecionada pra lançar o primeiro alimento sem preparar nada antes.',
+        'Digite qualquer alimento novo uma vez e ele reaparece como opção rápida nos próximos registros. O nome fica salvo junto do evento no Firestore e sincroniza entre os dois iPhones.',
+        'A comida aparece no **Ring no horário em que aconteceu**, com ícone próprio e o nome do alimento ao tocar. O Histórico também ganhou filtro Comida.',
+      ],
+    },
+    en: {
+      title: "Solid foods are here: Banana and new flavors",
+      bullets: [
+        '★ New **Food** entry — Banana is already selected, ready for the first food log with no setup.',
+        'Type any new food once and it returns as a quick option on future logs. Its name is stored with the Firestore event and syncs across both iPhones.',
+        'Food appears on the **Ring at the time it happened**, with its own icon and the food name on tap. History now has a Food filter too.',
+      ],
+    },
+  },
+  {
     v: "11.9.147", date: "2026-09-02",
     pt: {
       title: "Dois toques no botão Parar não geram mais noite duplicada + alerta de volume mais paciente",

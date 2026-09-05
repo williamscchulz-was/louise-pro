@@ -351,7 +351,7 @@ function App(){
     }
     // v11.9.27: repeatFn pra Quick re-log. Disponivel pra tipos one-shot (sem timer).
     // Sleep/nap/nursing/tummytime sao via timer entao "repeat" nao faz sentido aqui.
-    const REPEATABLE={bottle:1,diaper:1,medicine:1,temperature:1,bath:1,wakeup:1,nightwaking:1};
+    const REPEATABLE={bottle:1,food:1,diaper:1,medicine:1,temperature:1,bath:1,wakeup:1,nightwaking:1};
     let repeatFn=null;
     if(!wasEdit&&REPEATABLE[e.type]){
       repeatFn=()=>{
@@ -1231,7 +1231,7 @@ function App(){
             const cfg=TYPES[tp]||{};
             const col=(tp==="nap"?T.accent:cfg.color)||T.accent;
             const ic=cfg.icon||"plus";
-            const SHORT={wakeup:_lang==="en"?"Woke up":"Acordou",bottle:_lang==="en"?"Bottle":"Mamadeira",nursing:_lang==="en"?"Nurse":"Amamentar",diaper:_lang==="en"?"Diaper":"Fralda",sleep:_lang==="en"?"Sleep":"Sono",nap:_lang==="en"?"Nap":"Soneca",bath:_lang==="en"?"Bath":"Banho",medicine:_lang==="en"?"Medicine":"Remédio"};
+            const SHORT={wakeup:_lang==="en"?"Woke up":"Acordou",bottle:_lang==="en"?"Bottle":"Mamadeira",nursing:_lang==="en"?"Nurse":"Amamentar",food:_lang==="en"?"Food":"Comida",diaper:_lang==="en"?"Diaper":"Fralda",sleep:_lang==="en"?"Sleep":"Sono",nap:_lang==="en"?"Nap":"Soneca",bath:_lang==="en"?"Bath":"Banho",medicine:_lang==="en"?"Medicine":"Remédio"};
             const lbl=SHORT[tp]||(cfg.label?cfg.label[_lang]:tp);
             // v11.9.93: "wakeup" registra em 1 toque via quickWakeup (anti-duplicata de 60s
             // + nightSleepMin já embutidos) — era a função morta desde a v11.9.x.
@@ -1460,7 +1460,7 @@ function App(){
         O AddForm em si (Bottle/Amount/Save) continua Sheet porque tem inputs e scroll. */}
     <Modal open={showAdd&&!formType} onClose={()=>setShowAdd(false)}>
       <div style={{fontSize:T.fSM,fontWeight:700,color:T.label,letterSpacing:0.5,textTransform:"uppercase",marginBottom:16,textAlign:"center"}}>{_lang==="en"?"Add event":"Adicionar evento"}</div>
-      <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)",gap:"10px 0"}}>{["wakeup","bottle","nursing","sleep","nap","diaper","bath","medicine","temperature","tummytime","dayevent"].map((type,i)=>{const cfg=TYPES[type];const last=entries.find(e=>e.type===type);const agoRaw=last?timeSince(last.date,last.time):null;const ago=agoRaw==="now"?"Just now":agoRaw;return(<button key={type} onClick={()=>setFormType(type)} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8,padding:"8px 4px 4px",animation:`slideUp .3s cubic-bezier(0.22,1,0.36,1) ${i*0.025}s both`}}>
+      <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)",gap:"10px 0"}}>{["wakeup","bottle","nursing","food","sleep","nap","diaper","bath","medicine","temperature","tummytime","dayevent"].map((type,i)=>{const cfg=TYPES[type];const last=entries.find(e=>e.type===type);const agoRaw=last?timeSince(last.date,last.time):null;const ago=agoRaw==="now"?"Just now":agoRaw;return(<button key={type} onClick={()=>setFormType(type)} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8,padding:"8px 4px 4px",animation:`slideUp .3s cubic-bezier(0.22,1,0.36,1) ${i*0.025}s both`}}>
         <div style={{width:58,height:58,borderRadius:"50%",background:`radial-gradient(circle at 35% 30%, rgba(50,60,120,0.95), rgba(18,22,55,0.98))`,border:`1.5px solid ${cfg.color}25`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 4px 16px rgba(0,0,0,0.35), 0 0 20px ${cfg.color}18, inset 0 1px 0 rgba(200,210,255,0.08), inset 0 -2px 4px rgba(0,0,0,0.2)`,position:"relative",overflow:"hidden",filter:`drop-shadow(0 0 4px ${cfg.color}44)`}}>
           <div style={{position:"absolute",top:"15%",left:"25%",width:"40%",height:"30%",background:`radial-gradient(ellipse,${cfg.color}12,transparent)`,borderRadius:"50%",filter:"blur(5px)"}}/>
           <Icon name={cfg.icon} size={22} color={cfg.color}/>
