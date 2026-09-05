@@ -1111,7 +1111,7 @@ function App(){
     st.active=false;st.locked=null;
   };
 
-  return(<div data-app-scroll-root="true" style={{background:"transparent",height:"var(--phys-h, 100dvh)",overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch",overscrollBehavior:"none",color:T.text,maxWidth:480,margin:"0 auto",position:"relative"}}>
+  return(<div style={{background:"transparent",height:"var(--phys-h, 100dvh)",overflow:"hidden",color:T.text,maxWidth:480,margin:"0 auto",position:"relative"}}>
     {/* Starfield: componente memoizado, renderiza 1x por sessão (v10.5.3). */}
     <Starfield/>
     {/* v11.9.127: chuva de meteoros 1x quando a rotina do dia fecha — atrás dos cards
@@ -1166,17 +1166,20 @@ function App(){
         </div>);
       }catch(e){console.warn("[RingDetail] render error",e);return null}})()}
     </Modal>
-    <div style={{position:"relative",zIndex:1}}>
-      {/* SWIPE CONTAINER (v9.9.2) — Home/Stats/History pre-mounted side-by-side */}
-      {isSwipePage?<div style={{overflow:"hidden",width:"100%",touchAction:"pan-y"}}>
+    <div style={{position:"relative",zIndex:1,height:"100%"}}>
+      {/* SWIPE CONTAINER (v9.9.2) — Home/Stats/History pre-mounted side-by-side.
+          v11.9.152: o trilho ocupa so o viewport; cada slide tem o proprio scroll vertical.
+          Assim a altura de Stats nunca cria espaco vazio na Home/History e cada aba preserva
+          sua posicao ao trocar por swipe ou navbar. */}
+      {isSwipePage?<div style={{overflow:"hidden",width:"100%",height:"100%",touchAction:"pan-y"}}>
         <div
           ref={swipeRef}
           onTouchStart={onSwipeStart}
           onTouchMove={onSwipeMove}
           onTouchEnd={onSwipeEnd}
           onTouchCancel={onSwipeEnd}
-          style={{display:"flex",width:"300%",transform:`translate3d(calc(${-swipeIdx*(100/3)}% + ${dragPx}px), 0, 0)`,transition:swipeDragging?"none":"transform .28s cubic-bezier(0.2,0.9,0.3,1)",willChange:"transform"}}>
-          <div style={{width:`${100/3}%`,flexShrink:0,minWidth:0,contentVisibility:"auto",containIntrinsicSize:"auto 100vh"}}>
+          style={{display:"flex",width:"300%",height:"100%",transform:`translate3d(calc(${-swipeIdx*(100/3)}% + ${dragPx}px), 0, 0)`,transition:swipeDragging?"none":"transform .28s cubic-bezier(0.2,0.9,0.3,1)",willChange:"transform"}}>
+          <div data-app-scroll-root={page==="home"?"true":undefined} data-page-scroll="home" style={{width:`${100/3}%`,height:"100%",overflowY:"auto",overflowX:"hidden",overscrollBehaviorY:"none",WebkitOverflowScrolling:"touch",flexShrink:0,minWidth:0,contentVisibility:"auto",containIntrinsicSize:"auto 100vh"}}>
             <div>
         <div style={{padding:"calc(12px + env(safe-area-inset-top)) 20px 0",display:"flex",alignItems:"center",gap:12}}>
           <div style={{position:"relative"}}><button onClick={()=>setShowProfile(true)} style={{width:52,height:52,borderRadius:16,overflow:"hidden",border:`1.5px solid ${T.accent}20`,background:T.glass,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 2px 12px rgba(0,0,0,0.3)"}}>{profile.photo?<img src={profile.photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<Icon name="sun" size={22} color={T.sub}/>}</button>{daysLeft!==null&&daysLeft>0&&<button onClick={()=>setShowSleepInfo(true)} style={{position:"absolute",top:-5,right:-8,minWidth:24,height:24,borderRadius:12,background:`linear-gradient(135deg,${T.accent},#a78bfa)`,color:"#fff",fontSize:T.fSM,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 5px",boxShadow:`0 2px 8px ${T.accent}55`,border:`2px solid ${T.bg1}`}}>{daysLeft}</button>}{sleepRec?.phase===2&&<button onClick={()=>setShowSleepInfo(true)} style={{position:"absolute",top:-2,right:-6,width:20,height:20,borderRadius:10,background:T.green,display:"flex",alignItems:"center",justifyContent:"center",border:`2px solid ${T.bg1}`}}><Icon name="check" size={10} color={T.bg1}/></button>}</div>
@@ -1403,26 +1406,22 @@ function App(){
         // aqui só precisa checar a metade que ESTÁ na lista de hoje. Achado #1 da auditoria.
         const pair=!useBlock&&(e.type==="sleep"||e.type==="nap")&&e.id&&e.id.endsWith("_b")?findMidnightPair(e,entries):null;
         return<div key={e.id} className="home-rise-in" style={{animationDelay:`${Math.min(i,10)*45}ms`}}>{gap}{useBlock?<SleepBlock entry={e} lang={lang} onDelete={deleteEntry} onEdit={startEdit} entries={entries} activeTimer={activeTimer} onSaveTimer={FB.saveTimer} onSaveEntry={FB.addEntry} showToast={showToast}/>:pair?<MidnightMergeCard lang={lang} part1={pair.part1} part2={pair.part2} onDelete={deleteEntry} onEdit={startEdit}/>:<EntryRow entry={e} lang={lang} onDelete={deleteEntry} onEdit={startEdit} napNum={napNums[e.id]||null}/>}</div>})}</div>
+        <div data-page-bottom-spacer="true" style={{height:activeTimer?"calc(160px + env(safe-area-inset-bottom))":"calc(80px + env(safe-area-inset-bottom))"}}/>
       </div>
           </div>
-          <div style={{width:`${100/3}%`,flexShrink:0,minWidth:0,contentVisibility:"auto",containIntrinsicSize:"auto 100vh"}}>
+          <div data-app-scroll-root={page==="stats"?"true":undefined} data-page-scroll="stats" style={{width:`${100/3}%`,height:"100%",overflowY:"auto",overflowX:"hidden",overscrollBehaviorY:"none",WebkitOverflowScrolling:"touch",flexShrink:0,minWidth:0,contentVisibility:"auto",containIntrinsicSize:"auto 100vh"}}>
             <StatsPage entries={entries} onGrowth={goGrowth} onBehavior={goBehavior} lang={lang}/>
+            <div data-page-bottom-spacer="true" style={{height:activeTimer?"calc(160px + env(safe-area-inset-bottom))":"calc(80px + env(safe-area-inset-bottom))"}}/>
           </div>
-          <div style={{width:`${100/3}%`,flexShrink:0,minWidth:0,contentVisibility:"auto",containIntrinsicSize:"auto 100vh"}}>
+          <div data-app-scroll-root={page==="history"?"true":undefined} data-page-scroll="history" style={{width:`${100/3}%`,height:"100%",overflowY:"auto",overflowX:"hidden",overscrollBehaviorY:"none",WebkitOverflowScrolling:"touch",flexShrink:0,minWidth:0,contentVisibility:"auto",containIntrinsicSize:"auto 100vh"}}>
             <HistoryPage entries={entries} onDelete={deleteEntry} onEdit={startEdit} activeTimer={activeTimer} lang={lang} showToast={showToast}/>
+            <div data-page-bottom-spacer="true" style={{height:activeTimer?"calc(160px + env(safe-area-inset-bottom))":"calc(80px + env(safe-area-inset-bottom))"}}/>
           </div>
         </div>
       </div>:null}
       {page==="growth"&&<GrowthPage lang={lang} entries={entries} birthDate={profile.birthDate} profile={profile} onBack={()=>{const f=growthFromRef.current||{page:"stats"};goTo(f.page||"stats");if(f.profile)setShowProfile(true)}} onAddEntry={addEntry} onDeleteEntry={deleteEntry}/>}
       {page==="behavior"&&<BehaviorPage entries={entries} birthDate={profile.birthDate} onBack={()=>{const f=behaviorFromRef.current||{page:"stats"};goTo(f.page||"stats")}} lang={lang}/>}
       {page==="milestones"&&<MilestonesPage milestones={allMilestones} birthDate={profile.birthDate} profile={profile} onBack={()=>goTo("home")} onAddEntry={addEntry} onDeleteEntry={deleteEntry} lang={lang}/>}
-      {/* Bottom spacer so content clears nav bar + timer (dynamic w/ safe-area) */}
-      {/* Sem bottom spacer (v10.2.9) — queremos conteúdo passando ATRÁS da nav
-          pill translúcida (Instagram-style: você rola até o fim, o último card
-          vai por baixo do pill, visível borrado pelo backdrop-filter). Só mantemos
-          ~4px pra o último card não ser cortado no visual-viewport-bottom. Com
-          timer ativo dobramos (TimerBar precisa de espaço pra render acima da nav). */}
-      <div style={{height:activeTimer?"calc(160px + env(safe-area-inset-bottom))":"calc(80px + env(safe-area-inset-bottom))"}}/>
     </div>
 
     {/* Fade gradient above nav */}
@@ -1512,7 +1511,7 @@ function App(){
       </div>
     </Modal>
 
-    {/* TimerBar + Nav via React Portal — vivem fora do scroll container (App root com overflow:auto)
+    {/* TimerBar + Nav via React Portal — vivem fora dos scroll containers de Home/Stats/History
         e fora do #root (com overflow:hidden) para que position:fixed funcione corretamente
         em iOS Safari PWA standalone. Veja #nav-host no <body>. */}
     {ReactDOM.createPortal(<><TimerBar activeTimer={activeTimer} lang={lang} onStop={stopTimer} onSwitch={switchSide} onPause={pauseNursing} onEditStart={()=>setShowEditStart(true)} hidden={showAdd||!!formType||showProfile||showInbox||showChangelog||showEditStart||showNursingPicker||showSleepInfo}/>

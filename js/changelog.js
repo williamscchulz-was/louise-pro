@@ -4,6 +4,11 @@
 
 window.CHANGELOG = [
   {
+    v: "11.9.152", date: "2026-09-05",
+    pt: {title:"Home, Estatísticas e Histórico agora rolam separadamente",bullets:['★ **Fim do espaço vazio/infinito:** cada uma das três abas ganhou sua própria altura e sua própria posição de rolagem. A tela mais comprida não estica mais as outras duas.','Swipe horizontal e rolagem vertical continuam independentes; voltar para uma aba preserva o ponto onde você estava. O espaço do timer e da navegação agora pertence a cada tela.']},
+    en: {title:"Home, Statistics, and History now scroll separately",bullets:['★ **No more empty/infinite space:** each of the three tabs now has its own height and scroll position. The longest screen no longer stretches the other two.','Horizontal swipes and vertical scrolling remain independent; returning to a tab preserves where you were. Timer and navigation clearance now belongs to each screen.']},
+  },
+  {
     v: "11.9.151", date: "2026-09-05",
     pt: {title:"Modais não movimentam mais a tela de trás",bullets:['★ **Scroll isolado no iPhone:** arrastar dentro de Comida ou de outro modal não move mais a Home/Ring desfocada por baixo.','Modais agora vivem em uma camada própria fora do scroll do app; o fundo fica bloqueado sem perder sua posição. Changelog, notificações, Marcos, Memória e seletores seguem a mesma proteção.']},
     en: {title:"Modals no longer move the screen behind them",bullets:['★ **Isolated scrolling on iPhone:** dragging inside Food or another modal no longer moves the blurred Home/Ring underneath.','Modals now live in their own layer outside the app scroller; the background is locked without losing its position. Changelog, notifications, Milestones, Memory, and pickers use the same protection.']},

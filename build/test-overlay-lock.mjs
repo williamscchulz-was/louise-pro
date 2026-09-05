@@ -76,7 +76,7 @@ function makeHarness(options={}){
 }
 
 ok(html.includes('id="overlay-host"'),"index possui host dedicado fora do root");
-ok(app.includes('data-app-scroll-root="true"'),"App identifica explicitamente seu scroll root");
+ok(app.includes('data-app-scroll-root={page==='),"App identifica explicitamente o scroll root da aba ativa");
 ok(widgets.includes('ReactDOM.createPortal(children,host)'),"overlays usam Portal real");
 ok(widgets.includes('overscrollBehaviorY:"contain"'),"scroll interno do Modal contem o gesto");
 
